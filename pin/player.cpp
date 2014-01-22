@@ -1292,28 +1292,9 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 	return pball;
 }
 
-void Player::EraseBall(Ball *pball)
-{
-   // Flag the region as needing to be updated.
-   if (m_fBallShadows)
-		if (!fIntRectIntersect(pball->m_rcScreen, pball->m_rcScreenShadow))
-			InvalidateRect(&pball->m_rcScreenShadow);
-
-   if ( m_ptable->m_useReflectionForBalls )
-      InvalidateRect(&pball->m_rcReflection);
-
-   if ( m_ptable->m_useTrailForBalls )
-      InvalidateRect(&pball->m_rcTrail);
-
-   InvalidateRect(&pball->m_rcScreen);
-}
-
 void Player::DestroyBall(Ball *pball)
 {
 	if (!pball) return;
-
-	if (pball->m_fErase) // Need to clear the ball off the playfield
-		EraseBall(pball);
 
 	if (pball->m_pballex)
 		{
@@ -2052,7 +2033,7 @@ void Player::RenderDynamics()
       m_ToggleDebugBalls = fFalse;
    }
 
-   DrawBalls(false);
+   DrawBalls();
    // Draw the alpha-ramps and primitives.
    //if (g_pvp->m_pdd.m_fHardwareAccel)
    DrawAlphas();
@@ -2068,82 +2049,43 @@ void Player::RenderDynamics()
    m_pin3d.m_pd3dDevice->EndScene();
 }
 
+
 unsigned int Player::CheckAndUpdateRegions()
 {
-	for (int i=0;i<m_vscreenupdate.Size();i++)
-	{
-		// Check if the element is invalid (its frame changed).
-		m_vscreenupdate.ElementAt(i)->m_fInvalid = false;
-		m_vscreenupdate.ElementAt(i)->Check3D();
-
-		// Clamp all bounds to screen (if not completely offscreen)
-		RECT * const prc = &m_vscreenupdate.ElementAt(i)->m_rcBounds;
-		if ((prc->top < 0) && (prc->bottom >= 0))
-			prc->top = 0;
-		if ((prc->left < 0) && (prc->right >= 0))
-			prc->left = 0;
-		if ((prc->bottom > m_pin3d.m_dwRenderHeight-1) && (prc->top <= m_pin3d.m_dwRenderHeight-1))
-			prc->bottom = m_pin3d.m_dwRenderHeight-1;
-		if ((prc->right > m_pin3d.m_dwRenderWidth-1) && (prc->left <= m_pin3d.m_dwRenderWidth-1))
-			prc->right = m_pin3d.m_dwRenderWidth-1;
-	}
-
-	// Check all elements that could possibly need updating.
-	for (int i=0;i<m_vscreenupdate.Size();i++)
-		if (m_vscreenupdate.ElementAt(i)->m_fInvalid)
-		{
-			// Flag the element's region as needing a redraw.
-			InvalidateRect(&m_vscreenupdate.ElementAt(i)->m_rcBounds);
-		}
-
-	// For alphas (alpha ramps & primitives), abuse the RenderMovers call to (optionally) invalidate regions that need updates.
+    // For alphas (alpha ramps & primitives), abuse the RenderMovers call to (optionally) invalidate regions that need updates.
+    // TODO: still needed without update regions?
     for (int i=0;i<m_vhitalpha.Size();i++)
-		m_vhitalpha.ElementAt(i)->RenderMovers(m_pin3d.m_pd3dDevice);
+        m_vhitalpha.ElementAt(i)->RenderMovers(m_pin3d.m_pd3dDevice);
 
-	//rlc BUG -- moved this code before copy of static buffers being copied to back and z buffers
-	//rlc  JEP placed code for copy of static buffers too soon 
-	// Notice - the light can only update once per frame, so if the light
-	// is blinking faster than the frame rate, the user will still see
-	// the light blinking, it will just be slower than intended.
-	for (int i=0;i<m_vblink.Size();i++)
-	{
-		IBlink * const pblink = m_vblink.ElementAt(i);
-		if (pblink->m_timenextblink <= m_time_msec)
-		{
-			const char cold = pblink->m_rgblinkpattern[pblink->m_iblinkframe];
-			pblink->m_iblinkframe++;
-			char cnew = pblink->m_rgblinkpattern[pblink->m_iblinkframe];
-			if (cnew == 0)
-			{
-				pblink->m_iblinkframe = 0;
-				cnew = pblink->m_rgblinkpattern[0];
-			}
+    //rlc BUG -- moved this code before copy of static buffers being copied to back and z buffers
+    //rlc  JEP placed code for copy of static buffers too soon 
+    // Notice - the light can only update once per frame, so if the light
+    // is blinking faster than the frame rate, the user will still see
+    // the light blinking, it will just be slower than intended.
+    for (int i=0;i<m_vblink.Size();i++)
+    {
+        IBlink * const pblink = m_vblink.ElementAt(i);
+        if (pblink->m_timenextblink <= m_time_msec)
+        {
+            const char cold = pblink->m_rgblinkpattern[pblink->m_iblinkframe];
+            pblink->m_iblinkframe++;
+            char cnew = pblink->m_rgblinkpattern[pblink->m_iblinkframe];
+            if (cnew == 0)
+            {
+                pblink->m_iblinkframe = 0;
+                cnew = pblink->m_rgblinkpattern[0];
+            }
 
-			if (cold != cnew)
-				pblink->DrawFrame(cnew == '1');
+            if (cold != cnew)
+                pblink->DrawFrame(cnew == '1');
 
-			pblink->m_timenextblink += pblink->m_blinkinterval;
-		}
-	}
+            pblink->m_timenextblink += pblink->m_blinkinterval;
+        }
+    }
 
-	//
-	// dynamic ... copies Static buffers to back buffer and z buffer
-	//
-
-	// Initialize all invalid regions by resetting the region (basically clear) 
-	// it with the contents of the static buffer.
-
-	// Check if more stuff is updated than area of whole screen
-#define FULLBLTAREA (unsigned int)(m_pin3d.m_dwRenderWidth*m_pin3d.m_dwRenderHeight) //!! other heuristic? seems like 1/8th would be good enough already?!
-
-	unsigned int overall_area = 0;
-	if(m_fCleanBlt)
-		for (int i=0;i<m_vupdaterect.Size();++i)
-		{
-			const RECT& prc = m_vupdaterect.ElementAt(i)->m_rcupdate;
-			if(prc.right > prc.left && prc.bottom > prc.top)
-				overall_area += (prc.right-prc.left)*(prc.bottom-prc.top);
-		}
+    //
+    // copy static buffers to back buffer and z buffer
+    //
 
     BaseTexture *backBuffer = m_pin3d.m_pddsBackBuffer;
     if ( m_useAA )
@@ -2151,175 +2093,91 @@ unsigned int Player::CheckAndUpdateRegions()
 
     BaseTexture * const backBufferZ = m_pin3d.m_pddsZBuffer;
 
-	if(((m_fEnableRegionUpdateOptimization && (m_ptable->m_TableRegionOptimization == -1)) || (m_ptable->m_TableRegionOptimization == 1))
-		&& (!m_fCleanBlt || (overall_area >= FULLBLTAREA)))
-	{
-		RECT rect;
-		rect.left = 0;
-		rect.right = min(GetSystemMetrics(SM_CXSCREEN), m_pin3d.m_dwRenderWidth);
-		rect.top = 0;
-		rect.bottom = min(GetSystemMetrics(SM_CYSCREEN), m_pin3d.m_dwRenderHeight);
-		backBuffer->BltFast(rect.left, rect.top, m_pin3d.m_pddsStatic, &rect, 0);
-		backBufferZ->BltFast(rect.left, rect.top, m_pin3d.m_pddsStaticZ, &rect, 0);
+    // blit static background
+    RECT rect;
+    rect.left = 0;
+    rect.right = min(GetSystemMetrics(SM_CXSCREEN), m_pin3d.m_dwRenderWidth);
+    rect.top = 0;
+    rect.bottom = min(GetSystemMetrics(SM_CYSCREEN), m_pin3d.m_dwRenderHeight);
+    
+    HRESULT hr1 = backBuffer->BltFast(rect.left, rect.top, m_pin3d.m_pddsStatic, &rect, 0);
+    HRESULT hr2 = backBufferZ->BltFast(rect.left, rect.top, m_pin3d.m_pddsStaticZ, &rect, 0);
 
-		// kill all update regions and create one screen sized one
-		for (int i=0;i<m_vupdaterect.Size();i++)
-		{
-			UpdateRect * const pur = m_vupdaterect.ElementAt(i);
-			delete pur;
-		}
-		m_vupdaterect.RemoveAllElements();
+    // Process all AnimObjects and render their sprites
+    for (int l=0; l < m_vscreenupdate.Size(); ++l)
+    {
+        AnimObject* pao = m_vscreenupdate.ElementAt(l);
 
-		InvalidateRect(&rect);
+        // Check if the element is invalid (its frame changed).
+        pao->m_fInvalid = false;
+        pao->Check3D();
 
-		overall_area = rect.right*rect.bottom;
-	}
-	else
-		for (int i=0;i<m_vupdaterect.Size();i++)
-		{
-			UpdateRect * const pur = m_vupdaterect.ElementAt(i);
-			if (pur->m_fSeeThrough)
-			{
-				RECT * const prc = &pur->m_rcupdate;
+        // Clamp all bounds to screen (if not completely offscreen)
+        RECT * const prc = &pao->m_rcBounds;
+        if ((prc->top < 0) && (prc->bottom >= 0))
+            prc->top = 0;
+        if ((prc->left < 0) && (prc->right >= 0))
+            prc->left = 0;
+        if ((prc->bottom > m_pin3d.m_dwRenderHeight-1) && (prc->top <= m_pin3d.m_dwRenderHeight-1))
+            prc->bottom = m_pin3d.m_dwRenderHeight-1;
+        if ((prc->right > m_pin3d.m_dwRenderWidth-1) && (prc->left <= m_pin3d.m_dwRenderWidth-1))
+            prc->right = m_pin3d.m_dwRenderWidth-1;
 
-				// Redraw the region from the static buffers to the back and z buffers.
-				backBuffer->BltFast(prc->left, prc->top, m_pin3d.m_pddsStatic, prc, 0);
-				backBufferZ->BltFast(prc->left, prc->top, m_pin3d.m_pddsStaticZ, prc, 0);
-			}
-		}
+        // Get the object's frame to draw.
+        const ObjFrame * const pobjframe = pao->Draw3D(&rect);
 
-	// Process all regions that need updating.  
-	// The region will be drawn with the current frame.
-	for (int i=0;i<m_vupdaterect.Size();i++)
-	{
-		const UpdateRect * const pur = m_vupdaterect.ElementAt(i);
+        // Make sure we have a frame.
+        if (pobjframe != NULL)
+        {
+            // NOTE: rect is the rectangle of the region needing to be updated.
+            // NOTE: pobjframe->rc is the rectangle of the entire object that intersects the region needing to updated.
+            // I think they are trying to define a rectangle that intersects... but why subtract pobjframe->rc?   -JEP
 
-		// Process all objects associated with this region.
-		for (int l=0;l<pur->m_vobject.Size();l++)
-		{
-			// Get the object's frame to draw.
-			const ObjFrame * const pobjframe = pur->m_vobject.ElementAt(l)->Draw3D(&pur->m_rcupdate);
+            const int bltleft = max(pobjframe->rc.left, rect.left);
+            const int blttop = max(pobjframe->rc.top, rect.top);
 
-			// Make sure we have a frame.
-			if (pobjframe != NULL)
-			{
-				const RECT * const prc = &pur->m_rcupdate;
+            RECT rcUpdate;
+            rcUpdate.left = bltleft - pobjframe->rc.left;
+            rcUpdate.top = blttop - pobjframe->rc.top;
+            rcUpdate.right = min(pobjframe->rc.right, rect.right) - pobjframe->rc.left;
+            rcUpdate.bottom = min(pobjframe->rc.bottom, rect.bottom) - pobjframe->rc.top;
 
-				// NOTE: prc is the rectangle of the region needing to be updated.
-				// NOTE: pobjframe->rc is the rectangle of the entire object that intersects the region needing to updated.
-				// I think they are trying to define a rectangle that intersects... but why subtract pobjframe->rc?   -JEP
+            // Make sure our rectangle dimensions aren't wacky.
+            if ((rcUpdate.right > rcUpdate.left) && (rcUpdate.bottom > rcUpdate.top))
+            {
+                // Make sure we have a source color surface.
+                if (pobjframe->pdds != NULL)
+                {
+                    // Blit to the backbuffer with DDraw.   
+                    backBuffer->BltFast(bltleft, blttop, pobjframe->pdds, &rcUpdate, DDBLTFAST_SRCCOLORKEY);
+                }
 
-				const int bltleft = max(pobjframe->rc.left, prc->left);
-				const int blttop = max(pobjframe->rc.top, prc->top);
+                // Make sure we have a source z surface.
+                if (pobjframe->pddsZBuffer != NULL)
+                {
+                    // Blit to the z buffer.	
+                    backBufferZ->BltFast(bltleft, blttop, pobjframe->pddsZBuffer, &rcUpdate, DDBLTFAST_NOCOLORKEY);
+                }
+            }
+        }
+    }
 
-				RECT rcUpdate;
-				rcUpdate.left = bltleft - pobjframe->rc.left;
-				rcUpdate.top = blttop - pobjframe->rc.top;
-				rcUpdate.right = min(pobjframe->rc.right, prc->right) - pobjframe->rc.left;
-				rcUpdate.bottom = min(pobjframe->rc.bottom, prc->bottom) - pobjframe->rc.top;
-
-				// Make sure our rectangle dimensions aren't wacky.
-				if ((rcUpdate.right > rcUpdate.left) && (rcUpdate.bottom > rcUpdate.top))
-				{
-					// Make sure we have a source color surface.
-					if (pobjframe->pdds != NULL)
-					{
-						// Blit to the backbuffer with DDraw.   
-						backBuffer->BltFast(bltleft, blttop, pobjframe->pdds, &rcUpdate, DDBLTFAST_SRCCOLORKEY);
-					}
-
-					// Make sure we have a source z surface.
-					if (pobjframe->pddsZBuffer != NULL)
-					{
-						// Blit to the z buffer.	
-						backBufferZ->BltFast(bltleft, blttop, pobjframe->pddsZBuffer, &rcUpdate, DDBLTFAST_NOCOLORKEY);
-					}
-				}
-			}
-		}
-	}
-
-   return overall_area;
+    return rect.right*rect.bottom;
 }
+
 
 void Player::FlipVideoBuffersNormal(unsigned int overall_area, bool vsync )
 {
-#define FULLBLTAREA2 (unsigned int)(m_pin3d.m_dwRenderWidth*m_pin3d.m_dwRenderHeight/8) //!! other heuristic? seems like 1/8th is good enough already?!
-
 	if ( m_nudgetime &&			// Table is being nudged.
 		 m_ptable->m_Shake )	// The "EarthShaker" effect is active.
 	{
 		// Draw with an offset to shake the display.
-
 		m_pin3d.Flip((int)m_NudgeBackX, (int)m_NudgeBackY, vsync);
-		m_fCleanBlt = fFalse;
 	}
-	else
-	{
-		if (m_fCleanBlt && (overall_area < FULLBLTAREA2)) //!! last check can lead to these strange super bright flashers in NBA, etc (overdraw of same stuff over and over again! -> maybe due to backbuffer not being blitted over frontbuffer but simply flipped??) //!! only with region optimization off??
-		{
-			if(vsync)
-				g_pvp->m_pdd.m_pDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
-
-			// Smart Blit - only update the invalidated areas
-			for (int i=0;i<m_vupdaterect.Size();i++)
-			{
-				UpdateRect * const pur = m_vupdaterect.ElementAt(i);
-				RECT * const prc = &pur->m_rcupdate;
-
-				RECT rcNew;
-				rcNew.left = prc->left + m_pin3d.m_rcUpdate.left;
-				rcNew.right = prc->right + m_pin3d.m_rcUpdate.left;
-				rcNew.top = prc->top + m_pin3d.m_rcUpdate.top;
-				rcNew.bottom = prc->bottom + m_pin3d.m_rcUpdate.top;
-
-				if(rcNew.right > rcNew.left && rcNew.bottom > rcNew.top)
-					m_pin3d.m_pddsFrontBuffer->Blt(&rcNew, m_pin3d.m_pddsBackBuffer, prc, 0, NULL); 
-
-            //this must be tested a bit more...seems to speed up some tables but can produce black screens on startup?!?
-            //if you use this be sure to disable the clipper in fullscreen mode -> see Pin3d::InitDD()
-/*            if( !firstRun && m_pin3d.fullscreen)
-            {
-
-               prc->top = max(prc->top, 0);
-               prc->left = max(prc->left, 0);
-               prc->right = min(prc->right, m_pin3d.m_dwRenderWidth-1);
-               prc->bottom = min(prc->bottom, m_pin3d.m_dwRenderHeight-1);
-
-               rcNew.left = max(rcNew.left, 0);
-               rcNew.top = max(rcNew.top, 0);
-               // Copy the region from the back buffer to the front buffer.
-               if ( prc->right>prc->left && prc->bottom>prc->top )
-               {
-                  HRESULT hr = m_pin3d.m_pddsFrontBuffer->BltFast(rcNew.left, rcNew.top, m_pin3d.m_pddsBackBuffer, prc, 0);
-                  if ( FAILED(hr))
-                  {
-                     char buff[256];
-                     sprintf(buff,"error code %08X  newLeft:%i newTop:%i left:%i right:%i top:%i bottom:%i",hr,rcNew.left, rcNew.top, prc->left, prc->right, prc->top, prc->bottom);
-                     ShowError(buff);
-                  }
-               }
-            }
-            else
-            {
-               // a test to prevent black screens on startup...the first blit is a slow one ;)
-				   m_pin3d.m_pddsFrontBuffer->Blt(&rcNew, m_pin3d.m_pddsBackBuffer, prc, 0, NULL); 
-               firstRun=false;
-            }
-*/
-			}
-		}
-		else
-		{
-			// Copy the entire back buffer to the front buffer.
-			m_pin3d.Flip(0, 0, vsync);
-
-			// Flag that we only need to update regions from now on...
-			if((m_fEnableRegionUpdates && (m_ptable->m_TableRegionUpdates == -1)) || (m_ptable->m_TableRegionUpdates == 1))
-				m_fCleanBlt = fTrue;
-		}
-	}
+    else
+        m_pin3d.Flip(0, 0, vsync);
 }
+
 
 void Player::FlipVideoBuffers3D( unsigned int overall_area )
 {
@@ -2576,178 +2434,155 @@ void Player::FlipVideoBuffers3D( unsigned int overall_area )
 //bool firstRun=true;
 void Player::Render()
 {
-	// On Win95 when there are no balls, frame updates happen so fast the blitter gets stuck
-	const int cball = m_vball.Size();
-	if (cball == 0)
-	{
-		Sleep(1);
-	}
+    // On Win95 when there are no balls, frame updates happen so fast the blitter gets stuck
+    const int cball = m_vball.Size();
+    if (cball == 0)
+    {
+        Sleep(1);
+    }
 
-	if (m_sleeptime > 0)
-	{
-		Sleep(m_sleeptime - 1);
-	}
+    if (m_sleeptime > 0)
+    {
+        Sleep(m_sleeptime - 1);
+    }
 
-	if (m_fCheckBlt) // Don't calculate the next frame if the last one isn't done blitting yet
-	{
-		const HRESULT hrdone = m_pin3d.m_pddsFrontBuffer->GetBltStatus(DDGBS_ISBLTDONE);
+    if (m_fCheckBlt) // Don't calculate the next frame if the last one isn't done blitting yet
+    {
+        const HRESULT hrdone = m_pin3d.m_pddsFrontBuffer->GetBltStatus(DDGBS_ISBLTDONE);
 
-		if (hrdone != DD_OK)
-		{
-			//Sleep(1);
-			return;
-		}
-	}
+        if (hrdone != DD_OK)
+        {
+            //Sleep(1);
+            return;
+        }
+    }
 
 #ifdef ANTI_TEAR
-	static U64 sync;
+    static U64 sync;
 
-	if( sync ) // Spin the CPU to prevent from running graphics faster than necessary
-	{
-		while( usec() - sync < 16666 ) { ; } // ~60 fps
-	}
-	sync = usec();
+    if( sync ) // Spin the CPU to prevent from running graphics faster than necessary
+    {
+        while( usec() - sync < 16666 ) { ; } // ~60 fps
+    }
+    sync = usec();
 #endif
 
-	//
-
-	for (int iball=0;iball<cball;iball++)
-	{
-		Ball * const pball = m_vball.ElementAt(iball);
-
-		if (pball->m_fErase) // Need to clear the ball off the playfield
-			EraseBall(pball);
-	}
-
-	// Erase the mixer volume.
-	mixer_erase();
-	// Plumb only (broken?) debug code
+    // Erase the mixer volume.
+    mixer_erase();
+    // Plumb only (broken?) debug code
     plumb_erase();
 
 #ifdef _DEBUGPHYSICS
-	c_collisioncnt = 0; 
-	c_hitcnts = 0;
-	c_contactcnt = 0;
-	c_staticcnt = 0;
+    c_collisioncnt = 0; 
+    c_hitcnts = 0;
+    c_contactcnt = 0;
+    c_staticcnt = 0;
 #endif
 
-	///+++++++++++++++++++++++++++++++++++++++++++++++++++++
+    ///+++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     UpdatePhysics();
     if( m_useAA )
-      m_pin3d.SetRenderTarget(m_pin3d.antiAliasTexture, m_pin3d.m_pddsZBuffer );
+        m_pin3d.SetRenderTarget(m_pin3d.antiAliasTexture, m_pin3d.m_pddsZBuffer );
 
-	// This only invalidates all of the new Ball regions upfront, which is needed due to the double buffering of DX7 to properly invalidate -all- regions (i.e. reblit the static buffer beforehand!). This can be removed as soon as region updates of the back/frontbuffer are deprecated and always the full static/backbuffer are blitted each frame!
-	DrawBalls(true);
+    m_LastKnownGoodCounter++;
 
-	m_LastKnownGoodCounter++;
+    unsigned int overall_area = CheckAndUpdateRegions();
+    RenderDynamics();
 
-   unsigned int overall_area = CheckAndUpdateRegions();
-   RenderDynamics();
-
-   if ( m_useAA )
-    m_pin3d.AntiAliasingScene();
+    if ( m_useAA )
+        m_pin3d.AntiAliasingScene();
 
     // Check if we should turn animate the plunger light.
     hid_set_output ( HID_OUTPUT_PLUNGER, ((m_time_msec - m_LastPlungerHit) < 512) && ((m_time_msec & 512) > 0) );
 
-	// Check if we are mirrored.
-	if ( m_ptable->m_tblMirrorEnabled )
-	{
-		// Mirroring only works if we mirror the entire backbuffer.
-		// Flag to draw the entire backbuffer.
-		m_fCleanBlt = fFalse;
-	}
+    // Check if we are mirrored.
+    if ( m_ptable->m_tblMirrorEnabled )
+    {
+        // Mirroring only works if we mirror the entire backbuffer.
+        // Flag to draw the entire backbuffer.
+        m_fCleanBlt = fFalse;
+    }
 
-	//
+    //
 
-	const unsigned int localvsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
+    const unsigned int localvsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
 
-   bool vsync = false;
-   if(localvsync > 0)
-   {
-      if(localvsync == 1) // legacy auto-detection
-      {
-         if(m_fps > m_refreshrate*ADAPT_VSYNC_FACTOR)
-            vsync = true;
-      }
-      else
-         if(m_fps > localvsync*ADAPT_VSYNC_FACTOR)
-            vsync = true;
-   }
+    bool vsync = false;
+    if(localvsync > 0)
+    {
+        if(localvsync == 1) // legacy auto-detection
+        {
+            if(m_fps > m_refreshrate*ADAPT_VSYNC_FACTOR)
+                vsync = true;
+        }
+        else
+            if(m_fps > localvsync*ADAPT_VSYNC_FACTOR)
+                vsync = true;
+    }
 
 
-  if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (m_fFXAA == 0)) || (m_pin3d.m_maxSeparation <= 0.0f) || (m_pin3d.m_maxSeparation >= 1.0f) || (m_pin3d.m_ZPD <= 0.0f) || (m_pin3d.m_ZPD >= 1.0f) || !m_pin3d.m_pdds3Dbuffercopy || !m_pin3d.m_pdds3DBackBuffer)
-  {
-     FlipVideoBuffersNormal( overall_area, vsync );
-  }
-  else
-  {
-     FlipVideoBuffers3D(overall_area);
-  }
-
-	// Remove the list of update regions.
-	// Note:  The balls, mixer, etc. update rects are removed here as well...
-	//        so for the clear, this is regenerated on the beginning of the next frame.
-	for (int i=0;i<m_vupdaterect.Size();i++)
-	{
-		UpdateRect * const pur = m_vupdaterect.ElementAt(i);
-		delete pur;
-	}
-	m_vupdaterect.RemoveAllElements();
+    if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (m_fFXAA == 0)) || (m_pin3d.m_maxSeparation <= 0.0f) || (m_pin3d.m_maxSeparation >= 1.0f) || (m_pin3d.m_ZPD <= 0.0f) || (m_pin3d.m_ZPD >= 1.0f) || !m_pin3d.m_pdds3Dbuffercopy || !m_pin3d.m_pdds3DBackBuffer)
+    {
+        FlipVideoBuffersNormal( overall_area, vsync );
+    }
+    else
+    {
+        FlipVideoBuffers3D(overall_area);
+    }
 
 #ifndef ACCURATETIMERS
-	m_pactiveball = NULL;  // No ball is the active ball for timers/key events
+    m_pactiveball = NULL;  // No ball is the active ball for timers/key events
 
-	for (int i=0;i<m_vht.Size();i++)
-	{
-		HitTimer * const pht = m_vht.ElementAt(i);
-		if (pht->m_nextfire <= m_time_msec)
-		{
-			pht->m_pfe->FireGroupEvent(DISPID_TimerEvents_Timer);
-			pht->m_nextfire += pht->m_interval;
-		}
-	}
+    for (int i=0;i<m_vht.Size();i++)
+    {
+        HitTimer * const pht = m_vht.ElementAt(i);
+        if (pht->m_nextfire <= m_time_msec)
+        {
+            pht->m_pfe->FireGroupEvent(DISPID_TimerEvents_Timer);
+            pht->m_nextfire += pht->m_interval;
+        }
+    }
 #endif
 
 #ifdef ULTRAPIN
-	// Draw hack lights.
-	DrawLightHack();
+    // Draw hack lights.
+    DrawLightHack();
 #endif
 
-	// Update music stream
-	if (m_pxap)
-	{
-		if (!m_pxap->Tick())
-		{
-			delete m_pxap;
-			m_pxap = NULL;
-			m_ptable->FireVoidEvent(DISPID_GameEvents_MusicDone);
-		}
-	}
+    // Update music stream
+    if (m_pxap)
+    {
+        if (!m_pxap->Tick())
+        {
+            delete m_pxap;
+            m_pxap = NULL;
+            m_ptable->FireVoidEvent(DISPID_GameEvents_MusicDone);
+        }
+    }
 
-	for (int i=0;i<m_vballDelete.Size();i++)
-	{
-		Ball * const pball = m_vballDelete.ElementAt(i);
-		delete pball->m_vpVolObjs;
-		delete pball;
-	}
+    for (int i=0;i<m_vballDelete.Size();i++)
+    {
+        Ball * const pball = m_vballDelete.ElementAt(i);
+        delete pball->m_vpVolObjs;
+        delete pball;
+    }
 
-	m_vballDelete.RemoveAllElements();
+    m_vballDelete.RemoveAllElements();
 
 #ifdef FPS
-	if (m_fShowFPS)
-	{
-		static U32 stamp;
-		static U32 period;
-		HDC hdcNull = GetDC(NULL);
-		char szFoo[128];
+    if (m_fShowFPS)
+    {
+        static U32 stamp;
+        static U32 period;
+        HDC hdcNull = GetDC(NULL);
+        char szFoo[128];
 
-		// Draw the amount of video memory used.
-		int len = sprintf_s(szFoo, " Used Graphics Memory: %.2f MB ", (float)NumVideoBytes/(float)(1024*1024));
-		TextOut(hdcNull, 10, 30, szFoo, len);
+        // Draw the amount of video memory used.
+        int len = sprintf_s(szFoo, " Used Graphics Memory: %.2f MB ", (float)NumVideoBytes/(float)(1024*1024));
+        TextOut(hdcNull, 10, 30, szFoo, len);
 
-		// Draw the framerate.
+        // Draw the framerate.
         int len2 = sprintf_s(szFoo, " FPS: %d FPS(avg): %d", m_fps,m_fpsAvg/m_fpsCount);
         if( len2>=0 )
         {
@@ -2756,123 +2591,123 @@ void Player::Render()
             TextOut(hdcNull, 10, 10, szFoo, len);
         }
 
-		const U32 curr_msec = msec();
-		period = curr_msec-stamp;
-		stamp = curr_msec;
-		if( period > m_max ) m_max = period;
-		if( phys_period > m_phys_max ) m_phys_max = phys_period;
-		if( phys_iterations > m_phys_max_iterations ) m_phys_max_iterations = phys_iterations;
-		if( m_count == 0 )
-		{
-			m_total = period;
-			m_phys_total = phys_period;
-			m_phys_total_iterations = phys_iterations;
-			m_count = 1;
-		}
-		else
-		{
-			m_total += period;
-			m_phys_total += phys_period;
-			m_phys_total_iterations += phys_iterations;
-			m_count++;
-		}
+        const U32 curr_msec = msec();
+        period = curr_msec-stamp;
+        stamp = curr_msec;
+        if( period > m_max ) m_max = period;
+        if( phys_period > m_phys_max ) m_phys_max = phys_period;
+        if( phys_iterations > m_phys_max_iterations ) m_phys_max_iterations = phys_iterations;
+        if( m_count == 0 )
+        {
+            m_total = period;
+            m_phys_total = phys_period;
+            m_phys_total_iterations = phys_iterations;
+            m_count = 1;
+        }
+        else
+        {
+            m_total += period;
+            m_phys_total += phys_period;
+            m_phys_total_iterations += phys_iterations;
+            m_count++;
+        }
 
 #ifdef DEBUG_FPS
-		{
+        {
 #define TSIZE 20
-			static int period[TSIZE];
-			static int speriod[TSIZE];
-			static int idx;
+            static int period[TSIZE];
+            static int speriod[TSIZE];
+            static int idx;
 
-			period[idx] = period;
-			idx++;
-			if( idx >= TSIZE ) idx = 0;
+            period[idx] = period;
+            idx++;
+            if( idx >= TSIZE ) idx = 0;
 
-			for(int i=0; i<TSIZE; i++)
-			{
-				len = sprintf_s( szFoo, " %d ", period[i] );
-				TextOut( hdcNull,  20 + i * 20, 10 + period[i], szFoo, len );
-			}
-		}
+            for(int i=0; i<TSIZE; i++)
+            {
+                len = sprintf_s( szFoo, " %d ", period[i] );
+                TextOut( hdcNull,  20 + i * 20, 10 + period[i], szFoo, len );
+            }
+        }
 #endif
 
 #ifdef _DEBUGPHYSICS
-		len = sprintf_s(szFoo, sizeof(szFoo), "period: %3d ms (%3d avg %10d max)      ",
-		period, (U32)( m_total / m_count ), (U32) m_max );
-		TextOut(hdcNull, 10, 120, szFoo, len);
+        len = sprintf_s(szFoo, sizeof(szFoo), "period: %3d ms (%3d avg %10d max)      ",
+                period, (U32)( m_total / m_count ), (U32) m_max );
+        TextOut(hdcNull, 10, 120, szFoo, len);
 
-		len = sprintf_s(szFoo, sizeof(szFoo), "physTimes %10d uS(%12d avg %12d max)    ",
-			   	(U32)phys_period,
-			   	(U32)(m_phys_total / m_count),
-			   	m_phys_max );
-		TextOut(hdcNull, 10, 140, szFoo, len);
+        len = sprintf_s(szFoo, sizeof(szFoo), "physTimes %10d uS(%12d avg %12d max)    ",
+                (U32)phys_period,
+                (U32)(m_phys_total / m_count),
+                m_phys_max );
+        TextOut(hdcNull, 10, 140, szFoo, len);
 
-		len = sprintf_s(szFoo, sizeof(szFoo), "phys:%5d iterations(%5d avg %5d max))   ",
-			   	phys_iterations,
-			   	(U32)( m_phys_total_iterations / m_count ),
-				(U32)m_phys_max_iterations );
-		TextOut(hdcNull, 10, 160, szFoo, len);
+        len = sprintf_s(szFoo, sizeof(szFoo), "phys:%5d iterations(%5d avg %5d max))   ",
+                phys_iterations,
+                (U32)( m_phys_total_iterations / m_count ),
+                (U32)m_phys_max_iterations );
+        TextOut(hdcNull, 10, 160, szFoo, len);
 
-		len = sprintf_s(szFoo, sizeof(szFoo), "Hits:%5d Collide:%5d Ctacs:%5d Static:%5d Embed: %5d    ",
-		c_hitcnts, c_collisioncnt, c_contactcnt, c_staticcnt, c_embedcnts);
-		TextOut(hdcNull, 10, 180, szFoo, len);
+        len = sprintf_s(szFoo, sizeof(szFoo), "Hits:%5d Collide:%5d Ctacs:%5d Static:%5d Embed: %5d    ",
+                c_hitcnts, c_collisioncnt, c_contactcnt, c_staticcnt, c_embedcnts);
+        TextOut(hdcNull, 10, 180, szFoo, len);
 #endif
-		ReleaseDC(NULL, hdcNull);
-		}
+        ReleaseDC(NULL, hdcNull);
+    }
 #endif
 
-	if ((m_PauseTimeTarget > 0) && (m_PauseTimeTarget <= m_time_msec))
-	{
-		m_PauseTimeTarget = 0;
-		m_fUserDebugPaused = true;
-		RecomputePseudoPauseState();
-		SendMessage(m_hwndDebugger, RECOMPUTEBUTTONCHECK, 0, 0);
-	}
+    if ((m_PauseTimeTarget > 0) && (m_PauseTimeTarget <= m_time_msec))
+    {
+        m_PauseTimeTarget = 0;
+        m_fUserDebugPaused = true;
+        RecomputePseudoPauseState();
+        SendMessage(m_hwndDebugger, RECOMPUTEBUTTONCHECK, 0, 0);
+    }
 
-	if (m_ptable->m_pcv->m_fScriptError)
-	{
-		 // Crash back to the editor
-		SendMessage(m_hwnd, WM_CLOSE, 0, 0);
-	}
-	else 
-	{
-		if (m_fCloseDown)
-		{
-			PauseMusic();
+    if (m_ptable->m_pcv->m_fScriptError)
+    {
+        // Crash back to the editor
+        SendMessage(m_hwnd, WM_CLOSE, 0, 0);
+    }
+    else 
+    {
+        if (m_fCloseDown)
+        {
+            PauseMusic();
 
-			int option;
+            int option;
 
-			if(m_fCloseType == 2) 
-			{
-				exit(-9999); // blast into space
-			}
-			else if( !VPinball::m_open_minimized && m_fCloseType == 0)
-			{
-				option = DialogBox(g_hinst, MAKEINTRESOURCE(IDD_GAMEPAUSE), m_hwnd, PauseProc);
-			}
-			else //m_fCloseType == all others
-			{
-				option = ID_QUIT;
-				SendMessage(g_pvp->m_hwnd, WM_COMMAND, ID_FILE_EXIT, NULL );
-			}
+            if(m_fCloseType == 2) 
+            {
+                exit(-9999); // blast into space
+            }
+            else if( !VPinball::m_open_minimized && m_fCloseType == 0)
+            {
+                option = DialogBox(g_hinst, MAKEINTRESOURCE(IDD_GAMEPAUSE), m_hwnd, PauseProc);
+            }
+            else //m_fCloseType == all others
+            {
+                option = ID_QUIT;
+                SendMessage(g_pvp->m_hwnd, WM_COMMAND, ID_FILE_EXIT, NULL );
+            }
 
-			m_fCloseDown = fFalse;
-			m_fNoTimeCorrect = fTrue; // Skip the time we were in the dialog
-			UnpauseMusic();
-			if (option == ID_QUIT)
-			{
-				SendMessage(m_hwnd, WM_CLOSE, 0, 0); // This line returns to the editor after exiting a table
+            m_fCloseDown = fFalse;
+            m_fNoTimeCorrect = fTrue; // Skip the time we were in the dialog
+            UnpauseMusic();
+            if (option == ID_QUIT)
+            {
+                SendMessage(m_hwnd, WM_CLOSE, 0, 0); // This line returns to the editor after exiting a table
 
-   				//unload VPM - works first time, crashes after rendering animations next time vpm is loaded by script
-				/*HMODULE hmod;
-				do {
-					hmod=GetModuleHandle("VPinMAME.dll");
-				} while(hmod != NULL && FreeLibrary(hmod));*/
-			}
-		}
-	}
-	///// Don't put anything here - the ID_QUIT check must be the last thing done
-	///// in this function
+                //unload VPM - works first time, crashes after rendering animations next time vpm is loaded by script
+                /*HMODULE hmod;
+                  do {
+                  hmod=GetModuleHandle("VPinMAME.dll");
+                  } while(hmod != NULL && FreeLibrary(hmod));*/
+            }
+        }
+    }
+    ///// Don't put anything here - the ID_QUIT check must be the last thing done
+    ///// in this function
 }
 
 void Player::PauseMusic()
@@ -3149,161 +2984,139 @@ void Player::DrawBallLogo(Ball * const pball)
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 }
 
-void Player::DrawBalls(const bool only_invalidate_regions)
+
+void Player::DrawBalls()
 {
-   bool drawReflection = m_ptable->m_useReflectionForBalls==fTrue;
+    bool drawReflection = m_ptable->m_useReflectionForBalls==fTrue;
 
-	if(!only_invalidate_regions)
-	{
-        m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREPERSPECTIVE, FALSE );
-		m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_ADDRESS, D3DTADDRESS_CLAMP);
+    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREPERSPECTIVE, FALSE );
+    m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_ADDRESS, D3DTADDRESS_CLAMP);
 
-		m_pin3d.EnableAlphaTestReference( 0x0000001 );
-		m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-		m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
-		m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MINFILTER, D3DTFN_LINEAR);
-	}
+    m_pin3d.EnableAlphaTestReference( 0x0000001 );
+    m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
+    m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MINFILTER, D3DTFN_LINEAR);
 
-	const float sn = sinf(m_pin3d.m_inclination);
-	const float cs = cosf(m_pin3d.m_inclination);
+    const float sn = sinf(m_pin3d.m_inclination);
+    const float cs = cosf(m_pin3d.m_inclination);
 
-	for (int i=0; i<m_vball.Size(); i++)
-	{
- 	  Ball * const pball = m_vball.ElementAt(i);
-      // just calculate the vertices once!
-      float zheight = (!pball->fFrozen) ? pball->z : (pball->z - pball->radius);
+    for (int i=0; i<m_vball.Size(); i++)
+    {
+        Ball * const pball = m_vball.ElementAt(i);
+        // just calculate the vertices once!
+        float zheight = (!pball->fFrozen) ? pball->z : (pball->z - pball->radius);
 
-      float maxz = pball->defaultZ+3.0f;
-      float minz = pball->defaultZ-1.0f;
-      if( m_ptable->m_useReflectionForBalls )
-      {
-         // don't draw reflection if the ball is not on the playfield (e.g. on a ramp/kicker)
-         if( (zheight > maxz) || (pball->z < minz) )
-         {
-            drawReflection=false;
-         }
-      }
-      if( (zheight > maxz) || (pball->z < minz) )
-      {
-         // scaling the ball height by the z scale value results in a flying ball over the playfield/ramp
-         // by reducing it with 0.96f (a factor found by trial'n error) the ball is on the ramp again
-         if ( m_ptable->m_zScale!=1.0f )
-         {
-            zheight *= (m_ptable->m_zScale*0.96f); 
-         }
-      }
+        float maxz = pball->defaultZ+3.0f;
+        float minz = pball->defaultZ-1.0f;
+        if( m_ptable->m_useReflectionForBalls )
+        {
+            // don't draw reflection if the ball is not on the playfield (e.g. on a ramp/kicker)
+            if( (zheight > maxz) || (pball->z < minz) )
+            {
+                drawReflection=false;
+            }
+        }
+        if( (zheight > maxz) || (pball->z < minz) )
+        {
+            // scaling the ball height by the z scale value results in a flying ball over the playfield/ramp
+            // by reducing it with 0.96f (a factor found by trial'n error) the ball is on the ramp again
+            if ( m_ptable->m_zScale!=1.0f )
+            {
+                zheight *= (m_ptable->m_zScale*0.96f); 
+            }
+        }
 
-      if( only_invalidate_regions )
-      {
-         const float radiusX = pball->radius * m_BallStretchX;
-         const float radiusY = pball->radius * m_BallStretchY;
-         Vertex3D_NoTex2 * const rgv3D = pball->vertices;
-         rgv3D[0].x = pball->x - radiusX;
-         rgv3D[0].y = pball->y - (radiusY * cs);
-         rgv3D[0].z = zheight+ (pball->radius * sn);
+        const float radiusX = pball->radius * m_BallStretchX;
+        const float radiusY = pball->radius * m_BallStretchY;
+        Vertex3D_NoTex2 * const rgv3D = pball->vertices;
+        rgv3D[0].x = pball->x - radiusX;
+        rgv3D[0].y = pball->y - (radiusY * cs);
+        rgv3D[0].z = zheight+ (pball->radius * sn);
 
-         rgv3D[1].x = pball->x + radiusX;
-         rgv3D[1].y = pball->y - (radiusY * cs);
-         rgv3D[1].z = zheight + (pball->radius * sn);
+        rgv3D[1].x = pball->x + radiusX;
+        rgv3D[1].y = pball->y - (radiusY * cs);
+        rgv3D[1].z = zheight + (pball->radius * sn);
 
-         rgv3D[2].x = pball->x + radiusX;
-         rgv3D[2].y = pball->y + (radiusY * cs);
-         rgv3D[2].z = zheight - (pball->radius * sn);
+        rgv3D[2].x = pball->x + radiusX;
+        rgv3D[2].y = pball->y + (radiusY * cs);
+        rgv3D[2].z = zheight - (pball->radius * sn);
 
-         rgv3D[3].x = pball->x - radiusX;
-         rgv3D[3].y = pball->y + (radiusY * cs);
-         rgv3D[3].z = zheight  - (pball->radius * sn);
-         memcpy( pball->reflectVerts, rgv3D, sizeof(Vertex3D_NoTex2)*4);
-         if ( drawReflection )
-         {
+        rgv3D[3].x = pball->x - radiusX;
+        rgv3D[3].y = pball->y + (radiusY * cs);
+        rgv3D[3].z = zheight  - (pball->radius * sn);
+        memcpy( pball->reflectVerts, rgv3D, sizeof(Vertex3D_NoTex2)*4);
+        if ( drawReflection )
+        {
             pball->reflectVerts[0].y = rgv3D[2].y - (rgv3D[2].y-rgv3D[0].y)*0.5f;
             pball->reflectVerts[1].y = rgv3D[3].y - (rgv3D[3].y-rgv3D[1].y)*0.5f;
             pball->reflectVerts[2].y = pball->reflectVerts[0].y + (rgv3D[2].y-rgv3D[0].y)*1.1f;
             pball->reflectVerts[3].y = pball->reflectVerts[1].y + (rgv3D[3].y-rgv3D[1].y)*1.1f;
             pball->reflectVerts[0].z = pball->reflectVerts[1].z = pball->reflectVerts[2].z = pball->reflectVerts[3].z-3.0f;
-         }
-      }
+        }
 
-		// prepare the vertex buffer for all possible options (ball,logo,shadow)
+        // prepare the vertex buffer for all possible options (ball,logo,shadow)
         Vertex3D_NoTex2 *buf;
-		if(!only_invalidate_regions)
-		{
-         Ball::vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
-		 memcpy( buf, pball->vertices, sizeof(Vertex3D_NoTex2)*4 );
-         if ( m_ptable->m_useReflectionForBalls )
+        Ball::vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+        memcpy( buf, pball->vertices, sizeof(Vertex3D_NoTex2)*4 );
+        if ( m_ptable->m_useReflectionForBalls )
             memcpy( &buf[16], pball->reflectVerts, sizeof(Vertex3D_NoTex2)*4 );
-		}
 
-		if (m_fBallShadows)
-           CalcBallShadow(pball, only_invalidate_regions ? NULL : &buf[12]);
+        if (m_fBallShadows)
+            CalcBallShadow(pball, &buf[12]);
 
-		if(only_invalidate_regions)
-		{
-	     // Mark ball rect as dirty for blitting to the screen
-		 m_pin3d.ClearExtents(&pball->m_rcScreen, NULL, NULL);
-         m_pin3d.ExpandExtentsPlus(&pball->m_rcScreen, pball->vertices, NULL, NULL, 4, fFalse);
-         if( m_ptable->m_useReflectionForBalls )
-         {
-            m_pin3d.ClearExtents(&pball->m_rcReflection, NULL, NULL);
-            m_pin3d.ExpandExtentsPlus(&pball->m_rcReflection, pball->reflectVerts, NULL, NULL, 4, fFalse);
-         }
-		}
+        if (m_fBallDecals && (pball->m_pinFront || pball->m_pinBack))
+            CalcBallLogo(pball, &buf[4]);
 
-		if (m_fBallDecals && (pball->m_pinFront || pball->m_pinBack))
-            CalcBallLogo(pball, only_invalidate_regions ? NULL : &buf[4]);
+        Ball::vertexBuffer->unlock();
 
-		if(!only_invalidate_regions)
-		{
-		 Ball::vertexBuffer->unlock();
+        pball->logoMaterial.setDiffuse( 0.8f, pball->m_color );
+        pball->logoMaterial.setAmbient( 0.8f, pball->m_color );
+        pball->material.setColor( 1.0f, pball->m_color );
+        pball->material.set();
 
-         pball->logoMaterial.setDiffuse( 0.8f, pball->m_color );
-         pball->logoMaterial.setAmbient( 0.8f, pball->m_color );
-         pball->material.setColor( 1.0f, pball->m_color );
-         pball->material.set();
+        // now render the ball with the vertex buffer data
+        if (m_fBallShadows && m_fBallAntialias)
+            DrawBallShadow(pball);
 
-		 // now render the ball with the vertex buffer data
-		 if (m_fBallShadows && m_fBallAntialias)
-			DrawBallShadow(pball);
-
-         if( !pball->m_pin )
+        if( !pball->m_pin )
             m_pin3d.ballTexture.Set( ePictureTexture );
-         else
+        else
             pball->m_pin->Set( ePictureTexture );
 
-		 if (m_fBallAntialias)
-		 {
-		    m_pin3d.SetColorKeyEnabled(FALSE);
-			m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
+        if (m_fBallAntialias)
+        {
+            m_pin3d.SetColorKeyEnabled(FALSE);
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
             if ( !drawReflection )
             {
-			   m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
-			   m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
             }
-			m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
-		 }
-		 else
-		 {
-			m_pin3d.SetColorKeyEnabled(TRUE);
-			m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-			m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_NONE);
-		 }
+            m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
+        }
+        else
+        {
+            m_pin3d.SetColorKeyEnabled(TRUE);
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+            m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_NONE);
+        }
 
-		 // reflection of ball
-         if( drawReflection && m_fBallAntialias )
-         {
+        // reflection of ball
+        if( drawReflection && m_fBallAntialias )
+        {
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_DESTALPHA);
 
-			const DWORD strength = m_ptable->m_ballReflectionStrength;
-			DWORD factor;
-			if(!pball->m_disableLighting)
-			    factor = (strength<<24) | (strength<<16) | (strength<<8) | strength;
-			else
-			    factor = (strength<<24) | (strength*(pball->m_color>>16)/255) | ((strength*((pball->m_color>>8)&255)/255)<<8) | ((strength*(pball->m_color&255)/255)<<16);
-		    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, factor);
-			m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
+            const DWORD strength = m_ptable->m_ballReflectionStrength;
+            DWORD factor;
+            if(!pball->m_disableLighting)
+                factor = (strength<<24) | (strength<<16) | (strength<<8) | strength;
+            else
+                factor = (strength<<24) | (strength*(pball->m_color>>16)/255) | ((strength*((pball->m_color>>8)&255)/255)<<8) | ((strength*(pball->m_color&255)/255)<<16);
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, factor);
+            m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
 
             m_pin3d.m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, pball->vertexBuffer, 16, 4, (LPWORD)rgi0123, 4, 0 );
 
@@ -3311,255 +3124,183 @@ void Player::DrawBalls(const bool only_invalidate_regions)
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA);
-         }
+        }
 
-		 if(pball->m_disableLighting)
-		 {
-		    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
-			m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
-		 }
+        if(pball->m_disableLighting)
+        {
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
+            m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
+        }
 
-		 // normal ball
-         m_pin3d.m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, pball->vertexBuffer, 0, 4, (LPWORD)rgi0123, 4, 0 );
+        // normal ball
+        m_pin3d.m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, pball->vertexBuffer, 0, 4, (LPWORD)rgi0123, 4, 0 );
 
-		 if(pball->m_disableLighting)
-		 {
+        if(pball->m_disableLighting)
+        {
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-		 }
+        }
 
-		 // ball trails //!! misses lighting disabled part!
-		 if( m_ptable->m_useTrailForBalls==fTrue && m_fBallAntialias )
-         {
-			m_pin3d.ClearExtents(&pball->m_rcTrail, NULL, NULL);
+        // ball trails //!! misses lighting disabled part!
+        if( m_ptable->m_useTrailForBalls==fTrue && m_fBallAntialias )
+        {
+            m_pin3d.ClearExtents(&pball->m_rcTrail, NULL, NULL);
 
-			Vertex3D_NoLighting rgv3D_all[10*2];
-			unsigned int num_rgv3D = 0;
+            Vertex3D_NoLighting rgv3D_all[10*2];
+            unsigned int num_rgv3D = 0;
 
-			for(int i2 = 0; i2 < 10-1; ++i2)
-			{
-				int i = pball->ringcounter_oldpos-1-i2;
-				if(i<0)
-					i += 10;
-				int io = i-1;
-				if(io<0)
-					io += 10;
+            for(int i2 = 0; i2 < 10-1; ++i2)
+            {
+                int i = pball->ringcounter_oldpos-1-i2;
+                if(i<0)
+                    i += 10;
+                int io = i-1;
+                if(io<0)
+                    io += 10;
 
-				if((pball->oldpos[i].x != FLT_MAX) && (pball->oldpos[io].x != FLT_MAX)) // only if already initialized
-				{
-					Vertex3Ds vec;
-					vec.x = pball->oldpos[io].x-pball->oldpos[i].x;
-					vec.y = pball->oldpos[io].y-pball->oldpos[i].y;
-					vec.z = pball->oldpos[io].z-pball->oldpos[i].z;
-					const unsigned int b = (unsigned int)((float)m_ptable->m_ballTrailStrength * powf(1.f-1.f/max(vec.Length(), 1.0f), 16.0f)); //!! 16=magic alpha falloff
-					const float r = min(pball->radius*0.9f, 2.0f*pball->radius/powf((float)(i2+2), 0.6f)); //!! consts are for magic radius falloff
-
-					if(b > 0 && r > FLT_MIN)
-					{
-						Vertex3Ds v = vec;
-						v.Normalize();
-						Vertex3Ds up;
-						up.x = 0.f;
-						up.y = 0.f;
-						up.z = 1.f;
-						Vertex3Ds n = CrossProduct(v,up);
-						n.x *= r;
-						n.y *= r;
-						n.z *= r;
-
-						Vertex3D_NoLighting rgv3D[4];
-						rgv3D[0].x = pball->oldpos[i].x - n.x;
-						rgv3D[0].y = pball->oldpos[i].y - n.y;
-						rgv3D[0].z = pball->oldpos[i].z - n.z;
-						rgv3D[1].x = pball->oldpos[i].x + n.x;
-						rgv3D[1].y = pball->oldpos[i].y + n.y;
-						rgv3D[1].z = pball->oldpos[i].z + n.z;
-						rgv3D[2].x = pball->oldpos[io].x + n.x;
-						rgv3D[2].y = pball->oldpos[io].y + n.y;
-						rgv3D[2].z = pball->oldpos[io].z + n.z;
-						rgv3D[3].x = pball->oldpos[io].x - n.x;
-						rgv3D[3].y = pball->oldpos[io].y - n.y;
-						rgv3D[3].z = pball->oldpos[io].z - n.z;
-
-						rgv3D[0].color = rgv3D[1].color = rgv3D[2].color = rgv3D[3].color = b | (b<<8) | (b<<16) | (b<<24);
-
-						rgv3D[0].tu = 0.5f+(float)(i2)*(float)(1.0/(2.0*(10-1)));
-						rgv3D[0].tv = 0.f;
-						rgv3D[1].tu = rgv3D[0].tu;
-						rgv3D[1].tv = 1.f;
-						rgv3D[2].tu = 0.5f+(float)(i2+1)*(float)(1.0/(2.0*(10-1)));
-						rgv3D[2].tv = 1.f;
-						rgv3D[3].tu = rgv3D[2].tu;
-						rgv3D[3].tv = 0.f;
-
-						if(num_rgv3D == 0)
-						{
-							rgv3D_all[0] = rgv3D[0];
-							rgv3D_all[1] = rgv3D[1];
-							rgv3D_all[2] = rgv3D[3];
-							rgv3D_all[3] = rgv3D[2];
-						}
-						else
-						{
-							rgv3D_all[num_rgv3D-2].x = (rgv3D[0].x+rgv3D_all[num_rgv3D-2].x)*0.5f;
-							rgv3D_all[num_rgv3D-2].y = (rgv3D[0].y+rgv3D_all[num_rgv3D-2].y)*0.5f;
-							rgv3D_all[num_rgv3D-2].z = (rgv3D[0].z+rgv3D_all[num_rgv3D-2].z)*0.5f;
-							rgv3D_all[num_rgv3D-1].x = (rgv3D[1].x+rgv3D_all[num_rgv3D-1].x)*0.5f;
-							rgv3D_all[num_rgv3D-1].y = (rgv3D[1].y+rgv3D_all[num_rgv3D-1].y)*0.5f;
-							rgv3D_all[num_rgv3D-1].z = (rgv3D[1].z+rgv3D_all[num_rgv3D-1].z)*0.5f;
-							rgv3D_all[num_rgv3D] = rgv3D[3];
-							rgv3D_all[num_rgv3D+1] = rgv3D[2];
-						}
-
-						if(num_rgv3D == 0)
-							num_rgv3D += 4;
-						else
-							num_rgv3D += 2;
-					}
-				}
-			}
-
-			static const WORD rgi_all[10*2] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
-
-			if(num_rgv3D > 0)
-			{
-				m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
-				m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
-				m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
-				m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_DESTALPHA);
-				m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
-
-				m_pin3d.m_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_NOLIGHTING_VERTEX, rgv3D_all, num_rgv3D, (LPWORD)rgi_all, num_rgv3D, 0);
-
-				m_pin3d.ExpandExtents/*Plus*/(&pball->m_rcTrail, rgv3D_all, NULL, NULL, num_rgv3D, fFalse);
-
-				m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
-				m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-				m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA);
-			}
-         }
-
-		 if(pball->m_disableLighting)
-		 {
-		    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
-			m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
-		 }
-
-		 if (m_fBallDecals && (pball->m_pinFront || pball->m_pinBack))
-		    DrawBallLogo(pball);
-
-		 if(pball->m_disableLighting)
-		 {
-            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
-            m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-		 }
-		}
-
-        pball->m_fErase = true;
-
-		if (m_fBallShadows)
-		{
-			if(only_invalidate_regions)
-			{
-				m_pin3d.ClearExtents(&pball->m_rcScreenShadow, NULL, NULL);
-				m_pin3d.ExpandExtentsPlus(&pball->m_rcScreenShadow, pball->m_rgv3DShadow, NULL, NULL, 4, fFalse);
-
-				if (fIntRectIntersect(pball->m_rcScreen, pball->m_rcScreenShadow))
-				{
-					pball->m_rcScreen.left = min(pball->m_rcScreen.left, pball->m_rcScreenShadow.left);
-					pball->m_rcScreen.top = min(pball->m_rcScreen.top, pball->m_rcScreenShadow.top);
-					pball->m_rcScreen.right = max(pball->m_rcScreen.right, pball->m_rcScreenShadow.right);
-					pball->m_rcScreen.bottom = max(pball->m_rcScreen.bottom, pball->m_rcScreenShadow.bottom);
-				}
-				else
-					InvalidateRect(&pball->m_rcScreenShadow);
-			}
-
-		    if (!m_fBallAntialias)
-			{
-	 		    if(pball->m_disableLighting)
+                if((pball->oldpos[i].x != FLT_MAX) && (pball->oldpos[io].x != FLT_MAX)) // only if already initialized
                 {
-		            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
-				    m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
+                    Vertex3Ds vec;
+                    vec.x = pball->oldpos[io].x-pball->oldpos[i].x;
+                    vec.y = pball->oldpos[io].y-pball->oldpos[i].y;
+                    vec.z = pball->oldpos[io].z-pball->oldpos[i].z;
+                    const unsigned int b = (unsigned int)((float)m_ptable->m_ballTrailStrength * powf(1.f-1.f/max(vec.Length(), 1.0f), 16.0f)); //!! 16=magic alpha falloff
+                    const float r = min(pball->radius*0.9f, 2.0f*pball->radius/powf((float)(i2+2), 0.6f)); //!! consts are for magic radius falloff
+
+                    if(b > 0 && r > FLT_MIN)
+                    {
+                        Vertex3Ds v = vec;
+                        v.Normalize();
+                        Vertex3Ds up;
+                        up.x = 0.f;
+                        up.y = 0.f;
+                        up.z = 1.f;
+                        Vertex3Ds n = CrossProduct(v,up);
+                        n.x *= r;
+                        n.y *= r;
+                        n.z *= r;
+
+                        Vertex3D_NoLighting rgv3D[4];
+                        rgv3D[0].x = pball->oldpos[i].x - n.x;
+                        rgv3D[0].y = pball->oldpos[i].y - n.y;
+                        rgv3D[0].z = pball->oldpos[i].z - n.z;
+                        rgv3D[1].x = pball->oldpos[i].x + n.x;
+                        rgv3D[1].y = pball->oldpos[i].y + n.y;
+                        rgv3D[1].z = pball->oldpos[i].z + n.z;
+                        rgv3D[2].x = pball->oldpos[io].x + n.x;
+                        rgv3D[2].y = pball->oldpos[io].y + n.y;
+                        rgv3D[2].z = pball->oldpos[io].z + n.z;
+                        rgv3D[3].x = pball->oldpos[io].x - n.x;
+                        rgv3D[3].y = pball->oldpos[io].y - n.y;
+                        rgv3D[3].z = pball->oldpos[io].z - n.z;
+
+                        rgv3D[0].color = rgv3D[1].color = rgv3D[2].color = rgv3D[3].color = b | (b<<8) | (b<<16) | (b<<24);
+
+                        rgv3D[0].tu = 0.5f+(float)(i2)*(float)(1.0/(2.0*(10-1)));
+                        rgv3D[0].tv = 0.f;
+                        rgv3D[1].tu = rgv3D[0].tu;
+                        rgv3D[1].tv = 1.f;
+                        rgv3D[2].tu = 0.5f+(float)(i2+1)*(float)(1.0/(2.0*(10-1)));
+                        rgv3D[2].tv = 1.f;
+                        rgv3D[3].tu = rgv3D[2].tu;
+                        rgv3D[3].tv = 0.f;
+
+                        if(num_rgv3D == 0)
+                        {
+                            rgv3D_all[0] = rgv3D[0];
+                            rgv3D_all[1] = rgv3D[1];
+                            rgv3D_all[2] = rgv3D[3];
+                            rgv3D_all[3] = rgv3D[2];
+                        }
+                        else
+                        {
+                            rgv3D_all[num_rgv3D-2].x = (rgv3D[0].x+rgv3D_all[num_rgv3D-2].x)*0.5f;
+                            rgv3D_all[num_rgv3D-2].y = (rgv3D[0].y+rgv3D_all[num_rgv3D-2].y)*0.5f;
+                            rgv3D_all[num_rgv3D-2].z = (rgv3D[0].z+rgv3D_all[num_rgv3D-2].z)*0.5f;
+                            rgv3D_all[num_rgv3D-1].x = (rgv3D[1].x+rgv3D_all[num_rgv3D-1].x)*0.5f;
+                            rgv3D_all[num_rgv3D-1].y = (rgv3D[1].y+rgv3D_all[num_rgv3D-1].y)*0.5f;
+                            rgv3D_all[num_rgv3D-1].z = (rgv3D[1].z+rgv3D_all[num_rgv3D-1].z)*0.5f;
+                            rgv3D_all[num_rgv3D] = rgv3D[3];
+                            rgv3D_all[num_rgv3D+1] = rgv3D[2];
+                        }
+
+                        if(num_rgv3D == 0)
+                            num_rgv3D += 4;
+                        else
+                            num_rgv3D += 2;
+                    }
+                }
+            }
+
+            static const WORD rgi_all[10*2] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
+
+            if(num_rgv3D > 0)
+            {
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_DESTALPHA);
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
+
+                m_pin3d.m_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_NOLIGHTING_VERTEX, rgv3D_all, num_rgv3D, (LPWORD)rgi_all, num_rgv3D, 0);
+
+                m_pin3d.ExpandExtents/*Plus*/(&pball->m_rcTrail, rgv3D_all, NULL, NULL, num_rgv3D, fFalse);
+
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA);
+            }
+        }
+
+        if(pball->m_disableLighting)
+        {
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
+            m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
+        }
+
+        if (m_fBallDecals && (pball->m_pinFront || pball->m_pinBack))
+            DrawBallLogo(pball);
+
+        if(pball->m_disableLighting)
+        {
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
+            m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        }
+
+        if (m_fBallShadows)
+        {
+            if (!m_fBallAntialias)
+            {
+                if(pball->m_disableLighting)
+                {
+                    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
+                    m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
                 }
 
-				// When not antialiasing, we can get a perf win by
-				// drawing the ball first.  That way, the part of the
-				// shadow that gets obscured doesn't need to do
-				// alpha-blending
-				DrawBallShadow(pball);
-			    
-				if(pball->m_disableLighting)
+                // When not antialiasing, we can get a perf win by
+                // drawing the ball first.  That way, the part of the
+                // shadow that gets obscured doesn't need to do
+                // alpha-blending
+                DrawBallShadow(pball);
+
+                if(pball->m_disableLighting)
                 {
                     m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
-				    m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+                    m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
                 }
-			}
-		}
-
-		if(only_invalidate_regions)
-        {
-         if ( m_ptable->m_useReflectionForBalls )
-            InvalidateRect(&pball->m_rcReflection);
-         if ( m_ptable->m_useTrailForBalls )
-            InvalidateRect(&pball->m_rcTrail);
-         InvalidateRect(&pball->m_rcScreen);
+            }
         }
-	}
+    }
 
-	if(!only_invalidate_regions)
-	{
-		m_pin3d.m_pd3dDevice->SetTexture(0, NULL);
-		m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
-	}
+    m_pin3d.m_pd3dDevice->SetTexture(0, NULL);
+    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
 }
+
 
 void Player::InvalidateRect(RECT * const prc)
 {
-	if(prc->left >= prc->right || prc->top >= prc->bottom) // uninitialized or broken region?
-		return;
-	if(prc->right < 0 || prc->bottom < 0) // completely off-screen?
-		return;
-	const int width = min(GetSystemMetrics(SM_CXSCREEN), m_pin3d.m_dwRenderWidth);
-	const int height = min(GetSystemMetrics(SM_CYSCREEN), m_pin3d.m_dwRenderHeight);
-	if(prc->left >= width || prc->top >= height) // completely off-screen?
-		return;
-
-    // This assumes the caller does not need *prc any more!!!
-	// Clip regions so that blits, etc. can succeed
-    if( prc->top < 0 )
-        prc->top = 0;
-	if( prc->left < 0 )
-		prc->left = 0;
-	if( prc->bottom >= height )
-        prc->bottom = height-1;
-	if( prc->right >= width )
-        prc->right = width-1;
-
-	UpdateRect * const pur = new UpdateRect();
-	pur->m_rcupdate = *prc;
-	pur->m_fSeeThrough = fTrue;
-
-	// Check all animated objects.
-	for (int i=0;i<m_vscreenupdate.Size();++i)
-		{
-		// Get the bounds of this animated object.
-		const RECT * const prc2 = &m_vscreenupdate.ElementAt(i)->m_rcBounds;
-
-		if(/*prc->left >= prc->right ||*/ prc2->left >= prc2->right || /*prc->top >= prc->bottom ||*/ prc2->top >= prc2->bottom)
-			continue;
-
-		// Check if the bounds of the animated object are within the bounds of our invalid rectangle.
-		if ((prc->right >= prc2->left) && (prc->left <= prc2->right) && (prc->bottom >= prc2->top) && (prc->top <= prc2->bottom))
-			{
-			// Add to this rect's list of objects that need to be redrawn.
-			pur->m_vobject.AddElement(m_vscreenupdate.ElementAt(i));
-			}
-		}
-
-	// Add the rect.
-	m_vupdaterect.AddElement(pur);
 }
+
 
 #ifdef LOG
 int cTested;

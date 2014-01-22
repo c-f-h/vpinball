@@ -155,8 +155,6 @@ void Ball::Init()
    z_min = g_pplayer->m_ptable->m_tableheight + radius;
    z_max = (g_pplayer->m_ptable->m_glassheight - radius);
 
-   m_fErase = false;
-
    m_pho = NULL;
    m_fDynamic = C_DYNAMIC; // assume dynamic
 

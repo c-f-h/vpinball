@@ -119,8 +119,6 @@ public:
 
 	bool m_HitRigid;	// Rigid = 1, Non-Rigid = 0
 
-	bool m_fErase;		// set after the ball has been drawn for the first time
-
 	bool fFrozen;
 
 	bool m_disableLighting;

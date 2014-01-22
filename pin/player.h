@@ -53,7 +53,7 @@ public:
 
     void DrawBallShadow(Ball * const pball);
     void CalcBallShadow(Ball * const pball, Vertex3D_NoTex2 *vBuffer);
-    void DrawBalls(const bool only_invalidate_regions);
+    void DrawBalls();
     void DrawBallLogo(Ball * const pball );
     void CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer);
     unsigned int CheckAndUpdateRegions();
@@ -68,7 +68,6 @@ public:
 #ifdef ULTRAPIN
 	void DrawLightHack();
 #endif
-	void EraseBall(Ball *pball);
 
 	Ball *CreateBall(const float x, const float y, const float z, const float vx, const float vy, const float vz, const float radius = 25.0f);
 	void DestroyBall(Ball *pball);
