@@ -260,7 +260,7 @@ set(HEADERS
   )
 
 set(RC_RESOURCE
-  vbatest_eng.rc
+  vbatest.rc
   )
 #  vbatest.rc
 #  vbatest_fre.rc
@@ -285,7 +285,7 @@ set(RC_RESOURCE
 # generate com interfaces with midl
 ADD_CUSTOM_COMMAND(OUTPUT "${CMAKE_BINARY_DIR}/VBATest.h"
   "${CMAKE_BINARY_DIR}/VBATest.tlb" "${CMAKE_BINARY_DIR}/VBATest_i.c"
-  COMMAND midl.exe "${CMAKE_SOURCE_DIR}/vbatest.idl"
+  COMMAND midl.exe /win32 "${CMAKE_SOURCE_DIR}/vbatest.idl"
   DEPENDS "${CMAKE_SOURCE_DIR}/vbatest.idl")
 
 add_msvc_precompiled_header(stdafx.h stdafx.cpp SOURCES)
