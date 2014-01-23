@@ -852,13 +852,16 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 				if ((pe->GetItemType() == eItemRamp && ((Ramp*)pe)->m_d.m_fAlpha) ||
 					(pe->GetItemType() == eItemPrimitive && !((Primitive *)m_ptable->m_vedit.ElementAt(i))->m_d.staticRendering) ||
 					(pe->GetItemType() == eItemFlasher) ||
-					(pe->GetItemType() == eItemFlipper) )
+					(pe->GetItemType() == eItemFlipper) ||
+					(pe->GetItemType() == eItemBumper) )
 					{
 					  m_vhitalpha.AddElement(ph);
 					}
 			}
 			else
-				if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemPrimitive)
+				if ((pe->GetItemType() == eItemPrimitive) ||
+					(pe->GetItemType() == eItemFlipper) ||
+                    (pe->GetItemType() == eItemBumper))
 					{
 					  m_vhitalpha.AddElement(ph);
 					}

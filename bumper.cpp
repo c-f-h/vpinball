@@ -253,11 +253,180 @@ void Bumper::EndPlay()
    m_pbumperhitcircle = NULL;
 }
 
-void Bumper::PostRenderStatic(const RenderDevice* pd3dDevice)
+static const WORD rgiBumperStatic[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
+
+void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    // TODO: this whole method is very inefficient, needs to be optimized
+    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
+    if(!m_d.m_fVisible)	return;
+
+    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+    int k=0;
+    Vertex3D verts[8*32];
+    WORD idx[12*32];
+
+    for( int l=0;l<32*12;l+=6,k+=4 )
+    {
+        idx[l  ]= k;
+        idx[l+1]= k+1;
+        idx[l+2]= k+2;
+        idx[l+3]= k;
+        idx[l+4]= k+2;
+        idx[l+5]= k+3;
+    }
+
+    const int i = m_pbumperhitcircle->m_bumperanim.m_iframe;    // 0 = off, 1 = lit
+
+    Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
+    if (!pin) // Top solid color
+    {
+        switch (i)
+        {
+            case 0:
+                {
+                    ppin3d->SetTexture(NULL);
+                    topNonLitMaterial.set();
+                    break;
+                }
+            case 1:
+                {
+                    ppin3d->lightTexture[0].Set( ePictureTexture );
+                    ppin3d->EnableLightMap(fFalse, -1);
+                    topLitMaterial.set();
+                }
+                break;
+        }
+
+        SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32, 0);
+
+        int t=0;
+        k=0;
+        int ofs=0;
+        for (int l=0;l<32;l++,t+=6,k+=4)
+        {
+            SetNormal(&moverVertices[i][64], &normalIndices[t], 3, NULL, &indices[k], 2);
+            SetNormal(&moverVertices[i][96], &normalIndices[t], 3, NULL, &indices[k], 2);
+            SetNormal(&moverVertices[i][64], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
+            SetNormal(&moverVertices[i][96], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
+            memcpy( &verts[ofs  ], &moverVertices[i][64+indices[k  ]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+1], &moverVertices[i][64+indices[k+1]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+2], &moverVertices[i][64+indices[k+2]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+3], &moverVertices[i][64+indices[k+3]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+4], &moverVertices[i][96+indices[k  ]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+5], &moverVertices[i][96+indices[k+1]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+6], &moverVertices[i][96+indices[k+2]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
+            ofs+=8;
+        }
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32, 0);
+    }
+
+    if (m_d.m_fSideVisible)
+    {
+        const float rside = (float)(m_d.m_sidecolor & 255) * (float) (1.0/255.0);
+        const float gside = (float)(m_d.m_sidecolor & 65280) * (float) (1.0/65280.0);
+        const float bside = (float)(m_d.m_sidecolor & 16711680) * (float) (1.0/16711680.0);
+        // Side color
+        switch (i)
+        {
+            case 0:
+                {
+                    ppin3d->SetTexture(NULL);
+                    sideNonLitMaterial.set();
+                    break;
+                }
+            case 1:
+                {
+                    ppin3d->lightTexture[0].Set( ePictureTexture );
+                    ppin3d->EnableLightMap(fFalse, -1);
+                    sideLitMaterial.set();
+                    break;
+                }
+        }
+
+        int t=0;
+        int k=0;
+        for (int l=0;l<32;l++,t+=6,k+=4)
+        {
+            SetNormal(moverVertices[i], &normalIndices[t], 3, NULL, &indices[k], 2);
+            SetNormal(moverVertices[i], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
+            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,moverVertices[i],64,(LPWORD)&indices[k], 4, 0);
+        }
+    }
+
+    if (pin)
+    {
+        float maxtu, maxtv;
+        m_ptable->GetTVTU(pin, &maxtu, &maxtv);
+
+        pin->EnsureBackdrop(m_d.m_color);
+        pin->SetBackDrop( ePictureTexture );
+
+        //pd3dDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, FALSE);
+        //pd3dDevice->SetRenderState(D3DRENDERSTATE_COLORKEYENABLE, TRUE);
+
+        //pd3dDevice->SetRenderState(D3DRENDERSTATE_DITHERENABLE, FALSE);
+
+        /*// HACK!!! I think this is the last place we ever use COLORKEY instead
+        // of Alpha transparency.  We do this because the D3D software
+        // rasterizer can only handle transparency on the first texture,
+        // but we need to layer textures to light up the bitmap provided
+        // by the user.  We could solve this by creating a bitmap
+        // with the background color swapped out in a pre-processing step.*/
+
+        switch (i)
+        {
+            case 0:
+                {
+                    ppin3d->EnableLightMap(fFalse, -1);
+                    nonLitMaterial.set();
+                    break;
+                }
+
+            case 1:
+                {
+                    ppin3d->lightTexture[0].Set( eLightProject1 );
+                    litMaterial.set();
+                    break;
+                }
+        }
+
+        SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32, 0);
+
+        int t=0;
+        k=0;
+        int ofs=0;
+        for (int l=0;l<32;l++,t+=6,k+=4)
+        {
+            SetNormal(&moverVertices[i][64], &normalIndices[t], 3, NULL, &indices[k], 2);
+            SetNormal(&moverVertices[i][96], &normalIndices[t], 3, NULL, &indices[k], 2);
+            SetNormal(&moverVertices[i][64], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
+            SetNormal(&moverVertices[i][96], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
+            memcpy( &verts[ofs  ], &moverVertices[i][64+indices[k  ]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+1], &moverVertices[i][64+indices[k+1]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+2], &moverVertices[i][64+indices[k+2]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+3], &moverVertices[i][64+indices[k+3]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+4], &moverVertices[i][96+indices[k  ]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+5], &moverVertices[i][96+indices[k+1]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+6], &moverVertices[i][96+indices[k+2]], sizeof(Vertex3D));
+            memcpy( &verts[ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
+            ofs+=8;
+        }
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32, 0);
+
+        // Reset all the texture coordinates
+        if (i == 1)
+        {
+            ppin3d->EnableLightMap(fFalse, -1);
+        }
+    }
+
+    ppin3d->SetTexture(NULL);
 }
 
-static const WORD rgiBumperStatic[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
 void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
 {
    const float outerradius = m_d.m_radius + m_d.m_overhang;
@@ -468,184 +637,6 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
 
 void Bumper::RenderMovers(const RenderDevice* _pd3dDevice)
 {
-   RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
-   if(!m_d.m_fVisible)	return;
-
-   Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-   int k=0;
-   Vertex3D verts[8*32];
-   WORD idx[12*32];
-
-   for( int l=0;l<32*12;l+=6,k+=4 )
-   {
-      idx[l  ]= k;
-      idx[l+1]= k+1;
-      idx[l+2]= k+2;
-      idx[l+3]= k;
-      idx[l+4]= k+2;
-      idx[l+5]= k+3;
-   }
-
-   ppin3d->ClearSpriteRectangle(&m_pbumperhitcircle->m_bumperanim, NULL );
-   for (int i=0;i<2;i++)	//0 is unlite, while 1 is lite
-   {
-      ObjFrame * const pof = new ObjFrame();
-
-      ppin3d->ClearSpriteRectangle( NULL, pof );
-
-      ppin3d->ExpandExtents(&pof->rc, moverVertices[i], &m_pbumperhitcircle->m_bumperanim.m_znear, &m_pbumperhitcircle->m_bumperanim.m_zfar, 160, fFalse);
-
-      Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-      if (!pin) // Top solid color
-      {
-         switch (i)
-         {
-            case 0:
-            {
-               ppin3d->SetTexture(NULL);
-               topNonLitMaterial.set();
-               break;
-            }
-            case 1:
-            {
-               ppin3d->lightTexture[0].Set( ePictureTexture );
-               ppin3d->EnableLightMap(fFalse, -1);
-               topLitMaterial.set();
-            }
-            break;
-         }
-
-         SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32, 0);
-
-         int t=0;
-         k=0;
-         int ofs=0;
-         for (int l=0;l<32;l++,t+=6,k+=4)
-         {
-            SetNormal(&moverVertices[i][64], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(&moverVertices[i][96], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(&moverVertices[i][64], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            SetNormal(&moverVertices[i][96], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            memcpy( &verts[ofs  ], &moverVertices[i][64+indices[k  ]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+1], &moverVertices[i][64+indices[k+1]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+2], &moverVertices[i][64+indices[k+2]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+3], &moverVertices[i][64+indices[k+3]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+4], &moverVertices[i][96+indices[k  ]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+5], &moverVertices[i][96+indices[k+1]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+6], &moverVertices[i][96+indices[k+2]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
-            ofs+=8;
-         }
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32, 0);
-      }
-
-      if (m_d.m_fSideVisible)
-      {
-         const float rside = (float)(m_d.m_sidecolor & 255) * (float) (1.0/255.0);
-         const float gside = (float)(m_d.m_sidecolor & 65280) * (float) (1.0/65280.0);
-         const float bside = (float)(m_d.m_sidecolor & 16711680) * (float) (1.0/16711680.0);
-         // Side color
-         switch (i)
-         {
-            case 0:
-            {
-               ppin3d->SetTexture(NULL);
-               sideNonLitMaterial.set();
-               break;
-            }
-            case 1:
-            {
-               ppin3d->lightTexture[0].Set( ePictureTexture );
-               ppin3d->EnableLightMap(fFalse, -1);
-               sideLitMaterial.set();
-               break;
-            }
-         }
-
-         int t=0;
-         int k=0;
-         for (int l=0;l<32;l++,t+=6,k+=4)
-         {
-            SetNormal(moverVertices[i], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(moverVertices[i], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,moverVertices[i],64,(LPWORD)&indices[k], 4, 0);
-         }
-      }
-
-      if (pin)
-      {
-         float maxtu, maxtv;
-         m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-
-         pin->EnsureBackdrop(m_d.m_color);
-         pin->SetBackDrop( ePictureTexture );
-
-         //pd3dDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, FALSE);
-         //pd3dDevice->SetRenderState(D3DRENDERSTATE_COLORKEYENABLE, TRUE);
-
-         //pd3dDevice->SetRenderState(D3DRENDERSTATE_DITHERENABLE, FALSE);
-
-         /*// HACK!!! I think this is the last place we ever use COLORKEY instead
-         // of Alpha transparency.  We do this because the D3D software
-         // rasterizer can only handle transparency on the first texture,
-         // but we need to layer textures to light up the bitmap provided
-         // by the user.  We could solve this by creating a bitmap
-         // with the background color swapped out in a pre-processing step.*/
-
-         switch (i)
-         {
-            case 0:
-            {
-               ppin3d->EnableLightMap(fFalse, -1);
-               nonLitMaterial.set();
-               break;
-            }
-
-            case 1:
-            {
-               ppin3d->lightTexture[0].Set( eLightProject1 );
-               litMaterial.set();
-               break;           
-            }
-         }
-
-         SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32, 0);
-
-         int t=0;
-         k=0;
-         int ofs=0;
-         for (int l=0;l<32;l++,t+=6,k+=4)
-         {
-            SetNormal(&moverVertices[i][64], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(&moverVertices[i][96], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(&moverVertices[i][64], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            SetNormal(&moverVertices[i][96], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            memcpy( &verts[ofs  ], &moverVertices[i][64+indices[k  ]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+1], &moverVertices[i][64+indices[k+1]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+2], &moverVertices[i][64+indices[k+2]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+3], &moverVertices[i][64+indices[k+3]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+4], &moverVertices[i][96+indices[k  ]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+5], &moverVertices[i][96+indices[k+1]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+6], &moverVertices[i][96+indices[k+2]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
-            ofs+=8;
-         }
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32, 0);
-
-         // Reset all the texture coordinates
-         if (i == 1)
-         {
-            ppin3d->EnableLightMap(fFalse, -1);
-         }
-      }
-
-      ppin3d->CreateAndCopySpriteBuffers( &m_pbumperhitcircle->m_bumperanim, pof );
-      m_pbumperhitcircle->m_bumperanim.m_pobjframe[i] = pof;
-   }
-
-   ppin3d->SetTexture(NULL);
 }
 
 void Bumper::SetObjectPos()

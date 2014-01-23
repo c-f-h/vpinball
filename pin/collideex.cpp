@@ -77,10 +77,7 @@ void BumperAnimObject::Check3D()
 
 ObjFrame *BumperAnimObject::Draw3D(const RECT * const prc)
 {
-	if(!m_fVisible || m_iframe == -1)
-		return NULL;
-
-	return m_pobjframe[m_iframe];
+    return NULL;
 }
 
 void BumperAnimObject::Reset()
