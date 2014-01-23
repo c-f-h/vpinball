@@ -418,11 +418,7 @@ void Ramp::RenderShadow(ShadowSur * const psur, const float height)
 
    if (range > 0)
    {
-      if (m_d.m_type == RampType4Wire 
-         || m_d.m_type == RampType1Wire 
-         || m_d.m_type == RampType2Wire 
-         || m_d.m_type == RampType3WireLeft 
-         || m_d.m_type == RampType3WireRight)
+      if (isHabitrail())
       {
          float * const rgheight2 = new float[cvertex];
 
@@ -1090,6 +1086,15 @@ static const WORD rgicrosssection[] = {
    12,28,31
 };
 
+bool Ramp::isHabitrail() const
+{
+    return  m_d.m_type == RampType4Wire
+         || m_d.m_type == RampType1Wire
+         || m_d.m_type == RampType2Wire
+         || m_d.m_type == RampType3WireLeft
+         || m_d.m_type == RampType3WireRight;
+}
+
 void Ramp::RenderStaticHabitrail(const RenderDevice* _pd3dDevice)
 {
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
@@ -1557,22 +1562,14 @@ void Ramp::RenderSetup(const RenderDevice* _pd3dDevice)
 
    if( !staticVertexBuffer && m_d.m_IsVisible && !(m_d.m_fAlpha && g_pvp->m_pdd.m_fHardwareAccel) )
    {
-      if (m_d.m_type == RampType4Wire 
-         || m_d.m_type == RampType1Wire //add check for 1 wire
-         || m_d.m_type == RampType2Wire 
-         || m_d.m_type == RampType3WireLeft 
-         || m_d.m_type == RampType3WireRight)
+      if (isHabitrail())
          prepareHabitrail( pd3dDevice );
       else
          prepareStatic( pd3dDevice );
    }
    else if( !dynamicVertexBuffer && m_d.m_IsVisible && m_d.m_fAlpha )
    {
-      if (m_d.m_type == RampType4Wire 
-         || m_d.m_type == RampType1Wire //add check for 1 wire
-         || m_d.m_type == RampType2Wire 
-         || m_d.m_type == RampType3WireLeft 
-         || m_d.m_type == RampType3WireRight)
+      if (isHabitrail())
       {
          prepareHabitrail( pd3dDevice );
       }
@@ -1583,7 +1580,7 @@ void Ramp::RenderSetup(const RenderDevice* _pd3dDevice)
          NumVideoBytes += numVertices*5*sizeof(Vertex3D_NoTex);     
 
          rgvbuf = new Vertex3D_NoTex2[numVertices];
-         rgibuf = new WORD[(rampVertex-1)*6*2];
+         rgibuf = new WORD[(rampVertex-1)*6*2*2];
       }
    }
 
@@ -1600,11 +1597,7 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
    // dont render alpha shaded ramps into static buffer, these are done per frame later-on
    if (m_d.m_fAlpha && g_pvp->m_pdd.m_fHardwareAccel) return;
 
-   if (m_d.m_type == RampType4Wire 
-      || m_d.m_type == RampType1Wire  //add check for 1 wire
-      || m_d.m_type == RampType2Wire 
-      || m_d.m_type == RampType3WireLeft 
-      || m_d.m_type == RampType3WireRight)
+   if (isHabitrail())
    {
       RenderStaticHabitrail(pd3dDevice);
    }
@@ -1705,15 +1698,11 @@ void Ramp::RenderMovers(const RenderDevice* pd3dDevice)
    if(!m_d.m_triggerSingleUpdateRegion && !m_d.m_triggerUpdateRegion)
 	   return;
 
-   if((!m_d.m_IsVisible && !m_d.m_wasVisible) ||		
+   if((!m_d.m_IsVisible && !m_d.m_wasVisible) ||
       // Don't render non-Alphas. 
       (!m_d.m_fAlpha && !m_d.m_wasAlpha) ||
 	  (m_d.m_widthbottom==0.0f && m_d.m_widthtop==0.0f) ||
-      (  m_d.m_type == RampType4Wire 
-      || m_d.m_type == RampType1Wire //add check for 1 wire
-      || m_d.m_type == RampType2Wire 
-      || m_d.m_type == RampType3WireLeft 
-      || m_d.m_type == RampType3WireRight))
+      (isHabitrail()))
 	  return;
 
    m_d.m_wasVisible = false;
@@ -2685,11 +2674,7 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
    if(dynamicVertexBufferRegenerate)
       solidMaterial.setColor(1.0f, m_d.m_color );
 
-   if (m_d.m_type == RampType4Wire 
-      || m_d.m_type == RampType1Wire //add check for 1 wire
-      || m_d.m_type == RampType2Wire 
-      || m_d.m_type == RampType3WireLeft 
-      || m_d.m_type == RampType3WireRight)
+   if (isHabitrail())
    {
       if(dynamicVertexBufferRegenerate)
       {
@@ -2806,6 +2791,20 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
             rgibuf[i*6+rgioffset+3] = i*4+numVertices;
             rgibuf[i*6+rgioffset+4] = i*4+numVertices+2;
             rgibuf[i*6+rgioffset+5] = i*4+numVertices+1;
+
+            rgibuf[i*6+rgioffset*2]   = i*4+numVertices*2;
+            rgibuf[i*6+rgioffset*2+1] = i*4+numVertices*2+1;
+            rgibuf[i*6+rgioffset*2+2] = i*4+numVertices*2+2;
+            rgibuf[i*6+rgioffset*2+3] = i*4+numVertices*2;
+            rgibuf[i*6+rgioffset*2+4] = i*4+numVertices*2+2;
+            rgibuf[i*6+rgioffset*2+5] = i*4+numVertices*2+3;
+
+			rgibuf[i*6+rgioffset*3]   = i*4+numVertices*3;
+            rgibuf[i*6+rgioffset*3+1] = i*4+numVertices*3+3;
+            rgibuf[i*6+rgioffset*3+2] = i*4+numVertices*3+2;
+            rgibuf[i*6+rgioffset*3+3] = i*4+numVertices*3;
+            rgibuf[i*6+rgioffset*3+4] = i*4+numVertices*3+2;
+            rgibuf[i*6+rgioffset*3+5] = i*4+numVertices*3+1;
          }
          memcpy( &buf[offset], rgvbuf, sizeof(Vertex3D_NoTex2)*numVertices );
          offset+=numVertices;
@@ -2950,17 +2949,20 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
          ppin3d->SetTexture(NULL);
          solidMaterial.set();
          if ( !m_d.m_enableLightingImage )
-         {
             pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
-         }
       }
 
-      if ( m_d.m_rightwallheightvisible!=0.f ) //only render right side if the height is >0
-         pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2, (LPWORD)rgibuf, (rampVertex-1)*6*2, 0 );
-      offset+=2*numVertices;
+	  if(m_d.m_rightwallheightvisible!=0.f && m_d.m_leftwallheightvisible!=0.f) //only render left & right side if the height is >0
+         pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2*2, (LPWORD)rgibuf, (rampVertex-1)*6*2*2, 0 );
+	  else
+	  {
+		if ( m_d.m_rightwallheightvisible!=0.f ) //only render right side if the height is >0
+			pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2, (LPWORD)rgibuf, (rampVertex-1)*6*2, 0 );
+		offset+=2*numVertices;
 
-      if ( m_d.m_leftwallheightvisible!=0.f ) //only render left side if the height is >0
-         pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2, (LPWORD)rgibuf, (rampVertex-1)*6*2, 0 );
+		if ( m_d.m_leftwallheightvisible!=0.f ) //only render left side if the height is >0
+			pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2, (LPWORD)rgibuf, (rampVertex-1)*6*2, 0 );
+	  }
 
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
       pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
