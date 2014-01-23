@@ -297,6 +297,8 @@ include_directories(${ATL_BASEPATH} ${MFC_BASEPATH})
 add_definitions(-D_ATL_STATIC_REGISTRY -D_WIN32_WINNT=0x0501 /Yu"stdafx.h")
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
+string(REPLACE "/MD" "/MT" CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE})
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /DCOR_ENABLE_PROFILING /DMYDEBUG /D_DEBUGPHYSICS /MTd")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT /Ox /Ob2 /Oi /Ot /GL /GF /GS- /GR- /fp:fast")
 set(CMAKE_CXX_FLAGS_RELWITHSSE "${CMAKE_CXX_FLAGS_RELWITHSSE} /MT /Ox /Ob2 /Oi /Ot /GL /GF /GS- /GR- /fp:fast /arch:SSE")
@@ -308,11 +310,13 @@ set(CMAKE_EXE_LINKER_FLAGS_RELWITHSSE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
 
 
 find_library(LIB_DXGUID dxguid.lib PATHS ${DirectX_LIB_DIR})
-find_library(LIB_FREEIMAGE freeimage.lib PATHS ${CMAKE_SOURCE_DIR})
+find_library(LIB_FREEIMAGE freeimage.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 find_library(LIB_DSOUND dsound.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_DINPUT dinput.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_XAUDIO xaudio.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
-find_library(LIB_HID hid.lib PATHS ${CMAKE_SOURCE_DIR})
+find_library(LIB_HID hid.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
+
+LINK_DIRECTORIES(C:/WinDDK7.1/Lib/atl/i386)
 
 add_executable(${NAME} WIN32 ${SOURCES} ${HEADERS} ${RC_RESOURCE})
 target_link_libraries(${NAME} comctl32.lib ${LIB_DXGUID} ${LIB_FREEIMAGE} ${LIB_DSOUND} winmm.lib ${LIB_DINPUT} 
