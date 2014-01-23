@@ -21,6 +21,7 @@ enum
 class Matrix3D : public D3DMATRIX
 	{
 public:
+    // premultiply the given matrix, i.e., result = mult * (*this)
 	inline void Multiply(const Matrix3D &mult, Matrix3D &result) const
 	{
 	Matrix3D matrixT;
@@ -79,9 +80,8 @@ public:
 	// Transform it through the current matrix set
 	const float xp = _11*x + _21*y + _31*z + _41;
 	const float yp = _12*x + _22*y + _32*z + _42;
-	const float wp = _14*x + _24*y + _34*z + _44;
-
 	const float zp = _13*x + _23*y + _33*z + _43;
+	const float wp = _14*x + _24*y + _34*z + _44;
 
 	const float inv_wp = 1.0f/wp;
 	pv3DOut->x = xp*inv_wp;
@@ -93,9 +93,8 @@ public:
       // Transform it through the current matrix set
       const float xp = _11*x + _21*y + _31*z + _41;
       const float yp = _12*x + _22*y + _32*z + _42;
-      const float wp = _14*x + _24*y + _34*z + _44;
-
       const float zp = _13*x + _23*y + _33*z + _43;
+      const float wp = _14*x + _24*y + _34*z + _44;
 
       const float inv_wp = 1.0f/wp;
       pv3DOut->x = xp*inv_wp;
@@ -107,9 +106,8 @@ public:
       // Transform it through the current matrix set
       const float xp = _11*x + _21*y + _31*z + _41;
       const float yp = _12*x + _22*y + _32*z + _42;
-      const float wp = _14*x + _24*y + _34*z + _44;
-
       const float zp = _13*x + _23*y + _33*z + _43;
+      const float wp = _14*x + _24*y + _34*z + _44;
 
       const float inv_wp = 1.0f/wp;
       pv3DOut->x = xp*inv_wp;
@@ -121,9 +119,8 @@ public:
 	// Transform it through the current matrix set
 	const float xp = _11*x + _21*y + _31*z + _41;
 	const float yp = _12*x + _22*y + _32*z + _42;
-	const float wp = _14*x + _24*y + _34*z + _44;
-
 	const float zp = _13*x + _23*y + _33*z + _43;
+	const float wp = _14*x + _24*y + _34*z + _44;
 
 	const float inv_wp = 1.0f/wp;
 	pv3DOut->x = xp*inv_wp;
@@ -135,9 +132,8 @@ public:
 	// Transform it through the current matrix set
 	const float xp = _11*v.x + _21*v.y + _31*v.z + _41;
 	const float yp = _12*v.x + _22*v.y + _32*v.z + _42;
-	const float wp = _14*v.x + _24*v.y + _34*v.z + _44;
-
 	const float zp = _13*v.x + _23*v.y + _33*v.z + _43;
+	const float wp = _14*v.x + _24*v.y + _34*v.z + _44;
 
 	const float inv_wp = 1.0f/wp;
 	Vertex3Ds pv3DOut;
@@ -171,7 +167,7 @@ public:
 	void Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z);
 	void Translate(const float x, const float y, const float z);
 	void FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, const int cvert, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const float xlatez);
-	void CacheTransform();
+	void CacheTransform();      // compute m_matrixTotal = m_World * m_View * m_Proj
 	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex3D * const rgvout) const;
 	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex2D * const rgvout) const;
 	void SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar);
@@ -215,7 +211,7 @@ public:
 	void Scale(const float x, const float y, const float z);
 	void Translate(const float x, const float y, const float z);
 	void FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, const int cvert, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const GPINFLOAT skew, const float xlatez);
-	void CacheTransform();
+	void CacheTransform();      // compute m_matrixTotal = mWorld * mView * mProj
 
 	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex3D * const rgvout) const;
 	void TransformVertices(const Vertex3D_NoTex2 * const rgv, const WORD * const rgi, const int count, Vertex3D_NoTex2 * const rgvout) const;
