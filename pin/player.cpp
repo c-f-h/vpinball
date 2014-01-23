@@ -834,7 +834,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	for (int i=0;i<m_ptable->m_vedit.Size();i++)
 	{
-		Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
+		IEditable * const pe = m_ptable->m_vedit.ElementAt(i);
+		Hitable * const ph = pe->GetIHitable();
 		if (ph)
 		{
 			const int currentsize = m_vho.Size();
@@ -848,15 +849,16 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
     		if (g_pvp->m_pdd.m_fHardwareAccel)
 			{
-  				if ((m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemRamp && ((Ramp*)m_ptable->m_vedit.ElementAt(i))->m_d.m_fAlpha) ||
-	  				(m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemPrimitive && !((Primitive *)m_ptable->m_vedit.ElementAt(i))->m_d.staticRendering) ||
-                    (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemFlasher) /*|| (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemFlipper )*/ )
+				if ((pe->GetItemType() == eItemRamp && ((Ramp*)pe)->m_d.m_fAlpha) ||
+					(pe->GetItemType() == eItemPrimitive && !((Primitive *)m_ptable->m_vedit.ElementAt(i))->m_d.staticRendering) ||
+					(pe->GetItemType() == eItemFlasher) ||
+					(pe->GetItemType() == eItemFlipper) )
 					{
 					  m_vhitalpha.AddElement(ph);
 					}
 			}
 			else
-				if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemPrimitive)
+				if (pe->GetItemType() == eItemPrimitive || pe->GetItemType() == eItemFlipper)
 					{
 					  m_vhitalpha.AddElement(ph);
 					}
@@ -2035,7 +2037,6 @@ void Player::RenderDynamics()
 
    DrawBalls();
    // Draw the alpha-ramps and primitives.
-   //if (g_pvp->m_pdd.m_fHardwareAccel)
    DrawAlphas();
 
    // Draw the mixer volume.
@@ -4166,7 +4167,7 @@ void Player::DrawAlphas()
 	if (g_pvp->m_pdd.m_fHardwareAccel)
 	{
 		// Turn off z writes for same values.  It fixes the problem of ramps rendering twice. //!! really still needed?
-        m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZFUNC,D3DCMP_LESS);
+        //m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZFUNC,D3DCMP_LESS);
 	}
 
 	// the helper list of m_vhitalpha only contains objects which evaluated to true in the old code.

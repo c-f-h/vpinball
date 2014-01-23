@@ -706,7 +706,5 @@ void FlipperAnimObject::Check3D()
 
 ObjFrame *FlipperAnimObject::Draw3D(const RECT * const prc)
 	{
-	if (m_iframe == -1) return NULL;
-
-	return (m_fVisible) ? m_vddsFrame.ElementAt(m_iframe) : NULL;
+        return NULL;
 	}

@@ -586,8 +586,30 @@ STDMETHODIMP Flipper::RotateToStart() // return to park
    return S_OK;
 }
 
-void Flipper::PostRenderStatic(const RenderDevice* pd3dDevice)
+void Flipper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_Center.x, m_d.m_Center.y);
+    const float anglerad = ANGTORAD(m_d.m_StartAngle);
+    const float anglerad2 = ANGTORAD(m_d.m_EndAngle);
+
+    g_pplayer->m_pin3d.SetTexture(NULL);
+
+    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
+    pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+    pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
+
+    const float angle = m_phitflipper->m_flipperanim.m_angleCur;
+
+    // TODO: These render calls REALLY have to go into a vertex buffer.
+
+    // Render the flipper.
+    RenderAtThickness(pd3dDevice, NULL, angle,  height, m_d.m_color, m_d.m_BaseRadius - (float)m_d.m_rubberthickness, m_d.m_EndRadius - (float)m_d.m_rubberthickness, m_d.m_height);
+
+    // Render the rubber.
+    if (m_d.m_rubberthickness > 0)
+    {
+        RenderAtThickness(pd3dDevice, NULL, angle, height + (float)m_d.m_rubberheight, m_d.m_rubbercolor, m_d.m_BaseRadius, m_d.m_EndRadius, (float)m_d.m_rubberwidth);// 34);
+    }
 }
 
 void Flipper::RenderSetup(const RenderDevice* _pd3dDevice)
@@ -602,201 +624,155 @@ void Flipper::RenderStatic(const RenderDevice* pd3dDevice)
 static const WORD rgiFlipper1[4] = {0,4,5,1};
 static const WORD rgiFlipper2[4] = {2,6,7,3};
 
-//!! flippers are NOT drawn to zbuffer?? (on SOME tables only! and on intel only!)
 
-void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, ObjFrame * const pof, const float angle, const float height, 
+void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, ObjFrame * const pof, const float angle, const float height,
                                 const COLORREF color, const float baseradius, const float endradius, const float flipperheight)
 {
-   RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
-   //pd3dDevice->SetRenderState(D3DRENDERSTATE_ALPHAREF, 0x80);
-   //pd3dDevice->SetRenderState(D3DRENDERSTATE_ALPHAFUNC, D3DCMP_GREATER);
-   pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE); 
-   pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE); 
+    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+    Material mat;
+    mat.setColor( 1.0f, color );
+    mat.set();
 
-   Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-   Material mat;
-   mat.setColor( 1.0f, color );
-   mat.set();
+    Vertex2D vendcenter;
+    Vertex2D rgv[4];
+    SetVertices(angle, &vendcenter, rgv, baseradius, endradius);
 
-   Vertex2D vendcenter;
-   Vertex2D rgv[4];
-   SetVertices(angle, &vendcenter, rgv, baseradius, endradius);
+    const float inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
+    const float inv_height = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
 
-   const float inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
-   const float inv_height = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
+    Vertex3D rgv3D[32];
+    for (int l=0;l<8;l++)
+    {
+        rgv3D[l].x = rgv[l&3].x;
+        rgv3D[l].y = rgv[l&3].y;
+        rgv3D[l].z = (l<4) ? height + flipperheight + 0.1f : height; // Make flippers a bit taller so they draw above walls
+        rgv3D[l].z *= m_ptable->m_zScale;
+        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
+    }
 
-   Vertex3D rgv3D[32];
-   for (int l=0;l<8;l++)
-   {
-      rgv3D[l].x = rgv[l&3].x;
-      rgv3D[l].y = rgv[l&3].y;
-      rgv3D[l].z = (l<4) ? height + flipperheight + 0.1f : height; // Make flippers a bit taller so they draw above walls
-      rgv3D[l].z *= m_ptable->m_zScale;
-      ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);		
-   }
+    if (pof)
+        ppin3d->ExpandExtents(&pof->rc, rgv3D, &m_phitflipper->m_flipperanim.m_znear,
+                &m_phitflipper->m_flipperanim.m_zfar, 8, fFalse);
 
-   ppin3d->ExpandExtents(&pof->rc, rgv3D, &m_phitflipper->m_flipperanim.m_znear
-      , &m_phitflipper->m_flipperanim.m_zfar, 8, fFalse);
+    SetNormal(rgv3D, rgi0123, 4, NULL, NULL, 0);
+    // Draw top.
+    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4,(LPWORD)rgi0123, 4, 0);
+    //Display_DrawPrimitive(pd3dDevice, D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4);
 
-   SetNormal(rgv3D, rgi0123, 4, NULL, NULL, 0);
-   // Draw top.
-   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4,(LPWORD)rgi0123, 4, 0);
-   //Display_DrawPrimitive(pd3dDevice, D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4);
+    SetNormal(rgv3D, rgiFlipper1, 4, NULL, NULL, 0);
+    // Draw front side wall of flipper (flipper and rubber).
+    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiFlipper1, 4, 0);
 
-   SetNormal(rgv3D, rgiFlipper1, 4, NULL, NULL, 0);
-   // Draw front side wall of flipper (flipper and rubber).
-   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiFlipper1, 4, 0);
+    SetNormal(rgv3D, rgiFlipper2, 4, NULL, NULL, 0);
+    // Draw back side wall.
+    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiFlipper2, 4, 0);
 
-   SetNormal(rgv3D, rgiFlipper2, 4, NULL, NULL, 0);
-   // Draw back side wall.
-   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiFlipper2, 4, 0);
+    // Base circle
+    for (int l=0;l<16;l++)
+    {
+        const float anglel = (float)(M_PI*2.0/16.0)*(float)l;
+        rgv3D[l].x = m_d.m_Center.x + sinf(anglel)*baseradius;
+        rgv3D[l].y = m_d.m_Center.y - cosf(anglel)*baseradius;
+        rgv3D[l].z = height + flipperheight + 0.1f;
+        rgv3D[l].z *= m_ptable->m_zScale;
+        rgv3D[l+16].x = rgv3D[l].x;
+        rgv3D[l+16].y = rgv3D[l].y;
+        rgv3D[l+16].z = height;
+        rgv3D[l+16].z *= m_ptable->m_zScale;
 
-   // Base circle
-   for (int l=0;l<16;l++)
-   {
-      const float anglel = (float)(M_PI*2.0/16.0)*(float)l;
-      rgv3D[l].x = m_d.m_Center.x + sinf(anglel)*baseradius;
-      rgv3D[l].y = m_d.m_Center.y - cosf(anglel)*baseradius;
-      rgv3D[l].z = height + flipperheight + 0.1f;
-      rgv3D[l].z *= m_ptable->m_zScale;
-      rgv3D[l+16].x = rgv3D[l].x;
-      rgv3D[l+16].y = rgv3D[l].y;
-      rgv3D[l+16].z = height;
-      rgv3D[l+16].z *= m_ptable->m_zScale;
+        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
+        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l+16],inv_width,inv_height);
+    }
 
-      ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
-      ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l+16],inv_width,inv_height);
-   }
+    if (pof)
+        ppin3d->ExpandExtents(&pof->rc, rgv3D,&m_phitflipper->m_flipperanim.m_znear,
+                &m_phitflipper->m_flipperanim.m_zfar, 32, fFalse);
 
-   ppin3d->ExpandExtents(&pof->rc, rgv3D,&m_phitflipper->m_flipperanim.m_znear,
-      &m_phitflipper->m_flipperanim.m_zfar, 32, fFalse);
+    {
+        WORD rgi[3*14];
+        // Draw end caps of cylinders of large ends.
+        for (int l=0;l<14;l++)
+        {
+            rgi[l*3  ] = 0;
+            rgi[l*3+1] = l+1;
+            rgi[l*3+2] = l+2;
+            SetNormal(rgv3D, rgi+l*3, 3, NULL, NULL, 0);
+        }
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, rgv3D,16, rgi,3*14, 0); //!! fan instead
+    }
 
-   {
-      WORD rgi[3*14];
-      // Draw end caps of cylinders of large ends.
-      for (int l=0;l<14;l++)
-      {
-         rgi[l*3  ] = 0;
-         rgi[l*3+1] = l+1;
-         rgi[l*3+2] = l+2;
-         SetNormal(rgv3D, rgi+l*3, 3, NULL, NULL, 0);
-      }	
-      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, rgv3D,16, rgi,3*14, 0); //!! fan instead
-   }
+    for (int l=0;l<14;l++)
+    {
+        const WORD rgiNormal[6] = {
+            (l+15) % 16,
+            (l+15) % 16 + 16,
+            l+1,
+            l,
+            l+16,
+            (l+2) % 16};
 
-   for (int l=0;l<14;l++)
-   {
-      const WORD rgiNormal[6] = {
-         (l+15) % 16,
-         (l+15) % 16 + 16,
-         l+1,
-         l,
-         l+16,
-         (l+2) % 16};
+        const WORD rgi[4] = {l,l+16,l+1+16,l+1};
 
-         const WORD rgi[4] = {l,l+16,l+1+16,l+1};
+        SetNormal(rgv3D, rgiNormal, 3, NULL, rgi, 2);
+        SetNormal(rgv3D, &rgiNormal[3], 3, NULL, &rgi[2], 2);
+        // Draw vertical cylinders at large end of flipper.
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, rgv3D, 32,(LPWORD)rgi, 4, 0);
+    }
 
-         SetNormal(rgv3D, rgiNormal, 3, NULL, rgi, 2);
-         SetNormal(rgv3D, &rgiNormal[3], 3, NULL, &rgi[2], 2);
-         // Draw vertical cylinders at large end of flipper.
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, rgv3D, 32,(LPWORD)rgi, 4, 0);
-   }
+    // End circle.
+    for (int l=0;l<16;l++)
+    {
+        const float anglel = (float)(M_PI*2.0/16.0)*(float)l;
+        rgv3D[l].x = vendcenter.x + sinf(anglel)*endradius;
+        rgv3D[l].y = vendcenter.y - cosf(anglel)*endradius;
+        rgv3D[l].z = height + flipperheight + 0.1f;
+        rgv3D[l].z *= m_ptable->m_zScale;
+        rgv3D[l+16].x = rgv3D[l].x;
+        rgv3D[l+16].y = rgv3D[l].y;
+        rgv3D[l+16].z = height;
+        rgv3D[l+16].z *= m_ptable->m_zScale;
 
-   // End circle.
-   for (int l=0;l<16;l++)
-   {
-      const float anglel = (float)(M_PI*2.0/16.0)*(float)l;
-      rgv3D[l].x = vendcenter.x + sinf(anglel)*endradius;
-      rgv3D[l].y = vendcenter.y - cosf(anglel)*endradius;
-      rgv3D[l].z = height + flipperheight + 0.1f;
-      rgv3D[l].z *= m_ptable->m_zScale;
-      rgv3D[l+16].x = rgv3D[l].x;
-      rgv3D[l+16].y = rgv3D[l].y;
-      rgv3D[l+16].z = height;
-      rgv3D[l+16].z *= m_ptable->m_zScale;
+        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
+        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l+16],inv_width,inv_height);
+    }
 
-      ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
-      ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l+16],inv_width,inv_height);
-   }
+    if (pof)
+        ppin3d->ExpandExtents(&pof->rc, rgv3D, &m_phitflipper->m_flipperanim.m_znear, &m_phitflipper->m_flipperanim.m_zfar, 32, fFalse);
 
-   ppin3d->ExpandExtents(&pof->rc, rgv3D, &m_phitflipper->m_flipperanim.m_znear, &m_phitflipper->m_flipperanim.m_zfar, 32, fFalse);
+    // Draw end caps to vertical cylinder at small end.
+    {
+        WORD rgi[3*14];
+        for (int l=0;l<14;l++)
+        {
+            rgi[l*3  ] = 0;
+            rgi[l*3+1] = l+1;
+            rgi[l*3+2] = l+2;
+            SetNormal(rgv3D, rgi+l*3, 3, NULL, NULL, 0);
+        }
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, rgv3D,16, rgi,3*14, 0); //!! fan instead
+    }
 
-   // Draw end caps to vertical cylinder at small end.
-   {
-      WORD rgi[3*14];
-      for (int l=0;l<14;l++)
-      {
-         rgi[l*3  ] = 0;
-         rgi[l*3+1] = l+1;
-         rgi[l*3+2] = l+2;
-         SetNormal(rgv3D, rgi+l*3, 3, NULL, NULL, 0);
-      }
-      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, rgv3D,16, rgi,3*14, 0); //!! fan instead
-   }
+    for (int l=0;l<14;l++)
+    {
+        const WORD rgiNormal[6] = {
+            (l+15) % 16,
+            (l+15) % 16 + 16,
+            l+1,
+            l,
+            l+16,
+            (l+2) % 16};
 
-   for (int l=0;l<14;l++)
-   {
-      const WORD rgiNormal[6] = {
-         (l+15) % 16,
-         (l+15) % 16 + 16,
-         l+1,
-         l,
-         l+16,
-         (l+2) % 16};
+        const WORD rgi[4] = {l,l+16,l+1+16,l+1};
 
-         const WORD rgi[4] = {l,l+16,l+1+16,l+1};
-
-         SetNormal(rgv3D, rgiNormal, 3, NULL, rgi, 2);
-         SetNormal(rgv3D, &rgiNormal[3], 3, NULL, &rgi[2], 2);
-         // Draw vertical cylinders at small end.
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 32,(LPWORD)rgi, 4, 0);
-   }
-
-   //pd3dDevice->SetRenderState(D3DRENDERSTATE_ALPHATESTENABLE, FALSE);
+        SetNormal(rgv3D, rgiNormal, 3, NULL, rgi, 2);
+        SetNormal(rgv3D, &rgiNormal[3], 3, NULL, &rgi[2], 2);
+        // Draw vertical cylinders at small end.
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 32,(LPWORD)rgi, 4, 0);
+    }
 }
 
 void Flipper::RenderMovers(const RenderDevice* _pd3dDevice)
 {
-   RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
-   _ASSERTE(m_phitflipper);
-   Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-
-   const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_Center.x, m_d.m_Center.y);
-
-   ppin3d->ClearSpriteRectangle( &m_phitflipper->m_flipperanim, NULL );
-
-   const float anglerad = ANGTORAD(m_d.m_StartAngle);
-   const float anglerad2 = ANGTORAD(m_d.m_EndAngle);
-
-   ppin3d->SetTexture(NULL);
-
-   const int cframes = max(abs(((int)(m_d.m_EndAngle - m_d.m_StartAngle))/2),2);//10),2);
-
-   // Direct all renders to the back buffer.
-   //ppin3d->SetRenderTarget(g_pplayer->m_pin3d.m_pddsBackBuffer);
-
-   const float inv_cframes = (anglerad2 - anglerad)/(float)(cframes-1);
-   // Pre-render each of the frames.
-   for (int i=0;i<cframes;i++)
-   {
-      const float angle = anglerad + inv_cframes*(float)i;
-
-      ObjFrame * const pof = new ObjFrame();
-
-      ppin3d->ClearSpriteRectangle( NULL, pof );
-
-      // Render just the flipper.
-      RenderAtThickness(pd3dDevice, pof, angle,  height, m_d.m_color, m_d.m_BaseRadius - (float)m_d.m_rubberthickness, m_d.m_EndRadius - (float)m_d.m_rubberthickness, m_d.m_height);
-
-      // Render just the rubber.
-      if (m_d.m_rubberthickness > 0)
-      {
-         RenderAtThickness(pd3dDevice, pof, angle, height + (float)m_d.m_rubberheight, m_d.m_rubbercolor, m_d.m_BaseRadius, m_d.m_EndRadius, (float)m_d.m_rubberwidth);// 34);
-      }
-
-      ppin3d->CreateAndCopySpriteBuffers( &m_phitflipper->m_flipperanim, pof );
-      m_phitflipper->m_flipperanim.m_vddsFrame.AddElement(pof);
-   }
 }
 
 
