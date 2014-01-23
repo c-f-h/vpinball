@@ -128,15 +128,15 @@ Player::Player()
 {
 	bool SSE2_supported;
 	{
-	int EAX,EBX,ECX,EDX;
-	cpuid(1,&EAX,&EBX,&ECX,&EDX);
+	int regs[4];
+	__cpuid(regs,1);
 	// check for SSE and exit if not available, as some code relies on it by now
-	if((EDX & 0x002000000) == 0) { // NO SSE?
+	if((regs[3] & 0x002000000) == 0) { // NO SSE?
 		ShowError("SSE is not supported on this processor");
 		exit(0);
 	}
 	// disable denormalized floating point numbers, can be faster on some CPUs (and VP doesn't need to rely on denormals)
-	SSE2_supported = ((EDX & 0x004000000) != 0);
+	SSE2_supported = ((regs[3] & 0x004000000) != 0);
 	if(SSE2_supported) // SSE2?
 		_mm_setcsr(_mm_getcsr() | 0x8040); // flush denorms to zero and also treat incoming denorms as zeros
 	else
@@ -2880,8 +2880,8 @@ void Player::CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
    if ( !vBuffer )
    {
       float zheight = (!pball->fFrozen) ? pball->z : (pball->z - pball->radius);
-      float maxz = pball->defaultZ+3.0f;
-      float minz = pball->defaultZ-1.0f;
+      const float maxz = pball->defaultZ+3.0f;
+      const float minz = pball->defaultZ-1.0f;
       if( (zheight > maxz) || (pball->z < minz) )
       {
          // scaling the ball height by the z scale value results in a flying ball over the playfield/ramp
@@ -3150,80 +3150,80 @@ void Player::DrawBalls()
             Vertex3D_NoLighting rgv3D_all[10*2];
             unsigned int num_rgv3D = 0;
 
-            for(int i2 = 0; i2 < 10-1; ++i2)
-            {
-                int i = pball->ringcounter_oldpos-1-i2;
-                if(i<0)
-                    i += 10;
-                int io = i-1;
-                if(io<0)
-                    io += 10;
+			for(int i2 = 0; i2 < 10-1; ++i2)
+			{
+				int i = pball->ringcounter_oldpos-1-i2;
+				if(i<0)
+					i += 10;
+				int io = i-1;
+				if(io<0)
+					io += 10;
 
-                if((pball->oldpos[i].x != FLT_MAX) && (pball->oldpos[io].x != FLT_MAX)) // only if already initialized
-                {
-                    Vertex3Ds vec;
-                    vec.x = pball->oldpos[io].x-pball->oldpos[i].x;
-                    vec.y = pball->oldpos[io].y-pball->oldpos[i].y;
-                    vec.z = pball->oldpos[io].z-pball->oldpos[i].z;
-                    const unsigned int b = (unsigned int)((float)m_ptable->m_ballTrailStrength * powf(1.f-1.f/max(vec.Length(), 1.0f), 16.0f)); //!! 16=magic alpha falloff
-                    const float r = min(pball->radius*0.9f, 2.0f*pball->radius/powf((float)(i2+2), 0.6f)); //!! consts are for magic radius falloff
+				if((pball->oldpos[i].x != FLT_MAX) && (pball->oldpos[io].x != FLT_MAX)) // only if already initialized
+				{
+					Vertex3Ds vec;
+					vec.x = pball->oldpos[io].x-pball->oldpos[i].x;
+					vec.y = pball->oldpos[io].y-pball->oldpos[i].y;
+					vec.z = pball->oldpos[io].z-pball->oldpos[i].z;
+					const unsigned int bc = (unsigned int)((float)m_ptable->m_ballTrailStrength * powf(1.f-1.f/max(vec.Length(), 1.0f), 16.0f)); //!! 16=magic alpha falloff
+					const float r = min(pball->radius*0.9f, 2.0f*pball->radius/powf((float)(i2+2), 0.6f)); //!! consts are for magic radius falloff
 
-                    if(b > 0 && r > FLT_MIN)
-                    {
-                        Vertex3Ds v = vec;
-                        v.Normalize();
-                        Vertex3Ds up;
-                        up.x = 0.f;
-                        up.y = 0.f;
-                        up.z = 1.f;
-                        Vertex3Ds n = CrossProduct(v,up);
-                        n.x *= r;
-                        n.y *= r;
-                        n.z *= r;
+					if(bc > 0 && r > FLT_MIN)
+					{
+						Vertex3Ds v = vec;
+						v.Normalize();
+						Vertex3Ds up;
+						up.x = 0.f;
+						up.y = 0.f;
+						up.z = 1.f;
+						Vertex3Ds n = CrossProduct(v,up);
+						n.x *= r;
+						n.y *= r;
+						n.z *= r;
 
-                        Vertex3D_NoLighting rgv3D[4];
-                        rgv3D[0].x = pball->oldpos[i].x - n.x;
-                        rgv3D[0].y = pball->oldpos[i].y - n.y;
-                        rgv3D[0].z = pball->oldpos[i].z - n.z;
-                        rgv3D[1].x = pball->oldpos[i].x + n.x;
-                        rgv3D[1].y = pball->oldpos[i].y + n.y;
-                        rgv3D[1].z = pball->oldpos[i].z + n.z;
-                        rgv3D[2].x = pball->oldpos[io].x + n.x;
-                        rgv3D[2].y = pball->oldpos[io].y + n.y;
-                        rgv3D[2].z = pball->oldpos[io].z + n.z;
-                        rgv3D[3].x = pball->oldpos[io].x - n.x;
-                        rgv3D[3].y = pball->oldpos[io].y - n.y;
-                        rgv3D[3].z = pball->oldpos[io].z - n.z;
+						Vertex3D_NoLighting rgv3D[4];
+						rgv3D[0].x = pball->oldpos[i].x - n.x;
+						rgv3D[0].y = pball->oldpos[i].y - n.y;
+						rgv3D[0].z = pball->oldpos[i].z - n.z;
+						rgv3D[1].x = pball->oldpos[i].x + n.x;
+						rgv3D[1].y = pball->oldpos[i].y + n.y;
+						rgv3D[1].z = pball->oldpos[i].z + n.z;
+						rgv3D[2].x = pball->oldpos[io].x + n.x;
+						rgv3D[2].y = pball->oldpos[io].y + n.y;
+						rgv3D[2].z = pball->oldpos[io].z + n.z;
+						rgv3D[3].x = pball->oldpos[io].x - n.x;
+						rgv3D[3].y = pball->oldpos[io].y - n.y;
+						rgv3D[3].z = pball->oldpos[io].z - n.z;
 
-                        rgv3D[0].color = rgv3D[1].color = rgv3D[2].color = rgv3D[3].color = b | (b<<8) | (b<<16) | (b<<24);
+						rgv3D[0].color = rgv3D[1].color = rgv3D[2].color = rgv3D[3].color = bc | (bc<<8) | (bc<<16) | (bc<<24);
 
-                        rgv3D[0].tu = 0.5f+(float)(i2)*(float)(1.0/(2.0*(10-1)));
-                        rgv3D[0].tv = 0.f;
-                        rgv3D[1].tu = rgv3D[0].tu;
-                        rgv3D[1].tv = 1.f;
-                        rgv3D[2].tu = 0.5f+(float)(i2+1)*(float)(1.0/(2.0*(10-1)));
-                        rgv3D[2].tv = 1.f;
-                        rgv3D[3].tu = rgv3D[2].tu;
-                        rgv3D[3].tv = 0.f;
+						rgv3D[0].tu = 0.5f+(float)(i2)*(float)(1.0/(2.0*(10-1)));
+						rgv3D[0].tv = 0.f;
+						rgv3D[1].tu = rgv3D[0].tu;
+						rgv3D[1].tv = 1.f;
+						rgv3D[2].tu = 0.5f+(float)(i2+1)*(float)(1.0/(2.0*(10-1)));
+						rgv3D[2].tv = 1.f;
+						rgv3D[3].tu = rgv3D[2].tu;
+						rgv3D[3].tv = 0.f;
 
-                        if(num_rgv3D == 0)
-                        {
-                            rgv3D_all[0] = rgv3D[0];
-                            rgv3D_all[1] = rgv3D[1];
-                            rgv3D_all[2] = rgv3D[3];
-                            rgv3D_all[3] = rgv3D[2];
-                        }
-                        else
-                        {
-                            rgv3D_all[num_rgv3D-2].x = (rgv3D[0].x+rgv3D_all[num_rgv3D-2].x)*0.5f;
-                            rgv3D_all[num_rgv3D-2].y = (rgv3D[0].y+rgv3D_all[num_rgv3D-2].y)*0.5f;
-                            rgv3D_all[num_rgv3D-2].z = (rgv3D[0].z+rgv3D_all[num_rgv3D-2].z)*0.5f;
-                            rgv3D_all[num_rgv3D-1].x = (rgv3D[1].x+rgv3D_all[num_rgv3D-1].x)*0.5f;
-                            rgv3D_all[num_rgv3D-1].y = (rgv3D[1].y+rgv3D_all[num_rgv3D-1].y)*0.5f;
-                            rgv3D_all[num_rgv3D-1].z = (rgv3D[1].z+rgv3D_all[num_rgv3D-1].z)*0.5f;
-                            rgv3D_all[num_rgv3D] = rgv3D[3];
-                            rgv3D_all[num_rgv3D+1] = rgv3D[2];
-                        }
+						if(num_rgv3D == 0)
+						{
+							rgv3D_all[0] = rgv3D[0];
+							rgv3D_all[1] = rgv3D[1];
+							rgv3D_all[2] = rgv3D[3];
+							rgv3D_all[3] = rgv3D[2];
+						}
+						else
+						{
+							rgv3D_all[num_rgv3D-2].x = (rgv3D[0].x+rgv3D_all[num_rgv3D-2].x)*0.5f;
+							rgv3D_all[num_rgv3D-2].y = (rgv3D[0].y+rgv3D_all[num_rgv3D-2].y)*0.5f;
+							rgv3D_all[num_rgv3D-2].z = (rgv3D[0].z+rgv3D_all[num_rgv3D-2].z)*0.5f;
+							rgv3D_all[num_rgv3D-1].x = (rgv3D[1].x+rgv3D_all[num_rgv3D-1].x)*0.5f;
+							rgv3D_all[num_rgv3D-1].y = (rgv3D[1].y+rgv3D_all[num_rgv3D-1].y)*0.5f;
+							rgv3D_all[num_rgv3D-1].z = (rgv3D[1].z+rgv3D_all[num_rgv3D-1].z)*0.5f;
+							rgv3D_all[num_rgv3D] = rgv3D[3];
+							rgv3D_all[num_rgv3D+1] = rgv3D[2];
+						}
 
                         if(num_rgv3D == 0)
                             num_rgv3D += 4;
