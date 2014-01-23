@@ -846,7 +846,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 			ph->GetTimers(&m_vht);
 
-			//if (g_pvp->m_pdd.m_fHardwareAccel)
+    		if (g_pvp->m_pdd.m_fHardwareAccel)
 			{
   				if ((m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemRamp && ((Ramp*)m_ptable->m_vedit.ElementAt(i))->m_d.m_fAlpha) ||
 	  				(m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemPrimitive && !((Primitive *)m_ptable->m_vedit.ElementAt(i))->m_d.staticRendering) ||
@@ -855,11 +855,11 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 					  m_vhitalpha.AddElement(ph);
 					}
 			}
-			//else
-			//	if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemPrimitive)
-			//		{
-			//		  m_vhitalpha.AddElement(ph);
-			//		}
+			else
+				if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemPrimitive)
+					{
+					  m_vhitalpha.AddElement(ph);
+					}
 		}
 	}
 
