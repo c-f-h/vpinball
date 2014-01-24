@@ -104,7 +104,7 @@ END_CONNECTION_POINT_MAP()
 
 	virtual void RenderShadow(ShadowSur * const psur, const float height);
 
-	void RenderAtThickness(RenderDevice* pd3dDevice, ObjFrame * const pof, const float angle, const float height, const COLORREF color, const float baseradius, const float endradius, const float flipperheight);
+	void RenderAtThickness(RenderDevice* pd3dDevice, const float angle, const float height, const COLORREF color, const float baseradius, const float endradius, const float flipperheight);
 
 	void WriteRegDefaults();
 

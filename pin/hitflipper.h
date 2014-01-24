@@ -8,8 +8,8 @@ public:
 
 	virtual bool FMover() const {return true;}
 
-	virtual void Check3D();
-	virtual ObjFrame *Draw3D(const RECT * const prc);
+	virtual void Check3D()                              { }
+	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
 
 	Flipper *m_pflipper;
 
@@ -43,16 +43,9 @@ public:
 
 	float m_angleMin, m_angleMax;
 
-	float m_frameStart;
-	float m_frameEnd;
-
-	float m_angleFrame; // angle at the beginning of this frame
-
 #if 0
 	float m_inertia;	//moment of inertia
 #endif
-
-	int m_iframe;		//Frame index that this flipper is currently displaying
 
 	int m_EnableRotateEvent;
 

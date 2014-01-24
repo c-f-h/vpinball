@@ -66,11 +66,6 @@ void BumperAnimObject::Check3D()
 	}
 }
 
-ObjFrame *BumperAnimObject::Draw3D(const RECT * const prc)
-{
-    return NULL;
-}
-
 void BumperAnimObject::Reset()
 {
 	m_iframe = -2;
@@ -459,15 +454,6 @@ void SpinnerAnimObject::UpdateVelocities()
 	m_anglespeed -= sinf(m_angle) * 0.0025f; // Center of gravity towards bottom of object, makes it stop vertical
 
 	m_anglespeed *= m_pspinner->m_d.m_antifriction;
-}
-
-void SpinnerAnimObject::Check3D()
-{	
-}
-
-ObjFrame *SpinnerAnimObject::Draw3D(const RECT * const prc)
-{
-    return NULL;
 }
 
 void SpinnerAnimObject::Reset()

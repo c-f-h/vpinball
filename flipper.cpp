@@ -273,10 +273,10 @@ void Flipper::GetHitShapes(Vector<HitObject> * const pvho)
 
    phf->m_pfe = NULL;
 
-   phf->m_flipperanim.m_frameStart = ANGTORAD(m_d.m_StartAngle);
-   phf->m_flipperanim.m_frameEnd = ANGTORAD(m_d.m_EndAngle);
-   phf->m_flipperanim.m_angleMin = min(phf->m_flipperanim.m_frameStart, phf->m_flipperanim.m_frameEnd);
-   phf->m_flipperanim.m_angleMax = max(phf->m_flipperanim.m_frameStart, phf->m_flipperanim.m_frameEnd);
+   const float angStart = ANGTORAD(m_d.m_StartAngle);
+   const float angEnd = ANGTORAD(m_d.m_EndAngle);
+   phf->m_flipperanim.m_angleMin = min(angStart, angEnd);
+   phf->m_flipperanim.m_angleMax = max(angStart, angEnd);
 
    phf->m_flipperanim.m_fEnabled = (m_d.m_fEnabled != 0);
    phf->m_flipperanim.m_fVisible = (m_d.m_fVisible != 0);
@@ -598,12 +598,12 @@ void Flipper::PostRenderStatic(const RenderDevice* _pd3dDevice)
     // TODO: These render calls REALLY have to go into a vertex buffer.
 
     // Render the flipper.
-    RenderAtThickness(pd3dDevice, NULL, angle,  height, m_d.m_color, m_d.m_BaseRadius - (float)m_d.m_rubberthickness, m_d.m_EndRadius - (float)m_d.m_rubberthickness, m_d.m_height);
+    RenderAtThickness(pd3dDevice, angle,  height, m_d.m_color, m_d.m_BaseRadius - (float)m_d.m_rubberthickness, m_d.m_EndRadius - (float)m_d.m_rubberthickness, m_d.m_height);
 
     // Render the rubber.
     if (m_d.m_rubberthickness > 0)
     {
-        RenderAtThickness(pd3dDevice, NULL, angle, height + (float)m_d.m_rubberheight, m_d.m_rubbercolor, m_d.m_BaseRadius, m_d.m_EndRadius, (float)m_d.m_rubberwidth);// 34);
+        RenderAtThickness(pd3dDevice, angle, height + (float)m_d.m_rubberheight, m_d.m_rubbercolor, m_d.m_BaseRadius, m_d.m_EndRadius, (float)m_d.m_rubberwidth);// 34);
     }
 }
 
@@ -620,7 +620,7 @@ static const WORD rgiFlipper1[4] = {0,4,5,1};
 static const WORD rgiFlipper2[4] = {2,6,7,3};
 
 
-void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, ObjFrame * const pof, const float angle, const float height,
+void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, const float angle, const float height,
                                 const COLORREF color, const float baseradius, const float endradius, const float flipperheight)
 {
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
@@ -644,10 +644,6 @@ void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, ObjFrame * const pof, 
         rgv3D[l].z *= m_ptable->m_zScale;
         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
     }
-
-    if (pof)
-        ppin3d->ExpandExtents(&pof->rc, rgv3D, &m_phitflipper->m_flipperanim.m_znear,
-                &m_phitflipper->m_flipperanim.m_zfar, 8, fFalse);
 
     SetNormal(rgv3D, rgi0123, 4, NULL, NULL, 0);
     // Draw top.
@@ -678,10 +674,6 @@ void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, ObjFrame * const pof, 
         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l+16],inv_width,inv_height);
     }
-
-    if (pof)
-        ppin3d->ExpandExtents(&pof->rc, rgv3D,&m_phitflipper->m_flipperanim.m_znear,
-                &m_phitflipper->m_flipperanim.m_zfar, 32, fFalse);
 
     {
         WORD rgi[3*14];
@@ -730,9 +722,6 @@ void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, ObjFrame * const pof, 
         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l+16],inv_width,inv_height);
     }
-
-    if (pof)
-        ppin3d->ExpandExtents(&pof->rc, rgv3D, &m_phitflipper->m_flipperanim.m_znear, &m_phitflipper->m_flipperanim.m_zfar, 32, fFalse);
 
     // Draw end caps to vertical cylinder at small end.
     {

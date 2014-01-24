@@ -37,7 +37,6 @@ HitFlipper::HitFlipper(const float x, const float y, float baser, float endr, fl
 
 	m_flipperanim.m_angleCur = angle;
 	m_flipperanim.m_angleEnd = angle;
-	m_flipperanim.m_angleFrame = angle;
 
 	m_flipperanim.m_anglespeed = 0;
 	m_flipperanim.m_lastAngspd = 0;
@@ -47,8 +46,6 @@ HitFlipper::HitFlipper(const float x, const float y, float baser, float endr, fl
 	m_flipperanim.m_fAcc = 0;
 	m_flipperanim.m_mass = mass;
 	
-	m_flipperanim.m_iframe = -1;
-
 	m_last_hittime = 0;
 
 	m_flipperanim.m_force = 2;
@@ -690,13 +687,4 @@ void HitFlipper::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 
 	const Vertex3Ds vnormal(phitnormal->x, phitnormal->y, 0.0f);
 	pball->AngularAcceleration(&vnormal);
-	}
-
-void FlipperAnimObject::Check3D()
-	{
-	}
-
-ObjFrame *FlipperAnimObject::Draw3D(const RECT * const prc)
-	{
-        return NULL;
 	}
