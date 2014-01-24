@@ -152,6 +152,7 @@ Player::Player()
 	m_fPseudoPause = false;
 	m_pauseRefCount = 0;
 	m_fNoTimeCorrect = fFalse;
+	m_firstFrame = true;
 
     m_fThrowBalls = fFalse;
 	m_fAccelerometer = fTrue;	// true if electronic Accelerometer enabled 
@@ -2437,16 +2438,16 @@ void Player::FlipVideoBuffers3D( unsigned int overall_area )
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-bool firstRun=true;
-
 void Player::Render()
 {
-	if(firstRun)
+	if(m_firstFrame)
 	{
 		const HWND hVPMWnd = FindWindow( "MAME", NULL );
 		if (hVPMWnd != NULL)
-			SetWindowPos ( hVPMWnd, HWND_TOPMOST, 0, 0, 0, 0, (SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE) ); // in some strange cases the vpinmame window is not on top, so enforce it
-		firstRun = false; //!! meh
+		{
+			if(IsWindowVisible( hVPMWnd ))
+				SetWindowPos ( hVPMWnd, HWND_TOPMOST, 0, 0, 0, 0, (SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE) ); // in some strange cases the vpinmame window is not on top, so enforce it
+		}
 	}
 
 	// On Win95 when there are no balls, frame updates happen so fast the blitter gets stuck
@@ -2584,6 +2585,8 @@ void Player::Render()
     }
 
     m_vballDelete.RemoveAllElements();
+
+	m_firstFrame = false;
 
 #ifdef FPS
     if (m_fShowFPS)
