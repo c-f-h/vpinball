@@ -190,27 +190,12 @@ public:
 	~Pin3D();
 
 	HRESULT InitDD(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool stereo3DFXAA, const bool AA);
-	HRESULT Create3DDevice(const GUID * const pDeviceGUID);
-	HRESULT CreateZBuffer(const GUID * const pDeviceGUID);
-
-	void DrawBackground();
-
-	void InitRenderState();
-
-	void InitPlayfieldGraphics();
-   void RenderPlayfieldGraphics();
-
-	void InitLights();
-   void ClearSpriteRectangle( AnimObject *animObj, ObjFrame *pof );
-   void CreateAndCopySpriteBuffers( AnimObject *animObj, ObjFrame *pof );
 
 	void InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD);
-	void SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar);
-	void Identity();
-	void Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z);
-	void Scale(const float x, const float y, const float z);
-	void Translate(const float x, const float y, const float z);
-	void FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, const int cvert, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const GPINFLOAT skew, const float xlatez);
+
+    void ClearSpriteRectangle( AnimObject *animObj, ObjFrame *pof );
+    void CreateAndCopySpriteBuffers( AnimObject *animObj, ObjFrame *pof );
+
 	void CacheTransform();      // compute m_matrixTotal = mWorld * mView * mProj
 
 	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex3D * const rgvout) const;
@@ -221,9 +206,6 @@ public:
 
    Vertex3Ds Unproject( Vertex3Ds *point );
    Vertex3Ds Get3DPointFrom2D( POINT *p );
-	BaseTexture* CreateShadow(const float height);
-
-	void CreateBallShadow();
 
 	void SetUpdatePos(const int left, const int top);
    void Flip(const int offsetx, const int offsety, const BOOL vsync);
@@ -254,7 +236,28 @@ public:
 	BaseTexture* CreateOffscreen(const int width, const int height) const;
 	BaseTexture* CreateOffscreenWithCustomTransparency(const int width, const int height, const int color) const;
 	BaseTexture* CreateZBufferOffscreen(const int width, const int height) const;
+
+private:
+    HRESULT Create3DDevice(const GUID * const pDeviceGUID);
+    HRESULT CreateZBuffer(const GUID * const pDeviceGUID);
+    void DrawBackground();
+    void InitRenderState();
+    void InitPlayfieldGraphics();
+    void RenderPlayfieldGraphics();
+    void InitLights();
+
+	void SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar);
+	void Identity();
+	void Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z);
+	void Scale(const float x, const float y, const float z);
+	void Translate(const float x, const float y, const float z);
+	void FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, const int cvert, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const GPINFLOAT skew, const float xlatez);
    
+	BaseTexture* CreateShadow(const float height);
+	void CreateBallShadow();
+
+    // Data members
+
 private:
 	LPDIRECTDRAW7 m_pDD;        // only for convenience, does not own this
 	LPDIRECT3D7 m_pD3D;         // is owned

@@ -498,7 +498,7 @@ BaseTexture* Texture::CreateBaseTexture(const int width, const int height)
    ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE | DDSCAPS_COMPLEX | DDSCAPS_MIPMAP; 
    ddsd.dwMipMapCount	= 4;
 
-   if ( RenderDevice::instance()->getHardwareAccelerated() )
+   if (g_pvp->m_pdd.m_fHardwareAccel)
    {
 #if 1
       // Create the texture and let D3D driver decide where it store it.
@@ -524,7 +524,7 @@ BaseTexture* Texture::CreateBaseTexture(const int width, const int height)
 
    BaseTexture* pdds;
    HRESULT hr;
-   bool retryflag = (RenderDevice::instance()->getHardwareAccelerated() != 0);
+   bool retryflag = (g_pvp->m_pdd.m_fHardwareAccel != 0);
 retryimage:
    if( FAILED( hr = g_pvp->m_pdd.m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&pdds, NULL ) ) )
    {

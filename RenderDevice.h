@@ -7,6 +7,59 @@ typedef IDirectDrawSurface7 BaseTexture;
 typedef D3DVIEWPORT7 ViewPort;
 typedef IDirectDrawSurface7 RenderTarget;
 
+struct BaseLight : public D3DLIGHT7
+{
+    BaseLight()
+    {
+		ZeroMemory(this, sizeof(*this));
+    }
+
+    D3DLIGHTTYPE getType()          { return dltType; }
+    void setType(D3DLIGHTTYPE lt)   { dltType = lt; }
+
+    const D3DCOLORVALUE& getDiffuse()      { return dcvDiffuse; }
+    const D3DCOLORVALUE& getSpecular()     { return dcvSpecular; }
+    const D3DCOLORVALUE& getAmbient()      { return dcvAmbient; }
+
+    void setDiffuse(float r, float g, float b)
+    {
+        dcvDiffuse.r = r;
+        dcvDiffuse.g = g;
+        dcvDiffuse.b = b;
+    }
+    void setSpecular(float r, float g, float b)
+    {
+        dcvSpecular.r = r;
+        dcvSpecular.g = g;
+        dcvSpecular.b = b;
+    }
+    void setAmbient(float r, float g, float b)
+    {
+        dcvAmbient.r = r;
+        dcvAmbient.g = g;
+        dcvAmbient.b = b;
+    }
+    void setPosition(float x, float y, float z)
+    {
+        dvPosition.x = x;
+        dvPosition.y = y;
+        dvPosition.z = z;
+    }
+    void setDirection(float x, float y, float z)
+    {
+        dvDirection.x = x;
+        dvDirection.y = y;
+        dvDirection.z = z;
+    }
+    void setRange(float r)          { dvRange = r; }
+    void setFalloff(float r)        { dvFalloff = r; }
+    void setAttenuation0(float r)   { dvAttenuation0 = r; }
+    void setAttenuation1(float r)   { dvAttenuation1 = r; }
+    void setAttenuation2(float r)   { dvAttenuation2 = r; }
+    void setTheta(float r)          { dvTheta = r; }
+    void setPhi(float r)            { dvPhi = r; }
+};
+
 
 class VertexBuffer;
 
@@ -36,11 +89,11 @@ public:
 	  NORMALIZENORMALS   = D3DRENDERSTATE_NORMALIZENORMALS,
       TEXTUREFACTOR      = D3DRENDERSTATE_TEXTUREFACTOR
    };
-   static bool createDevice(const GUID * const _deviceGUID, LPDIRECT3D7 _dx7, BaseTexture *_backBuffer );
 
    RenderDevice();
+   ~RenderDevice();
 
-   static RenderDevice* instance();
+   bool createDevice(const GUID * const _deviceGUID, LPDIRECT3D7 _dx7, BaseTexture *_backBuffer );
 
    void SetMaterial( const THIS_ BaseMaterial * const _material );
    void SetRenderState( const RenderStates p1, const DWORD p2 );
@@ -53,24 +106,11 @@ public:
       vbInVRAM=(_state==1);
    }
 
-   inline void setHardwareAccelerated( const int _hwAcc)
-   {
-      hardwareAccelerated = _hwAcc;
-   }
-
-   inline int getHardwareAccelerated() const
-   {
-      return hardwareAccelerated;
-   }
-
    //########################## simple wrapper functions (interface for DX7)##################################
 
    HRESULT QueryInterface( THIS_ REFIID riid, LPVOID * ppvObj );
 
-   ULONG AddRef( void );
-   ULONG Release( void );
-
-   HRESULT GetCaps( THIS_ LPD3DDEVICEDESC7 );
+   //HRESULT GetCaps( THIS_ LPD3DDEVICEDESC7 );
 
    HRESULT EnumTextureFormats( THIS_ LPD3DENUMPIXELFORMATSCALLBACK,LPVOID );
 
@@ -78,7 +118,7 @@ public:
 
    HRESULT EndScene( THIS );
 
-   HRESULT GetDirect3D( THIS_ LPDIRECT3D7* );
+   //HRESULT GetDirect3D( THIS_ LPDIRECT3D7* );
 
    HRESULT SetRenderTarget( THIS_ RenderTarget*,DWORD );
 
@@ -96,9 +136,9 @@ public:
 
    HRESULT GetViewport( THIS_ ViewPort* );
 
-   HRESULT SetMaterial( THIS_ LPD3DMATERIAL7 );
+   //HRESULT SetMaterial( THIS_ LPD3DMATERIAL7 );
 
-   HRESULT GetMaterial( THIS_ LPD3DMATERIAL7 );
+   //HRESULT GetMaterial( THIS_ LPD3DMATERIAL7 );
 
    void getMaterial( THIS_ BaseMaterial *_material );
 
@@ -168,12 +208,13 @@ private:
    static const DWORD RENDER_STATE_CACHE_SIZE=256;
    static const DWORD TEXTURE_STATE_CACHE_SIZE=256;
 
-   static RenderDevice *theDevice;
    DWORD renderStateCache[RENDER_STATE_CACHE_SIZE];
    DWORD textureStateCache[8][TEXTURE_STATE_CACHE_SIZE];
-   int hardwareAccelerated;
    BaseMaterial materialStateCache;
    bool vbInVRAM;
+
+   LPDIRECT3DDEVICE7 dx7Device;
+   LPDIRECT3D7 dx7;
 };
 
 class VertexBuffer : public IDirect3DVertexBuffer7

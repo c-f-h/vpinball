@@ -3,18 +3,14 @@
 #include "Material.h"
 #include "Texture.h"
 
-static LPDIRECT3DDEVICE7 dx7Device;
-static LPDIRECT3D7 dx7;
-RenderDevice* RenderDevice::theDevice=0;
-
 bool RenderDevice::createDevice(const GUID * const _deviceGUID, LPDIRECT3D7 _dx7, BaseTexture *_backBuffer )
 {
    dx7=_dx7;
-   memset( theDevice->renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
+   memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
    for( int i=0;i<8;i++ )
       for( unsigned int j=0;j<TEXTURE_STATE_CACHE_SIZE;j++ )
-         theDevice->textureStateCache[i][j]=0xFFFFFFFF;
-   memset(&theDevice->materialStateCache, 0xFFFFFFFF, sizeof(Material));
+         textureStateCache[i][j]=0xFFFFFFFF;
+   memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
 
    HRESULT hr;
    if( FAILED( hr = dx7->CreateDevice( *_deviceGUID, (LPDIRECTDRAWSURFACE7)_backBuffer, &dx7Device ) ) )
@@ -26,7 +22,6 @@ bool RenderDevice::createDevice(const GUID * const _deviceGUID, LPDIRECT3D7 _dx7
 
 RenderDevice::RenderDevice()
 {
-   theDevice=this;
    vbInVRAM=false;
    Material::setRenderDevice(this);
    Texture::SetRenderDevice(this);
@@ -37,9 +32,9 @@ RenderDevice::RenderDevice()
    memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
 }
 
-RenderDevice* RenderDevice::instance()
+RenderDevice::~RenderDevice()
 {
-   return theDevice;
+   dx7Device->Release();
 }
 
 void RenderDevice::SetMaterial( const THIS_ BaseMaterial * const _material )
@@ -109,10 +104,10 @@ HRESULT RenderDevice::QueryInterface( THIS_ REFIID riid, LPVOID * ppvObj )
    return dx7Device->QueryInterface(riid,ppvObj);
 }
 
-HRESULT RenderDevice::GetCaps( THIS_ LPD3DDEVICEDESC7 p1)
-{
-   return dx7Device->GetCaps(p1);
-}
+//HRESULT RenderDevice::GetCaps( THIS_ LPD3DDEVICEDESC7 p1)
+//{
+//   return dx7Device->GetCaps(p1);
+//}
 
 HRESULT RenderDevice::EnumTextureFormats( THIS_ LPD3DENUMPIXELFORMATSCALLBACK p1,LPVOID p2)
 {
@@ -131,10 +126,10 @@ HRESULT RenderDevice::EndScene( THIS )
    return dx7Device->EndScene();
 }
 
-HRESULT RenderDevice::GetDirect3D( THIS_ LPDIRECT3D7* p1)
-{
-   return dx7Device->GetDirect3D(p1);
-}
+//HRESULT RenderDevice::GetDirect3D( THIS_ LPDIRECT3D7* p1)
+//{
+//   return dx7Device->GetDirect3D(p1);
+//}
 
 HRESULT RenderDevice::SetRenderTarget( THIS_ LPDIRECTDRAWSURFACE7 p1,DWORD p2)
 {
@@ -176,15 +171,15 @@ HRESULT RenderDevice::GetViewport( THIS_ LPD3DVIEWPORT7 p1)
    return dx7Device->GetViewport(p1);
 }
 
-HRESULT RenderDevice::SetMaterial( THIS_ LPD3DMATERIAL7 p1)
-{
-   return dx7Device->SetMaterial(p1);
-}
+//HRESULT RenderDevice::SetMaterial( THIS_ LPD3DMATERIAL7 p1)
+//{
+//   return dx7Device->SetMaterial(p1);
+//}
 
-HRESULT RenderDevice::GetMaterial( THIS_ LPD3DMATERIAL7 p1)
-{
-   return dx7Device->GetMaterial(p1);
-}
+//HRESULT RenderDevice::GetMaterial( THIS_ LPD3DMATERIAL7 p1)
+//{
+//   return dx7Device->GetMaterial(p1);
+//}
 
 void RenderDevice::getMaterial( THIS_ BaseMaterial *_material )
 {
@@ -355,12 +350,3 @@ HRESULT RenderDevice::GetInfo( THIS_ DWORD p1,LPVOID p2,DWORD p3 )
    return dx7Device->GetInfo(p1, p2, p3);
 }
 
-ULONG RenderDevice::Release( ) 
-{
-   return dx7Device->Release();
-}
-
-ULONG RenderDevice::AddRef( void ) 
-{
-   return dx7Device->AddRef();
-}
