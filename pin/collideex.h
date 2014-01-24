@@ -134,15 +134,11 @@ public:
 
 	virtual bool FMover() const {return true;}
 
-	virtual void Check3D();
-	virtual ObjFrame *Draw3D(const RECT * const prc);
+	virtual void Check3D()                              { }
+	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
 	virtual void Reset();
 
-	Vector<ObjFrame> m_vddsFrame;
-
 	Gate *m_pgate;
-
-	int m_iframe; //Frame index that this flipper is currently displaying
 
 	float m_anglespeed;
 	float m_angle;

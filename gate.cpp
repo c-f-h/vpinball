@@ -361,21 +361,21 @@ void Gate::EndPlay()
 {
    IEditable::EndPlay();
 
-   if (m_phitgate) // Failed Player case
-   {
-      for (int i=0;i<m_phitgate->m_gateanim.m_vddsFrame.Size();i++)
-      {
-         delete m_phitgate->m_gateanim.m_vddsFrame.ElementAt(i);
-      }
-
-      m_phitgate = NULL;
-   }
-
+   m_phitgate = NULL;   // possible memory leak here?
    m_plineseg = NULL;
 }
 
-void Gate::PostRenderStatic(const RenderDevice* pd3dDevice)
+int Gate::angleToFrame(float angle) const
 {
+    int frame = (m_d.m_angleMin != m_d.m_angleMax)
+        ?  (int)(((angle - m_d.m_angleMin)/(m_d.m_angleMax - m_d.m_angleMin)
+                    * (float)frameCount) + 0.5f)
+        : 1;
+
+    if (frame == frameCount) // Happens when the angle exactly equals m_angleMax
+        frame = frameCount - 1;
+
+    return frame;
 }
 
 static const WORD rgiGate0[8] = {0,1,2,3,6,7,4,5};
@@ -388,6 +388,271 @@ static const WORD rgiGate4[4] = {0,2,3,1};
 static const WORD rgiGate5[4] = {4,5,7,6};
 static const WORD rgiGate6[4] = {0,4,6,2};
 static const WORD rgiGate7[4] = {1,3,7,5};
+
+void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
+{
+    // TODO: needs optimization, and get rid of the frame stuff.
+    // This looks pretty similar to the spinner render function,
+    // maybe make one common function out of them?
+    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
+    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+    COLORREF rgbTransparent = RGB(255,0,255); //RGB(0,0,0);
+
+    Texture * const pinback = m_ptable->GetImage(m_d.m_szImageBack);
+    Texture * const pinfront = m_ptable->GetImage(m_d.m_szImageFront);
+
+    if (g_pvp->m_pdd.m_fHardwareAccel)
+    {
+        pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
+        pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
+        pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
+    }
+    else
+    {
+        //modified to correct software render of plain gates
+        ppin3d->SetColorKeyEnabled(FALSE);
+    }
+    // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
+    pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_MIRROR);
+
+    if(!m_d.m_fEnableLighting)
+        pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
+
+    static const WORD idx[24] = {0,1,2,0,1,2, 4,5,6,4,6,7, 8,9,10,8,10,11, 12,13,14,12,14,15 };
+
+    const int i = angleToFrame(m_phitgate->m_gateanim.m_angle);
+    const int ofs = 8 * i;
+
+    if(m_d.m_fEnableLighting)
+    {
+        Vertex3D verts[16];
+        Vertex3D rgv3D[8];
+        memcpy(rgv3D,&litVertices[ofs],sizeof(Vertex3D)*8);
+
+        // Draw Backside
+        if (pinback)
+        {
+            pinback->CreateAlphaChannel();
+            pinback->Set( ePictureTexture );
+
+            if (pinback->m_fTransparent)
+            {
+                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+                if (m_d.m_color != rgbTransparent)
+                    rgbTransparent = pinback->m_rgbTransparent;
+            }
+            else 
+            {
+                ppin3d->EnableAlphaBlend( 0x80, fFalse );
+                pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
+/*              pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE);
+                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
+                pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
+                pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
+                pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
+                pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
+                pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA); 
+*/
+            }
+
+            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
+            ppin3d->SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+            ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+
+            textureMaterial.set();
+        }
+        else // No image by that name  
+        {
+            ppin3d->SetTexture(NULL);
+            solidMaterial.set();
+        }
+        SetNormal(rgv3D, rgiGate2, 4, NULL, NULL, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4, 0);
+
+        // Draw Frontside
+        if (pinfront) 
+        {
+            pinfront->CreateAlphaChannel();
+            pinfront->Set( ePictureTexture );
+            if (pinfront->m_fTransparent)
+            {
+                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+                if (m_d.m_color != rgbTransparent)
+                    rgbTransparent = pinfront->m_rgbTransparent;
+            }
+            else 
+            {
+                ppin3d->EnableAlphaBlend( 1,fFalse );
+            }
+
+            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
+            ppin3d->SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+            ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+
+            textureMaterial.set();
+        }
+        else // No image by that name  
+        {
+            ppin3d->SetTexture(NULL);
+            solidMaterial.set();
+        }
+
+        SetNormal(rgv3D, rgiGate3, 4, NULL, NULL, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4, 0);
+
+        solidMaterial.set();
+        ppin3d->SetTexture(NULL);
+
+        if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
+        {
+            // Top & Bottom
+            SetNormal(rgv3D, rgiGate4, 4, NULL, NULL, 0);
+            memcpy(&verts[0], &rgv3D[rgiGate4[0]], sizeof(Vertex3D));
+            memcpy(&verts[1], &rgv3D[rgiGate4[1]], sizeof(Vertex3D));
+            memcpy(&verts[2], &rgv3D[rgiGate4[2]], sizeof(Vertex3D));
+            memcpy(&verts[3], &rgv3D[rgiGate4[3]], sizeof(Vertex3D));
+            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4,(LPWORD)rgiGate4, 4, 0);
+
+            SetNormal(rgv3D, rgiGate5, 4, NULL, NULL, 0);
+            memcpy(&verts[4], &rgv3D[rgiGate5[0]], sizeof(Vertex3D));
+            memcpy(&verts[5], &rgv3D[rgiGate5[1]], sizeof(Vertex3D));
+            memcpy(&verts[6], &rgv3D[rgiGate5[2]], sizeof(Vertex3D));
+            memcpy(&verts[7], &rgv3D[rgiGate5[3]], sizeof(Vertex3D));
+            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate5, 4, 0);
+
+            // Sides
+            SetNormal(rgv3D, rgiGate6, 4, NULL, NULL, 0);
+            memcpy(&verts[8], &rgv3D[rgiGate6[0]], sizeof(Vertex3D));
+            memcpy(&verts[9], &rgv3D[rgiGate6[1]], sizeof(Vertex3D));
+            memcpy(&verts[10], &rgv3D[rgiGate6[2]], sizeof(Vertex3D));
+            memcpy(&verts[11], &rgv3D[rgiGate6[3]], sizeof(Vertex3D));
+            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 7,(LPWORD)rgiGate6, 4, 0);
+
+            SetNormal(rgv3D, rgiGate7, 4, NULL, NULL, 0);
+            memcpy(&verts[12], &rgv3D[rgiGate7[0]], sizeof(Vertex3D));
+            memcpy(&verts[13], &rgv3D[rgiGate7[1]], sizeof(Vertex3D));
+            memcpy(&verts[14], &rgv3D[rgiGate7[2]], sizeof(Vertex3D));
+            memcpy(&verts[15], &rgv3D[rgiGate7[3]], sizeof(Vertex3D));
+            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate7, 4, 0);
+            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,verts, 16,(LPWORD)idx, 24, 0);
+        }
+    }
+    else // copy pasted from above, just without lighting
+    {
+        Vertex3D_NoLighting rgv3D[8];
+        Vertex3D_NoLighting verts[16];
+
+        memcpy( rgv3D, &nolitVertices[ofs],sizeof(Vertex3D_NoLighting)*8);
+
+        // Draw Backside
+        if (pinback)
+        {
+            pinback->CreateAlphaChannel();
+            pinback->Set( ePictureTexture );
+            if (pinback->m_fTransparent)
+            {
+                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+                if (m_d.m_color != rgbTransparent)
+                    rgbTransparent = pinback->m_rgbTransparent;
+            }
+            else 
+            {
+                ppin3d->EnableAlphaBlend( 0x80, fFalse );
+                pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
+/*              pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE);
+                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
+                pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
+                pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
+                pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
+                pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
+                pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA);
+*/
+            }
+
+            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
+            g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+            g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+
+            textureMaterial.set();
+        }
+        else // No image by that name  
+        {
+            ppin3d->SetTexture(NULL);
+            solidMaterial.set();
+        }
+
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4, 0);
+
+        // Draw Frontside
+        if (pinfront) 
+        {
+            pinfront->CreateAlphaChannel();
+            //pd3dDevice->SetTexture(ePictureTexture, pinfront->m_pdsBufferColorKey);
+            pinfront->Set( ePictureTexture );
+            if (pinfront->m_fTransparent)
+            {
+                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+                if (m_d.m_color != rgbTransparent)
+                    rgbTransparent = pinfront->m_rgbTransparent;
+            }
+            else 
+            {
+                ppin3d->EnableAlphaBlend(1,fFalse);
+            }
+
+            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
+            ppin3d->SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+            ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+
+            textureMaterial.set();
+        }
+        else // No image by that name  
+        {
+            ppin3d->SetTexture(NULL);
+            solidMaterial.set();
+        }
+
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4, 0);
+        solidMaterial.set();
+        ppin3d->SetTexture(NULL);
+
+        if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
+        {
+            // Top & Bottom
+            memcpy(&verts[0], &rgv3D[rgiGate4[0]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[1], &rgv3D[rgiGate4[1]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[2], &rgv3D[rgiGate4[2]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[3], &rgv3D[rgiGate4[3]], sizeof(Vertex3D_NoLighting));
+
+            memcpy(&verts[4], &rgv3D[rgiGate5[0]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[5], &rgv3D[rgiGate5[1]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[6], &rgv3D[rgiGate5[2]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[7], &rgv3D[rgiGate5[3]], sizeof(Vertex3D_NoLighting));
+
+            // Sides
+            memcpy(&verts[8], &rgv3D[rgiGate6[0]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[9], &rgv3D[rgiGate6[1]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[10], &rgv3D[rgiGate6[2]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[11], &rgv3D[rgiGate6[3]], sizeof(Vertex3D_NoLighting));
+
+            memcpy(&verts[12], &rgv3D[rgiGate7[0]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[13], &rgv3D[rgiGate7[1]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[14], &rgv3D[rgiGate7[2]], sizeof(Vertex3D_NoLighting));
+            memcpy(&verts[15], &rgv3D[rgiGate7[3]], sizeof(Vertex3D_NoLighting));
+            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_NOLIGHTING_VERTEX,verts, 16,(LPWORD)idx, 24, 0);
+        }
+    }
+    g_pplayer->m_pin3d.SetColorKeyEnabled(FALSE);
+    pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
+    pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
+
+    if(!m_d.m_fEnableLighting)
+        pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
+}
 
 void Gate::PrepareStatic(RenderDevice* pd3dDevice)
 {
@@ -668,280 +933,6 @@ void Gate::RenderStatic(const RenderDevice* _pd3dDevice) // only the support str
 
 void Gate::RenderMovers(const RenderDevice* _pd3dDevice)
 {
-   RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
-   Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-   COLORREF rgbTransparent = RGB(255,0,255); //RGB(0,0,0);
-
-   Texture * const pinback = m_ptable->GetImage(m_d.m_szImageBack);
-   Texture * const pinfront = m_ptable->GetImage(m_d.m_szImageFront);
-
-   if (g_pvp->m_pdd.m_fHardwareAccel)
-   {
-      pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
-      pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
-      pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
-   }
-   else
-   {
-      //modified to correct software render of plain gates
-      ppin3d->SetColorKeyEnabled(FALSE);
-   }
-   // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
-   pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_MIRROR);
-
-   //ppin3d->ClearExtents(&m_phitgate->m_gateanim.m_rcBounds, &m_phitgate->m_gateanim.m_znear, &m_phitgate->m_gateanim.m_zfar);
-   ppin3d->ClearSpriteRectangle( &m_phitgate->m_gateanim, NULL );
-
-   if(!m_d.m_fEnableLighting)
-      pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
-
-   static const WORD idx[24] = {0,1,2,0,1,2, 4,5,6,4,6,7, 8,9,10,8,10,11, 12,13,14,12,14,15 };
-
-   int ofs=0;
-   for (int i=0;i<frameCount;i++, ofs+=8)
-   {
-      ObjFrame * const pof = new ObjFrame(); 
-
-      if(m_d.m_fEnableLighting)
-      {
-         Vertex3D verts[16];
-         Vertex3D rgv3D[8];
-         memcpy(rgv3D,&litVertices[ofs],sizeof(Vertex3D)*8);
-
-         ppin3d->ClearSpriteRectangle( NULL, pof );
-         ppin3d->ExpandExtents(&pof->rc, rgv3D, &m_phitgate->m_gateanim.m_znear, &m_phitgate->m_gateanim.m_zfar, 8, fFalse);
-
-         // Draw Backside
-         if (pinback) //(pinback)
-         {			
-            pinback->CreateAlphaChannel();
-            pinback->Set( ePictureTexture );
-
-            if (pinback->m_fTransparent)
-            {				
-               pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);				
-               if (m_d.m_color != rgbTransparent)
-                  rgbTransparent = pinback->m_rgbTransparent;
-            }
-            else 
-            {	
-               ppin3d->EnableAlphaBlend( 0x80, fFalse );
-               pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
-/*               pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
-               pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
-               pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
-               pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
-               pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
-               pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
-               pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA); 
-*/
-            }
-
-            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-            ppin3d->SetColorKeyEnabled(TRUE);
-            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-            ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-
-            textureMaterial.set();
-         }
-         else // No image by that name  
-         {
-            ppin3d->SetTexture(NULL);
-            solidMaterial.set();
-         }
-         SetNormal(rgv3D, rgiGate2, 4, NULL, NULL, 0);
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4, 0);
-
-         // Draw Frontside
-         if (pinfront) 
-         {			
-            pinfront->CreateAlphaChannel();
-            pinfront->Set( ePictureTexture );
-            if (pinfront->m_fTransparent)
-            {				
-               pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-               if (m_d.m_color != rgbTransparent)
-                  rgbTransparent = pinfront->m_rgbTransparent;
-            }
-            else 
-            {	
-               ppin3d->EnableAlphaBlend( 1,fFalse );
-            }
-
-            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-            ppin3d->SetColorKeyEnabled(TRUE);
-            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-            ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-
-            textureMaterial.set();
-         }
-         else // No image by that name  
-         {
-            ppin3d->SetTexture(NULL);
-            solidMaterial.set();
-         }
-
-         SetNormal(rgv3D, rgiGate3, 4, NULL, NULL, 0);
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4, 0);
-
-         solidMaterial.set();
-         ppin3d->SetTexture(NULL);
-
-
-         if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
-         {
-            // Top & Bottom
-            SetNormal(rgv3D, rgiGate4, 4, NULL, NULL, 0);
-            memcpy(&verts[0], &rgv3D[rgiGate4[0]], sizeof(Vertex3D));
-            memcpy(&verts[1], &rgv3D[rgiGate4[1]], sizeof(Vertex3D));
-            memcpy(&verts[2], &rgv3D[rgiGate4[2]], sizeof(Vertex3D));
-            memcpy(&verts[3], &rgv3D[rgiGate4[3]], sizeof(Vertex3D));
-            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4,(LPWORD)rgiGate4, 4, 0);
-
-            SetNormal(rgv3D, rgiGate5, 4, NULL, NULL, 0);
-            memcpy(&verts[4], &rgv3D[rgiGate5[0]], sizeof(Vertex3D));
-            memcpy(&verts[5], &rgv3D[rgiGate5[1]], sizeof(Vertex3D));
-            memcpy(&verts[6], &rgv3D[rgiGate5[2]], sizeof(Vertex3D));
-            memcpy(&verts[7], &rgv3D[rgiGate5[3]], sizeof(Vertex3D));
-            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate5, 4, 0);
-            
-            // Sides
-            SetNormal(rgv3D, rgiGate6, 4, NULL, NULL, 0);
-            memcpy(&verts[8], &rgv3D[rgiGate6[0]], sizeof(Vertex3D));
-            memcpy(&verts[9], &rgv3D[rgiGate6[1]], sizeof(Vertex3D));
-            memcpy(&verts[10], &rgv3D[rgiGate6[2]], sizeof(Vertex3D));
-            memcpy(&verts[11], &rgv3D[rgiGate6[3]], sizeof(Vertex3D));
-            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 7,(LPWORD)rgiGate6, 4, 0);
-
-            SetNormal(rgv3D, rgiGate7, 4, NULL, NULL, 0);
-            memcpy(&verts[12], &rgv3D[rgiGate7[0]], sizeof(Vertex3D));
-            memcpy(&verts[13], &rgv3D[rgiGate7[1]], sizeof(Vertex3D));
-            memcpy(&verts[14], &rgv3D[rgiGate7[2]], sizeof(Vertex3D));
-            memcpy(&verts[15], &rgv3D[rgiGate7[3]], sizeof(Vertex3D));
-            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate7, 4, 0);
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,verts, 16,(LPWORD)idx, 24, 0);
-         }
-      }
-      else // copy pasted from above, just without lighting
-      {
-         Vertex3D_NoLighting rgv3D[8];
-         Vertex3D_NoLighting verts[16];
-
-         memcpy( rgv3D, &nolitVertices[ofs],sizeof(Vertex3D_NoLighting)*8);
-
-         ppin3d->ClearSpriteRectangle( NULL, pof );
-         ppin3d->ExpandExtents(&pof->rc, rgv3D, &m_phitgate->m_gateanim.m_znear, &m_phitgate->m_gateanim.m_zfar, 8, fFalse);
-
-         // Draw Backside
-         if (pinback) //(pinback)
-         {			
-            pinback->CreateAlphaChannel();
-            pinback->Set( ePictureTexture );
-            if (pinback->m_fTransparent)
-            {				
-               pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);				
-               if (m_d.m_color != rgbTransparent)
-                  rgbTransparent = pinback->m_rgbTransparent;
-            }
-            else 
-            {	
-               ppin3d->EnableAlphaBlend( 0x80, fFalse );
-               pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
-/*               pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
-               pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
-               pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
-               pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
-               pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
-               pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
-               pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA); 
-*/
-            }
-
-            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-            g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
-            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-            g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-
-            textureMaterial.set();
-         }
-         else // No image by that name  
-         {
-            ppin3d->SetTexture(NULL);
-            solidMaterial.set();
-         }
-
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4, 0);
-
-         // Draw Frontside
-         if (pinfront) 
-         {			
-            pinfront->CreateAlphaChannel();
-            //pd3dDevice->SetTexture(ePictureTexture, pinfront->m_pdsBufferColorKey);
-            pinfront->Set( ePictureTexture );
-            if (pinfront->m_fTransparent)
-            {				
-               pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-               if (m_d.m_color != rgbTransparent)
-                  rgbTransparent = pinfront->m_rgbTransparent;
-            }
-            else 
-            {	
-               ppin3d->EnableAlphaBlend(1,fFalse);
-            }
-
-            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-            ppin3d->SetColorKeyEnabled(TRUE);
-            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-            ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-
-            textureMaterial.set();
-         }
-         else // No image by that name  
-         {
-            ppin3d->SetTexture(NULL);
-            solidMaterial.set();
-         }
-
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4, 0);
-         solidMaterial.set();
-         ppin3d->SetTexture(NULL);
-
-         if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
-         {
-            // Top & Bottom
-            memcpy(&verts[0], &rgv3D[rgiGate4[0]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[1], &rgv3D[rgiGate4[1]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[2], &rgv3D[rgiGate4[2]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[3], &rgv3D[rgiGate4[3]], sizeof(Vertex3D_NoLighting));
-
-            memcpy(&verts[4], &rgv3D[rgiGate5[0]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[5], &rgv3D[rgiGate5[1]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[6], &rgv3D[rgiGate5[2]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[7], &rgv3D[rgiGate5[3]], sizeof(Vertex3D_NoLighting));
-
-            // Sides
-            memcpy(&verts[8], &rgv3D[rgiGate6[0]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[9], &rgv3D[rgiGate6[1]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[10], &rgv3D[rgiGate6[2]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[11], &rgv3D[rgiGate6[3]], sizeof(Vertex3D_NoLighting));
-
-            memcpy(&verts[12], &rgv3D[rgiGate7[0]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[13], &rgv3D[rgiGate7[1]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[14], &rgv3D[rgiGate7[2]], sizeof(Vertex3D_NoLighting));
-            memcpy(&verts[15], &rgv3D[rgiGate7[3]], sizeof(Vertex3D_NoLighting));
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_NOLIGHTING_VERTEX,verts, 16,(LPWORD)idx, 24, 0);
-         }
-      }
-      ppin3d->CreateAndCopySpriteBuffers( &m_phitgate->m_gateanim, pof );
-      m_phitgate->m_gateanim.m_vddsFrame.AddElement(pof);
-   }
-
-   g_pplayer->m_pin3d.SetColorKeyEnabled(FALSE);
-   pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
-   pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
-
-   if(!m_d.m_fEnableLighting)
-      pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
 }
 
 void Gate::SetObjectPos()

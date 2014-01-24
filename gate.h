@@ -97,6 +97,8 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Gate)
 
 	virtual void RenderBlueprint(Sur *psur);
 
+    int angleToFrame(float angle) const;
+
 	void WriteRegDefaults();
 	PinTable *m_ptable;
 

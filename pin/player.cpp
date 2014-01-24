@@ -855,6 +855,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 					(pe->GetItemType() == eItemFlasher) ||
 					(pe->GetItemType() == eItemFlipper) ||
 					(pe->GetItemType() == eItemSpinner) ||
+					(pe->GetItemType() == eItemGate) ||
 					(pe->GetItemType() == eItemBumper) )
 					{
 					  m_vhitalpha.AddElement(ph);
@@ -864,6 +865,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 				if ((pe->GetItemType() == eItemPrimitive) ||
 					(pe->GetItemType() == eItemFlipper) ||
 					(pe->GetItemType() == eItemSpinner) ||
+					(pe->GetItemType() == eItemGate) ||
                     (pe->GetItemType() == eItemBumper))
 					{
 					  m_vhitalpha.AddElement(ph);

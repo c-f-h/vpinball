@@ -186,8 +186,6 @@ HitGate::HitGate(Gate * const pgate)
 	m_gateanim.m_friction = pgate->m_d.m_friction;
 	m_gateanim.m_fVisible = pgate->m_d.m_fVisible;	
 
-	m_gateanim.m_iframe = -1; //force new animation frame draw
-
 	m_gateanim.m_angle = m_gateanim.m_angleMin;
 	m_gateanim.m_anglespeed = 0;
 
@@ -265,44 +263,8 @@ void GateAnimObject::UpdateVelocities()
 	}
 }
 
-void GateAnimObject::Check3D()
-{
-	if (!m_fVisible)
-	{
-		if (m_iframe != -1)
-		{
-			m_fInvalid = true;
-			m_iframe = -1;
-		}
-		return;
-	}
-	
-	int frame = (m_pgate->m_d.m_angleMin != m_pgate->m_d.m_angleMax) ?
-				(int)(((m_angle - m_pgate->m_d.m_angleMin)/(m_pgate->m_d.m_angleMax - m_pgate->m_d.m_angleMin)
-				* (float)m_vddsFrame.Size()) + 0.5f)
-				: 1;
-
-	if (frame == m_vddsFrame.Size()) // Happens when the angle exactly equals m_angleMax
-		frame = m_vddsFrame.Size()-1;
-
-	if (frame != m_iframe)
-	{
-		m_iframe = frame;
-		m_fInvalid = true;
-	}
-}
-
-ObjFrame *GateAnimObject::Draw3D(const RECT * const prc)
-{
-	if (!m_fVisible || m_iframe == -1)
-		return NULL;
-
-	return m_vddsFrame.ElementAt(m_iframe);
-}
-
 void GateAnimObject::Reset()
 {
-	m_iframe = -1;
 }
 
 HitSpinner::HitSpinner(Spinner * const pspinner, const float height)
