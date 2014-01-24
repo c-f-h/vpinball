@@ -10,15 +10,6 @@ BumperHitCircle::BumperHitCircle()
 	m_antifriction = 1.0f;
 	m_scatter = 0;
 	m_bumperanim.m_fVisible = fTrue;
-	for (int i=0;i<2;i++)
-		m_bumperanim.m_pobjframe[i] = NULL;
-}
-
-BumperHitCircle::~BumperHitCircle()
-{
-	for (int i=0;i<2;i++)
-		if (m_bumperanim.m_pobjframe[i])
-			delete m_bumperanim.m_pobjframe[i];
 }
 
 void BumperHitCircle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
@@ -353,8 +344,6 @@ HitSpinner::HitSpinner(Spinner * const pspinner, const float height)
 	m_spinneranim.m_angleMax = ANGTORAD(pspinner->m_d.m_angleMax);
 	m_spinneranim.m_angleMin = ANGTORAD(pspinner->m_d.m_angleMin);
 
-	m_spinneranim.m_iframe = -1;
-
 	m_spinneranim.m_angle = 0;
 	m_spinneranim.m_anglespeed = 0;
 
@@ -474,63 +463,15 @@ void SpinnerAnimObject::UpdateVelocities()
 
 void SpinnerAnimObject::Check3D()
 {	
-	if (!m_fVisible)
-	{
-		if (m_iframe != -1)
-		{
-			m_fInvalid = true;
-			m_iframe = -1;
-		}
-		return;
-	}
-
-	int frame;	
-	const int cframes = m_vddsFrame.Size();
-
-	if (m_pspinner->m_d.m_angleMin != m_pspinner->m_d.m_angleMax)
-	{
-		const float ang = RADTOANG(m_angle);
-
-		frame = (int)(((ang - m_pspinner->m_d.m_angleMin)/(m_pspinner->m_d.m_angleMax - m_pspinner->m_d.m_angleMin))
-				* (float)cframes - 0.5f);
-
-		if (frame >= cframes) 
-			frame = cframes-1;		//hold 	
-		else if (frame < 0) 
-			frame = 0; 
-	}
-	else 
-	{
-		float ang = m_angle;
-		while (ang > (float)(2.0*M_PI))
-			ang -= (float)(2.0*M_PI);
-		while (ang < 0.0f)
-			ang += (float)(2.0*M_PI);
-
-		frame = (int)(((ang * (float)(1.0/(2.0*M_PI))) * (float)cframes) + 0.5f);
-
-		if (frame >= cframes)
-			frame = 0;		//wrap
-	}
-
-	if (frame != m_iframe)
-	{
-		m_iframe = frame;
-		m_fInvalid = true;
-	}
 }
 
 ObjFrame *SpinnerAnimObject::Draw3D(const RECT * const prc)
 {
-	if (!m_fVisible || m_iframe == -1)
-		return NULL;
-
-	return m_vddsFrame.ElementAt(m_iframe);
+    return NULL;
 }
 
 void SpinnerAnimObject::Reset()
 {
-	m_iframe = -1;
 }
 
 void HitSpinner::CalcHitRect()

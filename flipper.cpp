@@ -306,11 +306,6 @@ void Flipper::EndPlay()
 {
    if (m_phitflipper) // Failed player case
    {
-      for (int i=0;i<m_phitflipper->m_flipperanim.m_vddsFrame.Size();i++)
-      {
-         delete m_phitflipper->m_flipperanim.m_vddsFrame.ElementAt(i);
-      }
-
       m_phitflipper = NULL;
    }
 

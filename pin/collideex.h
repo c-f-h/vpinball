@@ -15,15 +15,12 @@ public:
 	BOOL m_fAutoTurnedOff;
 	BOOL m_fDisabled;
 	BOOL m_fVisible;
-
-	ObjFrame *m_pobjframe[2];
 };
 
 class BumperHitCircle : public HitCircle
 {
 public:
 	BumperHitCircle();
-	virtual ~BumperHitCircle();
 
 	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
 
@@ -97,11 +94,7 @@ public:
 	virtual ObjFrame *Draw3D(const RECT * const prc);
 	virtual void Reset();
 
-	Vector<ObjFrame> m_vddsFrame;
-
 	Spinner *m_pspinner;
-
-	int m_iframe; //Frame index that this spinner is currently displaying
 
 	float m_anglespeed;
 	float m_angle;

@@ -43,7 +43,6 @@ public:
 
 	float m_angleMin, m_angleMax;
 
-	Vector<ObjFrame> m_vddsFrame;
 	float m_frameStart;
 	float m_frameEnd;
 

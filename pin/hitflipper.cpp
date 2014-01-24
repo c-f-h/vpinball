@@ -694,14 +694,6 @@ void HitFlipper::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 
 void FlipperAnimObject::Check3D()
 	{
-	const int frame = (m_fVisible) ? (int)((m_angleCur-m_frameStart)/(m_frameEnd-m_frameStart) * (m_vddsFrame.Size()-1)) : -1;
-
-	if (frame != m_iframe)
-		{
-		m_iframe = frame;
-
-		m_fInvalid = true;
-		}
 	}
 
 ObjFrame *FlipperAnimObject::Draw3D(const RECT * const prc)

@@ -853,6 +853,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 					(pe->GetItemType() == eItemPrimitive && !((Primitive *)m_ptable->m_vedit.ElementAt(i))->m_d.staticRendering) ||
 					(pe->GetItemType() == eItemFlasher) ||
 					(pe->GetItemType() == eItemFlipper) ||
+					(pe->GetItemType() == eItemSpinner) ||
 					(pe->GetItemType() == eItemBumper) )
 					{
 					  m_vhitalpha.AddElement(ph);
@@ -861,6 +862,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 			else
 				if ((pe->GetItemType() == eItemPrimitive) ||
 					(pe->GetItemType() == eItemFlipper) ||
+					(pe->GetItemType() == eItemSpinner) ||
                     (pe->GetItemType() == eItemBumper))
 					{
 					  m_vhitalpha.AddElement(ph);

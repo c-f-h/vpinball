@@ -94,6 +94,8 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Spinner)
    void PrepareStatic( RenderDevice* pd3dDevice );
    void PrepareMovers( RenderDevice* pd3dDevice );
 
+   int angleToFrame(float angle) const;
+
 	void WriteRegDefaults();
 
 	PinTable *m_ptable;
