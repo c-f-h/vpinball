@@ -35,10 +35,8 @@ class SlingshotAnimObject : public AnimObject
 {
 public:
 	virtual void Check3D();
-	virtual ObjFrame *Draw3D(const RECT * const prc);
+	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
 	virtual void Reset();
-
-	ObjFrame *m_pobjframe;
 
 	int m_iframe;
 	int m_TimeReset; // Time at which to pull in slingshot
@@ -49,7 +47,6 @@ class LineSegSlingshot : public LineSeg
 {
 public:
 	LineSegSlingshot();
-	virtual ~LineSegSlingshot();
 
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
 	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);

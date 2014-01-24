@@ -855,6 +855,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 					(pe->GetItemType() == eItemFlasher) ||
 					(pe->GetItemType() == eItemFlipper) ||
 					(pe->GetItemType() == eItemPlunger) ||
+					(pe->GetItemType() == eItemSurface) ||
 					(pe->GetItemType() == eItemSpinner) ||
 					(pe->GetItemType() == eItemGate) ||
 					(pe->GetItemType() == eItemBumper) )
@@ -866,6 +867,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 				if ((pe->GetItemType() == eItemPrimitive) ||
 					(pe->GetItemType() == eItemFlipper) ||
 					(pe->GetItemType() == eItemPlunger) ||
+					(pe->GetItemType() == eItemSurface) ||
 					(pe->GetItemType() == eItemSpinner) ||
 					(pe->GetItemType() == eItemGate) ||
                     (pe->GetItemType() == eItemBumper))

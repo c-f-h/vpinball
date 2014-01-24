@@ -887,6 +887,7 @@ void Surface::MoveOffset(const float dx, const float dy)
 
 void Surface::PostRenderStatic(const RenderDevice* pd3dDevice)
 {
+    RenderSlingshots((RenderDevice*)pd3dDevice);
 }
 
 void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
@@ -1273,10 +1274,6 @@ void Surface::PrepareSlingshots( RenderDevice *pd3dDevice )
    {
       LineSegSlingshot * const plinesling = m_vlinesling.ElementAt(i);
       plinesling->m_slingshotanim.m_fAnimations = (m_d.m_fSlingshotAnimation != 0);
-      ObjFrame * const pof = new ObjFrame();
-
-      plinesling->m_slingshotanim.m_pobjframe = pof;		
-      ppin3d->ClearExtents(&plinesling->m_slingshotanim.m_rcBounds, &plinesling->m_slingshotanim.m_znear, &plinesling->m_slingshotanim.m_zfar);
 
       Vertex3D rgv3D[12];
       rgv3D[0].x = plinesling->v1.x;
@@ -1308,68 +1305,41 @@ void Surface::PrepareSlingshots( RenderDevice *pd3dDevice )
       for (int l=0;l<12;l++)
          ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
       
-	  ppin3d->ClearExtents(&pof->rc, NULL, NULL);
-      ppin3d->ExpandExtents(&pof->rc, rgv3D, &plinesling->m_slingshotanim.m_znear, &plinesling->m_slingshotanim.m_zfar, 6, fFalse);
-
       SetNormal(rgv3D, rgiSlingshot0, 4, NULL, NULL, NULL);
-      buf[offset] = rgv3D[rgiSlingshot0[0]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot0[1]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot0[2]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot0[3]];
-      offset++;
+      buf[offset++] = rgv3D[rgiSlingshot0[0]];
+      buf[offset++] = rgv3D[rgiSlingshot0[1]];
+      buf[offset++] = rgv3D[rgiSlingshot0[2]];
+      buf[offset++] = rgv3D[rgiSlingshot0[3]];
 
       SetNormal(rgv3D, rgiSlingshot1, 4, NULL, NULL, NULL);
-      buf[offset] = rgv3D[rgiSlingshot1[0]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot1[1]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot1[2]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot1[3]];
-      offset++;
+      buf[offset++] = rgv3D[rgiSlingshot1[0]];
+      buf[offset++] = rgv3D[rgiSlingshot1[1]];
+      buf[offset++] = rgv3D[rgiSlingshot1[2]];
+      buf[offset++] = rgv3D[rgiSlingshot1[3]];
 
       SetNormal(rgv3D, rgiSlingshot2, 4, NULL, NULL, NULL);
-      buf[offset] = rgv3D[rgiSlingshot2[0]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot2[1]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot2[2]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot2[3]];
-      offset++;
+      buf[offset++] = rgv3D[rgiSlingshot2[0]];
+      buf[offset++] = rgv3D[rgiSlingshot2[1]];
+      buf[offset++] = rgv3D[rgiSlingshot2[2]];
+      buf[offset++] = rgv3D[rgiSlingshot2[3]];
 
       SetNormal(rgv3D, rgiSlingshot3, 4, NULL, NULL, NULL);
-      buf[offset] = rgv3D[rgiSlingshot3[0]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot3[1]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot3[2]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot3[3]];
-      offset++;
+      buf[offset++] = rgv3D[rgiSlingshot3[0]];
+      buf[offset++] = rgv3D[rgiSlingshot3[1]];
+      buf[offset++] = rgv3D[rgiSlingshot3[2]];
+      buf[offset++] = rgv3D[rgiSlingshot3[3]];
 
       SetNormal(rgv3D, rgiSlingshot4, 4, NULL, NULL, NULL);
-      buf[offset] = rgv3D[rgiSlingshot4[0]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot4[1]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot4[2]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot4[3]];
-      offset++;
+      buf[offset++] = rgv3D[rgiSlingshot4[0]];
+      buf[offset++] = rgv3D[rgiSlingshot4[1]];
+      buf[offset++] = rgv3D[rgiSlingshot4[2]];
+      buf[offset++] = rgv3D[rgiSlingshot4[3]];
 
       SetNormal(rgv3D, rgiSlingshot5, 4, NULL, NULL, NULL);
-      buf[offset] = rgv3D[rgiSlingshot5[0]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot5[1]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot5[2]];
-      offset++;
-      buf[offset] = rgv3D[rgiSlingshot5[3]];
-      offset++;
+      buf[offset++] = rgv3D[rgiSlingshot5[0]];
+      buf[offset++] = rgv3D[rgiSlingshot5[1]];
+      buf[offset++] = rgv3D[rgiSlingshot5[2]];
+      buf[offset++] = rgv3D[rgiSlingshot5[3]];
    }
 
    slingshotVBuffer->unlock();
@@ -1481,22 +1451,18 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
    const float inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
    const float inv_height = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
 
-   int offset=0;
    for (int i=0;i<m_vlinesling.Size();i++)
    {
       LineSegSlingshot * const plinesling = m_vlinesling.ElementAt(i);
+      if (plinesling->m_slingshotanim.m_iframe != 1)
+          continue;
 
-      pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET, 0x00000000, 1.0f, 0L );
-
-      ppin3d->m_pddsZBuffer->Blt(NULL, ppin3d->m_pddsStaticZ, NULL, DDBLT_WAIT, NULL);
+      //pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET, 0x00000000, 1.0f, 0L );
+      //ppin3d->m_pddsZBuffer->Blt(NULL, ppin3d->m_pddsStaticZ, NULL, DDBLT_WAIT, NULL);
 
       pd3dDevice->SetMaterial(slingShotMaterial);
-      ObjFrame *pof = plinesling->m_slingshotanim.m_pobjframe;
 
-      pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, slingshotVBuffer, offset, 24, (LPWORD)rgisling, 36, 0 );
-      offset+=24;
-
-      ppin3d->CreateAndCopySpriteBuffers( &plinesling->m_slingshotanim, pof );
+      pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, slingshotVBuffer, i*24, 24, (LPWORD)rgisling, 36, 0 );
    }
 }
 
@@ -1670,7 +1636,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
 
 void Surface::RenderMovers(const RenderDevice* pd3dDevice)
 {
-   RenderSlingshots((RenderDevice*)pd3dDevice);
+   //RenderSlingshots((RenderDevice*)pd3dDevice);
 
    if (m_d.m_fDroppable)
    {
@@ -1692,7 +1658,7 @@ void Surface::RenderMovers(const RenderDevice* pd3dDevice)
          m_phitdrop->m_polydropanim.m_pobjframe[1] = pof2;
       }
    }
-   FreeBuffers();
+   //FreeBuffers();     // TODO: we can't call this here because we need the vertex buffer in PostRenderStatic()
 }
 
 void Surface::DoCommand(int icmd, int x, int y)

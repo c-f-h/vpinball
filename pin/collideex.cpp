@@ -80,11 +80,6 @@ LineSegSlingshot::LineSegSlingshot()
 	m_scatter = 0;
 }
 
-LineSegSlingshot::~LineSegSlingshot()
-{
-	delete m_slingshotanim.m_pobjframe;
-}
-
 float LineSegSlingshot::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal)
 {
 	if (!m_fEnabled) return -1.0f;	
@@ -164,11 +159,6 @@ void SlingshotAnimObject::Check3D()
 		m_fInvalid = true;
 		m_TimeReset = 0;
 	}
-}
-
-ObjFrame *SlingshotAnimObject::Draw3D(const RECT * const prc)
-{
-	return (m_iframe == 1) ? m_pobjframe : NULL;
 }
 
 void SlingshotAnimObject::Reset()
