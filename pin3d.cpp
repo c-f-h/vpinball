@@ -864,17 +864,6 @@ HRESULT Pin3D::Create3DDevice(const GUID * const pDeviceGUID)
 	m_pd3dDevice = renderDevice.instance();
 	m_pd3dDevice->setHardwareAccelerated( g_pvp->m_pdd.m_fHardwareAccel );
 
-	/*   D3DDEVICEDESC7 ddfoo;
-	m_pd3dDevice->GetCaps(&ddfoo);
-
-	const DWORD caps = ddfoo.dpcLineCaps.dwRasterCaps;
-
-	//if (caps & D3DPRASTERCAPS_ANTIALIASSORTINDEPENDENT) //!! doesn't seem to do anything
-	//{
-	//hr = m_pd3dDevice->SetRenderState(D3DRENDERSTATE_ANTIALIAS, D3DANTIALIAS_SORTINDEPENDENT);
-	//   and/or set ddsCaps.dwCaps2 = DDSCAPS2_HINTANTIALIASING (if DDSCAPS_3DDEVICE also enabled)
-	//}
-	*/
 	// Finally, set the viewport for the newly created device
 	vp.dwX=0;
 	vp.dwY=0;
@@ -1063,11 +1052,11 @@ void Pin3D::SetTextureFilter(const int TextureNum, const int Mode) const
 	}
 }
 
-void Pin3D::SetRenderTarget(const BaseTexture* pddsSurface, const BaseTexture* pddsZ) const
+void Pin3D::SetRenderTarget(RenderTarget* pddsSurface, RenderTarget* pddsZ) const
 {
 	HRESULT hr;
-	hr = m_pd3dDevice->SetRenderTarget((LPDIRECTDRAWSURFACE7)pddsSurface, 0L);
-	hr = m_pd3dDevice->SetRenderTarget((LPDIRECTDRAWSURFACE7)pddsZ, 0L);
+	hr = m_pd3dDevice->SetRenderTarget(pddsSurface, 0L);
+	hr = m_pd3dDevice->SetRenderTarget(pddsZ, 0L);
 }
 
 void Pin3D::InitRenderState() 

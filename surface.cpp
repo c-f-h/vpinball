@@ -1659,24 +1659,6 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
 
    if (fMover)
    {
-/*      // Create the color surface.
-      pof->pdds = ppin3d->CreateOffscreen(pof->rc.right - pof->rc.left, pof->rc.bottom - pof->rc.top);
-      pof->pdds->BltFast(0, 0, ppin3d->m_pddsBackBuffer, &pof->rc, DDBLTFAST_WAIT);
-
-      // Create the z surface.
-      pof->pddsZBuffer = ppin3d->CreateZBufferOffscreen(pof->rc.right - pof->rc.left, pof->rc.bottom - pof->rc.top);
-      pof->pddsZBuffer->BltFast(0, 0, ppin3d->m_pddsZBuffer, &pof->rc, DDBLTFAST_NOCOLORKEY | DDBLTFAST_WAIT);
-
-      ppin3d->ExpandRectByRect(&m_phitdrop->m_polydropanim.m_rcBounds, &pof->rc);
-
-      // reset the portion of the z-buffer that we changed
-      ppin3d->m_pddsZBuffer->BltFast(pof->rc.left, pof->rc.top, ppin3d->m_pddsStaticZ, &pof->rc, DDBLTFAST_NOCOLORKEY | DDBLTFAST_WAIT);
-      // Reset color key in back buffer
-      DDBLTFX ddbltfx;
-      ddbltfx.dwSize = sizeof(DDBLTFX);
-      ddbltfx.dwFillColor = 0;
-      ppin3d->m_pddsBackBuffer->Blt(&pof->rc, NULL,&pof->rc, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
-*/
       ppin3d->CreateAndCopySpriteBuffers( &m_phitdrop->m_polydropanim, pof );
    }
 

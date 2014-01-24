@@ -30,13 +30,13 @@ void Texture::Release()
 
 void Texture::SetBackDrop( DWORD textureChannel )
 {
-    renderDevice->SetTexture( textureChannel, m_pdsBufferBackdrop ? (LPDIRECTDRAWSURFACE7)m_pdsBufferBackdrop : NULL);
+    renderDevice->SetTexture( textureChannel, m_pdsBufferBackdrop ? m_pdsBufferBackdrop : NULL);
 }
 
 /*
 void Texture::Set( const DWORD textureChannel )
 {
-    renderDevice->SetTexture( textureChannel, m_pdsBufferColorKey ? (LPDIRECTDRAWSURFACE7)m_pdsBufferColorKey : NULL);
+    renderDevice->SetTexture( textureChannel, m_pdsBufferColorKey ? m_pdsBufferColorKey : NULL);
 }
 */
 void Texture::Unset( const DWORD textureChannel )

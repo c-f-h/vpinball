@@ -2,10 +2,15 @@
 #include "Material.h"
 #pragma once
 
-class VertexBuffer;
-class BaseTexture;
 
-class RenderDevice : public IDirect3DDevice7
+typedef IDirectDrawSurface7 BaseTexture;
+typedef D3DVIEWPORT7 ViewPort;
+typedef IDirectDrawSurface7 RenderTarget;
+
+
+class VertexBuffer;
+
+class RenderDevice
 {
 public:
 
@@ -37,8 +42,8 @@ public:
 
    static RenderDevice* instance();
 
-   virtual void SetMaterial( const THIS_ BaseMaterial * const _material );
-   virtual void SetRenderState( const RenderStates p1, const DWORD p2 );
+   void SetMaterial( const THIS_ BaseMaterial * const _material );
+   void SetRenderState( const RenderStates p1, const DWORD p2 );
    bool createVertexBuffer( unsigned int _length, DWORD _usage, DWORD _fvf, VertexBuffer **_vBuffer );
    void renderPrimitive(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, LPWORD _indices, DWORD _numIndices, DWORD _flags);
    void renderPrimitiveListed(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, DWORD _flags);
@@ -60,104 +65,104 @@ public:
 
    //########################## simple wrapper functions (interface for DX7)##################################
 
-   virtual STDMETHODIMP QueryInterface( THIS_ REFIID riid, LPVOID * ppvObj );
+   HRESULT QueryInterface( THIS_ REFIID riid, LPVOID * ppvObj );
 
-   virtual STDOVERRIDEMETHODIMP_(ULONG) AddRef( void );
-   virtual STDOVERRIDEMETHODIMP_(ULONG) Release( void );
+   ULONG AddRef( void );
+   ULONG Release( void );
 
-   virtual STDMETHODIMP GetCaps( THIS_ LPD3DDEVICEDESC7 );
+   HRESULT GetCaps( THIS_ LPD3DDEVICEDESC7 );
 
-   virtual STDMETHODIMP EnumTextureFormats( THIS_ LPD3DENUMPIXELFORMATSCALLBACK,LPVOID );
+   HRESULT EnumTextureFormats( THIS_ LPD3DENUMPIXELFORMATSCALLBACK,LPVOID );
 
-   virtual STDMETHODIMP BeginScene( THIS );
+   HRESULT BeginScene( THIS );
 
-   virtual STDMETHODIMP EndScene( THIS );
+   HRESULT EndScene( THIS );
 
-   virtual STDMETHODIMP GetDirect3D( THIS_ LPDIRECT3D7* );
+   HRESULT GetDirect3D( THIS_ LPDIRECT3D7* );
 
-   virtual STDMETHODIMP SetRenderTarget( THIS_ LPDIRECTDRAWSURFACE7,DWORD );
+   HRESULT SetRenderTarget( THIS_ RenderTarget*,DWORD );
 
-   virtual STDMETHODIMP GetRenderTarget( THIS_ LPDIRECTDRAWSURFACE7 * );
+   HRESULT GetRenderTarget( THIS_ RenderTarget* * );
 
-   virtual STDMETHODIMP Clear( THIS_ DWORD,LPD3DRECT,DWORD,D3DCOLOR,D3DVALUE,DWORD );
+   HRESULT Clear( THIS_ DWORD,LPD3DRECT,DWORD,D3DCOLOR,D3DVALUE,DWORD );
 
-   virtual STDMETHODIMP SetTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
+   HRESULT SetTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
 
-   virtual STDMETHODIMP GetTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
+   HRESULT GetTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
 
-   virtual STDMETHODIMP SetViewport( THIS_ LPD3DVIEWPORT7 );
+   HRESULT SetViewport( THIS_ ViewPort* );
 
-   virtual STDMETHODIMP MultiplyTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
+   HRESULT MultiplyTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
 
-   virtual STDMETHODIMP GetViewport( THIS_ LPD3DVIEWPORT7 );
+   HRESULT GetViewport( THIS_ ViewPort* );
 
-   virtual STDMETHODIMP SetMaterial( THIS_ LPD3DMATERIAL7 );
+   HRESULT SetMaterial( THIS_ LPD3DMATERIAL7 );
 
-   virtual STDMETHODIMP GetMaterial( THIS_ LPD3DMATERIAL7 );
+   HRESULT GetMaterial( THIS_ LPD3DMATERIAL7 );
 
-   virtual void getMaterial( THIS_ BaseMaterial *_material );
+   void getMaterial( THIS_ BaseMaterial *_material );
 
-   virtual STDMETHODIMP SetLight( THIS_ DWORD,LPD3DLIGHT7 );
+   HRESULT SetLight( THIS_ DWORD,LPD3DLIGHT7 );
 
-   virtual STDMETHODIMP GetLight( THIS_ DWORD,LPD3DLIGHT7 );
+   HRESULT GetLight( THIS_ DWORD,LPD3DLIGHT7 );
 
-   virtual STDMETHODIMP SetRenderState( THIS_ D3DRENDERSTATETYPE,DWORD );
+   HRESULT SetRenderState( THIS_ D3DRENDERSTATETYPE,DWORD );
 
-   virtual STDMETHODIMP GetRenderState( THIS_ D3DRENDERSTATETYPE,LPDWORD );
+   HRESULT GetRenderState( THIS_ D3DRENDERSTATETYPE,LPDWORD );
 
-   virtual STDMETHODIMP BeginStateBlock( THIS );
+   HRESULT BeginStateBlock( THIS );
 
-   virtual STDMETHODIMP EndStateBlock( THIS_ LPDWORD );
+   HRESULT EndStateBlock( THIS_ LPDWORD );
 
-   virtual STDMETHODIMP PreLoad( THIS_ LPDIRECTDRAWSURFACE7 );
+   HRESULT PreLoad( THIS_ LPDIRECTDRAWSURFACE7 );
 
-   virtual STDMETHODIMP DrawPrimitive( THIS_ D3DPRIMITIVETYPE,DWORD,LPVOID,DWORD,DWORD );
+   HRESULT DrawPrimitive( THIS_ D3DPRIMITIVETYPE,DWORD,LPVOID,DWORD,DWORD );
 
-   virtual STDMETHODIMP DrawIndexedPrimitive( THIS_ D3DPRIMITIVETYPE,DWORD,LPVOID,DWORD,LPWORD,DWORD,DWORD );
+   HRESULT DrawIndexedPrimitive( THIS_ D3DPRIMITIVETYPE,DWORD,LPVOID,DWORD,LPWORD,DWORD,DWORD );
 
-   virtual STDMETHODIMP SetClipStatus( THIS_ LPD3DCLIPSTATUS );
+   HRESULT SetClipStatus( THIS_ LPD3DCLIPSTATUS );
 
-   virtual STDMETHODIMP GetClipStatus( THIS_ LPD3DCLIPSTATUS );
+   HRESULT GetClipStatus( THIS_ LPD3DCLIPSTATUS );
 
-   virtual STDMETHODIMP DrawPrimitiveStrided( THIS_ D3DPRIMITIVETYPE,DWORD,LPD3DDRAWPRIMITIVESTRIDEDDATA,DWORD,DWORD );
+   HRESULT DrawPrimitiveStrided( THIS_ D3DPRIMITIVETYPE,DWORD,LPD3DDRAWPRIMITIVESTRIDEDDATA,DWORD,DWORD );
 
-   virtual STDMETHODIMP DrawIndexedPrimitiveStrided( THIS_ D3DPRIMITIVETYPE,DWORD,LPD3DDRAWPRIMITIVESTRIDEDDATA,DWORD,LPWORD,DWORD,DWORD );
+   HRESULT DrawIndexedPrimitiveStrided( THIS_ D3DPRIMITIVETYPE,DWORD,LPD3DDRAWPRIMITIVESTRIDEDDATA,DWORD,LPWORD,DWORD,DWORD );
 
-   virtual STDMETHODIMP DrawPrimitiveVB( THIS_ D3DPRIMITIVETYPE,LPDIRECT3DVERTEXBUFFER7,DWORD,DWORD,DWORD );
+   HRESULT DrawPrimitiveVB( THIS_ D3DPRIMITIVETYPE,LPDIRECT3DVERTEXBUFFER7,DWORD,DWORD,DWORD );
 
-   virtual STDMETHODIMP DrawIndexedPrimitiveVB( THIS_ D3DPRIMITIVETYPE,LPDIRECT3DVERTEXBUFFER7,DWORD,DWORD,LPWORD,DWORD,DWORD );
+   HRESULT DrawIndexedPrimitiveVB( THIS_ D3DPRIMITIVETYPE,LPDIRECT3DVERTEXBUFFER7,DWORD,DWORD,LPWORD,DWORD,DWORD );
 
-   virtual STDMETHODIMP ComputeSphereVisibility( THIS_ LPD3DVECTOR,LPD3DVALUE,DWORD,DWORD,LPDWORD );
+   HRESULT ComputeSphereVisibility( THIS_ LPD3DVECTOR,LPD3DVALUE,DWORD,DWORD,LPDWORD );
 
-   virtual STDMETHODIMP GetTexture( THIS_ DWORD,LPDIRECTDRAWSURFACE7 * );
+   HRESULT GetTexture( THIS_ DWORD,LPDIRECTDRAWSURFACE7 * );
 
-   virtual STDMETHODIMP SetTexture( THIS_ DWORD,LPDIRECTDRAWSURFACE7 );
+   HRESULT SetTexture( THIS_ DWORD,LPDIRECTDRAWSURFACE7 );
 
-   virtual STDMETHODIMP GetTextureStageState( THIS_ DWORD,D3DTEXTURESTAGESTATETYPE,LPDWORD );
+   HRESULT GetTextureStageState( THIS_ DWORD,D3DTEXTURESTAGESTATETYPE,LPDWORD );
 
-   virtual STDMETHODIMP SetTextureStageState( THIS_ DWORD,D3DTEXTURESTAGESTATETYPE,DWORD );
+   HRESULT SetTextureStageState( THIS_ DWORD,D3DTEXTURESTAGESTATETYPE,DWORD );
 
-   virtual STDMETHODIMP ValidateDevice( THIS_ LPDWORD );
+   HRESULT ValidateDevice( THIS_ LPDWORD );
 
-   virtual STDMETHODIMP ApplyStateBlock( THIS_ DWORD );
+   HRESULT ApplyStateBlock( THIS_ DWORD );
 
-   virtual STDMETHODIMP CaptureStateBlock( THIS_ DWORD );
+   HRESULT CaptureStateBlock( THIS_ DWORD );
 
-   virtual STDMETHODIMP DeleteStateBlock( THIS_ DWORD );
+   HRESULT DeleteStateBlock( THIS_ DWORD );
 
-   virtual STDMETHODIMP CreateStateBlock( THIS_ D3DSTATEBLOCKTYPE,LPDWORD );
+   HRESULT CreateStateBlock( THIS_ D3DSTATEBLOCKTYPE,LPDWORD );
 
-   virtual STDMETHODIMP Load( THIS_ LPDIRECTDRAWSURFACE7,LPPOINT,LPDIRECTDRAWSURFACE7,LPRECT,DWORD );
+   HRESULT Load( THIS_ LPDIRECTDRAWSURFACE7,LPPOINT,LPDIRECTDRAWSURFACE7,LPRECT,DWORD );
 
-   virtual STDMETHODIMP LightEnable( THIS_ DWORD,BOOL );
+   HRESULT LightEnable( THIS_ DWORD,BOOL );
 
-   virtual STDMETHODIMP GetLightEnable( THIS_ DWORD,BOOL* );
+   HRESULT GetLightEnable( THIS_ DWORD,BOOL* );
 
-   virtual STDMETHODIMP SetClipPlane( THIS_ DWORD,D3DVALUE* );
+   HRESULT SetClipPlane( THIS_ DWORD,D3DVALUE* );
 
-   virtual STDMETHODIMP GetClipPlane( THIS_ DWORD,D3DVALUE* );
+   HRESULT GetClipPlane( THIS_ DWORD,D3DVALUE* );
 
-   virtual STDMETHODIMP GetInfo( THIS_ DWORD,LPVOID,DWORD );
+   HRESULT GetInfo( THIS_ DWORD,LPVOID,DWORD );
 
 private:
    static const DWORD RENDER_STATE_CACHE_SIZE=256;
@@ -188,10 +193,6 @@ public:
    inline bool unlock(void)
    {
       return ( !FAILED(this->Unlock() ) );
-   }
-   inline bool optimize( RenderDevice *device)
-   {
-      return ( !FAILED(this->Optimize((LPDIRECT3DDEVICE7)device,0)));
    }
    inline ULONG release(void)
    {

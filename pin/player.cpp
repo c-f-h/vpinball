@@ -3357,7 +3357,7 @@ void Player::DoDebugObjectMenu(int x, int y)
 	Matrix3D mat3D = m_pin3d.m_matrixTotal;
 	mat3D.Invert();
 
-	D3DVIEWPORT7 vp;
+	ViewPort vp;
 	m_pin3d.m_pd3dDevice->GetViewport( &vp );
 	const float rClipWidth  = (float)vp.dwWidth*0.5f;
 	const float rClipHeight = (float)vp.dwHeight*0.5f;

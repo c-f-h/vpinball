@@ -14,7 +14,7 @@ inline unsigned int RGB_TO_BGR(const unsigned int c)
 #define     RGBA_TO_D3DRGBA(r,g,b,a)	((((long)((r) * 255.0f)) << 24) | (((long)((g) * 255.0f)) << 16) | (((long)((b) * 255.0f)) << 8) | (long)((a) * 255.0f))
 
 //!! this is only used for the mixer and debugging the plumb, so delete:
-inline void Display_DrawSprite( const LPDIRECT3DDEVICE7 Direct3DDevice, const float x, const float y, const float Width, const float Height, const DWORD col, void * const Texture, const float u, const float v )
+inline void Display_DrawSprite( RenderDevice* Direct3DDevice, const float x, const float y, const float Width, const float Height, const DWORD col, void * const Texture, const float u, const float v )
 {
 	// Build a quad.
     Vertex3D_NoTex2 Vertices[4];

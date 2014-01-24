@@ -228,7 +228,7 @@ public:
 	void SetUpdatePos(const int left, const int top);
    void Flip(const int offsetx, const int offsety, const BOOL vsync);
 
-	void SetRenderTarget(const BaseTexture* pddsSurface, const BaseTexture* pddsZ) const;
+	void SetRenderTarget(RenderTarget* pddsSurface, RenderTarget* pddsZ) const;
 	void SetTextureFilter(const int TextureNum, const int Mode) const;
 	
 	void SetTexture(BaseTexture* pddsTexture);
@@ -255,7 +255,11 @@ public:
 	BaseTexture* CreateOffscreenWithCustomTransparency(const int width, const int height, const int color) const;
 	BaseTexture* CreateZBufferOffscreen(const int width, const int height) const;
    
-	LPDIRECTDRAW7 m_pDD;
+private:
+	LPDIRECTDRAW7 m_pDD;        // only for convenience, does not own this
+	LPDIRECT3D7 m_pD3D;         // is owned
+public:
+	RenderDevice* m_pd3dDevice;
 	BaseTexture* m_pddsFrontBuffer;
 	BaseTexture* m_pddsBackBuffer;
 
@@ -265,8 +269,6 @@ public:
 	unsigned char* __restrict m_pdds3Dbuffermask;
 
 	BaseTexture* m_pddsZBuffer;
-	LPDIRECT3D7 m_pD3D;
-	RenderDevice* m_pd3dDevice;
 
 	BaseTexture* m_pddsStatic;
 	BaseTexture* m_pddsStaticZ;
@@ -275,7 +277,6 @@ public:
 	Texture ballTexture;
 	Texture ballShadowTexture;
 	Texture lightTexture[2]; // 0=bumper, 1=lights
-	//LPDIRECTDRAWSURFACE7 m_pddsLightProjectTexture;
 	BaseTexture* m_pddsLightWhite;
 
    VertexBuffer *backgroundVBuffer;
@@ -312,6 +313,6 @@ public:
 	LightProjected m_lightproject;
    //bool fullscreen;
 	float m_maxSeparation, m_ZPD;
-   D3DVIEWPORT7 vp;
+   ViewPort vp;
    VertexBuffer *spriteVertexBuffer;
 };
