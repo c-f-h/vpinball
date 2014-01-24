@@ -230,23 +230,15 @@ void Plunger::GetTimers(Vector<HitTimer> * const pvht)
 	}
 
 void Plunger::EndPlay()
-	{
-	if (m_phitplunger) // Failed Player case
-		{
-		for (int i=0;i<m_phitplunger->m_plungeranim.m_vddsFrame.Size();i++)
-			{
-			delete m_phitplunger->m_plungeranim.m_vddsFrame.ElementAt(i);
-			}
+{
+    m_phitplunger = NULL;       // possible memory leak here?
 
-		m_phitplunger = NULL;
-		}
-
-	IEditable::EndPlay();
-   if(vertexBuffer)
-   {
-      vertexBuffer->release();
-      vertexBuffer = NULL;
-   }
+    IEditable::EndPlay();
+    if(vertexBuffer)
+    {
+        vertexBuffer->release();
+        vertexBuffer = NULL;
+    }
 }
 
 void Plunger::SetObjectPos()
@@ -273,9 +265,86 @@ void Plunger::PutCenter(const Vertex2D * const pv)
 	m_ptable->SetDirtyDraw();
 	}
 
-void Plunger::PostRenderStatic(const RenderDevice* pd3dDevice)
-	{
-	}
+void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
+{
+    // TODO: optimize, get rid of frame stuff
+    RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
+    if (!m_d.m_fVisible)
+        return;
+
+    _ASSERTE(m_phitplunger);
+    const PlungerAnimObject& pa = m_phitplunger->m_plungeranim;
+    const int frame = (int)((pa.m_pos - pa.m_frameStart + 1.0f)/(pa.m_frameEnd-pa.m_frameStart) * (cframes-1)+0.5f);
+    if (frame < 0 || frame >= cframes)
+        return;
+
+    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+    Texture *pin = NULL;
+
+    pd3dDevice->SetMaterial(material);
+    pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
+
+    Vertex3D_NoTex2 *ptr = verts[frame].moverVertices;
+
+    if (m_d.m_type == PlungerTypeModern)
+    {
+        if ( renderNewPlunger )
+        {
+            //render a simple rectangle as an embedded alpha ramp plunger ;)
+            pin = m_ptable->GetImage(m_d.m_szImage);
+            pin->CreateAlphaChannel();
+            pin->Set(ePictureTexture);
+            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
+            pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE );
+            ppin3d->EnableAlphaBlend( 1, false );
+            ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+            static const WORD idx[6] = {0,1,2,2,3,0};
+            pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, vertexBuffer, frame*4, 4, (LPWORD)idx, 6, 0 );
+            pin->Unset(ePictureTexture);
+            pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE );
+        }
+        else
+        {
+            pin = m_ptable->GetImage(m_d.m_szImage);
+            if ( pin )
+            {
+                pin->CreateAlphaChannel();
+                pin->Set(ePictureTexture);
+                pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE );
+                ppin3d->EnableAlphaBlend( 1, false );
+                ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+            }
+
+            int k=0;
+            for (int l=0;l<16;l++)
+            {
+                for (int m=0;m<(PLUNGEPOINTS1-1);m++,k+=4)
+                {
+                    pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer, frame*(16*PLUNGEPOINTS1), (16*PLUNGEPOINTS1), (LPWORD)&indices[k], 4, 0 );
+                }
+            }
+            if ( pin )
+            {
+                pin->Unset(ePictureTexture);
+                pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE );
+            }
+        }
+    }
+    else if (m_d.m_type == PlungerTypeOrig)
+    {
+        int k=0;
+        for (int l=0;l<16;l++)
+        {
+            const int offset = l*PLUNGEPOINTS0;
+            for (int m=0;m<(PLUNGEPOINTS0-1);m++,k+=4)
+            {
+                pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer,
+                        frame*(16*PLUNGEPOINTS0), (16*PLUNGEPOINTS0), (LPWORD)&indices[k], 4, 0 );
+            }
+        }
+    }
+}
+
 const float rgcrossplunger0[][2] =
 {
    1.0f, 0.0f,
@@ -485,89 +554,6 @@ void Plunger::RenderStatic(const RenderDevice* pd3dDevice)
 
 void Plunger::RenderMovers(const RenderDevice* _pd3dDevice)
 {
-   RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
-   if(m_d.m_fVisible)
-   {
-      _ASSERTE(m_phitplunger);
-      Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-      Texture *pin = NULL;
-
-      pd3dDevice->SetMaterial(material);
-      ppin3d->ClearSpriteRectangle( &m_phitplunger->m_plungeranim, NULL );
-      pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-
-      for (int i=0;i<cframes;i++)
-      {
-         Vertex3D_NoTex2 *ptr = verts[i].moverVertices;
-
-         ObjFrame * const pof = new ObjFrame();
-
-         if (m_d.m_type == PlungerTypeModern)
-         {
-            ppin3d->ClearSpriteRectangle( NULL, pof );
-            if ( renderNewPlunger )
-            {
-               //render a simple rectangle as an embedded alpha ramp plunger ;)
-               ppin3d->ExpandExtents(&pof->rc, ptr, &m_phitplunger->m_plungeranim.m_znear, &m_phitplunger->m_plungeranim.m_zfar, 4, fFalse);
-               pin = m_ptable->GetImage(m_d.m_szImage);
-               pin->CreateAlphaChannel();
-               pin->Set(ePictureTexture);
-               pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-               pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE );
-               ppin3d->EnableAlphaBlend( 1, false );
-               ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-               static const WORD idx[6] = {0,1,2,2,3,0};
-               pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, vertexBuffer, i*4, 4, (LPWORD)idx, 6, 0 );   
-               pin->Unset(ePictureTexture);
-               pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE );
-            }
-            else
-            {
-               pin = m_ptable->GetImage(m_d.m_szImage);
-               if ( pin )
-               {
-                  pin->CreateAlphaChannel();
-                  pin->Set(ePictureTexture);
-                  pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE );
-                  ppin3d->EnableAlphaBlend( 1, false );
-                  ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-               }
-
-               int k=0;
-               ppin3d->ExpandExtents(&pof->rc, ptr, &m_phitplunger->m_plungeranim.m_znear, &m_phitplunger->m_plungeranim.m_zfar, (16*PLUNGEPOINTS1), fFalse);
-               for (int l=0;l<16;l++)
-               {
-                  for (int m=0;m<(PLUNGEPOINTS1-1);m++,k+=4)
-                  {
-                     pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer, i*(16*PLUNGEPOINTS1), (16*PLUNGEPOINTS1), (LPWORD)&indices[k], 4, 0 );
-                  }
-               }
-               if ( pin )
-               {
-                  pin->Unset(ePictureTexture);
-                  pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE );
-               }
-            }
-         }
-         else if (m_d.m_type == PlungerTypeOrig)
-         {
-            ppin3d->ClearSpriteRectangle( NULL, pof );
-            ppin3d->ExpandExtents(&pof->rc, ptr, &m_phitplunger->m_plungeranim.m_znear, &m_phitplunger->m_plungeranim.m_zfar, (16*PLUNGEPOINTS0), fFalse);
-
-            int k=0;
-            for (int l=0;l<16;l++)
-            {
-               const int offset = l*PLUNGEPOINTS0;
-               for (int m=0;m<(PLUNGEPOINTS0-1);m++,k+=4)
-               {
-                  pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer, i*(16*PLUNGEPOINTS0), (16*PLUNGEPOINTS0), (LPWORD)&indices[k], 4, 0 );
-               }
-            }
-         }
-         ppin3d->CreateAndCopySpriteBuffers( &m_phitplunger->m_plungeranim, pof );
-         m_phitplunger->m_plungeranim.m_vddsFrame.AddElement(pof);
-      }
-   }
 }
 
 STDMETHODIMP Plunger::InterfaceSupportsErrorInfo(REFIID riid)

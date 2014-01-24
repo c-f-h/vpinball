@@ -9,7 +9,6 @@ HitPlunger::HitPlunger(const float x, const float y, const float x2, const float
 
 		m_plungeranim.m_pos = pos;
 		m_plungeranim.m_posdesired = pos;
-		m_plungeranim.m_posFrame =  pos;
 
 		
 		m_plungeranim.recock = false;
@@ -150,10 +149,6 @@ void PlungerAnimObject::UpdateDisplacements(const float dtime)
 		}
 
 	SetObjects(m_pos);
-
-	// Used to be in updatetimepermanent
-
-	m_posFrame = m_pos;
 
 	if (m_fAcc && (m_pos == m_posdesired))
 		{
@@ -386,27 +381,4 @@ void HitPlunger::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 
 	const Vertex3Ds vnormal(phitnormal->x, phitnormal->y, 0.0f);
 	pball->AngularAcceleration(&vnormal);	
-	}
-
-void PlungerAnimObject::Check3D()
-	{
-	const int frame = (int)((m_pos - m_frameStart + 1.0f)/(m_frameEnd-m_frameStart) * (m_vddsFrame.Size()-1)+0.5f);
-
-	if((unsigned int)frame >= (unsigned int)m_vddsFrame.Size())
-		return;
-
-	if (frame != m_iframe)
-		{
-		m_iframe = frame;
-		m_fInvalid = true;
-		}
-	}
-
-ObjFrame *PlungerAnimObject::Draw3D(const RECT * const prc)
-	{
-	if (m_iframe == -1) return NULL;
-
-	ObjFrame * const pobjframe = m_vddsFrame.ElementAt(m_iframe);
-
-	return pobjframe;
 	}

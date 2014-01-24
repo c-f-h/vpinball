@@ -108,10 +108,10 @@ HRESULT RenderDevice::QueryInterface( THIS_ REFIID riid, LPVOID * ppvObj )
 //   return dx7Device->GetCaps(p1);
 //}
 
-HRESULT RenderDevice::EnumTextureFormats( THIS_ LPD3DENUMPIXELFORMATSCALLBACK p1,LPVOID p2)
-{
-   return dx7Device->EnumTextureFormats(p1,p2);
-}
+//HRESULT RenderDevice::EnumTextureFormats( THIS_ LPD3DENUMPIXELFORMATSCALLBACK p1,LPVOID p2)
+//{
+//   return dx7Device->EnumTextureFormats(p1,p2);
+//}
 
 HRESULT RenderDevice::BeginScene( THIS )
 {

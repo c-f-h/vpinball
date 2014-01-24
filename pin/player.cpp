@@ -854,6 +854,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 					(pe->GetItemType() == eItemPrimitive && !((Primitive *)m_ptable->m_vedit.ElementAt(i))->m_d.staticRendering) ||
 					(pe->GetItemType() == eItemFlasher) ||
 					(pe->GetItemType() == eItemFlipper) ||
+					(pe->GetItemType() == eItemPlunger) ||
 					(pe->GetItemType() == eItemSpinner) ||
 					(pe->GetItemType() == eItemGate) ||
 					(pe->GetItemType() == eItemBumper) )
@@ -864,6 +865,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 			else
 				if ((pe->GetItemType() == eItemPrimitive) ||
 					(pe->GetItemType() == eItemFlipper) ||
+					(pe->GetItemType() == eItemPlunger) ||
 					(pe->GetItemType() == eItemSpinner) ||
 					(pe->GetItemType() == eItemGate) ||
                     (pe->GetItemType() == eItemBumper))

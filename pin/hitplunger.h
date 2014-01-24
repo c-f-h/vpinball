@@ -7,8 +7,8 @@ public:
 
 	virtual bool FMover() const {return true;}
 
-	virtual void Check3D();
-	virtual ObjFrame *Draw3D(const RECT * const prc);
+	virtual void Check3D()                                  { }
+	virtual ObjFrame *Draw3D(const RECT * const prc)        { return NULL; }
 
 	void SetObjects(const float len);
 
@@ -21,14 +21,11 @@ public:
 	Joint m_jointBase[2];
 	Joint m_jointEnd[2];
 
-	Vector<ObjFrame> m_vddsFrame;
-
 	int m_iframe; //Frame index that this flipper is currently displaying
 
 	float m_speed;
 	float m_pos;
 	float m_posdesired;
-	float m_posFrame; // Location of plunger at beginning of frame
 	float m_mass;
 
 	float m_x,m_x2,m_y;
