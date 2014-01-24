@@ -2,7 +2,8 @@
 #pragma once
 
 
-typedef struct  
+// NB: this has the same layout as D3DMATERIAL7/9
+typedef struct
 {
    union {
       D3DCOLORVALUE   diffuse;        /* Diffuse color RGBA */
@@ -179,14 +180,11 @@ public:
    {
       mat = _base;
    }
-
-   void set();
-
-   static void setRenderDevice( RenderDevice *_device );
-
+   const BaseMaterial& getBaseMaterial() const
+   {
+       return mat;
+   }
 
 private:
    BaseMaterial mat;
-
-   static RenderDevice *renderDevice;
 };

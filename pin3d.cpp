@@ -1487,7 +1487,7 @@ void Pin3D::RenderPlayfieldGraphics()
 
 		mtrl.setColor( 1.0f, g_pplayer->m_ptable->m_colorplayfield );
 	}
-	mtrl.set();
+	m_pd3dDevice->SetMaterial(mtrl);
 
 	m_pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, tableVBuffer, 0, numVerts, playfieldPolyIndices, numPolys, 0 );
 	EnableLightMap(fFalse, -1);

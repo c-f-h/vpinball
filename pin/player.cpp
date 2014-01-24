@@ -2871,7 +2871,7 @@ void Player::CalcBallShadow(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
 
 void Player::DrawBallShadow(Ball * const pball)
 {
-   pball->shadowMaterial.set();
+   m_pin3d.m_pd3dDevice->SetMaterial(pball->shadowMaterial);
 
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE); //!! actually fails then for shadows on alpha ramps/primitives
 
@@ -2974,7 +2974,7 @@ void Player::CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
 void Player::DrawBallLogo(Ball * const pball)
 {
    // Draw the ball logo
-   pball->logoMaterial.set();
+   m_pin3d.m_pd3dDevice->SetMaterial(pball->logoMaterial);
 
 //   m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
 
@@ -3092,7 +3092,7 @@ void Player::DrawBalls()
         pball->logoMaterial.setDiffuse( 0.8f, pball->m_color );
         pball->logoMaterial.setAmbient( 0.8f, pball->m_color );
         pball->material.setColor( 1.0f, pball->m_color );
-        pball->material.set();
+        m_pin3d.m_pd3dDevice->SetMaterial(pball->material);
 
         // now render the ball with the vertex buffer data
         if (m_fBallShadows && m_fBallAntialias)

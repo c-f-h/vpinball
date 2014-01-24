@@ -460,12 +460,12 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
-            textureMaterial.set();
+            pd3dDevice->SetMaterial(textureMaterial);
         }
         else // No image by that name  
         {
             ppin3d->SetTexture(NULL);
-            solidMaterial.set();
+            pd3dDevice->SetMaterial(solidMaterial);
         }
         SetNormal(rgv3D, rgiGate2, 4, NULL, NULL, 0);
         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4, 0);
@@ -491,18 +491,18 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
-            textureMaterial.set();
+            pd3dDevice->SetMaterial(textureMaterial);
         }
         else // No image by that name  
         {
             ppin3d->SetTexture(NULL);
-            solidMaterial.set();
+            pd3dDevice->SetMaterial(solidMaterial);
         }
 
         SetNormal(rgv3D, rgiGate3, 4, NULL, NULL, 0);
         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4, 0);
 
-        solidMaterial.set();
+        pd3dDevice->SetMaterial(solidMaterial);
         ppin3d->SetTexture(NULL);
 
         if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
@@ -576,12 +576,12 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
-            textureMaterial.set();
+            pd3dDevice->SetMaterial(textureMaterial);
         }
         else // No image by that name  
         {
             ppin3d->SetTexture(NULL);
-            solidMaterial.set();
+            pd3dDevice->SetMaterial(solidMaterial);
         }
 
         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4, 0);
@@ -608,16 +608,16 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
-            textureMaterial.set();
+            pd3dDevice->SetMaterial(textureMaterial);
         }
         else // No image by that name  
         {
             ppin3d->SetTexture(NULL);
-            solidMaterial.set();
+            pd3dDevice->SetMaterial(solidMaterial);
         }
 
         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4, 0);
-        solidMaterial.set();
+        pd3dDevice->SetMaterial(solidMaterial);
         ppin3d->SetTexture(NULL);
 
         if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
@@ -919,7 +919,7 @@ void Gate::RenderStatic(const RenderDevice* _pd3dDevice) // only the support str
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
    if(!m_d.m_fSupports) return; // no support structures are allocated ... therefore render none
 
-   staticMaterial.set();
+   pd3dDevice->SetMaterial(staticMaterial);
    Vertex3D rgv3D[8];
    memcpy( rgv3D, staticVertices, sizeof(Vertex3D)*8);
    static const WORD rgiGate0[8] = {0,1,2,3,6,7,4,5};

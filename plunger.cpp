@@ -492,7 +492,7 @@ void Plunger::RenderMovers(const RenderDevice* _pd3dDevice)
       Pin3D * const ppin3d = &g_pplayer->m_pin3d;
       Texture *pin = NULL;
 
-      material.set();
+      pd3dDevice->SetMaterial(material);
       ppin3d->ClearSpriteRectangle( &m_phitplunger->m_plungeranim, NULL );
       pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
 

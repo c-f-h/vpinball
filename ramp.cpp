@@ -1101,7 +1101,7 @@ void Ramp::RenderStaticHabitrail(const RenderDevice* _pd3dDevice)
 
    pd3dDevice->SetRenderState(RenderDevice::SPECULARENABLE, TRUE);
 
-   habitrailMaterial.set();
+   pd3dDevice->SetMaterial(habitrailMaterial);
    int offset=0;
    for (int i=0;i<rampVertex;i++,offset+=32)
    {
@@ -1644,12 +1644,12 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
          else
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
-         textureMaterial.set();
+         pd3dDevice->SetMaterial(textureMaterial);
          if ( !m_d.m_enableLightingImage )
             pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
       }
       else
-         solidMaterial.set();
+         pd3dDevice->SetMaterial(solidMaterial);
 
       int offset=0;
       for (int i=0; i<(rampVertex-1); i++,offset+=4)
@@ -1658,7 +1658,7 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
       if (pin && !m_d.m_fImageWalls)
       {
          ppin3d->SetTexture(NULL);
-         solidMaterial.set();
+         pd3dDevice->SetMaterial(solidMaterial);
          if ( !m_d.m_enableLightingImage )
          {
             pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
@@ -2707,12 +2707,12 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
          ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
-         textureMaterial.set();
+         pd3dDevice->SetMaterial(textureMaterial);
          if ( !m_d.m_enableLightingImage )
             pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
       }
       else
-         solidMaterial.set();
+         pd3dDevice->SetMaterial(solidMaterial);
 
       unsigned int numVertices;
       if(dynamicVertexBufferRegenerate)
@@ -2947,7 +2947,7 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
       if (pin && !m_d.m_fImageWalls)
       {
          ppin3d->SetTexture(NULL);
-         solidMaterial.set();
+         pd3dDevice->SetMaterial(solidMaterial);
          if ( !m_d.m_enableLightingImage )
             pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
       }

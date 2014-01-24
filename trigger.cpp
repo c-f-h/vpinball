@@ -490,7 +490,7 @@ void Trigger::RenderStatic(const RenderDevice* _pd3dDevice)
    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y);
    ppin3d->EnableLightMap(fTrue, height);
 
-   material.set();
+   pd3dDevice->SetMaterial(material);
 
    for (int i=0;i<4;i++)
    {

@@ -1490,7 +1490,7 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
 
       ppin3d->m_pddsZBuffer->Blt(NULL, ppin3d->m_pddsStaticZ, NULL, DDBLT_WAIT, NULL);
 
-      slingShotMaterial.set();
+      pd3dDevice->SetMaterial(slingShotMaterial);
       ObjFrame *pof = plinesling->m_slingshotanim.m_pobjframe;
 
       pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, slingshotVBuffer, offset, 24, (LPWORD)rgisling, 36, 0 );
@@ -1543,7 +1543,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
       g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
    }
 
-   sideMaterial.set();
+   pd3dDevice->SetMaterial(sideMaterial);
    if(!m_d.m_fEnableLighting)
       ppin3d->EnableLightMap(fFalse, -1);
    else
@@ -1638,7 +1638,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
          ppin3d->SetTexture(NULL);
       }
 
-	  topMaterial.set();
+	  pd3dDevice->SetMaterial(topMaterial);
 
 	  if(numPolys > 0)
 	  {

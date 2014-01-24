@@ -917,7 +917,7 @@ void Light::RenderStatic(const RenderDevice* _pd3dDevice)
       mtrl.setColor( 1.0f, m_d.m_bordercolor );
 
       RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
-      mtrl.set();
+      pd3dDevice->SetMaterial(mtrl);
 
 	   if((!m_fBackglass) || GetPTable()->GetDecalsEnabled()) 
        {
@@ -1023,7 +1023,7 @@ void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
             mtrl.setEmissive(0.0f, r, g, b );
          }
       }
-     mtrl.set();    
+     pd3dDevice->SetMaterial(mtrl);    
 
      m_pobjframe[i] = new ObjFrame();
      ppin3d->ClearExtents(&m_pobjframe[i]->rc, NULL, NULL);
@@ -1159,7 +1159,7 @@ void Light::RenderMovers(const RenderDevice* _pd3dDevice)
       if (m_fBackglass)
          SetDiffuseFromMaterial(rgv3D, 32, &mtrl);
 
-      mtrl.set();
+      pd3dDevice->SetMaterial(mtrl);
       Vertex3D *buf;
       normalMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
       memcpy( buf, rgv3D, 32*sizeof(Vertex3D));

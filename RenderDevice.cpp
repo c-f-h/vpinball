@@ -23,7 +23,6 @@ bool RenderDevice::createDevice(const GUID * const _deviceGUID, LPDIRECT3D7 _dx7
 RenderDevice::RenderDevice()
 {
    vbInVRAM=false;
-   Material::setRenderDevice(this);
    Texture::SetRenderDevice(this);
    memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
    for( int i=0;i<8;i++ )
@@ -37,7 +36,7 @@ RenderDevice::~RenderDevice()
    dx7Device->Release();
 }
 
-void RenderDevice::SetMaterial( const THIS_ BaseMaterial * const _material )
+void RenderDevice::SetMaterial( const BaseMaterial * const _material )
 {
 #if !defined(DEBUG_XXX) && !defined(_CRTDBG_MAP_ALLOC)
    // this produces a crash if BaseMaterial isn't proper aligned to 16byte (in vbatest.cpp new/delete is overloaded for that)
@@ -55,7 +54,7 @@ void RenderDevice::SetMaterial( const THIS_ BaseMaterial * const _material )
    materialStateCache.power = _material->power;
 #endif
 
-   dx7Device->SetMaterial( (LPD3DMATERIAL7)_material);
+   dx7Device->SetMaterial((LPD3DMATERIAL7)_material);
 }
 
 void RenderDevice::SetRenderState( const RenderStates p1, const DWORD p2 )

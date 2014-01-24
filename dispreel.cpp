@@ -704,7 +704,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 			// New rendering stuff
          Material mat;
          mat.setColor( 0.5f, 1.0f, 1.0f, 1.0f );
-         mat.set();
+         pd3dDevice->SetMaterial(mat);
 				
 			pin->EnsureMaxTextureCoordinates();
 				

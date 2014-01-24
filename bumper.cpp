@@ -286,14 +286,14 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
             case 0:
                 {
                     ppin3d->SetTexture(NULL);
-                    topNonLitMaterial.set();
+                    pd3dDevice->SetMaterial(topNonLitMaterial);
                     break;
                 }
             case 1:
                 {
                     ppin3d->lightTexture[0].Set( ePictureTexture );
                     ppin3d->EnableLightMap(fFalse, -1);
-                    topLitMaterial.set();
+                    pd3dDevice->SetMaterial(topLitMaterial);
                 }
                 break;
         }
@@ -334,14 +334,14 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
             case 0:
                 {
                     ppin3d->SetTexture(NULL);
-                    sideNonLitMaterial.set();
+                    pd3dDevice->SetMaterial(sideNonLitMaterial);
                     break;
                 }
             case 1:
                 {
                     ppin3d->lightTexture[0].Set( ePictureTexture );
                     ppin3d->EnableLightMap(fFalse, -1);
-                    sideLitMaterial.set();
+                    pd3dDevice->SetMaterial(sideLitMaterial);
                     break;
                 }
         }
@@ -381,14 +381,14 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
             case 0:
                 {
                     ppin3d->EnableLightMap(fFalse, -1);
-                    nonLitMaterial.set();
+                    pd3dDevice->SetMaterial(nonLitMaterial);
                     break;
                 }
 
             case 1:
                 {
                     ppin3d->lightTexture[0].Set( eLightProject1 );
-                    litMaterial.set();
+                    pd3dDevice->SetMaterial(litMaterial);
                     break;
                 }
         }
@@ -592,7 +592,7 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
 
       pd3dDevice->SetRenderState( RenderDevice::ALPHABLENDENABLE, TRUE);
 
-      staticMaterial.set();
+      pd3dDevice->SetMaterial(staticMaterial);
 
       pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, staticVertices, 32, (LPWORD)rgiBumperStatic, 32, 0);
       int t=0;

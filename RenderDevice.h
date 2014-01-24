@@ -95,7 +95,8 @@ public:
 
    bool createDevice(const GUID * const _deviceGUID, LPDIRECT3D7 _dx7, BaseTexture *_backBuffer );
 
-   void SetMaterial( const THIS_ BaseMaterial * const _material );
+   void SetMaterial( const BaseMaterial * const _material );
+   void SetMaterial( const Material & material )        { SetMaterial(&material.getBaseMaterial()); }
    void SetRenderState( const RenderStates p1, const DWORD p2 );
    bool createVertexBuffer( unsigned int _length, DWORD _usage, DWORD _fvf, VertexBuffer **_vBuffer );
    void renderPrimitive(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, LPWORD _indices, DWORD _numIndices, DWORD _flags);

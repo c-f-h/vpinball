@@ -937,10 +937,10 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
          ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
 
-         textureMaterial.set();
+         pd3dDevice->SetMaterial(textureMaterial);
       }
       else
-         solidMaterial.set();
+         pd3dDevice->SetMaterial(solidMaterial);
 
       static const WORD indices[4] = {0,1,3,2};
       if(dynamicVertexBufferRegenerate)

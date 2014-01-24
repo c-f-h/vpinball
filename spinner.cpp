@@ -405,12 +405,12 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
         g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-        textureMaterial.set();
+        pd3dDevice->SetMaterial(textureMaterial);
     }
     else // No image by that name
     {
         ppin3d->SetTexture(NULL);
-        solidMaterial.set();
+        pd3dDevice->SetMaterial(solidMaterial);
     }
 
     SetNormal(rgv3D, rgiSpinner2, 4, NULL, NULL, 0);
@@ -437,17 +437,17 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
         g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-        textureMaterial.set();
+        pd3dDevice->SetMaterial(textureMaterial);
     }
     else // No image by that name
     {
         ppin3d->SetTexture(NULL);
-        solidMaterial.set();
+        pd3dDevice->SetMaterial(solidMaterial);
     }
     SetNormal(rgv3D, rgiSpinner3, 4, NULL, NULL, 0);
     pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiSpinner3, 4, 0);
 
-    solidMaterial.set();
+    pd3dDevice->SetMaterial(solidMaterial);
     ppin3d->SetTexture(NULL);
 
     if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
@@ -715,7 +715,7 @@ void Spinner::RenderStatic(const RenderDevice* _pd3dDevice)
 
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
-   staticMaterial.set();
+   pd3dDevice->SetMaterial(staticMaterial);
    Vertex3D rgv3D[8];
    memcpy( rgv3D, staticVertices, sizeof(Vertex3D)*8);
 

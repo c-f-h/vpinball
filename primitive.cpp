@@ -871,7 +871,7 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
             material.setColor( 1.0f, m_d.m_TopColor );
       }
 
-      material.set();
+      pd3dDevice->SetMaterial(material);
       if(vertexBufferRegenerate)
       {
          vertexBufferRegenerate = false;

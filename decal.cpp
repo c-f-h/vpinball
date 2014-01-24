@@ -543,7 +543,7 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
-   material.set();
+   pd3dDevice->SetMaterial(material);
    Texture *pin;
    if (m_d.m_decaltype != DecalImage)
    {
