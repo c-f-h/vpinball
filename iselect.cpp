@@ -331,14 +331,6 @@ void ISelect::Translate(Vertex2D *pvOffset)
 	PutCenter(&vCenter);
 	}
 
-void ISelect::GetCenter(Vertex2D * const pv) const
-	{
-	}
-
-void ISelect::PutCenter(const Vertex2D * const pv)
-	{
-	}
-
 HRESULT ISelect::GetTypeName(BSTR *pVal)
 	{
 	WCHAR wzName[128];

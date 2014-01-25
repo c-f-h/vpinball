@@ -65,25 +65,6 @@ public:
 	virtual ~Surface();
 
 	HRESULT InitTarget(PinTable * const ptable, const float x, const float y, bool fromMouseClick);
-	void WriteRegDefaults();
-	
-	//int GetPointCount();
-	//Vertex2D *GetRgVertex(int *pcount);
-	//void GetRgVertex(Vector<RenderVertex> *pvv);
-
-	//RenderVertex *GetRgRenderVertex(int *pcount);
-
-	virtual void ClearForOverwrite();
-
-	virtual void MoveOffset(const float dx, const float dy);
-
-	virtual void RenderShadow(ShadowSur * const psur, const float height);
-
-	virtual void GetBoundingVertices(Vector<Vertex3Ds> * const pvvertex3D);
-
-	// IHitable
-	void CurvesToShapes(Vector<HitObject> * const pvho);
-	void AddLine(Vector<HitObject> * const pvho, const RenderVertex * const pv1, const RenderVertex * const pv2, const RenderVertex * const pv3, const bool fSlingshot);
 
 	STANDARD_DISPATCH_DECLARE
 	STANDARD_EDITABLE_DECLARES(eItemSurface)
@@ -105,42 +86,57 @@ BEGIN_CONNECTION_POINT_MAP(Surface)
 	CONNECTION_POINT_ENTRY(DIID_IWallEvents)
 END_CONNECTION_POINT_MAP()
 
-	//virtual HRESULT GetTypeName(BSTR *pVal);
-	virtual void GetDialogPanes(Vector<PropertyPane> *pvproppane);
-	// From IHaveDragPoints
-	virtual void GetPointDialogPanes(Vector<PropertyPane> *pvproppane);
+    // IHaveDragPoints
+    virtual void GetPointDialogPanes(Vector<PropertyPane> *pvproppane);
+    // end IHaveDragPoints
 
-	virtual void RenderSlingshots(RenderDevice* pd3dDevice);
-	virtual ObjFrame *RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, BOOL fDrop);
-   virtual void PrepareWallsAtHeight( RenderDevice* pd3dDevice );
-   virtual void PrepareSlingshots( RenderDevice *pd3dDevice );
+    // IEditable
+    virtual void WriteRegDefaults();
+    virtual void RenderBlueprint(Sur *psur);
+    virtual void RenderShadow(ShadowSur * const psur, const float height);
+    virtual void GetBoundingVertices(Vector<Vertex3Ds> * const pvvertex3D);
+    virtual void ClearForOverwrite();
+    // end IEditable
 
-	virtual void RenderBlueprint(Sur *psur);
+    // ISelect
+    virtual void FlipY(Vertex2D * const pvCenter);
+    virtual void FlipX(Vertex2D * const pvCenter);
+    virtual void Rotate(float ang, Vertex2D *pvCenter);
+    virtual void Scale(float scalex, float scaley, Vertex2D *pvCenter);
+    virtual void Translate(Vertex2D *pvOffset);
+    virtual void MoveOffset(const float dx, const float dy);
 
-	virtual void DoCommand(int icmd, int x, int y);
+    virtual void GetCenter(Vertex2D * const pv) const {GetPointCenter(pv);}
+    virtual void PutCenter(const Vertex2D * const pv) {PutPointCenter(pv);}
 
-	virtual void FlipY(Vertex2D * const pvCenter);
-	virtual void FlipX(Vertex2D * const pvCenter);
-	virtual void Rotate(float ang, Vertex2D *pvCenter);
-	virtual void Scale(float scalex, float scaley, Vertex2D *pvCenter);
-	virtual void Translate(Vertex2D *pvOffset);
+    virtual void DoCommand(int icmd, int x, int y);
 
-	virtual void GetCenter(Vertex2D * const pv) const {GetPointCenter(pv);}
-	virtual void PutCenter(const Vertex2D * const pv) {PutPointCenter(pv);}
-   void FreeBuffers();
+    virtual void GetDialogPanes(Vector<PropertyPane> *pvproppane);
+    // end ISelect
 
-	//void CheckIntersecting();
+private:
+    void CurvesToShapes(Vector<HitObject> * const pvho);
+    void AddLine(Vector<HitObject> * const pvho, const RenderVertex * const pv1, const RenderVertex * const pv2, const RenderVertex * const pv3, const bool fSlingshot);
 
-	PinTable *m_ptable;
-	BSTR m_bstrName;
+    void RenderSlingshots(RenderDevice* pd3dDevice);
+    ObjFrame *RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, BOOL fDrop);
+    void PrepareWallsAtHeight( RenderDevice* pd3dDevice );
+    void PrepareSlingshots( RenderDevice *pd3dDevice );
 
+    void FreeBuffers();
+
+public:
 	SurfaceData m_d;
-
-	Vector<LineSegSlingshot> m_vlinesling;
 
 	BOOL m_fIsDropped;
 	BOOL m_fDisabled;
 	
+private:
+	PinTable *m_ptable;
+	BSTR m_bstrName;
+
+	Vector<LineSegSlingshot> m_vlinesling;
+
 	Hit3DPolyDrop *m_phitdrop;
 	Vector<HitObject> m_vhoDrop; // Objects to disable when dropped
 	Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
