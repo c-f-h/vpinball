@@ -212,19 +212,13 @@ public:
 	float transangle;
 };
 
+// TODO: this class is a no-op now, get rid of it if possible
 class PolyDropAnimObject : public AnimObject
 {
 public:
-	virtual void Check3D();
-	virtual ObjFrame *Draw3D(const RECT * const prc);
-	virtual void Reset();
-
-	int m_iframe;
-	int m_TimeReset; // Time at which to turn off light
-
-	int m_iframedesire; // Frame we want to be at
-
-	ObjFrame *m_pobjframe[2];
+	virtual void Check3D()                              { }
+	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
+	virtual void Reset()                                { }
 };
 
 class Hit3DPolyDrop : public Hit3DPoly

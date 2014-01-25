@@ -713,8 +713,6 @@ void Surface::CurvesToShapes(Vector<HitObject> * const pvho)
 
       m_phitdrop->m_fVisible = fTrue;
 
-      m_phitdrop->m_polydropanim.m_iframedesire = 0;
-
       pvho->AddElement(m_phitdrop);			
 
       m_vhoDrop.AddElement(m_phitdrop);	
@@ -856,14 +854,7 @@ void Surface::EndPlay()
 {
    IEditable::EndPlay();
 
-   if (m_phitdrop) // Failed Player Case
-   {
-      if (m_d.m_fDroppable)
-         for (int i=0;i<2;i++)
-            delete m_phitdrop->m_polydropanim.m_pobjframe[i];
-
-      m_phitdrop = NULL;
-   }
+   m_phitdrop = NULL;       // possible memory leak here?
 
    m_vlinesling.RemoveAllElements();
    m_vhoDrop.RemoveAllElements();
@@ -887,7 +878,26 @@ void Surface::MoveOffset(const float dx, const float dy)
 
 void Surface::PostRenderStatic(const RenderDevice* pd3dDevice)
 {
+    // TODO: optimize and get rid of dynamic allocations
     RenderSlingshots((RenderDevice*)pd3dDevice);
+
+    if (m_d.m_fDroppable)
+    {
+        if (!m_fIsDropped)
+        {
+            // Render wall raised.
+            RenderWallsAtHeight((RenderDevice*)pd3dDevice, fTrue, fFalse);
+        }
+        else    // is dropped
+        {
+            // if this wall is part of flipbook animation, do not render when dropped
+            if (!m_d.m_fFlipbook)
+            {
+                // Render wall dropped (smashed to a pancake at bottom height).
+                RenderWallsAtHeight((RenderDevice*)pd3dDevice, fTrue, fTrue);
+            }
+        }
+    }
 }
 
 void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
@@ -1468,197 +1478,152 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
 
 ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, BOOL fDrop)
 {
-   Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
-   ppin3d->m_pddsZBuffer->Blt(NULL, ppin3d->m_pddsStaticZ, NULL, DDBLT_WAIT, NULL);
+    if(!m_d.m_fEnableLighting)
+        pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
 
-   if(!m_d.m_fEnableLighting)
-      pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
+    Texture * const pinSide = m_ptable->GetImage(m_d.m_szSideImage);
+    if (pinSide)
+    {
+        pinSide->CreateAlphaChannel();
+        pinSide->Set( ePictureTexture );
 
-   ObjFrame *pof = NULL;
-   if (fMover)
-   {
-      pof = new ObjFrame();
+        if (pinSide->m_fTransparent)
+        {
+            if (g_pvp->m_pdd.m_fHardwareAccel)
+                g_pplayer->m_pin3d.EnableAlphaTestReference(128);
+            else
+                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
 
-      ppin3d->ClearSpriteRectangle( &m_phitdrop->m_polydropanim, pof );
-   }
-
-   Texture * const pinSide = m_ptable->GetImage(m_d.m_szSideImage);
-   if (pinSide)
-   {
-      pinSide->CreateAlphaChannel();
-      pinSide->Set( ePictureTexture );
-
-      if (pinSide->m_fTransparent)
-      {				
-         if (g_pvp->m_pdd.m_fHardwareAccel)
-            g_pplayer->m_pin3d.EnableAlphaTestReference(128);
-         else
-            pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-
-         pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
-      }
-      else 
-      {	
-         pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-         g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
-      }
-
-      g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
-      pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-      g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-   }
-
-   pd3dDevice->SetMaterial(sideMaterial);
-   if(!m_d.m_fEnableLighting)
-      ppin3d->EnableLightMap(fFalse, -1);
-   else
-      ppin3d->EnableLightMap(fTrue, fDrop ? m_d.m_heightbottom : m_d.m_heighttop);
-
-   // Render side
-
-   if (!fDrop && m_d.m_fSideVisible && (numVertices > 0)) // Don't need to render walls if dropped
-   {
-       // combine drawcalls into one (hopefully faster)
-	   WORD* const rgi = new WORD[numVertices*6];
-	   
-	   int offset=0;
-	   int offset2=0;
-	   for (int i=0;i<numVertices;i++, offset+=6,offset2+=4)
-	   {
-		   rgi[offset]   = offset2;
-		   rgi[offset+1] = offset2+1;
-		   rgi[offset+2] = offset2+2;
-		   rgi[offset+3] = offset2;
-		   rgi[offset+4] = offset2+2;
-		   rgi[offset+5] = offset2+3;
-	   }
-
-	   pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, sideVBuffer, 0, numVertices*4, (LPWORD)rgi, numVertices*6, 0);
-
-	   delete [] rgi;
-   }
-
-   // but we do need to always extend the extrema
-   if (fMover)
-   {
-	   if(!m_d.m_fEnableLighting)
-		   ppin3d->ExpandExtents(&pof->rc, vertsNotLit, &m_phitdrop->m_polydropanim.m_znear, &m_phitdrop->m_polydropanim.m_zfar, numVertices*4, fFalse);
-	   else
-		   ppin3d->ExpandExtents(&pof->rc, verts, &m_phitdrop->m_polydropanim.m_znear, &m_phitdrop->m_polydropanim.m_zfar, numVertices*4, fFalse);
-   }
-
-   if (m_d.m_fVisible)
-   {
-      if (pinSide)
-      {
-         if(!m_d.m_fEnableLighting)
-            ppin3d->EnableLightMap(fFalse, -1);
-         else
-            ppin3d->EnableLightMap(fTrue, fDrop ? m_d.m_heightbottom : m_d.m_heighttop);
-
-         pinSide->CreateAlphaChannel();
-         pinSide->Set(ePictureTexture);
-
-         if (pinSide->m_fTransparent)
-         {
-            pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
-         }
-         else // ppin3d->SetTexture(pin->m_pdsBuffer);
-         {
+        }
+        else
+        {
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
             g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
-         }
+        }
 
-         g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
-         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-         g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-      }
-      else
-         pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+        g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
+        pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+        g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+    }
 
-      Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-      if (pin)
-      {
-         pin->CreateAlphaChannel();
-         pin->Set( ePictureTexture );
+    pd3dDevice->SetMaterial(sideMaterial);
+    if(!m_d.m_fEnableLighting)
+        ppin3d->EnableLightMap(fFalse, -1);
+    else
+        ppin3d->EnableLightMap(fTrue, fDrop ? m_d.m_heightbottom : m_d.m_heighttop);
 
-         if (pin->m_fTransparent)
-         {				
+    // Render side
+
+    if (!fDrop && m_d.m_fSideVisible && (numVertices > 0)) // Don't need to render walls if dropped
+    {
+        // combine drawcalls into one (hopefully faster)
+        // TODO: eliminate this allocation
+        WORD* const rgi = new WORD[numVertices*6];
+
+        int offset=0;
+        int offset2=0;
+        for (int i=0;i<numVertices;i++, offset+=6,offset2+=4)
+        {
+            rgi[offset]   = offset2;
+            rgi[offset+1] = offset2+1;
+            rgi[offset+2] = offset2+2;
+            rgi[offset+3] = offset2;
+            rgi[offset+4] = offset2+2;
+            rgi[offset+5] = offset2+3;
+        }
+
+        pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, sideVBuffer, 0, numVertices*4, (LPWORD)rgi, numVertices*6, 0);
+
+        delete [] rgi;
+    }
+
+    if (m_d.m_fVisible)
+    {
+        if (pinSide)
+        {
+            if(!m_d.m_fEnableLighting)
+                ppin3d->EnableLightMap(fFalse, -1);
+            else
+                ppin3d->EnableLightMap(fTrue, fDrop ? m_d.m_heightbottom : m_d.m_heighttop);
+
+            pinSide->CreateAlphaChannel();
+            pinSide->Set(ePictureTexture);
+
+            if (pinSide->m_fTransparent)
+            {
+                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+                pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
+            }
+            else // ppin3d->SetTexture(pin->m_pdsBuffer);
+            {
+                pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
+                g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
+            }
+
+            g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+            g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+        }
+        else
             pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
-         }
-         else 
-         {
-            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-            g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
-         }
 
-         g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
-         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-         g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-      }
-      else
-      {
-         ppin3d->SetTexture(NULL);
-      }
+        Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
+        if (pin)
+        {
+            pin->CreateAlphaChannel();
+            pin->Set( ePictureTexture );
 
-	  pd3dDevice->SetMaterial(topMaterial);
+            if (pin->m_fTransparent)
+            {
+                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+                pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
+            }
+            else
+            {
+                pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
+                g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
+            }
 
-	  if(numPolys > 0)
-	  {
-		  // combine drawcalls into one (hopefully faster)
-		  WORD* const rgi = new WORD[numPolys*3];
-      
-		  for (int i=0;i<numPolys*3;i++)
-			  rgi[i] = i;
+            g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+            g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+        }
+        else
+        {
+            ppin3d->SetTexture(NULL);
+        }
 
-		  pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, !fDrop ? topVBuffer[0] : topVBuffer[1], 0, numPolys*3, (LPWORD)rgi, numPolys*3, 0);
+        pd3dDevice->SetMaterial(topMaterial);
 
-		  delete [] rgi;
-	  }
-   }
+        if(numPolys > 0)
+        {
+            // combine drawcalls into one (hopefully faster)
+            // TODO: eliminate this allocation
+            WORD* const rgi = new WORD[numPolys*3];
 
-   ppin3d->SetTexture(NULL);
-   ppin3d->EnableLightMap(fFalse, -1);
+            for (int i=0;i<numPolys*3;i++)
+                rgi[i] = i;
 
-   if (fMover)
-   {
-      ppin3d->CreateAndCopySpriteBuffers( &m_phitdrop->m_polydropanim, pof );
-   }
+            pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, !fDrop ? topVBuffer[0] : topVBuffer[1], 0, numPolys*3, (LPWORD)rgi, numPolys*3, 0);
 
-   if(!m_d.m_fEnableLighting)
-      pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
+            delete [] rgi;
+        }
+    }
 
-   return pof;
+    ppin3d->SetTexture(NULL);
+    ppin3d->EnableLightMap(fFalse, -1);
+
+    if(!m_d.m_fEnableLighting)
+        pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
+
+    return NULL;
 }
 
 void Surface::RenderMovers(const RenderDevice* pd3dDevice)
 {
-   //RenderSlingshots((RenderDevice*)pd3dDevice);
-
-   if (m_d.m_fDroppable)
-   {
-      // Render wall raised.
-      ObjFrame * const pof = RenderWallsAtHeight((RenderDevice*)pd3dDevice, fTrue, fFalse);
-      m_phitdrop->m_polydropanim.m_pobjframe[0] = pof;
-
-      // Check if this wall is being 
-      // used as a flipbook animation.
-      if (m_d.m_fFlipbook)
-      {
-         // Don't render a dropped wall. 
-         m_phitdrop->m_polydropanim.m_pobjframe[1] = NULL;
-      }
-      else
-      {
-         // Render wall dropped (smashed to a pancake at bottom height).
-         ObjFrame * const pof2 = RenderWallsAtHeight((RenderDevice*)pd3dDevice, fTrue, fTrue); 
-         m_phitdrop->m_polydropanim.m_pobjframe[1] = pof2;
-      }
-   }
-   //FreeBuffers();     // TODO: we can't call this here because we need the vertex buffer in PostRenderStatic()
 }
 
 void Surface::DoCommand(int icmd, int x, int y)
@@ -2287,8 +2252,6 @@ STDMETHODIMP Surface::put_IsDropped(VARIANT_BOOL newVal)
    if (m_fIsDropped != fNewVal)
    {
       m_fIsDropped = fNewVal;
-
-      m_phitdrop->m_polydropanim.m_iframedesire = m_fIsDropped ? 1 : 0;
 
       for (int i=0;i<m_vhoDrop.Size();i++)
          m_vhoDrop.ElementAt(i)->m_fEnabled = !m_fIsDropped && m_d.m_fCollidable; //disable hit on enities composing the object 

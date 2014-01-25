@@ -717,33 +717,15 @@ void Hit3DCylinder::CalcHitRect()
 	m_rcHitRect.zhigh = max(v1.z, v2.z);
 }
 
+
 Hit3DPolyDrop::Hit3DPolyDrop(Vertex3Ds * const rgv, const int count) : Hit3DPoly(rgv, count)
 {
-	m_polydropanim.m_iframe = -1;
 	m_fVisible = fFalse;
 }
 
-void PolyDropAnimObject::Check3D()
-{
-	if (m_iframe != m_iframedesire)
-	{
-		m_iframe = m_iframedesire;
-		m_fInvalid = true;
-	}
-}
 
-ObjFrame *PolyDropAnimObject::Draw3D(const RECT * const prc)
-{
-	if (m_iframe == -1)
-		return NULL;
 
-	return m_pobjframe[m_iframe];
-}
 
-void PolyDropAnimObject::Reset()
-{
-	m_iframe = -1;
-}
 
 ObjFrame *TextboxAnimObject::Draw3D(const RECT * const prc)
 {

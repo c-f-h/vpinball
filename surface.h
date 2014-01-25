@@ -21,8 +21,8 @@ public:
 	float m_heighttop;
 	COLORREF m_topcolor;
 	BOOL m_fDroppable;
-	BOOL m_fFlipbook;
-	BOOL m_fDisplayTexture; //In editor
+	BOOL m_fFlipbook;           // if enabled, dropped walls are not rendered
+	BOOL m_fDisplayTexture;     // in editor
 	float m_slingshotforce;
 	float m_elasticity;
 	float m_friction;
