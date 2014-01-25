@@ -29,13 +29,12 @@ public:
 
    bool use3DMesh;
    bool m_TopVisible;
-   bool m_wasVisible;
    bool m_DrawTexturesInside;
    bool useLighting;
    bool staticRendering;
    bool sphereMapping;
-   bool m_triggerUpdateRegion;
-   bool m_triggerSingleUpdateRegion;
+   bool m_triggerUpdateRegion;              // no-op; TODO: remove
+   bool m_triggerSingleUpdateRegion;        // no-op; TODO: remove
 };
 
 class Primitive :

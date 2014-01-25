@@ -13,7 +13,6 @@ Primitive::Primitive()
    indexList=0;
    indexListSize=0;
    m_d.use3DMesh=false;
-   m_d.m_wasVisible=false;
    g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
    m_d.meshFileName[0]=0;
    m_d.useLighting=false;
@@ -334,7 +333,6 @@ void Primitive::EndPlay()
 		objMesh = 0;
 	}
 
-	m_d.m_wasVisible = false;
     g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
     m_d.m_triggerSingleUpdateRegion = true;
 }
@@ -953,18 +951,6 @@ void Primitive::RenderStatic(const RenderDevice* _pd3dDevice)
 
 void Primitive::RenderMovers(const RenderDevice* pd3dDevice)
 {
-    if(!m_d.m_triggerSingleUpdateRegion && !m_d.m_triggerUpdateRegion)
-	    return;
-
-    if(m_d.staticRendering ||
-	  (!m_d.m_TopVisible && !m_d.m_wasVisible))
-		return;
-
-	m_d.m_wasVisible = false;
-	m_d.m_triggerSingleUpdateRegion = false;
-
-	// Seems like for now we can simply abuse the already calculated coordinates
-    g_pplayer->InvalidateRect(&m_d.m_boundRectangle);
 }
 
 //////////////////////////////
@@ -1536,11 +1522,7 @@ STDMETHODIMP Primitive::get_TopVisible(VARIANT_BOOL *pVal)
 STDMETHODIMP Primitive::put_TopVisible(VARIANT_BOOL newVal)
 {
    STARTUNDO
-
-   if( m_d.m_TopVisible && !VBTOF(newVal) )
-      m_d.m_wasVisible=true;
    m_d.m_TopVisible = VBTOF(newVal);
-   
    STOPUNDO
    return S_OK;
 }

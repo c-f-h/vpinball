@@ -5,8 +5,6 @@ Ramp::Ramp()
    m_menuid = IDR_SURFACEMENU;
    m_d.m_fCollidable = true;
    m_d.m_IsVisible = true;
-   m_d.m_wasVisible = false;
-   m_d.m_wasAlpha = false;
    g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
    staticVertexBuffer = 0;
    dynamicVertexBuffer = 0;
@@ -1042,8 +1040,6 @@ void Ramp::EndPlay()
         delete [] rgibuf;
 	}
 
-	m_d.m_wasVisible = false;
-    m_d.m_wasAlpha = false;
     g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
     m_d.m_triggerSingleUpdateRegion = true;
 }
@@ -1695,21 +1691,6 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
 
 void Ramp::RenderMovers(const RenderDevice* pd3dDevice)
 {
-   if(!m_d.m_triggerSingleUpdateRegion && !m_d.m_triggerUpdateRegion)
-	   return;
-
-   if((!m_d.m_IsVisible && !m_d.m_wasVisible) ||
-      // Don't render non-Alphas. 
-      (!m_d.m_fAlpha && !m_d.m_wasAlpha) ||
-	  (m_d.m_widthbottom==0.0f && m_d.m_widthtop==0.0f) ||
-      (isHabitrail()))
-	  return;
-
-   m_d.m_wasVisible = false;
-   m_d.m_wasAlpha = false;
-   m_d.m_triggerSingleUpdateRegion = false;
-
-   g_pplayer->InvalidateRect(&m_d.m_boundRectangle);
 }
 
 void Ramp::SetObjectPos()
@@ -2341,9 +2322,6 @@ STDMETHODIMP Ramp::put_Alpha(VARIANT_BOOL newVal)
 {
    STARTUNDO
 
-   if(m_d.m_fAlpha && !VBTOF(newVal))
-      m_d.m_wasAlpha=true;
-
    m_d.m_fAlpha = VBTOF(newVal);
    dynamicVertexBufferRegenerate = true;
    
@@ -2564,12 +2542,7 @@ STDMETHODIMP Ramp::put_IsVisible(VARIANT_BOOL newVal)
    if (!g_pplayer )
    {
       STARTUNDO
-
-      if( m_d.m_IsVisible && !VBTOF(newVal) )
-          m_d.m_wasVisible=true;
-
       m_d.m_IsVisible = VBTOF(newVal);			// set visibility
-      
 	  STOPUNDO
    }
 
