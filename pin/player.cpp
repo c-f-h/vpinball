@@ -184,14 +184,8 @@ Player::Player()
 
 	m_curPlunger = JOYRANGEMN-1;
 
-	int checkblit;
-	HRESULT hr = GetRegInt("Player", "CheckBlit", &checkblit);
-	if (hr != S_OK)
-		checkblit = g_pvp->FDefaultCheckBlit(); // The default
-	m_fCheckBlt = (checkblit == 1);
-
 	int shadow;
-	hr = GetRegInt("Player", "BallShadows", &shadow);
+	HRESULT hr = GetRegInt("Player", "BallShadows", &shadow);
 	if (hr != S_OK)
 		shadow = fTrue; // The default
 	m_fBallShadows = (shadow == 1);
@@ -2466,17 +2460,6 @@ void Player::Render()
     if (m_sleeptime > 0)
     {
         Sleep(m_sleeptime - 1);
-    }
-
-    if (m_fCheckBlt) // Don't calculate the next frame if the last one isn't done blitting yet
-    {
-        const HRESULT hrdone = m_pin3d.m_pddsFrontBuffer->GetBltStatus(DDGBS_ISBLTDONE);
-
-        if (hrdone != DD_OK)
-        {
-            //Sleep(1);
-            return;
-        }
     }
 
 #ifdef ANTI_TEAR

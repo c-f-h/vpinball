@@ -101,8 +101,6 @@ public:
 	HRESULT ShowIDE();
 	BOOL CloseTable(PinTable *ppt);
 
-	BOOL FDefaultCheckBlit();
-
 	void SetEnableToolbar();
 	void SetEnablePalette();
 	void ShowPermissionError();

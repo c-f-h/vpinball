@@ -1726,14 +1726,6 @@ BOOL VPinball::CloseTable(PinTable *ppt)
 }
 
 
-BOOL VPinball::FDefaultCheckBlit()
-{
-   const bool fCheckBlt = ((GetVersion() & 0x80000000) != 0); // check blt status on Win9x
-
-   return fCheckBlt;
-}
-
-
 void VPinball::InitVBA()
 {
    m_fDebugging = false;
@@ -3584,15 +3576,8 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             (rcMain.bottom + rcMain.top)/2 - (rcDlg.bottom - rcDlg.top)/2,
             0, 0, SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE/* | SWP_NOMOVE*/);
 
-         HWND hwndCheck = GetDlgItem(hwndDlg, IDC_CHECKBLIT);
-         int checkblit;
-         HRESULT hr = GetRegInt("Player", "CheckBlit", &checkblit);
-         if (hr != S_OK)
-            checkblit = g_pvp->FDefaultCheckBlit();
-         SendMessage(hwndCheck, BM_SETCHECK, checkblit ? BST_CHECKED : BST_UNCHECKED, 0);
-
          int maxTexDim;
-         hr = GetRegInt("Player", "MaxTexDimension", &maxTexDim);
+         HRESULT hr = GetRegInt("Player", "MaxTexDimension", &maxTexDim);
          if (hr != S_OK)
             maxTexDim = 0; // default: Don't resize textures
          switch(maxTexDim)
@@ -3606,7 +3591,7 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
          default:	SendMessage(GetDlgItem(hwndDlg, IDC_TexUnlimited),BM_SETCHECK, BST_CHECKED,0);
          }
 
-         hwndCheck = GetDlgItem(hwndDlg, IDC_SHADOW);
+         HWND hwndCheck = GetDlgItem(hwndDlg, IDC_SHADOW);
          int shadow;
          hr = GetRegInt("Player", "BallShadows", &shadow);
          if (hr != S_OK)
@@ -3821,10 +3806,6 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
                      SetRegValue("Player", "ColorDepth", REG_DWORD, &pvm->depth, 4);
                      SetRegValue("Player", "RefreshRate", REG_DWORD, &pvm->refreshrate, 4);
                   }
-
-                  HWND hwndCheck = GetDlgItem(hwndDlg, IDC_CHECKBLIT);
-                  int checkblit = SendMessage(hwndCheck, BM_GETCHECK, 0, 0);
-                  SetRegValue("Player", "CheckBlit", REG_DWORD, &checkblit, 4);
 
                   HWND maxTexDim512 = GetDlgItem(hwndDlg, IDC_Tex512);
                   HWND maxTexDim1024 = GetDlgItem(hwndDlg, IDC_Tex1024);

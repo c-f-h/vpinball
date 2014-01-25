@@ -242,8 +242,6 @@ private:
 	FILE *m_fplaylog;
 #endif
 
-	BOOL m_fCheckBlt;
-
 	BOOL m_fBallShadows;
 	BOOL m_fBallDecals;
 	BOOL m_fBallAntialias;
