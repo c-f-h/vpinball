@@ -932,7 +932,7 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
          }
          ppin3d->EnableAlphaBlend( 1, m_d.m_fAddBlend );
 
-         ppin3d->SetColorKeyEnabled(TRUE);
+         pd3dDevice->SetColorKeyEnabled(TRUE);
          pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, (g_pplayer->m_fStereo3D == 0) || !g_pplayer->m_fStereo3Denabled );
          ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );

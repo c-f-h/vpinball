@@ -2982,7 +2982,7 @@ void Player::DrawBallLogo(Ball * const pball)
 
 //   m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
 
-   g_pplayer->m_pin3d.SetColorKeyEnabled(FALSE);
+   m_pin3d.SetColorKeyEnabled(FALSE);
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);

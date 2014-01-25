@@ -718,7 +718,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 
 			//pd3dDevice->SetTextureStageState( 0, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
 			//pd3dDevice->SetRenderState(D3DRENDERSTATE_COLORKEYENABLE, TRUE);
-			ppin3d->SetColorKeyEnabled(fFalse);
+			pd3dDevice->SetColorKeyEnabled(fFalse);
          ppin3d->SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
 				
          pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);

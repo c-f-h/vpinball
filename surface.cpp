@@ -1504,7 +1504,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
             g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
         }
 
-        g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
+        pd3dDevice->SetColorKeyEnabled(true);
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
     }
@@ -1563,7 +1563,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
                 g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
             }
 
-            g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetColorKeyEnabled(true);
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
         }
@@ -1587,7 +1587,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
                 g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
             }
 
-            g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetColorKeyEnabled(true);
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
         }

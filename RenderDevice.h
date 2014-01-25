@@ -102,6 +102,11 @@ public:
    void renderPrimitive(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, LPWORD _indices, DWORD _numIndices, DWORD _flags);
    void renderPrimitiveListed(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, DWORD _flags);
 
+   void SetColorKeyEnabled(bool enable)
+   {
+       SetRenderState(RenderDevice::COLORKEYENABLE, enable);
+   }
+
    inline void setVBInVRAM( const BOOL _state )
    {
       vbInVRAM=(_state==1);

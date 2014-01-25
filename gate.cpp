@@ -410,7 +410,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
     else
     {
         //modified to correct software render of plain gates
-        ppin3d->SetColorKeyEnabled(FALSE);
+        pd3dDevice->SetColorKeyEnabled(false);
     }
     // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
     pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_MIRROR);
@@ -456,7 +456,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             }
 
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-            ppin3d->SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetColorKeyEnabled(true);
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
@@ -487,7 +487,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             }
 
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-            ppin3d->SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetColorKeyEnabled(true);
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
@@ -572,7 +572,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             }
 
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-            g_pplayer->m_pin3d.SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetColorKeyEnabled(true);
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
@@ -604,7 +604,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             }
 
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-            ppin3d->SetColorKeyEnabled(TRUE);
+            pd3dDevice->SetColorKeyEnabled(true);
             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
@@ -646,7 +646,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_NOLIGHTING_VERTEX,verts, 16,(LPWORD)idx, 24, 0);
         }
     }
-    g_pplayer->m_pin3d.SetColorKeyEnabled(FALSE);
+    pd3dDevice->SetColorKeyEnabled(false);
     pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
     pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
 

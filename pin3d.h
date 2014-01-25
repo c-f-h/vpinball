@@ -216,7 +216,7 @@ public:
 	void SetTexture(BaseTexture* pddsTexture);
 	void EnableLightMap(const BOOL fEnable, const float z);
 
-	void SetColorKeyEnabled(const BOOL fColorKey) const;
+	void SetColorKeyEnabled(bool fColorKey);
 	void EnableAlphaTestReference(DWORD alphaRefValue) const;
     void EnableAlphaBlend( DWORD alphaRefValue, BOOL additiveBlending=fFalse );
 
