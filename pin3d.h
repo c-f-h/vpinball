@@ -194,7 +194,6 @@ public:
 	void InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD);
 
     void ClearSpriteRectangle( AnimObject *animObj, ObjFrame *pof );
-    void CreateAndCopySpriteBuffers( AnimObject *animObj, ObjFrame *pof );
 
 	void CacheTransform();      // compute m_matrixTotal = mWorld * mView * mProj
 
@@ -235,7 +234,6 @@ public:
 
 	BaseTexture* CreateOffscreen(const int width, const int height) const;
 	BaseTexture* CreateOffscreenWithCustomTransparency(const int width, const int height, const int color) const;
-	BaseTexture* CreateZBufferOffscreen(const int width, const int height) const;
 
 private:
     HRESULT Create3DDevice(const GUID * const pDeviceGUID);

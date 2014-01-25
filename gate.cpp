@@ -772,8 +772,6 @@ void Gate::PrepareMovers(RenderDevice* pd3dDevice )
    const float snY = sinf(radangle);
    const float csY = cosf(radangle);
 
-   ppin3d->ClearExtents(&m_phitgate->m_gateanim.m_rcBounds, &m_phitgate->m_gateanim.m_znear, &m_phitgate->m_gateanim.m_zfar);
-
    const float inv_cframes = (cframes > 1) ? ((m_d.m_angleMax - m_d.m_angleMin)/(float)(cframes-1)) : 0.0f;
 
    const float inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
