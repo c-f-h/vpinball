@@ -149,23 +149,23 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Light)
 	void WriteRegDefaults();
    void FreeBuffers();
 
-	PinTable *m_ptable;
-
-	LightData m_d;
-
-	// Run-time
-	ObjFrame *m_pobjframe[2];
-	//int m_iblinkframe;
-	//int m_timenextblink;
-
-	LightCenter m_lightcenter;
-
-//>>> Added By Chris
-	LightState 	m_realState;
 	void		lockLight();
 	void		unLockLight();
 	void		setLightStateBypass(const LightState newVal);
 	void		setLightState(const LightState newVal);
+
+	PinTable *m_ptable;
+
+	LightData m_d;
+	LightState 	m_realState;
+
+	// Run-time
+private:
+	ObjFrame *m_pobjframe[2];
+
+	LightCenter m_lightcenter;
+
+//>>> Added By Chris
 	bool		m_fLockedByLS;
 //<<<
    Vertex3D circleVertex[32];
