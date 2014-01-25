@@ -3,7 +3,7 @@
 #include "Material.h"
 #include "Texture.h"
 
-bool RenderDevice::createDevice(BaseTexture *_backBuffer )
+bool RenderDevice::CreateDevice(BaseTexture *_backBuffer )
 {
     memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
     for( int i=0;i<8;i++ )
@@ -20,7 +20,7 @@ bool RenderDevice::createDevice(BaseTexture *_backBuffer )
     return true;
 }
 
-bool RenderDevice::initRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
+bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
 {
     LPDIRECTDRAW7 dd = g_pvp->m_pdd.m_pDD;
 
@@ -128,7 +128,7 @@ retry2:
     // Create the D3D device.  This device will pre-render everything once...
     // Then it will render only the ball and its shadow in real time.
 
-	if( !createDevice(m_pddsBackBuffer) )
+	if( !CreateDevice(m_pddsBackBuffer) )
 	{
 		ShowError("Could not create Direct 3D device.");
 		return false;
@@ -172,7 +172,7 @@ void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
 		hr = g_pvp->m_pdd.m_pDD->RestoreAllSurfaces();
 }
 
-void RenderDevice::destroyRenderer()
+void RenderDevice::DestroyRenderer()
 {
 	g_pvp->m_pdd.m_pDD->RestoreDisplayMode();
 
@@ -232,6 +232,12 @@ void RenderDevice::SetRenderState( const RenderStates p1, const DWORD p2 )
    dx7Device->SetRenderState((D3DRENDERSTATETYPE)p1,p2);
 }
 
+void RenderDevice::SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode)
+{
+    dx7Device->SetTextureStageState(texUnit, D3DTSS_ADDRESS, mode);
+}
+
+
 void RenderDevice::createVertexBuffer( unsigned int _length, DWORD _usage, DWORD _fvf, VertexBuffer **_vBuffer )
 {
    D3DVERTEXBUFFERDESC vbd;
@@ -255,6 +261,96 @@ void RenderDevice::renderPrimitiveListed(D3DPRIMITIVETYPE _primType, VertexBuffe
 {
    dx7Device->DrawPrimitiveVB( _primType, (LPDIRECT3DVERTEXBUFFER7)_vbuffer, _startVertex, _numVertices, _flags );
 }
+
+
+static HRESULT WINAPI EnumZBufferFormatsCallback( DDPIXELFORMAT * pddpf,
+	VOID * pContext )
+{
+	DDPIXELFORMAT * const pddpfOut = (DDPIXELFORMAT*)pContext;
+
+	if((pddpf->dwRGBBitCount > 0) && (pddpfOut->dwRGBBitCount == pddpf->dwRGBBitCount))
+	{
+		(*pddpfOut) = (*pddpf);
+		return D3DENUMRET_CANCEL;
+	}
+
+	return D3DENUMRET_OK;
+}
+
+RenderTarget* RenderDevice::AttachZBufferTo(RenderTarget* surf)
+{
+	// Get z-buffer dimensions from the render target
+	DDSURFACEDESC2 ddsd;
+	ddsd.dwSize = sizeof(ddsd);
+	surf->GetSurfaceDesc( &ddsd );
+
+	// Setup the surface desc for the z-buffer.
+	ddsd.dwFlags        = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PIXELFORMAT;
+	ddsd.ddsCaps.dwCaps = DDSCAPS_ZBUFFER;
+	ddsd.ddpfPixelFormat.dwSize = 0;  // Tag the pixel format as unitialized
+
+	// Check if we are rendering in software.
+	if (!g_pvp->m_pdd.m_fHardwareAccel)
+		ddsd.ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
+	else
+		ddsd.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY; // slower(?): | DDSCAPS_LOCALVIDMEM;
+
+	const GUID* pDeviceGUID = (g_pvp->m_pdd.m_fHardwareAccel) ? &IID_IDirect3DHALDevice : &IID_IDirect3DRGBDevice;
+
+	// Get an appropriate pixel format from enumeration of the formats. On the
+	// first pass, we look for a zbuffer depth which is equal to the frame
+	// buffer depth (as some cards unfornately require this).
+	m_pD3D->EnumZBufferFormats( *pDeviceGUID, EnumZBufferFormatsCallback,
+		(VOID*)&ddsd.ddpfPixelFormat );
+	if( 0 == ddsd.ddpfPixelFormat.dwSize )
+	{
+		// Try again, just accepting any 16-bit zbuffer
+		ddsd.ddpfPixelFormat.dwRGBBitCount = 16;
+		m_pD3D->EnumZBufferFormats( *pDeviceGUID, EnumZBufferFormatsCallback,
+			(VOID*)&ddsd.ddpfPixelFormat );
+
+		if( 0 == ddsd.ddpfPixelFormat.dwSize )
+		{
+			ShowError("Could not find Z-Buffer format.");
+			return NULL;
+		}
+	}
+
+	// Create the z buffer.
+    LPDIRECTDRAWSURFACE7 pZBuf;
+retry6:
+	HRESULT hr;
+	if( FAILED( hr = g_pvp->m_pdd.m_pDD->CreateSurface( &ddsd, &pZBuf, NULL ) ) )
+	{
+		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
+			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
+			goto retry6;
+		}
+		ShowError("Could not create Z-Buffer.");
+		return NULL;
+	}
+
+	// Attach the z buffer to the back buffer.
+	if( FAILED( hr = surf->AddAttachedSurface( pZBuf ) ) )
+	{
+		ShowError("Could not attach Z-Buffer.");
+		return NULL;
+	}
+
+    return pZBuf;
+}
+
+void RenderDevice::SetRenderTarget( RenderTarget* surf)
+{
+    dx7Device->SetRenderTarget(surf, 0);
+}
+
+void RenderDevice::SetZBuffer( RenderTarget* surf)
+{
+    dx7Device->SetRenderTarget(surf, 0);
+}
+
+
 
 //########################## simple wrapper functions (interface for DX7)##################################
 
@@ -285,10 +381,7 @@ HRESULT RenderDevice::EndScene( THIS )
 //   return dx7Device->GetDirect3D(p1);
 //}
 
-HRESULT RenderDevice::SetRenderTarget( THIS_ LPDIRECTDRAWSURFACE7 p1,DWORD p2)
-{
-   return dx7Device->SetRenderTarget(p1,p2);
-}
+   void SetZBuffer( RenderTarget* );
 
 HRESULT RenderDevice::GetRenderTarget( THIS_ LPDIRECTDRAWSURFACE7 *p1 )
 {

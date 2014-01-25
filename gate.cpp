@@ -413,7 +413,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
         pd3dDevice->SetColorKeyEnabled(false);
     }
     // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
-    pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_MIRROR);
+    pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_MIRROR);
 
     if(!m_d.m_fEnableLighting)
         pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
@@ -648,7 +648,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
     }
     pd3dDevice->SetColorKeyEnabled(false);
     pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
-    pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
+    pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
 
     if(!m_d.m_fEnableLighting)
         pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);

@@ -90,19 +90,27 @@ public:
       TEXTUREFACTOR      = D3DRENDERSTATE_TEXTUREFACTOR
    };
 
+   enum TextureAddressMode {
+       TEX_WRAP          = D3DTADDRESS_WRAP,
+       TEX_CLAMP         = D3DTADDRESS_CLAMP,
+       TEX_MIRROR        = D3DTADDRESS_MIRROR
+   };
+
    RenderDevice();
    ~RenderDevice();
 
-   bool createDevice(BaseTexture *_backBuffer);
-   bool initRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate);
+   bool CreateDevice(BaseTexture *_backBuffer);
+   bool InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate);
    void Flip(int offsetx, int offsety, bool vsync);
-   void destroyRenderer();
+   void DestroyRenderer();
 
-   RenderTarget* getBackBuffer() { return m_pddsBackBuffer; }
+   RenderTarget* GetBackBuffer() { return m_pddsBackBuffer; }
 
    void SetMaterial( const BaseMaterial * const _material );
    void SetMaterial( const Material & material )        { SetMaterial(&material.getBaseMaterial()); }
    void SetRenderState( const RenderStates p1, const DWORD p2 );
+   void SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode);
+
    void createVertexBuffer( unsigned int _length, DWORD _usage, DWORD _fvf, VertexBuffer **_vBuffer );
    void renderPrimitive(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, LPWORD _indices, DWORD _numIndices, DWORD _flags);
    void renderPrimitiveListed(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, DWORD _flags);
@@ -117,13 +125,18 @@ public:
       vbInVRAM=(_state==1);
    }
 
-   //########################## simple wrapper functions (interface for DX7)##################################
+   void SetRenderTarget( RenderTarget* );
+   void SetZBuffer( RenderTarget* );
+
+   RenderTarget* AttachZBufferTo(RenderTarget* surf);
+private:
+
+
+public:  //########################## simple wrapper functions (interface for DX7)##################################
 
    HRESULT BeginScene( THIS );
 
    HRESULT EndScene( THIS );
-
-   HRESULT SetRenderTarget( THIS_ RenderTarget*,DWORD );
 
    HRESULT GetRenderTarget( THIS_ RenderTarget* * );
 
@@ -216,10 +229,10 @@ private:
 
 };
 
+
 class VertexBuffer : public IDirect3DVertexBuffer7
 {
 public:
-
    enum LockFlags
    {
       WRITEONLY = DDLOCK_WRITEONLY,

@@ -14,7 +14,6 @@ Pin3D::Pin3D()
 	m_pdds3Dbufferzcopy = NULL;
 	m_pdds3Dbuffermask = NULL;
 	m_pddsZBuffer = NULL;
-	antiAliasTexture = NULL;
 	m_pD3D = NULL;
 	m_pd3dDevice = NULL;
 	m_pddsStatic = NULL;
@@ -53,11 +52,9 @@ Pin3D::~Pin3D()
 
 	SAFE_RELEASE(m_pddsLightWhite);
 
-    m_pd3dDevice->destroyRenderer();
+    m_pd3dDevice->DestroyRenderer();
 
 	delete m_pd3dDevice;
-
-   SAFE_RELEASE(antiAliasTexture);
 
    if( spriteVertexBuffer )
    {
@@ -77,20 +74,6 @@ Pin3D::~Pin3D()
 		delete [] playfieldPolyIndices;
 }
 
-static HRESULT WINAPI EnumZBufferFormatsCallback( DDPIXELFORMAT * pddpf,
-	VOID * pContext )
-{
-	DDPIXELFORMAT * const pddpfOut = (DDPIXELFORMAT*)pContext;
-
-	if((pddpf->dwRGBBitCount > 0) && (pddpfOut->dwRGBBitCount == pddpf->dwRGBBitCount))
-	{
-		(*pddpfOut) = (*pddpf);
-		return D3DENUMRET_CANCEL;
-	}
-
-	return D3DENUMRET_OK;
-}
-
 void Pin3D::ClearSpriteRectangle( AnimObject *animObj, ObjFrame *pof )
 {
 	if ( animObj )
@@ -98,102 +81,6 @@ void Pin3D::ClearSpriteRectangle( AnimObject *animObj, ObjFrame *pof )
 
 	if( pof )
 		ClearExtents(&pof->rc, NULL, NULL);
-}
-
-// assumes that antiAliasTexture is already initialized and that m_rzfar is correct
-// so be sure to call this function after InitDD and InitLayout
-void Pin3D::InitAntiAliasing()
-{
-   if( !spriteVertexBuffer )
-   {
-      m_pd3dDevice->createVertexBuffer(8, 0, D3DFVF_TLVERTEX, &spriteVertexBuffer );
-      NumVideoBytes += 8*sizeof(D3DTLVERTEX);
-   }
-   DDSURFACEDESC2 ddsd;
-   ddsd.dwSize = sizeof(ddsd);
-   antiAliasTexture->GetSurfaceDesc( &ddsd );
-
-   const float width = (float)min(GetSystemMetrics(SM_CXSCREEN), m_dwRenderWidth);
-   const float height = (float)min(GetSystemMetrics(SM_CYSCREEN), m_dwRenderHeight);
-   const float maxtu = (float)width / (float)ddsd.dwWidth;
-   const float maxtv = (float)height/ (float)ddsd.dwHeight;
-   const float z = 1.0f;
-   const float rhw = 1.0f/(z*(float)m_rzfar);
-   float x=0;
-   float y=0;
-   
-   D3DTLVERTEX *verts;
-   spriteVertexBuffer->lock(0,0,(void**)&verts, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE );
-   verts[0].sx = x;
-   verts[0].sy = y;
-   verts[0].sz = z;
-   verts[0].rhw = rhw;
-   verts[0].color=0xFFFFFFFF;
-   verts[0].tu = 0.0f;
-   verts[0].tv = 0.0f;
-
-   verts[1].sx = (x+width);
-   verts[1].sy = y;
-   verts[1].sz = z;
-   verts[1].rhw = rhw;
-   verts[1].color=0xFFFFFFFF;
-   verts[1].tu = maxtu;
-   verts[1].tv = 0.0f;
-
-   verts[2].sx = (x+width);
-   verts[2].sy = (y+height);
-   verts[2].sz = z;
-   verts[2].rhw = rhw;
-   verts[2].color=0xFFFFFFFF;
-   verts[2].tu = maxtu;
-   verts[2].tv = maxtv;
-
-   verts[3].sx = x;
-   verts[3].sy = (y+height);
-   verts[3].sz = z;
-   verts[3].rhw = rhw;
-   verts[3].color=0xFFFFFFFF;
-   verts[3].tu = 0.0f;
-   verts[3].tv = maxtv;
-   for( int i=4;i<8;i++ )
-   {
-      verts[i].sx++;
-      verts[i].sy++;
-   }
-   spriteVertexBuffer->unlock();
-}
-
-void Pin3D::AntiAliasingScene()
-{
-   static const WORD idx[6]={0,1,2,2,3,0};
-   m_pd3dDevice->SetRenderTarget( m_pddsBackBuffer,0  );
-   if ( m_pd3dDevice->BeginScene()==D3D_OK )
-   {
-      m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
-      m_pd3dDevice->SetRenderState(RenderDevice::ZENABLE, FALSE);
-      m_pd3dDevice->SetTexture(0, antiAliasTexture);
-
-      m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
-      m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE); 	
-      m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, spriteVertexBuffer, 0, 4, (LPWORD)idx, 6, 0 );
-
-      m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE); 	
-      m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE,FALSE);
-      m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
-      m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_DESTALPHA);
-      m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1}
-      m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0x40404040);
-      m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, spriteVertexBuffer, 4, 4, (LPWORD)idx, 6, 0 );
-
-      m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
-      m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE,TRUE);
-      m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
-      m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-      m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
-      m_pd3dDevice->SetRenderState(RenderDevice::ZENABLE, TRUE);
-      m_pd3dDevice->SetTexture(0, NULL);
-      m_pd3dDevice->EndScene();
-   }
 }
 
 void Pin3D::ClipRectToVisibleArea(RECT * const prc) const
@@ -423,7 +310,7 @@ HRESULT Pin3D::InitDD(const HWND hwnd, const bool fFullScreen, const int screenw
 	m_pDD = g_pvp->m_pdd.m_pDD; 
 
     m_pd3dDevice = new RenderDevice;
-    m_pd3dDevice->initRenderer(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate);
+    m_pd3dDevice->InitRenderer(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate);
 	SetUpdatePos(m_rcScreen.left, m_rcScreen.top);
     m_pD3D = m_pd3dDevice->m_pD3D;
 
@@ -442,7 +329,7 @@ HRESULT Pin3D::InitDD(const HWND hwnd, const bool fFullScreen, const int screenw
 		return false; 
 	}
 
-    m_pddsBackBuffer = m_pd3dDevice->getBackBuffer();
+    m_pddsBackBuffer = m_pd3dDevice->GetBackBuffer();
 
 	DDSURFACEDESC2 ddsd;
 	ddsd.dwSize = sizeof(ddsd);
@@ -464,53 +351,10 @@ retry3:
 	// Update the count.
 	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
 
-	if(AA)
-	{
-	   //!! aligning to power of two does not seem to be necessary
-
-	   int texwidth = m_dwRenderWidth;//8; // Minimum size 8
-//	   while(texwidth < m_dwRenderWidth)
-//		  texwidth <<= 1;
-
-	   int texheight = m_dwRenderHeight;//8;
-//	   while(texheight < m_dwRenderHeight)
-//		  texheight <<= 1;
-
-	   // D3D7 does not support textures greater than 4096 in either dimension
-	   /*if (texwidth > MAX_TEXTURE_SIZE)
-	   {
-		  texwidth = MAX_TEXTURE_SIZE;
-	   }
-
-	   if (texheight > MAX_TEXTURE_SIZE)
-	   {
-		  texheight = MAX_TEXTURE_SIZE;
-	   }*/
-
-	   // Define a backbuffer.
-	   ddsd.dwFlags        = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS;
-	   ddsd.dwWidth        = texwidth;
-	   ddsd.dwHeight       = texheight;
-	   ddsd.ddsCaps.dwCaps = DDSCAPS_TEXTURE | DDSCAPS_3DDEVICE;
- 	   //!!? ddsd.ddsCaps.dwCaps2 = DDSCAPS2_HINTDYNAMIC;
-
-retry4:
-	   if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&antiAliasTexture, NULL ) ) )
-	   {
-		  if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
-			 ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
-			 goto retry4;
-		  }
-		  ShowError("Could not create antialias buffer.");
-		  return hr;
-	   }
-	}
-
-	// Create the z and "static" z buffers.
-	// Also attach the z buffers to their corresponding color buffer.
-	hr = CreateZBuffer();
-	if(FAILED(hr))
-		return hr;
+    m_pddsZBuffer = m_pd3dDevice->AttachZBufferTo(m_pddsBackBuffer);
+    m_pddsStaticZ = m_pd3dDevice->AttachZBufferTo(m_pddsStatic);
+    if (!m_pddsZBuffer || !m_pddsStatic)
+        return E_FAIL;
 
 	CreateBallShadow();
 
@@ -561,106 +405,6 @@ retry4:
 	return S_OK;
 }
 
-HRESULT Pin3D::CreateZBuffer()
-{
-	// Get z-buffer dimensions from the render target
-	DDSURFACEDESC2 ddsd;
-	ddsd.dwSize = sizeof(ddsd);
-	m_pddsBackBuffer->GetSurfaceDesc( &ddsd );
-
-	// Setup the surface desc for the z-buffer.
-	ddsd.dwFlags        = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_PIXELFORMAT;
-	ddsd.ddsCaps.dwCaps = DDSCAPS_ZBUFFER;
-	ddsd.ddpfPixelFormat.dwSize = 0;  // Tag the pixel format as unitialized
-
-	// Check if we are rendering in software.
-	if (!g_pvp->m_pdd.m_fHardwareAccel)
-	{
-		ddsd.ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
-	}
-	else
-	{
-		ddsd.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY; // slower(?): | DDSCAPS_LOCALVIDMEM;
-	}
-
-	const GUID* pDeviceGUID = (g_pvp->m_pdd.m_fHardwareAccel) ? &IID_IDirect3DHALDevice : &IID_IDirect3DRGBDevice;
-
-	// Get an appropiate pixel format from enumeration of the formats. On the
-	// first pass, we look for a zbuffer depth which is equal to the frame
-	// buffer depth (as some cards unfornately require this).
-	m_pD3D->EnumZBufferFormats( *pDeviceGUID, EnumZBufferFormatsCallback,
-		(VOID*)&ddsd.ddpfPixelFormat );
-	if( 0 == ddsd.ddpfPixelFormat.dwSize )
-	{
-		// Try again, just accepting any 16-bit zbuffer
-		ddsd.ddpfPixelFormat.dwRGBBitCount = 16;
-		m_pD3D->EnumZBufferFormats( *pDeviceGUID, EnumZBufferFormatsCallback,
-			(VOID*)&ddsd.ddpfPixelFormat );
-
-		if( 0 == ddsd.ddpfPixelFormat.dwSize )
-		{
-			ShowError("Could not find Z-Buffer format.");
-			return E_FAIL;// D3DFWERR_NOZBUFFER;
-		}
-	}
-
-	// Create the z buffer.
-retry6:
-	HRESULT hr;
-	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&m_pddsZBuffer, NULL ) ) )
-	{
-		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
-			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
-			goto retry6;
-		}
-		ShowError("Could not create Z-Buffer.");
-		return hr; 
-	}
-
-	// Update the count.
-	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
-
-	// Create the "static" z buffer.
-retry7:
-   if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&m_pddsStaticZ, NULL ) ) )
-	{
-		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
-			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
-			goto retry7;
-		}
-		ShowError("Could not create static Z-Buffer.");
-		return hr; 
-	}
-
-	// Update the count.
-	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
-
-	// Attach the z buffer to the back buffer.
-	if( FAILED( hr = m_pddsBackBuffer->AddAttachedSurface( m_pddsZBuffer ) ) )
-	{
-		ShowError("Could not attach Z-Buffer.");
-		return hr; 
-	}
-
-   // Attach the "static" z buffer to the "static" buffer.
-   if( FAILED( hr = m_pddsStatic->AddAttachedSurface( m_pddsStaticZ ) ) )
-   {
-      ShowError("Could not attach static Z-Buffer.");
-      return hr; 
-   }
-
-   if(antiAliasTexture)
-   {
-	   // Attach the "static" z buffer to the "static" buffer.
-	   if( FAILED( hr = antiAliasTexture->AddAttachedSurface( m_pddsZBuffer ) ) )
-	   {
-		  ShowError("Could not attach AA Z-Buffer.");
-		  return hr;
-	   }
-   }
-
-   return S_OK;
-}
 
 // Sets the texture filtering state.
 void Pin3D::SetTextureFilter(const int TextureNum, const int Mode) const
@@ -719,9 +463,8 @@ void Pin3D::SetTextureFilter(const int TextureNum, const int Mode) const
 
 void Pin3D::SetRenderTarget(RenderTarget* pddsSurface, RenderTarget* pddsZ) const
 {
-	HRESULT hr;
-	hr = m_pd3dDevice->SetRenderTarget(pddsSurface, 0L);
-	hr = m_pd3dDevice->SetRenderTarget(pddsZ, 0L);
+	m_pd3dDevice->SetRenderTarget(pddsSurface);
+	m_pd3dDevice->SetZBuffer(pddsZ);
 }
 
 void Pin3D::InitRenderState() 
@@ -734,7 +477,7 @@ void Pin3D::InitRenderState()
 	m_pd3dDevice->SetRenderState(RenderDevice::ZENABLE, TRUE);
 	m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_CLAMP/*WRAP*/);
+    m_pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_CLAMP/*WRAP*/);
 	m_pd3dDevice->SetColorKeyEnabled(true);
 
 	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);

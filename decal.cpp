@@ -557,7 +557,7 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
    pd3dDevice->SetRenderState( RenderDevice::ZWRITEENABLE, FALSE);
 
    // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
-   pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_MIRROR);
+   pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_MIRROR);
 
    if (pin)
    {
@@ -604,7 +604,7 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
    // Set the render state.
    pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-   pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
+   pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
 }
 
 void Decal::RenderMovers(const RenderDevice* pd3dDevice)

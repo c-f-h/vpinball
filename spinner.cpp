@@ -376,7 +376,7 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
     }
 
     // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
-    pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_MIRROR);
+    pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_MIRROR);
 
     const int i = angleToFrame(m_phitspinner->m_spinneranim.m_angle);
     const int ofs = 8 * i;
@@ -483,7 +483,7 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     pd3dDevice->SetColorKeyEnabled(FALSE);
     pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
-    pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
+    pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
 }
 
 void Spinner::PrepareStatic( RenderDevice* pd3dDevice )

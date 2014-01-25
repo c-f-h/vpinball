@@ -711,12 +711,11 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
          pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
 
 			// Set texture to mirror, so the alpha state of the texture blends correctly to the outside
-			pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_MIRROR);
+            pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_MIRROR);
 				
 			pin->CreateAlphaChannel();
          pin->Set( ePictureTexture );
 
-			//pd3dDevice->SetTextureStageState( 0, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
 			//pd3dDevice->SetRenderState(D3DRENDERSTATE_COLORKEYENABLE, TRUE);
 			pd3dDevice->SetColorKeyEnabled(fFalse);
          ppin3d->SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
@@ -870,7 +869,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
       ppin3d->SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
       pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-		pd3dDevice->SetTextureStageState( ePictureTexture, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
+      pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
         }
     }
     else    /* generate a strip of numbers using font rendering */

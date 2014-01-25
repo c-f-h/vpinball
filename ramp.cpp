@@ -1632,7 +1632,7 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
             // giving the illusion of transparency (screen door). 
             ppin3d->EnableAlphaTestReference(127);
             // Make sure our textures tile.
-            pd3dDevice->SetTextureStageState( 0, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
+            pd3dDevice->SetTextureAddressMode(0, RenderDevice::TEX_WRAP);
 
             // Turn off texture filtering.
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_POINT );

@@ -1091,8 +1091,6 @@ void Light::RenderMovers(const RenderDevice* _pd3dDevice)
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
    ppin3d->lightTexture[1].Set(ePictureTexture);
 
-   //pd3dDevice->SetTextureStageState( 0, D3DTSS_ADDRESS, D3DTADDRESS_WRAP);
-
    //pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
    //pd3dDevice->SetTextureStageState( 0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
 

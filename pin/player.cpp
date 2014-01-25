@@ -803,10 +803,10 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_nudgetime = 0;
 	m_movedPlunger = 0;	// has plunger moved, must have moved at least three times
 
-    if ( m_useAA )
-    {
-      m_pin3d.InitAntiAliasing();
-    }
+    //if ( m_useAA )
+    //{
+    //  m_pin3d.InitAntiAliasing();
+    //}
 
 	SendMessage(hwndProgress, PBM_SETPOS, 50, 0);
 	SetWindowText(hwndProgressName, "Initalizing Physics...");
@@ -2095,8 +2095,8 @@ unsigned int Player::CheckAndUpdateRegions()
     //
 
     BaseTexture *backBuffer = m_pin3d.m_pddsBackBuffer;
-    if ( m_useAA )
-        backBuffer = m_pin3d.antiAliasTexture; //m_pin3d.m_pddsBackBuffer;
+    //if ( m_useAA )
+    //    backBuffer = m_pin3d.antiAliasTexture; //m_pin3d.m_pddsBackBuffer;
 
     BaseTexture * const backBufferZ = m_pin3d.m_pddsZBuffer;
 
@@ -2489,16 +2489,16 @@ void Player::Render()
     ///+++++++++++++++++++++++++++++++++++++++++++++++++++++
 
     UpdatePhysics();
-    if( m_useAA )
-        m_pin3d.SetRenderTarget(m_pin3d.antiAliasTexture, m_pin3d.m_pddsZBuffer );
+    //if( m_useAA )
+    //    m_pin3d.SetRenderTarget(m_pin3d.antiAliasTexture, m_pin3d.m_pddsZBuffer );
 
     m_LastKnownGoodCounter++;
 
     unsigned int overall_area = CheckAndUpdateRegions();
     RenderDynamics();
 
-    if ( m_useAA )
-        m_pin3d.AntiAliasingScene();
+    //if ( m_useAA )
+    //    m_pin3d.AntiAliasingScene();
 
     // Check if we should turn animate the plunger light.
     hid_set_output ( HID_OUTPUT_PLUNGER, ((m_time_msec - m_LastPlungerHit) < 512) && ((m_time_msec & 512) > 0) );
@@ -2870,7 +2870,7 @@ void Player::DrawBallShadow(Ball * const pball)
    m_pin3d.SetColorKeyEnabled(FALSE);
 
    m_pin3d.ballShadowTexture.Set( ePictureTexture );
-   m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_ADDRESS, D3DTADDRESS_CLAMP);
+   m_pin3d.m_pd3dDevice->SetTextureAddressMode(0, RenderDevice::TEX_CLAMP);
    Vertex3D_NoTex2 * const rgv3DShadow = pball->m_rgv3DShadow;
 
    if (!pball->fFrozen && rgv3DShadow[0].x <= m_ptable->m_right && rgv3DShadow[2].y >= m_ptable->m_top)
@@ -2999,7 +2999,7 @@ void Player::DrawBalls()
     bool drawReflection = m_ptable->m_useReflectionForBalls==fTrue;
 
     m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREPERSPECTIVE, FALSE );
-    m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_ADDRESS, D3DTADDRESS_CLAMP);
+    m_pin3d.m_pd3dDevice->SetTextureAddressMode(0, RenderDevice::TEX_CLAMP);
 
     m_pin3d.EnableAlphaTestReference( 0x0000001 );
     m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
