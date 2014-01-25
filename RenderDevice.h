@@ -93,12 +93,17 @@ public:
    RenderDevice();
    ~RenderDevice();
 
-   bool createDevice(const GUID * const _deviceGUID, LPDIRECT3D7 _dx7, BaseTexture *_backBuffer );
+   bool createDevice(BaseTexture *_backBuffer);
+   bool initRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate);
+   void Flip(int offsetx, int offsety, bool vsync);
+   void destroyRenderer();
+
+   RenderTarget* getBackBuffer() { return m_pddsBackBuffer; }
 
    void SetMaterial( const BaseMaterial * const _material );
    void SetMaterial( const Material & material )        { SetMaterial(&material.getBaseMaterial()); }
    void SetRenderState( const RenderStates p1, const DWORD p2 );
-   bool createVertexBuffer( unsigned int _length, DWORD _usage, DWORD _fvf, VertexBuffer **_vBuffer );
+   void createVertexBuffer( unsigned int _length, DWORD _usage, DWORD _fvf, VertexBuffer **_vBuffer );
    void renderPrimitive(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, LPWORD _indices, DWORD _numIndices, DWORD _flags);
    void renderPrimitiveListed(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, DWORD _flags);
 
@@ -114,21 +119,26 @@ public:
 
    //########################## simple wrapper functions (interface for DX7)##################################
 
-   HRESULT QueryInterface( THIS_ REFIID riid, LPVOID * ppvObj );
-
-   //HRESULT GetCaps( THIS_ LPD3DDEVICEDESC7 );
-
-   //HRESULT EnumTextureFormats( THIS_ LPD3DENUMPIXELFORMATSCALLBACK,LPVOID );
-
    HRESULT BeginScene( THIS );
 
    HRESULT EndScene( THIS );
 
-   //HRESULT GetDirect3D( THIS_ LPDIRECT3D7* );
-
    HRESULT SetRenderTarget( THIS_ RenderTarget*,DWORD );
 
    HRESULT GetRenderTarget( THIS_ RenderTarget* * );
+
+   HRESULT SetTexture( THIS_ DWORD, BaseTexture* );
+
+   void getMaterial( THIS_ BaseMaterial *_material );
+
+   HRESULT SetLight( THIS_ DWORD, BaseLight* );
+
+   HRESULT GetLight( THIS_ DWORD, BaseLight* );
+
+   HRESULT SetViewport( THIS_ ViewPort* );
+
+   HRESULT GetViewport( THIS_ ViewPort* );
+
 
    HRESULT Clear( THIS_ DWORD,LPD3DRECT,DWORD,D3DCOLOR,D3DVALUE,DWORD );
 
@@ -136,53 +146,31 @@ public:
 
    HRESULT GetTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
 
-   HRESULT SetViewport( THIS_ ViewPort* );
-
-   HRESULT MultiplyTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
-
-   HRESULT GetViewport( THIS_ ViewPort* );
-
    //HRESULT SetMaterial( THIS_ LPD3DMATERIAL7 );
 
    //HRESULT GetMaterial( THIS_ LPD3DMATERIAL7 );
-
-   void getMaterial( THIS_ BaseMaterial *_material );
-
-   HRESULT SetLight( THIS_ DWORD,LPD3DLIGHT7 );
-
-   HRESULT GetLight( THIS_ DWORD,LPD3DLIGHT7 );
 
    HRESULT SetRenderState( THIS_ D3DRENDERSTATETYPE,DWORD );
 
    HRESULT GetRenderState( THIS_ D3DRENDERSTATETYPE,LPDWORD );
 
-   HRESULT BeginStateBlock( THIS );
+   //HRESULT BeginStateBlock( THIS );
 
-   HRESULT EndStateBlock( THIS_ LPDWORD );
+   //HRESULT EndStateBlock( THIS_ LPDWORD );
 
-   HRESULT PreLoad( THIS_ LPDIRECTDRAWSURFACE7 );
+   HRESULT DrawPrimitive( THIS_ D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, DWORD flags);
 
-   HRESULT DrawPrimitive( THIS_ D3DPRIMITIVETYPE,DWORD,LPVOID,DWORD,DWORD );
+   HRESULT DrawIndexedPrimitive( THIS_ D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount, DWORD flags);
 
-   HRESULT DrawIndexedPrimitive( THIS_ D3DPRIMITIVETYPE,DWORD,LPVOID,DWORD,LPWORD,DWORD,DWORD );
+   //HRESULT SetClipStatus( THIS_ LPD3DCLIPSTATUS );
 
-   HRESULT SetClipStatus( THIS_ LPD3DCLIPSTATUS );
-
-   HRESULT GetClipStatus( THIS_ LPD3DCLIPSTATUS );
-
-   HRESULT DrawPrimitiveStrided( THIS_ D3DPRIMITIVETYPE,DWORD,LPD3DDRAWPRIMITIVESTRIDEDDATA,DWORD,DWORD );
-
-   HRESULT DrawIndexedPrimitiveStrided( THIS_ D3DPRIMITIVETYPE,DWORD,LPD3DDRAWPRIMITIVESTRIDEDDATA,DWORD,LPWORD,DWORD,DWORD );
+   //HRESULT GetClipStatus( THIS_ LPD3DCLIPSTATUS );
 
    HRESULT DrawPrimitiveVB( THIS_ D3DPRIMITIVETYPE,LPDIRECT3DVERTEXBUFFER7,DWORD,DWORD,DWORD );
 
    HRESULT DrawIndexedPrimitiveVB( THIS_ D3DPRIMITIVETYPE,LPDIRECT3DVERTEXBUFFER7,DWORD,DWORD,LPWORD,DWORD,DWORD );
 
-   HRESULT ComputeSphereVisibility( THIS_ LPD3DVECTOR,LPD3DVALUE,DWORD,DWORD,LPDWORD );
-
    HRESULT GetTexture( THIS_ DWORD,LPDIRECTDRAWSURFACE7 * );
-
-   HRESULT SetTexture( THIS_ DWORD,LPDIRECTDRAWSURFACE7 );
 
    HRESULT GetTextureStageState( THIS_ DWORD,D3DTEXTURESTAGESTATETYPE,LPDWORD );
 
@@ -198,7 +186,7 @@ public:
 
    HRESULT CreateStateBlock( THIS_ D3DSTATEBLOCKTYPE,LPDWORD );
 
-   HRESULT Load( THIS_ LPDIRECTDRAWSURFACE7,LPPOINT,LPDIRECTDRAWSURFACE7,LPRECT,DWORD );
+   HRESULT Load( THIS_ LPDIRECTDRAWSURFACE7 destTex, LPPOINT destPoint, LPDIRECTDRAWSURFACE7 srcTex, LPRECT srcRect, DWORD flags);
 
    HRESULT LightEnable( THIS_ DWORD,BOOL );
 
@@ -210,6 +198,9 @@ public:
 
    HRESULT GetInfo( THIS_ DWORD,LPVOID,DWORD );
 
+   // TODO make private
+   LPDIRECT3D7 m_pD3D;
+   RECT m_rcUpdate;
 private:
    static const DWORD RENDER_STATE_CACHE_SIZE=256;
    static const DWORD TEXTURE_STATE_CACHE_SIZE=256;
@@ -220,7 +211,9 @@ private:
    bool vbInVRAM;
 
    LPDIRECT3DDEVICE7 dx7Device;
-   LPDIRECT3D7 dx7;
+   LPDIRECTDRAWSURFACE7 m_pddsFrontBuffer;
+   LPDIRECTDRAWSURFACE7 m_pddsBackBuffer;
+
 };
 
 class VertexBuffer : public IDirect3DVertexBuffer7

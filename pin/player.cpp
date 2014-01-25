@@ -2188,6 +2188,7 @@ void Player::FlipVideoBuffersNormal(unsigned int overall_area, bool vsync )
 
 void Player::FlipVideoBuffers3D( unsigned int overall_area )
 {
+#if 0   // TODO: disabled during DX9 port, reenable later
    //!! num_threads(max_threads-1 or -2) ? on my AMD omp is not really faster for the update path, a bit faster for full path
 	//!! overall half resolution necessary only (Y3D profits from full res though (implicit filtering))
 
@@ -2435,6 +2436,7 @@ void Player::FlipVideoBuffers3D( unsigned int overall_area )
 	// Flag that we only need to update regions from now on...
 	//if((m_fEnableRegionUpdates && (m_ptable->m_TableRegionUpdates == -1)) || (m_ptable->m_TableRegionUpdates == 1))
 		m_fCleanBlt = fTrue;
+#endif
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

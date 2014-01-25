@@ -729,9 +729,6 @@ Hit3DPolyDrop::Hit3DPolyDrop(Vertex3Ds * const rgv, const int count) : Hit3DPoly
 
 ObjFrame *TextboxAnimObject::Draw3D(const RECT * const prc)
 {
-	//g_pplayer->m_pin3d.m_pddsBackBuffer->Blt(&m_ptextbox->m_pobjframe->rc, m_ptextbox->m_pobjframe->pdds, NULL, DDBLT_WAIT, NULL);
-	//return NULL;
-
 	return m_ptextbox->m_pobjframe;
 }
 
@@ -755,20 +752,6 @@ ObjFrame *DispReelAnimObject::Draw3D(const RECT * const prc)
 	if(!m_pDispReel || !m_pDispReel->m_pobjframe)  //rlc-problem6 end bad pointers, fix needed
 		return NULL;
 
-/*	RECT rc;
-	rc.left = 0;		
-	rc.top = 0;	
-	
-	rc.right = m_pDispReel->m_pobjframe->rc.right - m_pDispReel->m_pobjframe->rc.left;
-	rc.bottom = m_pDispReel->m_pobjframe->rc.bottom - m_pDispReel->m_pobjframe->rc.top;	
-	
-	g_pplayer->m_pin3d.m_pddsBackBuffer->BltFast(m_pDispReel->m_pobjframe->rc.left,
-												 m_pDispReel->m_pobjframe->rc.top,
-												 m_pDispReel->m_pobjframe->pdds,
-												 &rc,
-												 DDBLTFAST_SRCCOLORKEY);
-	// return with no object
-	return NULL; */
 	return m_pDispReel->m_pobjframe;
 }
 
@@ -784,14 +767,6 @@ void LightSeqAnimObject::Check3D()
     m_fInvalid = m_pLightSeq->RenderAnimation();
 }
 
-// this function is called when it is time to be drawn (Z-Ordered)
-// and only if Check3D() tells it to. (m_fInvalid == true)
-//
-ObjFrame *LightSeqAnimObject::Draw3D(const RECT * const prc)
-{
-	// return with no object
-	return NULL;
-}
 
 TriggerLineSeg::TriggerLineSeg()
 {

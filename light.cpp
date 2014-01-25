@@ -1056,7 +1056,7 @@ void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
 
       ppin3d->ClipRectToVisibleArea(&m_pobjframe[i]->rc);
-      m_pobjframe[i]->pdds = ppin3d->CreateOffscreen(m_pobjframe[i]->rc.right - m_pobjframe[i]->rc.left, m_pobjframe[i]->rc.bottom - m_pobjframe[i]->rc.top);
+      m_pobjframe[i]->pdds = g_pvp->m_pdd.CreateOffscreenPlain(m_pobjframe[i]->rc.right - m_pobjframe[i]->rc.left, m_pobjframe[i]->rc.bottom - m_pobjframe[i]->rc.top);
 
       if (m_pobjframe[i]->pdds == NULL)
          continue;
@@ -1170,7 +1170,7 @@ void Light::RenderMovers(const RenderDevice* _pd3dDevice)
       ppin3d->ExpandExtents(&m_pobjframe[i]->rc, rgv3D, NULL, NULL, 32, m_fBackglass);
 
       ppin3d->ClipRectToVisibleArea(&m_pobjframe[i]->rc);
-      m_pobjframe[i]->pdds = ppin3d->CreateOffscreen(m_pobjframe[i]->rc.right - m_pobjframe[i]->rc.left, m_pobjframe[i]->rc.bottom - m_pobjframe[i]->rc.top);
+      m_pobjframe[i]->pdds = g_pvp->m_pdd.CreateOffscreenPlain(m_pobjframe[i]->rc.right - m_pobjframe[i]->rc.left, m_pobjframe[i]->rc.bottom - m_pobjframe[i]->rc.top);
 
       if (m_pobjframe[i]->pdds == NULL)
          continue;

@@ -647,8 +647,7 @@ void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, const float angle, con
 
     SetNormal(rgv3D, rgi0123, 4, NULL, NULL, 0);
     // Draw top.
-    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4,(LPWORD)rgi0123, 4, 0);
-    //Display_DrawPrimitive(pd3dDevice, D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4);
+    pd3dDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, rgv3D, 4, 0);
 
     SetNormal(rgv3D, rgiFlipper1, 4, NULL, NULL, 0);
     // Draw front side wall of flipper (flipper and rubber).

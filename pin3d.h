@@ -207,7 +207,7 @@ public:
    Vertex3Ds Get3DPointFrom2D( POINT *p );
 
 	void SetUpdatePos(const int left, const int top);
-   void Flip(const int offsetx, const int offsety, const BOOL vsync);
+    void Flip(const int offsetx, const int offsety, bool vsync);
 
 	void SetRenderTarget(RenderTarget* pddsSurface, RenderTarget* pddsZ) const;
 	void SetTextureFilter(const int TextureNum, const int Mode) const;
@@ -232,12 +232,8 @@ public:
 
 	void ClipRectToVisibleArea(RECT * const prc) const;
 
-	BaseTexture* CreateOffscreen(const int width, const int height) const;
-	BaseTexture* CreateOffscreenWithCustomTransparency(const int width, const int height, const int color) const;
-
 private:
-    HRESULT Create3DDevice(const GUID * const pDeviceGUID);
-    HRESULT CreateZBuffer(const GUID * const pDeviceGUID);
+    HRESULT CreateZBuffer();
     void DrawBackground();
     void InitRenderState();
     void InitPlayfieldGraphics();
@@ -261,18 +257,17 @@ private:
 	LPDIRECT3D7 m_pD3D;         // is owned
 public:
 	RenderDevice* m_pd3dDevice;
-	BaseTexture* m_pddsFrontBuffer;
-	BaseTexture* m_pddsBackBuffer;
+	RenderTarget* m_pddsBackBuffer;
 
-	BaseTexture* m_pdds3DBackBuffer;
+	RenderTarget* m_pdds3DBackBuffer;
 	const unsigned int* __restrict m_pdds3Dbuffercopy;
 	const unsigned int* __restrict m_pdds3Dbufferzcopy;
 	unsigned char* __restrict m_pdds3Dbuffermask;
 
-	BaseTexture* m_pddsZBuffer;
+	RenderTarget* m_pddsZBuffer;
 
-	BaseTexture* m_pddsStatic;
-	BaseTexture* m_pddsStaticZ;
+	RenderTarget* m_pddsStatic;
+	RenderTarget* m_pddsStaticZ;
 
    BaseTexture *antiAliasTexture;
 	Texture ballTexture;

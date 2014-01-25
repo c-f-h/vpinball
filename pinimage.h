@@ -14,8 +14,6 @@
 //#define MINBLACK 0x00070707
 //#define MINBLACKMASK 0x00f8f8f8
 
-typedef int(CALLBACK *DDCreateFunction)(GUID FAR *lpGUID, LPVOID *lplpDD, REFIID iid, IUnknown FAR *pUnkOuter);
-
 class PinDirectDraw
 {
 public:
@@ -30,6 +28,8 @@ public:
 	BaseTexture* CreateFromFile(char *szfile, int * const pwidth, int * const pheight, int& originalWidth, int& originalHeight);
 	BaseTexture* CreateFromResource(const int id, int * const pwidth, int * const pheight);
 	BaseTexture* CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * const pheight);
+    BaseTexture* CreateOffscreenWithCustomTransparency(const int width, const int height, const int color);
+    BaseTexture* CreateOffscreenPlain(const int width, const int height);   // this is only used by a few elements, maybe can be removed
 
 	void SetOpaque(BaseTexture* pdds, const int width, const int height);
 	void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop, const int width, const int height);
@@ -42,10 +42,6 @@ public:
 
 	BOOL m_fHardwareAccel;
 	BOOL m_fAlternateRender;
-
-	// variables needed to initialize ddraw.dll
-	HINSTANCE m_DDraw;
-	DDCreateFunction m_DDCreate;
 };
 
 #endif // !defined(AFX_PINIMAGE_H__74A4733B_B66C_4C24_97AE_C7E9792E0635__INCLUDED_)

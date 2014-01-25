@@ -8,7 +8,6 @@ Pin3D::Pin3D()
 	m_scalex = m_scaley = 1.0f;
 	m_xlatex = m_xlatey = 0.0f;
 	m_pDD = NULL;
-	m_pddsFrontBuffer = NULL;
 	m_pddsBackBuffer = NULL;
 	m_pdds3DBackBuffer = NULL;
 	m_pdds3Dbuffercopy = NULL;
@@ -29,11 +28,6 @@ Pin3D::Pin3D()
 
 Pin3D::~Pin3D()
 {
-	m_pDD->RestoreDisplayMode();
-
-	SAFE_RELEASE(m_pddsFrontBuffer);
-	SAFE_RELEASE(m_pddsBackBuffer);
-
 	SAFE_RELEASE(m_pdds3DBackBuffer);
 	if(m_pdds3Dbuffercopy) {
 		_aligned_free((void*)m_pdds3Dbuffercopy);
@@ -59,7 +53,7 @@ Pin3D::~Pin3D()
 
 	SAFE_RELEASE(m_pddsLightWhite);
 
-	SAFE_RELEASE(m_pD3D);
+    m_pd3dDevice->destroyRenderer();
 
 	delete m_pd3dDevice;
 
@@ -412,92 +406,11 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * const rgv, const WORD * co
 	}
 }
 
-BaseTexture* Pin3D::CreateOffscreenWithCustomTransparency(const int width, const int height, const int color) const
-{
-	//const GUID* pDeviceGUID = &IID_IDirect3DRGBDevice;
-	DDSURFACEDESC2 ddsd;
-	ZeroMemory( &ddsd, sizeof(ddsd) );
-	ddsd.dwSize = sizeof(ddsd);
-
-	/*if (width < 1 || height < 1)
-	{
-	return NULL;
-	}*/
-
-	ddsd.dwFlags        = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_CKSRCBLT;
-	ddsd.ddckCKSrcBlt.dwColorSpaceLowValue = color;//0xffffff;
-	ddsd.ddckCKSrcBlt.dwColorSpaceHighValue = color;//0xffffff;
-   ddsd.dwWidth        = width < 1 ? 1 : width;   // This can happen if an object is completely off screen.  Since that's
-	ddsd.dwHeight       = height < 1 ? 1 : height; // rare, it's easier just to create a tiny surface to handle it.
-	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;// | DDSCAPS_3DDEVICE;
-
-	// Check if we are rendering in hardware.
-	if (g_pvp->m_pdd.m_fHardwareAccel)
-		ddsd.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY; // slower(?): | DDSCAPS_LOCALVIDMEM;
-	else
-		ddsd.ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
-
-retry0:
-	BaseTexture* pdds;
-	HRESULT hr;
-	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&pdds, NULL ) ) )
-	{
-		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
-			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
-			goto retry0;
-		}
-		ShowError("Could not create offscreen surface.");
-		return NULL;
-	}
-
-	return pdds;
-}
-
-BaseTexture* Pin3D::CreateOffscreen(const int width, const int height) const
-{
-	DDSURFACEDESC2 ddsd;
-	ZeroMemory( &ddsd, sizeof(ddsd) );
-	ddsd.dwSize = sizeof(ddsd);
-
-	if (width < 1 || height < 1)
-		return NULL;
-
-	ddsd.dwFlags        = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_CKSRCBLT;
-	ddsd.ddckCKSrcBlt.dwColorSpaceLowValue = 0;//0xffffff;
-	ddsd.ddckCKSrcBlt.dwColorSpaceHighValue = 0;//0xffffff;
-	ddsd.dwWidth        = width;
-	ddsd.dwHeight       = height;
-	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-
-	// Check if we are rendering in hardware.
-	ddsd.ddsCaps.dwCaps |= (g_pvp->m_pdd.m_fHardwareAccel) ? DDSCAPS_VIDEOMEMORY : DDSCAPS_SYSTEMMEMORY;
-
-retry1:
-	HRESULT hr;
-	BaseTexture* pdds;
-	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&pdds, NULL ) ) )
-	{
-		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
-			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
-			goto retry1;
-		}
-		ShowError("Could not create offscreen surface.");
-		exit(-1400);
-		return NULL;
-	}
-
-	// Update the count.
-	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
-
-	return pdds;
-}
-
 HRESULT Pin3D::InitDD(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool stereo3DFXAA, const bool AA)
 {
 	m_hwnd = hwnd;
 	//fullscreen = fFullScreen;
 	// Check if we are rendering in hardware.
-	const GUID* pDeviceGUID = (g_pvp->m_pdd.m_fHardwareAccel) ? &IID_IDirect3DHALDevice : &IID_IDirect3DRGBDevice;
 
 	// Get the dimensions of the viewport and screen bounds
 	GetClientRect( hwnd, &m_rcScreen );
@@ -506,111 +419,34 @@ HRESULT Pin3D::InitDD(const HWND hwnd, const bool fFullScreen, const int screenw
 	m_dwRenderWidth  = m_rcScreen.right  - m_rcScreen.left;
 	m_dwRenderHeight = m_rcScreen.bottom - m_rcScreen.top;
 
-	SetUpdatePos(m_rcScreen.left, m_rcScreen.top);
-
 	// Cache pointer from global direct draw object
 	m_pDD = g_pvp->m_pdd.m_pDD; 
 
-	HRESULT hr = m_pDD->QueryInterface( IID_IDirect3D7, (VOID**)&m_pD3D );
-	if (hr != S_OK)
+    m_pd3dDevice = new RenderDevice;
+    m_pd3dDevice->initRenderer(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate);
+	SetUpdatePos(m_rcScreen.left, m_rcScreen.top);
+    m_pD3D = m_pd3dDevice->m_pD3D;
+
+    HRESULT hr;
+
+	// set the viewport for the newly created device
+	vp.dwX=0;
+	vp.dwY=0;
+	vp.dwWidth=m_dwRenderWidth;
+	vp.dwHeight=m_dwRenderHeight;
+	vp.dvMinZ=0.0f;
+	vp.dvMaxZ=1.0f;
+	if( FAILED(hr = m_pd3dDevice->SetViewport( &vp ) ) )
 	{
-		ShowError("Could not create Direct 3D.");
-		return hr;
+		ShowError("Could not set viewport.");
+		return false; 
 	}
 
-	hr = m_pDD->SetCooperativeLevel(hwnd, DDSCL_FPUSETUP); // was DDSCL_FPUPRESERVE, which in theory adds lots of overhead, but who knows if this is even supported nowadays by the drivers
+    m_pddsBackBuffer = m_pd3dDevice->getBackBuffer();
 
-	if (fFullScreen)
-	{
-		//hr = m_pDD->SetCooperativeLevel(hwnd, DDSCL_ALLOWREBOOT|DDSCL_EXCLUSIVE|DDSCL_FULLSCREEN|DDSCL_FPUSETUP/*DDSCL_FPUPRESERVE*/);
-		hr = m_pDD->SetDisplayMode(screenwidth, screenheight, colordepth, refreshrate, 0);
-		DDSURFACEDESC2 ddsd;
-		ddsd.dwSize = sizeof(ddsd);
-		hr = m_pDD->GetDisplayMode(&ddsd);
-		refreshrate = ddsd.dwRefreshRate;
-		if(FAILED(hr) || (refreshrate <= 0))
-			refreshrate = 60; // meh, hardcode to 60Hz if fail
-	}
-
-	// Create the primary surface
 	DDSURFACEDESC2 ddsd;
-	ZeroMemory( &ddsd, sizeof(ddsd) );
-	ddsd.dwSize         = sizeof(ddsd);
-	ddsd.dwFlags        = DDSD_CAPS;
-	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-
-	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&m_pddsFrontBuffer, NULL ) ) )
-	{
-		ShowError("Could not create front buffer.");
-		return hr;
-	}
-
-	// Update the count.
-	NumVideoBytes += m_dwRenderWidth * m_dwRenderHeight * 4;
-	//if ( !fullscreen )
-	{
-		// If in windowed-mode, create a clipper object //!! but it's always needed for whatever reason to get rid of initial rendering artifacts on some systems
-		LPDIRECTDRAWCLIPPER pcClipper;
-		if( FAILED( hr = m_pDD->CreateClipper( 0, &pcClipper, NULL ) ) )
-		{
-			ShowError("Could not create clipper.");
-			return hr;
-		}
-
-		if (pcClipper)
-		{
-			// Associate the clipper with the window.
-			pcClipper->SetHWnd( 0, m_hwnd );
-			m_pddsFrontBuffer->SetClipper( pcClipper );
-			pcClipper->Release();
-		}
-	}
-
-	// Define a backbuffer.
-	ddsd.dwFlags        = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS;
-	ddsd.dwWidth        = m_dwRenderWidth;
-	ddsd.dwHeight       = m_dwRenderHeight;
-	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN | DDSCAPS_3DDEVICE;
-
-	// Check if we are rendering in hardware.
-	if (g_pvp->m_pdd.m_fHardwareAccel)
-		ddsd.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY; // slower(?): | DDSCAPS_LOCALVIDMEM;
-	else
-		ddsd.ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
-
-	DDSURFACEDESC2 ddsdPrimary; // descriptor for current screen format
-	// Check for 8-bit color
-	ddsdPrimary.dwSize = sizeof(DDSURFACEDESC2);
-	m_pDD->GetDisplayMode( &ddsdPrimary );
-	if( ddsdPrimary.ddpfPixelFormat.dwRGBBitCount <= 8 )
-	{
-		/*ddsd.dwFlags |= DDSD_PIXELFORMAT;
-		ddsd.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
-		ddsd.ddpfPixelFormat.dwFlags = DDPF_RGB;
-		ddsd.ddpfPixelFormat.dwRGBBitCount = 16;
-		ddsd.ddpfPixelFormat.dwRBitMask = 0x007c00;
-		ddsd.ddpfPixelFormat.dwGBitMask = 0x0003e0;
-		ddsd.ddpfPixelFormat.dwBBitMask = 0x00001f;
-		ddsd.ddpfPixelFormat.dwRGBAlphaBitMask = 0;*/
-
-		ShowError("Color depth must be 16 bit or greater.");
-		return E_FAIL;
-	}
-
-	// Create the back buffer.
-retry2:
-	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&m_pddsBackBuffer, NULL ) ) )
-	{
-		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
-			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
-			goto retry2;
-		}
-		ShowError("Could not create back buffer.");
-		return hr;
-	}
-
-	// Update the count.
-	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
+	ddsd.dwSize = sizeof(ddsd);
+	m_pddsBackBuffer->GetSurfaceDesc( &ddsd );
 
 	// Create the "static" color buffer.  
 	// This will hold a pre-rendered image of the table and any non-changing elements (ie ramps, decals, etc).
@@ -670,17 +506,30 @@ retry4:
 	   }
 	}
 
-	// Create the D3D device.  This device will pre-render everything once...
-	// Then it will render only the ball and its shadow in real time.
-	hr = Create3DDevice((GUID*) pDeviceGUID);
+	// Create the z and "static" z buffers.
+	// Also attach the z buffers to their corresponding color buffer.
+	hr = CreateZBuffer();
 	if(FAILED(hr))
 		return hr;
 
-	// Create the z and "static" z buffers.
-	// Also attach the z buffers to their corresponding color buffer.
-	hr = CreateZBuffer((GUID*) pDeviceGUID);
-	if(FAILED(hr))
-		return hr;
+	CreateBallShadow();
+
+	int width, height;
+	ballTexture.CreateFromResource( IDB_BALLTEXTURE, &width, &height );
+	ballTexture.SetAlpha(RGB(0,0,0), width, height);
+	ballTexture.CreateMipMap();
+
+	lightTexture[0].CreateFromResource(IDB_SUNBURST, &width, &height);
+	lightTexture[0].SetAlpha(RGB(0,0,0), width, height);
+	lightTexture[0].CreateMipMap();
+
+	lightTexture[1].CreateFromResource(IDB_SUNBURST5, &width, &height);
+	lightTexture[1].SetAlpha(RGB(0,0,0), width, height);
+	lightTexture[1].CreateMipMap();
+
+	m_pddsLightWhite = g_pvp->m_pdd.CreateFromResource(IDB_WHITE, &width, &height);
+	g_pvp->m_pdd.SetAlpha(m_pddsLightWhite, RGB(0,0,0), width, height);
+	g_pvp->m_pdd.CreateNextMipMapLevel(m_pddsLightWhite);
 
 	if(stereo3DFXAA) {
 		ZeroMemory(&ddsd,sizeof(ddsd));
@@ -712,33 +561,7 @@ retry4:
 	return S_OK;
 }
 
-HRESULT Pin3D::Create3DDevice(const GUID * const pDeviceGUID)
-{
-	HRESULT hr;
-    m_pd3dDevice = new RenderDevice;
-	if( !m_pd3dDevice->createDevice(pDeviceGUID, m_pD3D, m_pddsBackBuffer) )
-	{
-		ShowError("Could not create Direct 3D device.");
-		return S_FALSE;
-	}
-
-	// Finally, set the viewport for the newly created device
-	vp.dwX=0;
-	vp.dwY=0;
-	vp.dwWidth=m_dwRenderWidth;
-	vp.dwHeight=m_dwRenderHeight;
-	vp.dvMinZ=0.0f;
-	vp.dvMaxZ=1.0f;
-	if( FAILED(hr = m_pd3dDevice->SetViewport( &vp ) ) )
-	{
-		ShowError("Could not set viewport.");
-		return hr; 
-	}
-
-	return S_OK;
-}
-
-HRESULT Pin3D::CreateZBuffer(const GUID* const pDeviceGUID )
+HRESULT Pin3D::CreateZBuffer()
 {
 	// Get z-buffer dimensions from the render target
 	DDSURFACEDESC2 ddsd;
@@ -760,6 +583,8 @@ HRESULT Pin3D::CreateZBuffer(const GUID* const pDeviceGUID )
 		ddsd.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY; // slower(?): | DDSCAPS_LOCALVIDMEM;
 	}
 
+	const GUID* pDeviceGUID = (g_pvp->m_pdd.m_fHardwareAccel) ? &IID_IDirect3DHALDevice : &IID_IDirect3DRGBDevice;
+
 	// Get an appropiate pixel format from enumeration of the formats. On the
 	// first pass, we look for a zbuffer depth which is equal to the frame
 	// buffer depth (as some cards unfornately require this).
@@ -778,6 +603,7 @@ HRESULT Pin3D::CreateZBuffer(const GUID* const pDeviceGUID )
 			return E_FAIL;// D3DFWERR_NOZBUFFER;
 		}
 	}
+
 	// Create the z buffer.
 retry6:
 	HRESULT hr;
@@ -808,25 +634,6 @@ retry7:
 
 	// Update the count.
 	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
-
-	CreateBallShadow();
-
-	int width, height;
-	ballTexture.CreateFromResource( IDB_BALLTEXTURE, &width, &height );
-	ballTexture.SetAlpha(RGB(0,0,0), width, height);
-	ballTexture.CreateMipMap();
-
-	lightTexture[0].CreateFromResource(IDB_SUNBURST, &width, &height);
-	lightTexture[0].SetAlpha(RGB(0,0,0), width, height);
-	lightTexture[0].CreateMipMap();
-
-	lightTexture[1].CreateFromResource(IDB_SUNBURST5, &width, &height);
-	lightTexture[1].SetAlpha(RGB(0,0,0), width, height);
-	lightTexture[1].CreateMipMap();
-
-	m_pddsLightWhite = g_pvp->m_pdd.CreateFromResource(IDB_WHITE, &width, &height);
-	g_pvp->m_pdd.SetAlpha(m_pddsLightWhite, RGB(0,0,0), width, height);
-	g_pvp->m_pdd.CreateNextMipMapLevel(m_pddsLightWhite);
 
 	// Attach the z buffer to the back buffer.
 	if( FAILED( hr = m_pddsBackBuffer->AddAttachedSurface( m_pddsZBuffer ) ) )
@@ -1368,6 +1175,7 @@ const int rgfilterwindow[7][7] =
 
 void Pin3D::CreateBallShadow()
 {
+#if 0   // TODO: disabled for DX9 port (can't lock texture in VRAM)
 	ballShadowTexture.CreateTextureOffscreen(16,16);
 	ballShadowTexture.Lock();
 
@@ -1437,6 +1245,7 @@ void Pin3D::CreateBallShadow()
 	}
 
 	ballShadowTexture.Unlock();
+#endif
 }
 
 BaseTexture* Pin3D::CreateShadow(const float z)
@@ -1560,45 +1369,14 @@ void Pin3D::SetUpdatePos(const int left, const int top)
 	m_rcUpdate.top = top;
 	m_rcUpdate.right = left + m_dwRenderWidth;
 	m_rcUpdate.bottom = top + m_dwRenderHeight;
+
+    if (m_pd3dDevice)
+        m_pd3dDevice->m_rcUpdate = m_rcUpdate;
 }
 
-void Pin3D::Flip(const int offsetx, const int offsety, const BOOL vsync)
+void Pin3D::Flip(const int offsetx, const int offsety, bool vsync)
 {
-	RECT rcNew;
-	// Set the region to the entire screen dimensions.
-	rcNew.left = m_rcUpdate.left + offsetx;
-	rcNew.right = m_rcUpdate.right + offsetx;
-	rcNew.top = m_rcUpdate.top + offsety;
-	rcNew.bottom = m_rcUpdate.bottom + offsety;
-
-	// Set blt effects
-	DDBLTFX ddbltfx;
-	ZeroMemory(&ddbltfx, sizeof(DDBLTFX));
-	ddbltfx.dwSize = sizeof(DDBLTFX);
-	//if(vsync)
-	//    ddbltfx.dwDDFX = DDBLTFX_NOTEARING; // deprecated for win2000 and above?!
-
-	// Check if we are mirrored.
-	if ( g_pplayer->m_ptable->m_tblMirrorEnabled )
-		// Mirror the table.
-		ddbltfx.dwDDFX |= DDBLTFX_MIRRORUPDOWN;
-
-	if(vsync)
-         g_pvp->m_pdd.m_pDD->WaitForVerticalBlank(DDWAITVB_BLOCKBEGIN, 0);
-
-	// Copy the back buffer to the front buffer.
-	HRESULT hr;
-	//if(ddbltfx.dwDDFX)
-	hr = m_pddsFrontBuffer->Blt(&rcNew, 
-		((((g_pplayer->m_fStereo3D != 0) && g_pplayer->m_fStereo3Denabled) || (g_pplayer->m_fFXAA)) && (m_maxSeparation > 0.0f) && (m_maxSeparation < 1.0f) && (m_ZPD > 0.0f) && (m_ZPD < 1.0f) && m_pdds3Dbuffercopy && m_pdds3DBackBuffer) ? m_pdds3DBackBuffer : 
-		m_pddsBackBuffer, NULL, ddbltfx.dwDDFX ? DDBLT_DDFX : 0, &ddbltfx);
-	/*else
-	hr = m_pddsFrontBuffer->BltFast(rcNew.left, rcNew.top, 
-	((((g_pplayer->m_fStereo3D != 0) && g_pplayer->m_fStereo3Denabled) || (g_pplayer->m_fFXAA)) && (m_maxSeparation > 0.0f) && (m_maxSeparation < 1.0f) && (m_ZPD > 0.0f) && (m_ZPD < 1.0f) && m_pdds3Dbuffercopy && m_pdds3DBackBuffer) ? m_pdds3DBackBuffer : 
-	m_pddsBackBuffer, NULL, 0);*/
-
-	if (hr == DDERR_SURFACELOST)
-		hr = g_pvp->m_pdd.m_pDD->RestoreAllSurfaces();
+    m_pd3dDevice->Flip(offsetx, offsety, vsync);
 }
 
 void Pin3D::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D/*Vertex3D *rgv*/, const int cvert, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const GPINFLOAT skew, const float xlatez)

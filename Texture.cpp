@@ -541,13 +541,14 @@ retryimage:
 
    // Update the count (including mipmaps).
    NumVideoBytes += (unsigned int)((float)(ddsd.dwWidth * ddsd.dwHeight * 4) * (float)(4.0/3.0));
+
+   pdds->SetLOD(0);
+
    m_width = ddsd.dwWidth;
    m_height = ddsd.dwHeight;
    m_maxtu = (float)m_width / (float)ddsd.dwWidth;
    m_maxtv = (float)m_height / (float)ddsd.dwHeight;
    pitch = ddsd.lPitch;
-
-   pdds->SetLOD(0);
 
    return pdds;
 }

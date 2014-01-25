@@ -16,16 +16,18 @@ PinDirectDraw::~PinDirectDraw()
    SAFE_RELEASE(m_pDD);
 }
 
+typedef int(CALLBACK *DDCreateFunction)(GUID FAR *lpGUID, LPVOID *lplpDD, REFIID iid, IUnknown FAR *pUnkOuter);
+
 HRESULT PinDirectDraw::InitDD()
 {
-   m_DDraw=LoadLibrary("ddraw.dll");
+   HINSTANCE m_DDraw = LoadLibrary("ddraw.dll");
    if ( m_DDraw==NULL )
    {
       return E_FAIL;
    }
-   m_DDCreate=(DDCreateFunction)GetProcAddress(m_DDraw,"DirectDrawCreateEx");
+   DDCreateFunction DDCreate = (DDCreateFunction)GetProcAddress(m_DDraw,"DirectDrawCreateEx");
 
-   if (m_DDCreate == NULL)
+   if (DDCreate == NULL)
    {
       FreeLibrary(m_DDraw);
 
@@ -35,7 +37,7 @@ HRESULT PinDirectDraw::InitDD()
       return E_FAIL;
    }
 
-   HRESULT hr = (*m_DDCreate)(NULL, (VOID **)&m_pDD, IID_IDirectDraw7, NULL);
+   HRESULT hr = (*DDCreate)(NULL, (VOID **)&m_pDD, IID_IDirectDraw7, NULL);
    if (hr != S_OK)
       ShowError("Could not create Direct Draw.");
 
@@ -248,6 +250,86 @@ BaseTexture* PinDirectDraw::CreateFromHBitmap(HBITMAP hbm, int * const pwidth, i
    return pdds;
 }
 
+BaseTexture* PinDirectDraw::CreateOffscreenPlain(const int width, const int height)
+{
+	DDSURFACEDESC2 ddsd;
+	ZeroMemory( &ddsd, sizeof(ddsd) );
+	ddsd.dwSize = sizeof(ddsd);
+
+	if (width < 1 || height < 1)
+		return NULL;
+
+	ddsd.dwFlags        = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_CKSRCBLT;
+	ddsd.ddckCKSrcBlt.dwColorSpaceLowValue = 0;//0xffffff;
+	ddsd.ddckCKSrcBlt.dwColorSpaceHighValue = 0;//0xffffff;
+	ddsd.dwWidth        = width;
+	ddsd.dwHeight       = height;
+	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+
+	// Check if we are rendering in hardware.
+	ddsd.ddsCaps.dwCaps |= (m_fHardwareAccel) ? DDSCAPS_VIDEOMEMORY : DDSCAPS_SYSTEMMEMORY;
+
+retry1:
+	HRESULT hr;
+	BaseTexture* pdds;
+	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&pdds, NULL ) ) )
+	{
+		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
+			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
+			goto retry1;
+		}
+		ShowError("Could not create offscreen surface.");
+		exit(-1400);
+		return NULL;
+	}
+
+	// Update the count.
+	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
+
+	return pdds;
+}
+
+BaseTexture* PinDirectDraw::CreateOffscreenWithCustomTransparency(const int width, const int height, const int color)
+{
+	//const GUID* pDeviceGUID = &IID_IDirect3DRGBDevice;
+	DDSURFACEDESC2 ddsd;
+	ZeroMemory( &ddsd, sizeof(ddsd) );
+	ddsd.dwSize = sizeof(ddsd);
+
+	/*if (width < 1 || height < 1)
+	{
+	return NULL;
+	}*/
+
+	ddsd.dwFlags        = DDSD_WIDTH | DDSD_HEIGHT | DDSD_CAPS | DDSD_CKSRCBLT;
+	ddsd.ddckCKSrcBlt.dwColorSpaceLowValue = color;//0xffffff;
+	ddsd.ddckCKSrcBlt.dwColorSpaceHighValue = color;//0xffffff;
+   ddsd.dwWidth        = width < 1 ? 1 : width;   // This can happen if an object is completely off screen.  Since that's
+	ddsd.dwHeight       = height < 1 ? 1 : height; // rare, it's easier just to create a tiny surface to handle it.
+	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;// | DDSCAPS_3DDEVICE;
+
+	// Check if we are rendering in hardware.
+	if (m_fHardwareAccel)
+		ddsd.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY; // slower(?): | DDSCAPS_LOCALVIDMEM;
+	else
+		ddsd.ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
+
+retry0:
+	BaseTexture* pdds;
+	HRESULT hr;
+	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&pdds, NULL ) ) )
+	{
+		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
+			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
+			goto retry0;
+		}
+		ShowError("Could not create offscreen surface.");
+		return NULL;
+	}
+
+	return pdds;
+}
+
 void PinDirectDraw::SetOpaque(BaseTexture* pdds, const int width, const int height)
 {
    DDSURFACEDESC2 ddsd;
@@ -314,8 +396,6 @@ void PinDirectDraw::SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTrans
 BOOL PinDirectDraw::SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const int width, const int height)
 {
    // Set alpha of each pixel
-
-
    DDSURFACEDESC2 ddsd;
    ddsd.dwSize = sizeof(ddsd);
    pdds->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);

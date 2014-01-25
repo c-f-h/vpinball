@@ -45,40 +45,42 @@ public:
    BaseTexture *CreateBaseTexture(const int width, const int height);
    void CreateMipMap();
    BOOL SetAlpha(const COLORREF rgbTransparent, const int width, const int height);
-   void CreateNextMipMapLevel(BaseTexture* pdds);
-   void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop, const int width, const int height);
    void Lock();
    void Unlock();
+
+   static void CreateNextMipMapLevel(BaseTexture* pdds);
+   static void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop, const int width, const int height);
 
    void Unset( const DWORD textureChannel );
 
    // width and height of texture can be different than width and height
    // of dd surface, since the surface has to be in powers of 2
    int m_width, m_height;
-   int m_originalWidth, m_originalHeight;
-
-   LONG pitch;
-   // only valid if Lock() was called before
-   BYTE *surfaceData;
+   COLORREF m_rgbTransparent;
+   BOOL m_fTransparent; // Whether this picture actually contains transparent bits
 
    // Filled at runtime, accounts for buffer space to meet the power of 2
    // requirement
    float m_maxtu, m_maxtv;
 
+   BaseTexture* m_pdsBuffer;
+   HBITMAP m_hbmGDIVersion; // HBitmap at screen depth so GDI draws it fast
+   PinBinary *m_ppb;  // if this image should be saved as a binary stream, otherwise just LZW compressed from the live bitmap
+
    char m_szName[MAXTOKEN];
    char m_szInternalName[MAXTOKEN];
    char m_szPath[MAX_PATH];
 
-   COLORREF m_rgbTransparent;
-   BOOL m_fTransparent; // Whether this picture actually contains transparent bits
+   int m_originalWidth, m_originalHeight;
+
+
+private:
+   LONG pitch;
+   // only valid if Lock() was called before
+   BYTE *surfaceData;
 
    COLORREF m_rgbBackdropCur;
 
-   HBITMAP m_hbmGDIVersion; // HBitmap at screen depth so GDI draws it fast
-
-   PinBinary *m_ppb;  // if this image should be saved as a binary stream, otherwise just LZW compressed from the live bitmap
-
-   BaseTexture* m_pdsBuffer;
    BaseTexture* m_pdsBufferColorKey;
    BaseTexture* m_pdsBufferBackdrop;
 

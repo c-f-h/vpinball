@@ -222,6 +222,12 @@ void Kicker::RenderSetup(const RenderDevice* _pd3dDevice)
 
 void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
 {
+    /* TODO: (DX9 port) The old render method for kickers relied on first clearing
+     * the Z buffer and then rendering the kicker. I'm not sure this works in DX9
+     * (we should investigate). Another idea: render the kicker before the table
+     * and put an invisible "lid" on top of it which only serves to block the
+     * Z buffer?
+     */
    RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
    // Don't process "invisible" kickers.
    if ((m_d.m_kickertype == KickerInvisible) || (m_d.m_kickertype == KickerHidden))
@@ -233,7 +239,7 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
 
    pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);	
    pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);	
-   pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
+   pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
    g_pplayer->m_pin3d.SetColorKeyEnabled(FALSE);
    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 
@@ -262,79 +268,84 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
       pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,borderVerices,16,rgi, 3*14, 0);
    }
 
-   BaseTexture* pddsBufferBack = ppin3d->CreateOffscreen(recBounds.right - recBounds.left, recBounds.bottom - recBounds.top);
-   BaseTexture* pddsMask = ppin3d->CreateOffscreen(recBounds.right - recBounds.left, recBounds.bottom - recBounds.top);
+   //BaseTexture* pddsBufferBack = g_pvp->m_pdd.CreateOffscreenPlain(recBounds.right - recBounds.left, recBounds.bottom - recBounds.top);
 
-   HRESULT hr = pddsBufferBack->BltFast(0, 0, ppin3d->m_pddsStatic, &recBounds, DDBLTFAST_WAIT);
-   pd3dDevice->Clear( 1, (D3DRECT *)&recBounds, D3DCLEAR_TARGET, 0x00ffffff, 1.0f, 0L );
+   //HRESULT hr = pddsBufferBack->BltFast(0, 0, ppin3d->m_pddsStatic, &recBounds, DDBLTFAST_WAIT);
+   //pd3dDevice->Clear( 1, (D3DRECT *)&recBounds, D3DCLEAR_TARGET, 0x00ffffff, 1.0f, 0L );
 
-   pd3dDevice->SetMaterial(blackMaterial);
+   //pd3dDevice->SetMaterial(blackMaterial);
 /*   mtrl.diffuse.r = mtrl.ambient.r = 
    mtrl.diffuse.g = mtrl.ambient.g = 
    mtrl.diffuse.b = mtrl.ambient.b = 0.0f;
    pd3dDevice->SetMaterial(&mtrl);
 */
-   ppin3d->EnableLightMap(fFalse, height);
+   //ppin3d->EnableLightMap(fFalse, height);
 
-   // Draw mask
-   {
-      WORD rgi[3*14];
-      for (int l=0;l<14;l++)
-      {
-         rgi[l*3  ] = 0;
-         rgi[l*3+1] = l+1;
-         rgi[l*3+2] = l+2;
+   //// Draw mask
+   //{
+   //   WORD rgi[3*14];
+   //   for (int l=0;l<14;l++)
+   //   {
+   //      rgi[l*3  ] = 0;
+   //      rgi[l*3+1] = l+1;
+   //      rgi[l*3+2] = l+2;
 
-         SetNormal(vertices+16, rgi+l*3, 3, NULL, NULL, 0);
-      }
-      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices+16, 16,rgi, 3*14, 0);
-   }
+   //      SetNormal(vertices+16, rgi+l*3, 3, NULL, NULL, 0);
+   //   }
+   //   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices+16, 16,rgi, 3*14, 0);
+   //}
 
-   DDSURFACEDESC2 ddsd;
-   ddsd.dwSize = sizeof(ddsd);
-   DDSURFACEDESC2 ddsdMask;
-   ddsdMask.dwSize = sizeof(ddsdMask);
+   //DDSURFACEDESC2 ddsd;
+   //ddsd.dwSize = sizeof(ddsd);
+   //DDSURFACEDESC2 ddsdMask;
+   //ddsdMask.dwSize = sizeof(ddsdMask);
 
-   // Use mask to reset z-values underneath kicker
-   hr = ppin3d->m_pddsStatic->Lock(&recBounds, &ddsdMask, DDLOCK_READONLY | DDLOCK_SURFACEMEMORYPTR 
-      | DDLOCK_WAIT, NULL);
-   if (hr == S_OK)
-   {
-      hr = ppin3d->m_pddsStaticZ->Lock(&recBounds, &ddsd, DDLOCK_WRITEONLY | DDLOCK_SURFACEMEMORYPTR 
-         | DDLOCK_WAIT, NULL);
-      if (hr == S_OK)
-      {
-         const int colorbytes = ddsdMask.ddpfPixelFormat.dwRGBBitCount/8;
-         const int zbytes = ddsd.ddpfPixelFormat.dwZBufferBitDepth/8;
-         const int lenx = recBounds.right - recBounds.left;
-         const int leny = recBounds.bottom - recBounds.top;
-         const int pitch = ddsd.lPitch;
-         BYTE *pch = (BYTE *)ddsd.lpSurface;
+   //// Use mask to reset z-values underneath kicker
+   //hr = ppin3d->m_pddsStatic->Lock(&recBounds, &ddsdMask, DDLOCK_READONLY | DDLOCK_SURFACEMEMORYPTR 
+   //   | DDLOCK_WAIT, NULL);
+   //if (hr == S_OK)
+   //{
+   //   hr = ppin3d->m_pddsStaticZ->Lock(&recBounds, &ddsd, DDLOCK_WRITEONLY | DDLOCK_SURFACEMEMORYPTR 
+   //      | DDLOCK_WAIT, NULL);
+   //   if (hr == S_OK)
+   //   {
+   //      const int colorbytes = ddsdMask.ddpfPixelFormat.dwRGBBitCount/8;
+   //      const int zbytes = ddsd.ddpfPixelFormat.dwZBufferBitDepth/8;
+   //      const int lenx = recBounds.right - recBounds.left;
+   //      const int leny = recBounds.bottom - recBounds.top;
+   //      const int pitch = ddsd.lPitch;
+   //      BYTE *pch = (BYTE *)ddsd.lpSurface;
 
-         const int pitchMask = ddsdMask.lPitch;
-         const BYTE *pchMask = (BYTE *)ddsdMask.lpSurface;
+   //      const int pitchMask = ddsdMask.lPitch;
+   //      const BYTE *pchMask = (BYTE *)ddsdMask.lpSurface;
 
-         for (int y=0;y<leny;++y)
-         {
-            for (int x=0;x<lenx;++x)
-            {
-               if (*pchMask == 0)
-                  for (int l=0;l<zbytes;++l)
-                     pch[l] = 0xff;
-               pch+=zbytes;
-               pchMask+=colorbytes;
-            }
-            pch += pitch - lenx*zbytes;
-            pchMask += pitchMask - lenx*colorbytes;
-         }
+   //      for (int y=0;y<leny;++y)
+   //      {
+   //         for (int x=0;x<lenx;++x)
+   //         {
+   //            if (*pchMask == 0)
+   //               for (int l=0;l<zbytes;++l)
+   //                  pch[l] = 0xff;
+   //            pch+=zbytes;
+   //            pchMask+=colorbytes;
+   //         }
+   //         pch += pitch - lenx*zbytes;
+   //         pchMask += pitchMask - lenx*colorbytes;
+   //      }
 
-         ppin3d->m_pddsStaticZ->Unlock(&recBounds);
-      }
-      ppin3d->m_pddsStatic->Unlock(&recBounds);
-   }
+   //      ppin3d->m_pddsStaticZ->Unlock(&recBounds);
+   //   }
+   //   ppin3d->m_pddsStatic->Unlock(&recBounds);
+   //}
 
-   // Reset graphics around kicker
-   hr = ppin3d->m_pddsStatic->Blt(&recBounds, pddsBufferBack, NULL, DDBLT_WAIT, NULL);
+   //// Reset graphics around kicker
+   //hr = ppin3d->m_pddsStatic->Blt(&recBounds, pddsBufferBack, NULL, DDBLT_WAIT, NULL);
+
+   //pddsBufferBack->Release();
+
+	//m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+
+   pd3dDevice->SetRenderState(RenderDevice::ZENABLE, FALSE);
 
    // Draw the inside of the kicker based on its type.
    switch (m_d.m_kickertype)
@@ -420,9 +431,7 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
          break;
    }
 
-   pddsBufferBack->Release();
-   pddsMask->Release();
-
+	pd3dDevice->SetRenderState(RenderDevice::ZENABLE, TRUE);
    ppin3d->EnableLightMap(fFalse, height);
 }
 

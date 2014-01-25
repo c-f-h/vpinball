@@ -802,7 +802,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
             vertexBuffer->unlock();
             pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4, (LPWORD)rgi0123, 4, 0 );
 
-				m_vreelframe.ElementAt(i)->pdds = ppin3d->CreateOffscreenWithCustomTransparency(/*m_reeldigitwidth*/m_renderwidth, /*m_reeldigitheight*/m_renderheight, m_rgbImageTransparent);
+				m_vreelframe.ElementAt(i)->pdds = g_pvp->m_pdd.CreateOffscreenWithCustomTransparency(/*m_reeldigitwidth*/m_renderwidth, /*m_reeldigitheight*/m_renderheight, m_rgbImageTransparent);
 				m_vreelframe.ElementAt(i)->pdds->BltFast(0, 0, ppin3d->m_pddsBackBuffer, &rectSrc, 0);
 
 				// Reset color key in back buffer
@@ -929,7 +929,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
       {
 			// allocate some memory for this strip
          BaseTexture *texel= m_vreelframe.ElementAt(i)->pdds;
-			texel = ppin3d->CreateOffscreen(maxwidth, maxheight);
+			texel = g_pvp->m_pdd.CreateOffscreenPlain(maxwidth, maxheight);
 			// fill the strip with the reel colour
 			texel->GetDC(&hdc);
 			HBRUSH hbrush = CreateSolidBrush(m_d.m_reelcolor);
@@ -971,7 +971,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 	}
 	
 	// allocate the memory for this object (returns with a LPDIRECTDRAWSURFACE7)
-	m_pobjframe->pdds = ppin3d->CreateOffscreenWithCustomTransparency(m_pobjframe->rc.right - m_pobjframe->rc.left, m_pobjframe->rc.bottom - m_pobjframe->rc.top, m_rgbImageTransparent);
+	m_pobjframe->pdds = g_pvp->m_pdd.CreateOffscreenWithCustomTransparency(m_pobjframe->rc.right - m_pobjframe->rc.left, m_pobjframe->rc.bottom - m_pobjframe->rc.top, m_rgbImageTransparent);
 }
 
 // This function is called during Check3D.  It basically check to see if the update
