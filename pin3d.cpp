@@ -209,7 +209,7 @@ void Pin3D::AntiAliasingScene()
       m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE,FALSE);
       m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
       m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_DESTALPHA);
-      m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1}
+      m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR);
       m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0x40404040);
       m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, spriteVertexBuffer, 4, 4, (LPWORD)idx, 6, 0 );
 
@@ -1141,7 +1141,7 @@ void Pin3D::InitRenderState()
 	}
 }
 
-const WORD rgiPin3D1[4] = {2,3,5,6};
+static const WORD rgiPin3D1[4] = {2,3,5,6};
 
 void Pin3D::DrawBackground()
 {
@@ -1710,7 +1710,7 @@ void Pin3D::EnableAlphaBlend( DWORD alphaRefValue, BOOL additiveBlending )
 	m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
 	m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, additiveBlending ? D3DBLEND_ONE : D3DBLEND_INVSRCALPHA);
 	if(additiveBlending)
-		m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1}
+		m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1
 }
 
 void Pin3D::SetUpdatePos(const int left, const int top)
