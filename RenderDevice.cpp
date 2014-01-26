@@ -59,7 +59,7 @@ bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscree
     }
 
     // Update the count.
-    NumVideoBytes += width * height * 4;
+    NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
     //if ( !fullscreen )
     {
         // If in windowed-mode, create a clipper object //!! but it's always needed for whatever reason to get rid of initial rendering artifacts on some systems

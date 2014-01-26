@@ -38,6 +38,10 @@ public:
    };
 
 
+private:
+   IDirect3D9* m_pD3D;
+   IDirect3DDevice9* m_pD3DDevice;
+   IDirect3DSurface9* m_pBackBuffer;
 };
 
 #define CHECKD3D(s) { HRESULT hr = (s); if (FAILED(hr)) ReportError(hr, __FILE__, __LINE__); }
@@ -72,6 +76,68 @@ void ReportError(HRESULT hr, const char *file, int line)
 
 
 ////////////////////////////////////////////////////////////////////
+
+RenderDevice::RenderDevice()
+{
+    m_pD3D = NULL;
+    m_pD3DDevice = NULL;
+    m_pBackBuffer = NULL;
+}
+
+bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
+{
+    m_pD3D = Direct3DCreate(D3D_SDK_VERSION);
+    if (m_pD3D == NULL)
+    {
+        ShowError("Could not create D3D9 object.");
+        return false;
+    }
+
+    D3DPRESENT_PARAMETERS params;
+    params.BackBufferWidth = fullscreen ? screenWidth : width;
+    params.BackBufferHeight = fullscreen ? screenHeight : height;
+    params.BackBufferFormat = (colordepth == 32) ? D3DFMT_R8G8B8 : D3DFMT_R5G6B5;
+    params.BackBufferCount = 1;
+    params.MultiSampleType = D3DMULTISAMPLE_NONE;
+    params.MultiSampleQuality = 0;
+    params.SwapEffect = D3DSWAPEFFECT_DISCARD;  // FLIP ?
+    params.hDeviceWindow = hwnd;
+    params.Windowed = !fullscreen;
+    params.EnableAutoDepthStencil = FALSE;
+    params.AutoDepthStencilFormat = 0;      // ignored
+    params.Flags = 0;
+    params.FullScreen_RefreshRateInHz = fullscreen ? refreshrate : 0;
+    params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // D3DPRESENT_INTERVAL_ONE for vsync
+
+    CHECKD3D(m_pD3D->CreateDevice(
+               D3DADAPTER_DEFAULT,
+               D3DDEVTYPE_HAL,
+               hwnd,
+               D3DCREATE_HARDWARE_VERTEXPROCESSING,
+               &params
+               &m_pD3DDevice));
+
+    CHECKD3D(m_pD3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &m_pBackBuffer));
+}
+
+void RenderDevice::DestroyRenderer()
+{
+    SAFE_RELEASE(m_pBackBuffer);
+    SAFE_RELEASE(m_pD3DDevice);
+    SAFE_RELEASE(m_pD3D);
+}
+
+RenderTarget* RenderDevice::GetBackBuffer()
+{
+    return m_pBackBuffer;
+}
+
+void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
+{
+    // TODO: we can't handle shake or vsync here
+    // (vsync should be set when creating the device)
+    m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
+}
 
 RenderTarget* RenderDevice::DuplicateRenderTarget(RenderTarget* src)
 {
