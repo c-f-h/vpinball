@@ -1223,7 +1223,7 @@ void Player::InitAnimations(HWND hwndProgress)
    m_pin3d.SetRenderTarget(m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsZBuffer);
 
 	// Set up z-buffer to the static one, so movers can clip to it
-	m_pin3d.m_pddsZBuffer->BltFast(0, 0, m_pin3d.m_pddsStaticZ, NULL, DDBLTFAST_WAIT);
+    m_pin3d.m_pd3dDevice->CopySurface(m_pin3d.m_pddsZBuffer, m_pin3d.m_pddsStaticZ);
 	m_pin3d.m_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET, 0x00000000, 1.0f, 0L );
 
 	// Draw stuff
@@ -1259,8 +1259,8 @@ void Player::InitAnimations(HWND hwndProgress)
 	hr = m_pin3d.m_pd3dDevice->EndScene();
 
 	// Copy the "static" buffer to the back buffer.
-	m_pin3d.m_pddsBackBuffer->BltFast(0, 0, m_pin3d.m_pddsStatic, NULL, DDBLTFAST_WAIT);
-	m_pin3d.m_pddsZBuffer->BltFast(0, 0, m_pin3d.m_pddsStaticZ, NULL, DDBLTFAST_WAIT);
+	m_pin3d.m_pd3dDevice->CopySurface( m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsStatic );
+	m_pin3d.m_pd3dDevice->CopySurface( m_pin3d.m_pddsZBuffer,    m_pin3d.m_pddsStaticZ);
 }
 
 Ball *Player::CreateBall(const float x, const float y, const float z, const float vx, const float vy, const float vz, const float radius)
@@ -2103,9 +2103,9 @@ unsigned int Player::CheckAndUpdateRegions()
     rect.right = min(GetSystemMetrics(SM_CXSCREEN), m_pin3d.m_dwRenderWidth);
     rect.top = 0;
     rect.bottom = min(GetSystemMetrics(SM_CYSCREEN), m_pin3d.m_dwRenderHeight);
-    
-    HRESULT hr1 = backBuffer->BltFast(rect.left, rect.top, m_pin3d.m_pddsStatic, &rect, 0);
-    HRESULT hr2 = backBufferZ->BltFast(rect.left, rect.top, m_pin3d.m_pddsStaticZ, &rect, 0);
+
+    m_pin3d.m_pd3dDevice->CopySurface(backBuffer,  m_pin3d.m_pddsStatic );
+    m_pin3d.m_pd3dDevice->CopySurface(backBufferZ, m_pin3d.m_pddsStaticZ);
 
     // Process all AnimObjects and render their sprites
     for (int l=0; l < m_vscreenupdate.Size(); ++l)
@@ -2952,8 +2952,6 @@ void Player::DrawBallLogo(Ball * const pball)
    // Draw the ball logo
    m_pin3d.m_pd3dDevice->SetMaterial(pball->logoMaterial);
 
-//   m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
-
    m_pin3d.SetColorKeyEnabled(FALSE);
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
@@ -2990,8 +2988,7 @@ void Player::DrawBalls()
 
     m_pin3d.EnableAlphaTestReference( 0x0000001 );
     m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-    m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
-    m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MINFILTER, D3DTFN_LINEAR);
+    m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_BILINEAR);
 
     const float sn = sinf(m_pin3d.m_inclination);
     const float cs = cosf(m_pin3d.m_inclination);
@@ -3088,13 +3085,13 @@ void Player::DrawBalls()
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
             }
-            m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
+            // m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_LINEAR); // TODO (DX9): disabled for compatibility
         }
         else
         {
             m_pin3d.SetColorKeyEnabled(TRUE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-            m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_NONE);
+            // m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_NONE);   // TODO (DX9): disabled for compatibility
         }
 
         // reflection of ball

@@ -221,6 +221,13 @@ retry3:
     return dup;
 }
 
+
+void RenderDevice::CopySurface(RenderTarget* dest, RenderTarget* src)
+{
+    dest->BltFast(0, 0, src, NULL, DDBLTFAST_WAIT);
+}
+
+
 void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
 {
 	DDSURFACEDESC2 ddsd;
@@ -228,6 +235,47 @@ void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
 	tex->GetSurfaceDesc(&ddsd);
     *width = ddsd.dwWidth;
     *height = ddsd.dwHeight;
+}
+
+void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
+{
+	switch ( mode )
+	{
+	case TEXTURE_MODE_POINT: 
+		// Don't filter textures.  Don't filter between mip levels.
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MAGFILTER, D3DTFG_POINT);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MINFILTER, D3DTFN_POINT);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MIPFILTER, D3DTFP_NONE);		
+		break;
+
+	case TEXTURE_MODE_BILINEAR:
+		// Filter textures when magnified or reduced (average of 2x2 texels).  Don't filter between mip levels.
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MINFILTER, D3DTFN_LINEAR);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MIPFILTER, D3DTFP_POINT);
+		break;
+
+	case TEXTURE_MODE_TRILINEAR:
+		// Filter textures when magnified or reduced (average of 2x2 texels).  And filter between the 2 mip levels.
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MINFILTER, D3DTFN_LINEAR);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
+		break;
+
+	case TEXTURE_MODE_ANISOTROPIC:
+		// Filter textures when magnified or reduced (filter to account for perspective distortion).  And filter between the 2 mip levels.
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MAGFILTER, D3DTFG_ANISOTROPIC);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MINFILTER, D3DTFN_ANISOTROPIC);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
+		break;
+
+	default:
+		// Don't filter textures.  Don't filter between mip levels.
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MAGFILTER, D3DTFG_POINT);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MINFILTER, D3DTFN_POINT);
+		dx7Device->SetTextureStageState(texUnit, D3DTSS_MIPFILTER, D3DTFP_NONE);
+		break;
+	}
 }
 
 void RenderDevice::SetMaterial( const BaseMaterial * const _material )
@@ -575,11 +623,6 @@ HRESULT RenderDevice::CreateStateBlock( THIS_ D3DSTATEBLOCKTYPE p1,LPDWORD p2)
    return dx7Device->CaptureStateBlock(*p2);
 }
 
-HRESULT RenderDevice::Load( THIS_ LPDIRECTDRAWSURFACE7 p1,LPPOINT p2,LPDIRECTDRAWSURFACE7 p3,LPRECT p4,DWORD p5)
-{
-   return dx7Device->Load(p1,p2,p3,p4,p5);
-}
-
 HRESULT RenderDevice::LightEnable( THIS_ DWORD p1,BOOL p2)
 {
    return dx7Device->LightEnable(p1,p2);
@@ -598,10 +641,5 @@ HRESULT RenderDevice::SetClipPlane( THIS_ DWORD p1,D3DVALUE* p2)
 HRESULT RenderDevice::GetClipPlane( THIS_ DWORD p1,D3DVALUE* p2)
 {
    return dx7Device->GetClipPlane(p1,p2);
-}
-
-HRESULT RenderDevice::GetInfo( THIS_ DWORD p1,LPVOID p2,DWORD p3 )
-{
-   return dx7Device->GetInfo(p1, p2, p3);
 }
 

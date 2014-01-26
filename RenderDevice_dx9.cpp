@@ -5,6 +5,62 @@ typedef D3DVIEWPORT9 ViewPort;
 typedef IDirect3DSurface9 RenderTarget;
 
 
+// adds simple setters and getters on top of D3DLIGHT9, for compatibility
+struct BaseLight : public D3DLIGHT9
+{
+    BaseLight()
+    {
+		ZeroMemory(this, sizeof(*this));
+    }
+
+    D3DLIGHTTYPE getType()          { return Type; }
+    void setType(D3DLIGHTTYPE lt)   { Type = lt; }
+
+    const D3DCOLORVALUE& getDiffuse()      { return Diffuse; }
+    const D3DCOLORVALUE& getSpecular()     { return Specular; }
+    const D3DCOLORVALUE& getAmbient()      { return Ambient; }
+
+    void setDiffuse(float r, float g, float b)
+    {
+        Diffuse.r = r;
+        Diffuse.g = g;
+        Diffuse.b = b;
+    }
+    void setSpecular(float r, float g, float b)
+    {
+        Specular.r = r;
+        Specular.g = g;
+        Specular.b = b;
+    }
+    void setAmbient(float r, float g, float b)
+    {
+        Ambient.r = r;
+        Ambient.g = g;
+        Ambient.b = b;
+    }
+    void setPosition(float x, float y, float z)
+    {
+        Position.x = x;
+        Position.y = y;
+        Position.z = z;
+    }
+    void setDirection(float x, float y, float z)
+    {
+        Direction.x = x;
+        Direction.y = y;
+        Direction.z = z;
+    }
+    void setRange(float r)          { Range = r; }
+    void setFalloff(float r)        { Falloff = r; }
+    void setAttenuation0(float r)   { Attenuation0 = r; }
+    void setAttenuation1(float r)   { Attenuation1 = r; }
+    void setAttenuation2(float r)   { Attenuation2 = r; }
+    void setTheta(float r)          { Theta = r; }
+    void setPhi(float r)            { Phi = r; }
+};
+
+
+
 class RenderDevice
 {
 public:
@@ -184,12 +240,79 @@ RenderTarget* RenderDevice::DuplicateRenderTarget(RenderTarget* src)
     return dup;
 }
 
+void RenderDevice::CopySurface(RenderTarget* dest, RenderTarget* src)
+{
+    m_pD3DDevice->StretchRect(src, NULL, dest, NULL, D3DTEXF_NONE);
+}
+
 void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
 {
     D3DSURFACE_DESC desc;
     tex->GetLevelDesc(0, &desc);
     *width = desc.Width;
     *height = desc.Height;
+}
+
+void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
+{
+	switch ( mode )
+	{
+	case TEXTURE_MODE_POINT: 
+		// Don't filter textures.  Don't filter between mip levels.
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT);		
+		break;
+
+	case TEXTURE_MODE_BILINEAR:
+		// Filter textures when magnified or reduced (average of 2x2 texels).  Don't filter between mip levels.
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
+		break;
+
+	case TEXTURE_MODE_TRILINEAR:
+		// Filter textures when magnified or reduced (average of 2x2 texels).  And filter between the 2 mip levels.
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		break;
+
+	case TEXTURE_MODE_ANISOTROPIC:
+		// Filter textures when magnified or reduced (filter to account for perspective distortion).  And filter between the 2 mip levels.
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		break;
+
+	default:
+		// Don't filter textures.  Don't filter between mip levels.
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+		break;
+	}
+}
+
+void RenderDevice::SetMaterial( const BaseMaterial * const _material )
+{
+#if !defined(DEBUG_XXX) && !defined(_CRTDBG_MAP_ALLOC)
+    // this produces a crash if BaseMaterial isn't proper aligned to 16byte (in vbatest.cpp new/delete is overloaded for that)
+    if((_mm_movemask_ps(_mm_and_ps(
+        _mm_and_ps(_mm_cmpeq_ps(_material->d,materialStateCache.d),_mm_cmpeq_ps(_material->a,materialStateCache.a)),
+        _mm_and_ps(_mm_cmpeq_ps(_material->s,materialStateCache.s),_mm_cmpeq_ps(_material->e,materialStateCache.e)))) == 15)
+            &&
+            (_material->power == materialStateCache.power))
+        return;
+
+    materialStateCache.d = _material->d;
+    materialStateCache.a = _material->a;
+    materialStateCache.e = _material->e;
+    materialStateCache.s = _material->s;
+    materialStateCache.power = _material->power;
+#endif
+
+    m_pD3DDevice->SetMaterial((LPD3DMATERIAL9)_material);
 }
 
 

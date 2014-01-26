@@ -183,9 +183,8 @@ public:
 	STDMETHOD(SetValue)(/*[in]*/ long Value);
     STDMETHOD(SpinReel)(/*[in]*/ long ReelNumber, /*[in]*/ long PulseCount);
 
-	void    UpdateObjFrame();
-
 private:
+	void    UpdateObjFrame();
     float   getBoxWidth() const;
     float   getBoxHeight() const;
 };

@@ -2002,6 +2002,7 @@ void Light::setLightState(const LightState newVal)
          else if (m_realState == LightStateBlinking)
          {
             // must be blinking now
+            // We know we can't be on the list already because we make sure our state has changed
             g_pplayer->m_vblink.AddElement((IBlink *)this);
             m_timenextblink = g_pplayer->m_time_msec; // Start pattern right away // + m_d.m_blinkinterval;
          }
@@ -2016,7 +2017,6 @@ void Light::setLightState(const LightState newVal)
                break;
 
             case LightStateBlinking:
-               // We know we can't be on the list already because we make sure our state has changed
                m_iblinkframe = 0; // reset pattern
                break;
             }

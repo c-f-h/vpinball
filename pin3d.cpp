@@ -387,56 +387,7 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
 // Sets the texture filtering state.
 void Pin3D::SetTextureFilter(const int TextureNum, const int Mode) const
 {
-#if 0
-	// Don't filter textures.  Don't filter between mip levels.
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_MAGFILTER, D3DTFG_POINT);
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_MINFILTER, D3DTFN_POINT);
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_MIPFILTER, D3DTFP_NONE);		
-	// Don't filter textures.  Don't filter between mip levels.
-	m_pd3dDevice->SetTextureStageState(eLightProject1, D3DTSS_MAGFILTER, D3DTFG_POINT);
-	m_pd3dDevice->SetTextureStageState(eLightProject1, D3DTSS_MINFILTER, D3DTFN_POINT);
-	m_pd3dDevice->SetTextureStageState(eLightProject1, D3DTSS_MIPFILTER, D3DTFP_NONE);		
-	return;
-#endif
-
-	// Set the state. 
-	switch ( Mode )
-	{
-	case TEXTURE_MODE_POINT: 
-		// Don't filter textures.  Don't filter between mip levels.
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MAGFILTER, D3DTFG_POINT);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MINFILTER, D3DTFN_POINT);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MIPFILTER, D3DTFP_NONE);		
-		break;
-
-	case TEXTURE_MODE_BILINEAR:
-		// Filter textures when magnified or reduced (average of 2x2 texels).  Don't filter between mip levels.
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MINFILTER, D3DTFN_LINEAR);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MIPFILTER, D3DTFP_POINT);
-		break;
-
-	case TEXTURE_MODE_TRILINEAR:
-		// Filter textures when magnified or reduced (average of 2x2 texels).  And filter between the 2 mip levels.
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MAGFILTER, D3DTFG_LINEAR);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MINFILTER, D3DTFN_LINEAR);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
-		break;
-
-	case TEXTURE_MODE_ANISOTROPIC:
-		// Filter textures when magnified or reduced (filter to account for perspective distortion).  And filter between the 2 mip levels.
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MAGFILTER, D3DTFG_ANISOTROPIC);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MINFILTER, D3DTFN_ANISOTROPIC);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MIPFILTER, D3DTFP_LINEAR);
-		break;
-
-	default:
-		// Don't filter textures.  Don't filter between mip levels.
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MAGFILTER, D3DTFG_POINT);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MINFILTER, D3DTFN_POINT);
-		m_pd3dDevice->SetTextureStageState(TextureNum, D3DTSS_MIPFILTER, D3DTFP_NONE);
-		break;
-	}
+    m_pd3dDevice->SetTextureFilter(TextureNum, Mode);
 }
 
 void Pin3D::SetRenderTarget(RenderTarget* pddsSurface, RenderTarget* pddsZ) const

@@ -108,12 +108,15 @@ public:
    RenderTarget* GetBackBuffer() { return m_pddsBackBuffer; }
    RenderTarget* DuplicateRenderTarget(RenderTarget* src);
 
+   void CopySurface(RenderTarget* dest, RenderTarget* src);
+
    void GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height);
 
+   void SetRenderState( const RenderStates p1, const DWORD p2 );
+   void SetTextureFilter(DWORD texUnit, DWORD mode);
+   void SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode);
    void SetMaterial( const BaseMaterial * const _material );
    void SetMaterial( const Material & material )        { SetMaterial(&material.getBaseMaterial()); }
-   void SetRenderState( const RenderStates p1, const DWORD p2 );
-   void SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode);
 
    void createVertexBuffer( unsigned int _length, DWORD _usage, DWORD _fvf, VertexBuffer **_vBuffer );
    void renderPrimitive(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, LPWORD _indices, DWORD _numIndices, DWORD _flags);
@@ -203,8 +206,6 @@ public:  //########################## simple wrapper functions (interface for DX
 
    HRESULT CreateStateBlock( THIS_ D3DSTATEBLOCKTYPE,LPDWORD );
 
-   HRESULT Load( THIS_ LPDIRECTDRAWSURFACE7 destTex, LPPOINT destPoint, LPDIRECTDRAWSURFACE7 srcTex, LPRECT srcRect, DWORD flags);
-
    HRESULT LightEnable( THIS_ DWORD,BOOL );
 
    HRESULT GetLightEnable( THIS_ DWORD,BOOL* );
@@ -212,8 +213,6 @@ public:  //########################## simple wrapper functions (interface for DX
    HRESULT SetClipPlane( THIS_ DWORD,D3DVALUE* );
 
    HRESULT GetClipPlane( THIS_ DWORD,D3DVALUE* );
-
-   HRESULT GetInfo( THIS_ DWORD,LPVOID,DWORD );
 
    // TODO make private
    LPDIRECT3D7 m_pD3D;
