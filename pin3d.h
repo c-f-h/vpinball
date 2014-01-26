@@ -189,7 +189,7 @@ public:
 	Pin3D();
 	~Pin3D();
 
-	HRESULT InitDD(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool stereo3DFXAA, const bool AA);
+	HRESULT InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool stereo3DFXAA, const bool AA);
 
 	void InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD);
 
@@ -197,11 +197,11 @@ public:
 
 	void CacheTransform();      // compute m_matrixTotal = mWorld * mView * mProj
 
-	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex3D * const rgvout) const;
-	void TransformVertices(const Vertex3D_NoTex2 * const rgv, const WORD * const rgi, const int count, Vertex3D_NoTex2 * const rgvout) const;
-	void TransformVertices(const Vertex3D_NoLighting * const rgv, const WORD * const rgi, const int count, Vertex3D_NoLighting * const rgvout) const;
-	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex2D * const rgvout) const;
-	void TransformVertices(const Vertex3D_NoTex2 * const rgv, const WORD * const rgi, const int count, Vertex2D * const rgvout) const;
+	void TransformVertices(const Vertex3D * rgv,            const WORD * rgi, int count, Vertex3D * rgvout) const;
+	void TransformVertices(const Vertex3D_NoTex2 * rgv,     const WORD * rgi, int count, Vertex3D_NoTex2 * rgvout) const;
+	void TransformVertices(const Vertex3D_NoLighting * rgv, const WORD * rgi, int count, Vertex3D_NoLighting * rgvout) const;
+	void TransformVertices(const Vertex3D * rgv,            const WORD * rgi, int count, Vertex2D * rgvout) const;
+	void TransformVertices(const Vertex3D_NoTex2 * rgv,     const WORD * rgi, int count, Vertex2D * rgvout) const;
 
    Vertex3Ds Unproject( Vertex3Ds *point );
    Vertex3Ds Get3DPointFrom2D( POINT *p );
@@ -248,10 +248,6 @@ private:
 	void CreateBallShadow();
 
     // Data members
-
-private:
-	LPDIRECTDRAW7 m_pDD;        // only for convenience, does not own this
-	LPDIRECT3D7 m_pD3D;         // is owned
 public:
 	RenderDevice* m_pd3dDevice;
 	RenderTarget* m_pddsBackBuffer;

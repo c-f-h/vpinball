@@ -7,14 +7,12 @@ Pin3D::Pin3D()
 {
 	m_scalex = m_scaley = 1.0f;
 	m_xlatex = m_xlatey = 0.0f;
-	m_pDD = NULL;
 	m_pddsBackBuffer = NULL;
 	m_pdds3DBackBuffer = NULL;
 	m_pdds3Dbuffercopy = NULL;
 	m_pdds3Dbufferzcopy = NULL;
 	m_pdds3Dbuffermask = NULL;
 	m_pddsZBuffer = NULL;
-	m_pD3D = NULL;
 	m_pd3dDevice = NULL;
 	m_pddsStatic = NULL;
 	m_pddsStaticZ = NULL;
@@ -91,7 +89,7 @@ void Pin3D::ClipRectToVisibleArea(RECT * const prc) const
 	prc->bottom = min(prc->bottom, m_dwRenderHeight);
 }
 
-void Pin3D::TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex3D * const rgvout) const
+void Pin3D::TransformVertices(const Vertex3D * rgv, const WORD * rgi, int count, Vertex3D * rgvout) const
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
@@ -133,7 +131,7 @@ void Pin3D::TransformVertices(const Vertex3D * const rgv, const WORD * const rgi
 }
 
 //copy pasted from above
-void Pin3D::TransformVertices(const Vertex3D_NoTex2 * const rgv, const WORD * const rgi, const int count, Vertex3D_NoTex2 * const rgvout) const
+void Pin3D::TransformVertices(const Vertex3D_NoTex2 * rgv, const WORD * rgi, int count, Vertex3D_NoTex2 * rgvout) const
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
@@ -175,7 +173,7 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * const rgv, const WORD * co
 }
 
 //copy pasted from above
-void Pin3D::TransformVertices(const Vertex3D_NoLighting * const rgv, const WORD * const rgi, const int count, Vertex3D_NoLighting * const rgvout) const
+void Pin3D::TransformVertices(const Vertex3D_NoLighting * rgv, const WORD * rgi, int count, Vertex3D_NoLighting * rgvout) const
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
@@ -216,7 +214,7 @@ void Pin3D::TransformVertices(const Vertex3D_NoLighting * const rgv, const WORD 
 }
 
 //copy pasted from above
-void Pin3D::TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex2D * const rgvout) const
+void Pin3D::TransformVertices(const Vertex3D * rgv, const WORD * rgi, int count, Vertex2D * rgvout) const
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
@@ -255,7 +253,7 @@ void Pin3D::TransformVertices(const Vertex3D * const rgv, const WORD * const rgi
 }
 
 //copy pasted from above
-void Pin3D::TransformVertices(const Vertex3D_NoTex2 * const rgv, const WORD * const rgi, const int count, Vertex2D * const rgvout) const
+void Pin3D::TransformVertices(const Vertex3D_NoTex2 * rgv, const WORD * rgi, int count, Vertex2D * rgvout) const
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
@@ -293,116 +291,96 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * const rgv, const WORD * co
 	}
 }
 
-HRESULT Pin3D::InitDD(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool stereo3DFXAA, const bool AA)
+HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool stereo3DFXAA, const bool AA)
 {
-	m_hwnd = hwnd;
-	//fullscreen = fFullScreen;
-	// Check if we are rendering in hardware.
+    m_hwnd = hwnd;
+    //fullscreen = fFullScreen;
+    // Check if we are rendering in hardware.
 
-	// Get the dimensions of the viewport and screen bounds
-	GetClientRect( hwnd, &m_rcScreen );
-	ClientToScreen( hwnd, (POINT*)&m_rcScreen.left );
-	ClientToScreen( hwnd, (POINT*)&m_rcScreen.right );
-	m_dwRenderWidth  = m_rcScreen.right  - m_rcScreen.left;
-	m_dwRenderHeight = m_rcScreen.bottom - m_rcScreen.top;
-
-	// Cache pointer from global direct draw object
-	m_pDD = g_pvp->m_pdd.m_pDD; 
+    // Get the dimensions of the viewport and screen bounds
+    GetClientRect( hwnd, &m_rcScreen );
+    ClientToScreen( hwnd, (POINT*)&m_rcScreen.left );
+    ClientToScreen( hwnd, (POINT*)&m_rcScreen.right );
+    m_dwRenderWidth  = m_rcScreen.right  - m_rcScreen.left;
+    m_dwRenderHeight = m_rcScreen.bottom - m_rcScreen.top;
 
     m_pd3dDevice = new RenderDevice;
     m_pd3dDevice->InitRenderer(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate);
-	SetUpdatePos(m_rcScreen.left, m_rcScreen.top);
-    m_pD3D = m_pd3dDevice->m_pD3D;
+    SetUpdatePos(m_rcScreen.left, m_rcScreen.top);
 
-    HRESULT hr;
-
-	// set the viewport for the newly created device
-	vp.dwX=0;
-	vp.dwY=0;
-	vp.dwWidth=m_dwRenderWidth;
-	vp.dwHeight=m_dwRenderHeight;
-	vp.dvMinZ=0.0f;
-	vp.dvMaxZ=1.0f;
-	if( FAILED(hr = m_pd3dDevice->SetViewport( &vp ) ) )
-	{
-		ShowError("Could not set viewport.");
-		return false; 
-	}
+    // set the viewport for the newly created device
+    vp.dwX=0;
+    vp.dwY=0;
+    vp.dwWidth=m_dwRenderWidth;
+    vp.dwHeight=m_dwRenderHeight;
+    vp.dvMinZ=0.0f;
+    vp.dvMaxZ=1.0f;
+    if( FAILED(m_pd3dDevice->SetViewport( &vp ) ) )
+    {
+        ShowError("Could not set viewport.");
+        return false; 
+    }
 
     m_pddsBackBuffer = m_pd3dDevice->GetBackBuffer();
 
-	DDSURFACEDESC2 ddsd;
-	ddsd.dwSize = sizeof(ddsd);
-	m_pddsBackBuffer->GetSurfaceDesc( &ddsd );
-
-	// Create the "static" color buffer.  
-	// This will hold a pre-rendered image of the table and any non-changing elements (ie ramps, decals, etc).
-retry3:
-	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&m_pddsStatic, NULL ) ) )
-	{
-		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
-			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
-			goto retry3;
-		}
-		ShowError("Could not create static buffer.");
-		return hr;
-	}
-
-	// Update the count.
-	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
+    // Create the "static" color buffer.  
+    // This will hold a pre-rendered image of the table and any non-changing elements (ie ramps, decals, etc).
+    m_pddsStatic = m_pd3dDevice->DuplicateRenderTarget(m_pddsBackBuffer);
 
     m_pddsZBuffer = m_pd3dDevice->AttachZBufferTo(m_pddsBackBuffer);
     m_pddsStaticZ = m_pd3dDevice->AttachZBufferTo(m_pddsStatic);
     if (!m_pddsZBuffer || !m_pddsStatic)
         return E_FAIL;
 
-	CreateBallShadow();
+    CreateBallShadow();
 
-	int width, height;
-	ballTexture.CreateFromResource( IDB_BALLTEXTURE, &width, &height );
-	ballTexture.SetAlpha(RGB(0,0,0), width, height);
-	ballTexture.CreateMipMap();
+    int width, height;
+    ballTexture.CreateFromResource( IDB_BALLTEXTURE, &width, &height );
+    ballTexture.SetAlpha(RGB(0,0,0), width, height);
+    ballTexture.CreateMipMap();
 
-	lightTexture[0].CreateFromResource(IDB_SUNBURST, &width, &height);
-	lightTexture[0].SetAlpha(RGB(0,0,0), width, height);
-	lightTexture[0].CreateMipMap();
+    lightTexture[0].CreateFromResource(IDB_SUNBURST, &width, &height);
+    lightTexture[0].SetAlpha(RGB(0,0,0), width, height);
+    lightTexture[0].CreateMipMap();
 
-	lightTexture[1].CreateFromResource(IDB_SUNBURST5, &width, &height);
-	lightTexture[1].SetAlpha(RGB(0,0,0), width, height);
-	lightTexture[1].CreateMipMap();
+    lightTexture[1].CreateFromResource(IDB_SUNBURST5, &width, &height);
+    lightTexture[1].SetAlpha(RGB(0,0,0), width, height);
+    lightTexture[1].CreateMipMap();
 
-	m_pddsLightWhite = g_pvp->m_pdd.CreateFromResource(IDB_WHITE, &width, &height);
-	g_pvp->m_pdd.SetAlpha(m_pddsLightWhite, RGB(0,0,0), width, height);
-	g_pvp->m_pdd.CreateNextMipMapLevel(m_pddsLightWhite);
+    m_pddsLightWhite = g_pvp->m_pdd.CreateFromResource(IDB_WHITE, &width, &height);
+    g_pvp->m_pdd.SetAlpha(m_pddsLightWhite, RGB(0,0,0), width, height);
+    g_pvp->m_pdd.CreateNextMipMapLevel(m_pddsLightWhite);
 
-	if(stereo3DFXAA) {
-		ZeroMemory(&ddsd,sizeof(ddsd));
-		ddsd.dwSize = sizeof(ddsd);
-		m_pddsBackBuffer->GetSurfaceDesc( &ddsd );
+    if(stereo3DFXAA) {
+        // TODO (DX9): disabled for now
+        ShowError("Stereo 3D not supported in this version");
+    //	ZeroMemory(&ddsd,sizeof(ddsd));
+    //	ddsd.dwSize = sizeof(ddsd);
+    //	m_pddsBackBuffer->GetSurfaceDesc( &ddsd );
 
-		m_pdds3Dbuffercopy  = (unsigned int*)_aligned_malloc(ddsd.lPitch*ddsd.dwHeight,16);
-		m_pdds3Dbufferzcopy = (unsigned int*)_aligned_malloc(ddsd.lPitch*ddsd.dwHeight,16);
-		m_pdds3Dbuffermask  = (unsigned char*)malloc(ddsd.lPitch*ddsd.dwHeight/4);
-		if(m_pdds3Dbuffercopy == NULL || m_pdds3Dbufferzcopy == NULL || m_pdds3Dbuffermask == NULL)
-		{
-			ShowError("Could not allocate 3D stereo buffers.");
-			return E_FAIL; 
-		}
+    //	m_pdds3Dbuffercopy  = (unsigned int*)_aligned_malloc(ddsd.lPitch*ddsd.dwHeight,16);
+    //	m_pdds3Dbufferzcopy = (unsigned int*)_aligned_malloc(ddsd.lPitch*ddsd.dwHeight,16);
+    //	m_pdds3Dbuffermask  = (unsigned char*)malloc(ddsd.lPitch*ddsd.dwHeight/4);
+    //	if(m_pdds3Dbuffercopy == NULL || m_pdds3Dbufferzcopy == NULL || m_pdds3Dbuffermask == NULL)
+    //	{
+    //		ShowError("Could not allocate 3D stereo buffers.");
+    //		return E_FAIL; 
+    //	}
 
-		ddsd.dwFlags         = DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_CAPS; //!! ? just to be the exact same as the Backbuffer
-		ddsd.ddsCaps.dwCaps  = DDSCAPS_TEXTURE;
-		ddsd.ddsCaps.dwCaps2 = DDSCAPS2_HINTDYNAMIC;
-		if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&m_pdds3DBackBuffer, NULL ) ) )
-		{
-			ShowError("Could not create 3D stereo buffer.");
-			return hr; 
-		}
-	}
+    //	ddsd.dwFlags         = DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_CAPS; //!! ? just to be the exact same as the Backbuffer
+    //	ddsd.ddsCaps.dwCaps  = DDSCAPS_TEXTURE;
+    //	ddsd.ddsCaps.dwCaps2 = DDSCAPS2_HINTDYNAMIC;
+    //	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&m_pdds3DBackBuffer, NULL ) ) )
+    //	{
+    //		ShowError("Could not create 3D stereo buffer.");
+    //		return hr; 
+    //	}
+    }
 
-	// Direct all renders to the "static" buffer.
-	SetRenderTarget(m_pddsStatic, m_pddsStaticZ);
+    // Direct all renders to the "static" buffer.
+    SetRenderTarget(m_pddsStatic, m_pddsStaticZ);
 
-	return S_OK;
+    return S_OK;
 }
 
 
@@ -1047,11 +1025,10 @@ BaseTexture* Pin3D::CreateShadow(const float z)
 	BaseTexture* pddsProjectTexture = g_pvp->m_pdd.CreateTextureOffscreen(shadwidth, shadheight);
 	m_xvShadowMap.AddElement(pddsProjectTexture, (int)z);
 
-	DDSURFACEDESC2 ddsd;
-	ddsd.dwSize = sizeof(ddsd);
-	pddsProjectTexture->GetSurfaceDesc(&ddsd);
-	m_maxtu = (float)shadwidth/(float)ddsd.dwWidth;
-	m_maxtv = (float)shadheight/(float)ddsd.dwHeight;
+    DWORD texWidth, texHeight;
+    m_pd3dDevice->GetTextureSize(pddsProjectTexture, &texWidth, &texHeight);
+	m_maxtu = (float)shadwidth/(float)texWidth;
+	m_maxtv = (float)shadheight/(float)texHeight;
 
 	SelectObject(hdc2, hbmOld);
 	DeleteDC(hdc2);

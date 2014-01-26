@@ -197,6 +197,39 @@ RenderDevice::~RenderDevice()
    dx7Device->Release();
 }
 
+RenderTarget* RenderDevice::DuplicateRenderTarget(RenderTarget* src)
+{
+	DDSURFACEDESC2 ddsd;
+	ddsd.dwSize = sizeof(ddsd);
+	src->GetSurfaceDesc( &ddsd );
+
+    LPDIRECTDRAWSURFACE7 dup;
+retry3:
+	if ( FAILED( g_pvp->m_pdd.m_pDD->CreateSurface(&ddsd, &dup, NULL) ) )
+	{
+		if ((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0)
+        {
+			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
+			goto retry3;
+		}
+		ShowError("Could not create duplicate render target.");
+		return NULL;
+	}
+	// Update the count.
+	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
+
+    return dup;
+}
+
+void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
+{
+	DDSURFACEDESC2 ddsd;
+	ddsd.dwSize = sizeof(ddsd);
+	tex->GetSurfaceDesc(&ddsd);
+    *width = ddsd.dwWidth;
+    *height = ddsd.dwHeight;
+}
+
 void RenderDevice::SetMaterial( const BaseMaterial * const _material )
 {
 #if !defined(DEBUG_XXX) && !defined(_CRTDBG_MAP_ALLOC)

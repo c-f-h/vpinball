@@ -7,6 +7,7 @@ typedef IDirectDrawSurface7 BaseTexture;
 typedef D3DVIEWPORT7 ViewPort;
 typedef IDirectDrawSurface7 RenderTarget;
 
+
 struct BaseLight : public D3DLIGHT7
 {
     BaseLight()
@@ -105,6 +106,9 @@ public:
    void DestroyRenderer();
 
    RenderTarget* GetBackBuffer() { return m_pddsBackBuffer; }
+   RenderTarget* DuplicateRenderTarget(RenderTarget* src);
+
+   void GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height);
 
    void SetMaterial( const BaseMaterial * const _material );
    void SetMaterial( const Material & material )        { SetMaterial(&material.getBaseMaterial()); }
