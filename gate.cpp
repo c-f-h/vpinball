@@ -590,7 +590,6 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
         if (pinfront) 
         {
             pinfront->CreateAlphaChannel();
-            //pd3dDevice->SetTexture(ePictureTexture, pinfront->m_pdsBufferColorKey);
             pinfront->Set( ePictureTexture );
             if (pinfront->m_fTransparent)
             {
@@ -1030,7 +1029,6 @@ BOOL Gate::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(COLR))
    {
       pbr->GetInt(&m_d.m_color);
-      //if (!(m_d.m_color & MINBLACKMASK)) {m_d.m_color |= MINBLACK;}	// set minimum black
    }
    else if (id == FID(GANM))
    {

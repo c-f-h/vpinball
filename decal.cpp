@@ -415,7 +415,7 @@ void Decal::GetHitShapes(Vector<HitObject> * const pvho)
 
       m_pinimage.m_pdsBuffer->ReleaseDC(hdc);
 
-      g_pvp->m_pdd.SetOpaque(m_pinimage.m_pdsBuffer, m_pinimage.m_width, m_pinimage.m_height);
+      Texture::SetOpaque(m_pinimage.m_pdsBuffer, m_pinimage.m_width, m_pinimage.m_height);
       DeleteObject(hFont);
    }
 }
@@ -452,11 +452,9 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
       leading = m_leading;
       descent = m_descent;
 
-      DDSURFACEDESC2 ddsd;
-      ddsd.dwSize = sizeof(ddsd);
-      m_pinimage.m_pdsBuffer->GetSurfaceDesc(&ddsd);
-      maxtu = (float)m_pinimage.m_width / (float)ddsd.dwWidth;
-      maxtv = (float)m_pinimage.m_height / (float)ddsd.dwHeight;
+      m_pinimage.EnsureMaxTextureCoordinates();
+      maxtu = m_pinimage.m_maxtu;
+      maxtv = m_pinimage.m_maxtv;
       pin = &m_pinimage;
    }
    else
@@ -736,7 +734,6 @@ BOOL Decal::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(COLR))
    {
       pbr->GetInt(&m_d.m_color);
-      //		if (!(m_d.m_color & MINBLACKMASK)) {m_d.m_color |= MINBLACK;}	// set minimum black
    }
    else if (id == FID(SIZE))
    {

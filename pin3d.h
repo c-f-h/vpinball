@@ -212,7 +212,8 @@ public:
 	void SetRenderTarget(RenderTarget* pddsSurface, RenderTarget* pddsZ) const;
 	void SetTextureFilter(const int TextureNum, const int Mode) const;
 	
-	void SetTexture(BaseTexture* pddsTexture);
+    void SetTexture(Texture* pTexture);
+	void SetBaseTexture(BaseTexture* pddsTexture);
 	void EnableLightMap(const BOOL fEnable, const float z);
 
 	void SetColorKeyEnabled(bool fColorKey);

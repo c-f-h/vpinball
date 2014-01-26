@@ -3010,9 +3010,6 @@ INT_PTR CALLBACK ImageManagerProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             ListView_GetItem(GetDlgItem(hwndDlg, IDC_SOUNDLIST), &lvitem);
             Texture * const ppi = (Texture *)lvitem.lParam;
             HDC hdcDD;
-            //DDSURFACEDESC2 ddsd;
-            //ddsd.dwSize = sizeof(ddsd);
-            //ppi->m_pdsBuffer->GetSurfaceDesc( &ddsd );
 
             RECT rcClient;
             GetWindowRect(pdis->hwndItem , &rcClient);

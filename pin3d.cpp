@@ -46,7 +46,7 @@ Pin3D::~Pin3D()
 	SAFE_RELEASE(m_pddsStaticZ);
 
 	for (int i=0; i<m_xvShadowMap.AbsoluteSize(); ++i)
-		((LPDIRECTDRAWSURFACE)m_xvShadowMap.AbsoluteElementAt(i))->Release();
+		((BaseTexture*)m_xvShadowMap.AbsoluteElementAt(i))->Release();
 
 	SAFE_RELEASE(m_pddsLightWhite);
 
@@ -348,8 +348,8 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     lightTexture[1].CreateMipMap();
 
     m_pddsLightWhite = g_pvp->m_pdd.CreateFromResource(IDB_WHITE, &width, &height);
-    g_pvp->m_pdd.SetAlpha(m_pddsLightWhite, RGB(0,0,0), width, height);
-    g_pvp->m_pdd.CreateNextMipMapLevel(m_pddsLightWhite);
+    Texture::SetAlpha(m_pddsLightWhite, RGB(0,0,0), width, height);
+    Texture::CreateNextMipMapLevel(m_pddsLightWhite);
 
     if(stereo3DFXAA) {
         // TODO (DX9): disabled for now
@@ -532,7 +532,7 @@ void Pin3D::DrawBackground()
 
 		m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
 
-		SetTexture(pin->m_pdsBuffer);
+		SetTexture(pin);
 
 		m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, backgroundVBuffer, 0, 4, (LPWORD)rgi0123, 4, 0 );
 		m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
@@ -773,7 +773,7 @@ void Pin3D::InitPlayfieldGraphics()
 		NumVideoBytes += numVerts*sizeof(Vertex3D); 
 	}
 
-	const Texture * const pin = g_pplayer->m_ptable->GetImage((char *)g_pplayer->m_ptable->m_szImage);
+	Texture * const pin = g_pplayer->m_ptable->GetImage((char *)g_pplayer->m_ptable->m_szImage);
 	float maxtu,maxtv;
 
 	if (pin)
@@ -864,11 +864,11 @@ void Pin3D::RenderPlayfieldGraphics()
 
 	Material mtrl;
 
-	const Texture * const pin = g_pplayer->m_ptable->GetImage((char *)g_pplayer->m_ptable->m_szImage);
+	Texture * const pin = g_pplayer->m_ptable->GetImage((char *)g_pplayer->m_ptable->m_szImage);
 
 	if (pin)
 	{
-		SetTexture(pin->m_pdsBuffer);
+		SetTexture(pin);
 	}
 	else // No image by that name
 	{
@@ -1034,14 +1034,19 @@ BaseTexture* Pin3D::CreateShadow(const float z)
 	DeleteDC(hdc2);
 	ReleaseDC(NULL, hdcScreen);
 
-	g_pvp->m_pdd.Blur(pddsProjectTexture, pbits, shadwidth, shadheight);
+    Texture::Blur(pddsProjectTexture, pbits, shadwidth, shadheight);
 
 	DeleteObject(hdib);
 
 	return pddsProjectTexture;
 }
 
-void Pin3D::SetTexture(BaseTexture* pddsTexture)
+void Pin3D::SetTexture(Texture* pTexture)
+{
+    SetBaseTexture(pTexture ? pTexture->m_pdsBuffer : NULL);
+}
+
+void Pin3D::SetBaseTexture(BaseTexture* pddsTexture)
 {
 	m_pd3dDevice->SetTexture(ePictureTexture, (pddsTexture == NULL) ? m_pddsLightWhite : pddsTexture);
 }

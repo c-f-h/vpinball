@@ -510,12 +510,9 @@ void Primitive::CalculateBuiltinOriginal()
    float maxtu,maxtv;
    if (pin) 
    {
-      DDSURFACEDESC2 ddsd;
-      ddsd.dwSize = sizeof(ddsd);
-
-      pin->m_pdsBuffer->GetSurfaceDesc(&ddsd);
-      maxtu = (float)pin->m_width / (float)ddsd.dwWidth;
-      maxtv = (float)pin->m_height / (float)ddsd.dwHeight;
+      pin->EnsureMaxTextureCoordinates();
+      maxtu = pin->m_maxtu;
+      maxtv = pin->m_maxtv;
    }
    else
       maxtu = maxtv = 1.f;

@@ -6570,15 +6570,12 @@ Texture *PinTable::GetImage(char *szName)
    return NULL;
 }
 
-void PinTable::GetTVTU(const Texture * const ppi, float * const pmaxtu, float * const pmaxtv)
+// TODO: this should be a method of the texture itself
+void PinTable::GetTVTU(Texture * const ppi, float * const pmaxtu, float * const pmaxtv)
 {
-   DDSURFACEDESC2 ddsd;
-   ddsd.dwSize = sizeof(ddsd);
-
-   ppi->m_pdsBuffer->GetSurfaceDesc(&ddsd);
-
-   *pmaxtu = (float)ppi->m_width / (float)ddsd.dwWidth;
-   *pmaxtv = (float)ppi->m_height / (float)ddsd.dwHeight;
+    ppi->EnsureMaxTextureCoordinates();     // is this needed?
+    *pmaxtu = ppi->m_maxtu;
+    *pmaxtv = ppi->m_maxtv;
 }
 
 void PinTable::CreateGDIBackdrop()
@@ -6631,7 +6628,7 @@ void PinTable::ReImportImage(HWND hwndListView, Texture *ppi, char *filename)
 
    lstrcpy(ppi->m_szPath, filename);
 
-   g_pvp->m_pdd.CreateNextMipMapLevel(ppi->m_pdsBuffer);
+   Texture::CreateNextMipMapLevel(ppi->m_pdsBuffer);
 
    ppi->EnsureMaxTextureCoordinates();
 }
@@ -6639,6 +6636,10 @@ void PinTable::ReImportImage(HWND hwndListView, Texture *ppi, char *filename)
 
 bool PinTable::ExportImage(HWND hwndListView, Texture *ppi, char *szfilename)
 {
+    // TODO (DX9): reenable image exporting
+    ShowError("ExportImage disabled during DX9 port, please come back later.");
+    return false;
+#if 0
    if (ppi->m_ppb != NULL)return ppi->m_ppb->WriteToFile(szfilename); 
    else if (ppi->m_pdsBuffer != NULL)
    {
@@ -6723,6 +6724,7 @@ bool PinTable::ExportImage(HWND hwndListView, Texture *ppi, char *szfilename)
       return true;
    }
    return false;
+#endif
 }
 
 
@@ -6877,70 +6879,8 @@ HRESULT PinTable::LoadImageFromStream(IStream *pstm, int version)
 {
    if (version < 100) // Tech Beta 3 and below
    {
-      Texture * const ppi = new Texture();
-
-      int len;
-      ULONG read = 0;
-      HRESULT hr;
-      if(FAILED(hr = pstm->Read(&len, sizeof(len), &read)))
-         return hr;
-
-      if(FAILED(hr = pstm->Read(ppi->m_szName, len, &read)))
-         return hr;
-
-      ppi->m_szName[len] = 0;
-
-      if(FAILED(hr = pstm->Read(&len, sizeof(len), &read)))
-         return hr;
-
-      if(FAILED(hr = pstm->Read(ppi->m_szPath, len, &read)))
-         return hr;
-
-      ppi->m_szPath[len] = 0;
-
-      if(FAILED(hr = pstm->Read(&len, sizeof(len), &read)))
-         return hr;
-
-      if(FAILED(hr = pstm->Read(ppi->m_szInternalName, len, &read)))
-         return hr;
-
-      ppi->m_szInternalName[len] = 0;
-
-      int width, height;
-      if(FAILED(hr = pstm->Read(&width, sizeof(int), &read)))
-         return hr;
-
-      if(FAILED(hr = pstm->Read(&height, sizeof(int), &read)))
-         return hr;
-
-      ppi->m_width = width;
-      ppi->m_height = height;
-      ppi->m_pdsBuffer = g_pvp->m_pdd.CreateTextureOffscreen(width, height);
-
-      if (ppi->m_pdsBuffer == NULL)
-      {
-         delete ppi;
-         return E_FAIL;
-      }
-
-      DDSURFACEDESC2 ddsd;
-      ddsd.dwSize = sizeof(ddsd);
-
-      hr = ppi->m_pdsBuffer->Lock(NULL, &ddsd, DDLOCK_WRITEONLY | DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-
-      // 32-bit picture
-      LZWReader lzwreader(pstm, (int *)ddsd.lpSurface, width*4, height, ddsd.lPitch);
-
-      lzwreader.Decoder();
-
-      ppi->m_pdsBuffer->Unlock(NULL);
-
-      if(FAILED(hr = pstm->Read(&ppi->m_rgbTransparent, sizeof(ppi->m_rgbTransparent), &read)))
-         ppi->m_rgbTransparent = NOTRANSCOLOR;
-
-      g_pvp->m_pdd.CreateNextMipMapLevel(ppi->m_pdsBuffer);
-
-      m_vimage.AddElement(ppi);
+       ShowError("Tables from Tech Beta 3 and below are not supported in this version.");
+       return E_FAIL;
    }
    else
    {
@@ -6948,7 +6888,7 @@ HRESULT PinTable::LoadImageFromStream(IStream *pstm, int version)
 
       if (ppi->LoadFromStream(pstm, version, this) == S_OK)
       {
-         g_pvp->m_pdd.CreateNextMipMapLevel(ppi->m_pdsBuffer);
+          Texture::CreateNextMipMapLevel(ppi->m_pdsBuffer);
 
          m_vimage.AddElement(ppi);
       }

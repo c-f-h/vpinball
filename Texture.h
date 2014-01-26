@@ -40,18 +40,30 @@ public:
    void EnsureHBitmap();
    void CreateGDIVersion();
    void CreateFromResource(const int id, int * const pwidth, int * const pheight);
+
    BaseTexture *CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * const pheight);
-   void CreateTextureOffscreen(const int width, const int height);
    BaseTexture *CreateBaseTexture(const int width, const int height);
+
+   void CreateTextureOffscreen(const int width, const int height);
    void CreateMipMap();
    BOOL SetAlpha(const COLORREF rgbTransparent, const int width, const int height);
+
    void Lock();
    void Unlock();
 
    static void CreateNextMipMapLevel(BaseTexture* pdds);
+   static void SetOpaque(BaseTexture* pdds, const int width, const int height);
    static void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop, const int width, const int height);
+   static BOOL SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const int width, const int height);
+   static void Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwidth, const int shadheight);
+
 
    void Unset( const DWORD textureChannel );
+
+private:
+   bool LoadFromMemory(BYTE *data, DWORD size);
+
+public:
 
    // width and height of texture can be different than width and height
    // of dd surface, since the surface has to be in powers of 2
@@ -75,10 +87,6 @@ public:
 
 
 private:
-   LONG pitch;
-   // only valid if Lock() was called before
-   BYTE *surfaceData;
-
    COLORREF m_rgbBackdropCur;
 
    BaseTexture* m_pdsBufferColorKey;

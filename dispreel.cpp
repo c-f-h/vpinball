@@ -969,7 +969,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 			}
 	}
 	
-	// allocate the memory for this object (returns with a LPDIRECTDRAWSURFACE7)
+	// allocate the memory for this object (returns with a BaseTexture*)
 	m_pobjframe->pdds = g_pvp->m_pdd.CreateOffscreenWithCustomTransparency(m_pobjframe->rc.right - m_pobjframe->rc.left, m_pobjframe->rc.bottom - m_pobjframe->rc.top, m_rgbImageTransparent);
 }
 
@@ -1904,7 +1904,7 @@ void DispReel::UpdateObjFrame()
     		// Set the color key for this bitmap (black)
 #if 0
             m_pobjframe->pdds->Blt(&ReelInfo[i].position,   // destination rectangle
-                                   m_preelframe->pdds,      // source image (LPDIRECTDRAWSURFACE7)
+                                   m_preelframe->pdds,      // source image
                                    &reelstriprc,            // source rectangle
                                    flags,
                                    &bltFx);            // no blit effects ;-(

@@ -1129,7 +1129,7 @@ void Ramp::prepareHabitrail(RenderDevice* pd3dDevice )
    NumVideoBytes += numVertices*sizeof(Vertex3D_NoTex);
 
    Vertex3D_NoTex *buf;
-   staticVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::DISCARDCONTENTS);
+   staticVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
 
    int offset=0;
    Vertex3D_NoTex rgv3D[32];
@@ -1615,7 +1615,7 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
          }
-         else // ppin3d->SetTexture(pin->m_pdsBuffer);
+         else
          {	
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
             ppin3d->EnableAlphaBlend( 1, m_d.m_fAddBlend );
@@ -1801,7 +1801,6 @@ BOOL Ramp::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(COLR))
    {
       pbr->GetInt(&m_d.m_color);
-      //	if (!(m_d.m_color & MINBLACKMASK)) {m_d.m_color |= MINBLACK;}	// set minimum black
    }
    else if (id == FID(TMON))
    {

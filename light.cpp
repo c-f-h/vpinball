@@ -961,7 +961,7 @@ void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
          if ((m_d.m_szOffImage[0] != 0) && (pin = m_ptable->GetImage(m_d.m_szOffImage)) != NULL)
          {
             // Set the texture to the one defined in the editor.
-            ppin3d->SetTexture(pin->m_pdsBuffer);
+            ppin3d->SetTexture(pin);
             ppin3d->EnableLightMap(fFalse, -1);
             mtrl.setAmbient( 1.0f, 1.0f, 1.0f, 1.0f );
             mtrl.setDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -1007,7 +1007,7 @@ void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
                }
             }
             else
-               ppin3d->SetTexture(pin->m_pdsBuffer);
+               ppin3d->SetTexture(pin);
 
  
             mtrl.setAmbient( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -1037,7 +1037,7 @@ void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
      {
         pd3dDevice->SetTextureStageState( 1, D3DTSS_COLORARG2, D3DTA_CURRENT ); 
         pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_MODULATE );
-        ppin3d->SetTexture(pin->m_pdsBuffer);     
+        ppin3d->SetTexture(pin);
         pd3dDevice->SetTexture(1,NULL);
      }
 	  ppin3d->ExpandExtents(&m_pobjframe[i]->rc, customMoverVertex[i], NULL, NULL, customMoverVertexNum, m_fBackglass);
@@ -1320,7 +1320,6 @@ BOOL Light::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(COLR))
    {
       pbr->GetInt(&m_d.m_color);
-      //		if (!(m_d.m_color & MINBLACKMASK)) {m_d.m_color |= MINBLACK;}	// set minimum black
    }
    else if (id == FID(IMG1))
    {
@@ -1357,7 +1356,6 @@ BOOL Light::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(BCOL))
    {
       pbr->GetInt(&m_d.m_bordercolor);
-      //		if (!(m_d.m_bordercolor & MINBLACKMASK)) {m_d.m_bordercolor |= MINBLACK;}	// set minimum black
    }
    else if (id == FID(BWTH))
    {

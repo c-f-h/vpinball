@@ -2,9 +2,6 @@
 #ifndef __DISPLAY_H__
 #define __DISPLAY_H__
 
-#include <ddraw.h>
-#include <d3d.h>
-
 inline unsigned int RGB_TO_BGR(const unsigned int c)
 {
 	return (c&0x00FF00u) | ((c>>16)&0xFFu) | ((c&0xFFu)<<16);

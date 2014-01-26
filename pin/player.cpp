@@ -280,8 +280,6 @@ Player::Player()
 	m_DebugBalls = fFalse;
 	m_ToggleDebugBalls = fFalse;
 
-	m_fCleanBlt = fFalse;
-
 	m_fDebugMode = fFalse;
 	m_hwndDebugger = NULL;
 	m_PauseTimeTarget = 0;
@@ -407,7 +405,6 @@ void Player::RecomputePauseState()
 		{
 		m_LastKnownGoodCounter++; // So our catcher doesn't catch on the last value
 		m_fNoTimeCorrect = fTrue;
-		m_fCleanBlt = fFalse;
 		}
 
 	m_fPause = fNewPause;
@@ -2503,16 +2500,6 @@ void Player::Render()
     // Check if we should turn animate the plunger light.
     hid_set_output ( HID_OUTPUT_PLUNGER, ((m_time_msec - m_LastPlungerHit) < 512) && ((m_time_msec & 512) > 0) );
 
-    // Check if we are mirrored.
-    if ( m_ptable->m_tblMirrorEnabled )
-    {
-        // Mirroring only works if we mirror the entire backbuffer.
-        // Flag to draw the entire backbuffer.
-        m_fCleanBlt = fFalse;
-    }
-
-    //
-
     const unsigned int localvsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
 
     bool vsync = false;
@@ -3658,7 +3645,6 @@ LRESULT CALLBACK PlayerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				g_pplayer->m_fGameWindowActive = true;
 				SetCursor(NULL);
 				g_pplayer->m_fNoTimeCorrect = fTrue;
-				g_pplayer->m_fCleanBlt = fFalse;
 				}
 			break;
 #endif
@@ -3722,7 +3708,6 @@ LRESULT CALLBACK PlayerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				SetCursor(NULL);
 				g_pplayer->m_fNoTimeCorrect = fTrue;
 				g_pplayer->m_fPause = false;
-				g_pplayer->m_fCleanBlt = fFalse;
 				}
 			else
 				{

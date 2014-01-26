@@ -28,10 +28,10 @@ using namespace MSAPC;
 
 #define DIRECTINPUT_VERSION 0x0700
 #define D3D_OVERLOADS 1
-#include "dinput.h"
-#include "ddraw.h"
-#include "d3d.h"
-#include "dsound.h"
+#include <dinput.h>
+#include <ddraw.h>
+#include <d3d.h>
+#include <dsound.h>
 
 #include "stdio.h"
 #include "wchar.h"

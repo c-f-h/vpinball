@@ -1467,9 +1467,6 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
       if (plinesling->m_slingshotanim.m_iframe != 1)
           continue;
 
-      //pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET, 0x00000000, 1.0f, 0L );
-      //ppin3d->m_pddsZBuffer->Blt(NULL, ppin3d->m_pddsStaticZ, NULL, DDBLT_WAIT, NULL);
-
       pd3dDevice->SetMaterial(slingShotMaterial);
 
       pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, slingshotVBuffer, i*24, 24, (LPWORD)rgisling, 36, 0 );
@@ -1920,12 +1917,10 @@ BOOL Surface::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(COLR))
    {
       pbr->GetInt(&m_d.m_sidecolor);
-      //if (!(m_d.m_sidecolor & MINBLACKMASK)) {m_d.m_sidecolor |= MINBLACK;}	// set minimum black
    }
    else if (id == FID(TCLR))
    {
       pbr->GetInt(&m_d.m_topcolor);
-      //if (!(m_d.m_topcolor & MINBLACKMASK)) {m_d.m_topcolor |= MINBLACK;}	// set minimum black
    }
    else if (id == FID(SCLR))
    {

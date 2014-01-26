@@ -528,7 +528,6 @@ BOOL Kicker::LoadToken(int id, BiffReader *pbr)
 	else if (id == FID(COLR))
 		{
 		pbr->GetInt(&m_d.m_color);
-//		if (!(m_d.m_color & MINBLACKMASK)) {m_d.m_color |= MINBLACK;}	// set minimum black
 		}
 	else if (id == FID(TMON))
 		{

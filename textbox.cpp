@@ -555,12 +555,10 @@ BOOL Textbox::LoadToken(int id, BiffReader *pbr)
 	else if (id == FID(CLRB))
 		{
 		pbr->GetInt(&m_d.m_backcolor);
-//		if (!(m_d.m_backcolor & MINBLACKMASK)) {m_d.m_backcolor |= MINBLACK;}	// set minimum black
 		}
 	else if (id == FID(CLRF))
 		{
 		pbr->GetInt(&m_d.m_fontcolor);
-//		if (!(m_d.m_fontcolor & MINBLACKMASK)) {m_d.m_fontcolor |= MINBLACK;}	// set minimum black
 		}
 	else if (id == FID(TMON))
 		{
