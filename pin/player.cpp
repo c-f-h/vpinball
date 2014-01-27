@@ -2091,11 +2091,11 @@ unsigned int Player::CheckAndUpdateRegions()
     // copy static buffers to back buffer and z buffer
     //
 
-    BaseTexture *backBuffer = m_pin3d.m_pddsBackBuffer;
+    RenderTarget* backBuffer = m_pin3d.m_pddsBackBuffer;
     //if ( m_useAA )
     //    backBuffer = m_pin3d.antiAliasTexture; //m_pin3d.m_pddsBackBuffer;
 
-    BaseTexture * const backBufferZ = m_pin3d.m_pddsZBuffer;
+    RenderTarget* const backBufferZ = m_pin3d.m_pddsZBuffer;
 
     // blit static background
     RECT rect;
@@ -2116,6 +2116,7 @@ unsigned int Player::CheckAndUpdateRegions()
         pao->m_fInvalid = false;
         pao->Check3D();
 
+#ifndef VPINBALL_DX9
         // Clamp all bounds to screen (if not completely offscreen)
         RECT * const prc = &pao->m_rcBounds;
         if ((prc->top < 0) && (prc->bottom >= 0))
@@ -2164,6 +2165,7 @@ unsigned int Player::CheckAndUpdateRegions()
                 }
             }
         }
+#endif // DX9
     }
 
     return rect.right*rect.bottom;
@@ -2983,7 +2985,7 @@ void Player::DrawBalls()
 {
     bool drawReflection = m_ptable->m_useReflectionForBalls==fTrue;
 
-    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREPERSPECTIVE, FALSE );
+    // m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREPERSPECTIVE, FALSE ); // this is always on in DX9
     m_pin3d.m_pd3dDevice->SetTextureAddressMode(0, RenderDevice::TEX_CLAMP);
 
     m_pin3d.EnableAlphaTestReference( 0x0000001 );
@@ -3332,8 +3334,8 @@ void Player::DoDebugObjectMenu(int x, int y)
 
 	ViewPort vp;
 	m_pin3d.m_pd3dDevice->GetViewport( &vp );
-	const float rClipWidth  = (float)vp.dwWidth*0.5f;
-	const float rClipHeight = (float)vp.dwHeight*0.5f;
+	const float rClipWidth  = (float)vp.Width*0.5f;
+	const float rClipHeight = (float)vp.Height*0.5f;
 
 	const float xcoord = ((float)x-rClipWidth)/rClipWidth;
 	const float ycoord = (-((float)y-rClipHeight))/rClipHeight;

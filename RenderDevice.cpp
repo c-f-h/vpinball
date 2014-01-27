@@ -1,3 +1,9 @@
+#ifdef VPINBALL_DX9
+
+#include "RenderDevice_dx9.cpp"
+
+#else
+
 #include "stdafx.h"
 #include "RenderDevice.h"
 #include "Material.h"
@@ -352,12 +358,12 @@ void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID
    dx7Device->DrawIndexedPrimitive(type, fvf, vertices, vertexCount, indices, indexCount, 0);
 }
 
-void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD numVertices)
+void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD numVertices)
 {
    dx7Device->DrawPrimitiveVB(type, vb, startVertex, numVertices, 0);
 }
 
-void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD numVertices, LPWORD indices, DWORD indexCount)
+void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD numVertices, LPWORD indices, DWORD indexCount)
 {
    dx7Device->DrawIndexedPrimitiveVB(type, vb, startVertex, numVertices, indices, indexCount, 0);
 }
@@ -475,7 +481,7 @@ void RenderDevice::SetZBuffer( RenderTarget* surf)
 //   return dx7Device->GetRenderTarget(p1);
 //}
 
-void RenderDevice::Clear(DWORD numRects, LPD3DRECT rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil)
+void RenderDevice::Clear(DWORD numRects, D3DRECT* rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil)
 {
    dx7Device->Clear(numRects, rects, flags, color, z, stencil);
 }
@@ -490,14 +496,14 @@ void RenderDevice::GetTransform( TransformStateType p1, LPD3DMATRIX p2)
    dx7Device->GetTransform((D3DTRANSFORMSTATETYPE)p1, p2);
 }
 
-void RenderDevice::SetViewport( LPD3DVIEWPORT7 p1)
+void RenderDevice::SetViewport( ViewPort* p1)
 {
-   dx7Device->SetViewport(p1);
+   dx7Device->SetViewport((LPD3DVIEWPORT7)p1);
 }
 
-void RenderDevice::GetViewport( LPD3DVIEWPORT7 p1)
+void RenderDevice::GetViewport( ViewPort* p1)
 {
-   dx7Device->GetViewport(p1);
+   dx7Device->GetViewport((LPD3DVIEWPORT7)p1);
 }
 
 //HRESULT RenderDevice::SetMaterial( THIS_ LPD3DMATERIAL7 p1)
@@ -619,3 +625,4 @@ void RenderDevice::LightEnable( DWORD p1, BOOL p2)
 //   return dx7Device->GetClipPlane(p1,p2);
 //}
 
+#endif // VPINBALL_DX9

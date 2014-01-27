@@ -1,8 +1,10 @@
 #pragma once
 
+#include "stdafx.h"
 #include <d3d9.h>
+#include "Material.h"
 
-typedef IDirect3dTexture9 BaseTexture;
+typedef IDirect3DTexture9 BaseTexture;
 typedef D3DVIEWPORT9 ViewPort;
 typedef IDirect3DSurface9 RenderTarget;
 
@@ -113,7 +115,6 @@ public:
       LIGHTING           = D3DRS_LIGHTING,
       SPECULARENABLE     = D3DRS_SPECULARENABLE,
       SRCBLEND           = D3DRS_SRCBLEND,
-      TEXTUREPERSPECTIVE = D3DRS_TEXTUREPERSPECTIVE,
       ZENABLE            = D3DRS_ZENABLE,
       ZFUNC              = D3DRS_ZFUNC,
       ZWRITEENABLE       = D3DRS_ZWRITEENABLE,
@@ -136,10 +137,10 @@ public:
    void BeginScene();
    void EndScene();
 
-   void Clear(DWORD numRects, LPD3DRECT rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil);
+   void Clear(DWORD numRects, D3DRECT* rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil);
    void Flip(int offsetx, int offsety, bool vsync);
 
-   RenderTarget* GetBackBuffer() { return m_pddsBackBuffer; }
+   RenderTarget* GetBackBuffer() { return m_pBackBuffer; }
    RenderTarget* DuplicateRenderTarget(RenderTarget* src);
 
    void SetRenderTarget( RenderTarget* );
@@ -162,8 +163,8 @@ public:
 
    void DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount);
    void DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount);
-   void DrawPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD vertexCount);
-   void DrawIndexedPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD vertexCount, LPWORD indices, DWORD indexCount);
+   void DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount);
+   void DrawIndexedPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount, LPWORD indices, DWORD indexCount);
 
    void GetMaterial( BaseMaterial *_material );
 
@@ -173,8 +174,8 @@ public:
    void SetViewport( ViewPort* );
    void GetViewport( ViewPort* );
 
-   void SetTransform( TransformStateType, LPD3DMATRIX );
-   void GetTransform( TransformStateType, LPD3DMATRIX );
+   void SetTransform( TransformStateType, D3DMATRIX* );
+   void GetTransform( TransformStateType, D3DMATRIX* );
 
    void SetColorKeyEnabled(bool enable)
    {
@@ -192,4 +193,11 @@ private:
    IDirect3DSurface9* m_pBackBuffer;
 
    UINT m_adapter;      // index of the display adapter to use
+
+   static const DWORD RENDER_STATE_CACHE_SIZE=256;
+   static const DWORD TEXTURE_STATE_CACHE_SIZE=256;
+
+   DWORD renderStateCache[RENDER_STATE_CACHE_SIZE];
+   DWORD textureStateCache[8][TEXTURE_STATE_CACHE_SIZE];
+   BaseMaterial materialStateCache;
 };

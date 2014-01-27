@@ -1,10 +1,25 @@
+#ifdef VPINBALL_DX9
+
+#include "RenderDevice_dx9.h"
+
+#else
+
 #include "stdafx.h"
 #include "Material.h"
 #pragma once
 
+// NB: this has the same layout as D3DVIEWPORT7 (and 9)
+struct ViewPort {
+    DWORD       X;
+    DWORD       Y;
+    DWORD       Width;
+    DWORD       Height;
+    D3DVALUE    MinZ;
+    D3DVALUE    MaxZ;
+};
 
 typedef IDirectDrawSurface7 BaseTexture;
-typedef D3DVIEWPORT7 ViewPort;
+//typedef D3DVIEWPORT7 ViewPort;
 typedef IDirectDrawSurface7 RenderTarget;
 
 enum TransformStateType {
@@ -111,7 +126,7 @@ public:
    void BeginScene();
    void EndScene();
 
-   void Clear(DWORD numRects, LPD3DRECT rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil);
+   void Clear(DWORD numRects, D3DRECT* rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil);
    void Flip(int offsetx, int offsety, bool vsync);
 
    RenderTarget* GetBackBuffer() { return m_pddsBackBuffer; }
@@ -137,8 +152,8 @@ public:
 
    void DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount);
    void DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount);
-   void DrawPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD numVertices);
-   void DrawIndexedPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD numVertices, LPWORD indices, DWORD indexCount);
+   void DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD numVertices);
+   void DrawIndexedPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD numVertices, LPWORD indices, DWORD indexCount);
 
    void GetMaterial( BaseMaterial *_material );
 
@@ -225,3 +240,5 @@ public:
       return 0;
    }
 };
+
+#endif // VPINBALL_DX9

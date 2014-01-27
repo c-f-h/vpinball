@@ -32,7 +32,7 @@ static unsigned int fvfToSize(DWORD fvf)
     }
 }
 
-static UINT ComputePrimitiveCount(D3DPRIMITIVETYPE type, DWORD vertexCount)
+static UINT ComputePrimitiveCount(D3DPRIMITIVETYPE type, int vertexCount)
 {
     switch (type)
     {
@@ -65,7 +65,7 @@ RenderDevice::RenderDevice()
 
 bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
 {
-    m_pD3D = Direct3DCreate(D3D_SDK_VERSION);
+    m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
     if (m_pD3D == NULL)
     {
         ShowError("Could not create D3D9 object.");
@@ -83,7 +83,7 @@ bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscree
     params.hDeviceWindow = hwnd;
     params.Windowed = !fullscreen;
     params.EnableAutoDepthStencil = FALSE;
-    params.AutoDepthStencilFormat = 0;      // ignored
+    params.AutoDepthStencilFormat = D3DFMT_UNKNOWN;      // ignored
     params.Flags = 0;
     params.FullScreen_RefreshRateInHz = fullscreen ? refreshrate : 0;
     params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // D3DPRESENT_INTERVAL_ONE for vsync
@@ -95,7 +95,7 @@ bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscree
                D3DDEVTYPE_HAL,
                hwnd,
                D3DCREATE_HARDWARE_VERTEXPROCESSING,
-               &params
+               &params,
                &m_pD3DDevice));
 
     // Get the display mode so that we can report back the actual refresh rate.
@@ -114,11 +114,6 @@ void RenderDevice::DestroyRenderer()
     SAFE_RELEASE(m_pD3D);
 }
 
-RenderTarget* RenderDevice::GetBackBuffer()
-{
-    return m_pBackBuffer;
-}
-
 void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
 {
     // TODO: we can't handle shake or vsync here
@@ -132,7 +127,7 @@ RenderTarget* RenderDevice::DuplicateRenderTarget(RenderTarget* src)
     src->GetDesc(&desc);
     IDirect3DSurface9 *dup;
     CHECKD3D(m_pD3DDevice->CreateRenderTarget(desc.Width, desc.Height, desc.Format,
-        desc.MultiSample, desc.MultisampleQuality, FALSE /* lockable */, &dup, NULL));
+        desc.MultiSampleType, desc.MultiSampleQuality, FALSE /* lockable */, &dup, NULL));
     return dup;
 }
 
@@ -208,7 +203,7 @@ void RenderDevice::SetMaterial( const BaseMaterial * const _material )
     materialStateCache.power = _material->power;
 #endif
 
-    CHECKD3D(m_pD3DDevice->SetMaterial((LPD3DMATERIAL9)_material));
+    CHECKD3D(m_pD3DDevice->SetMaterial((D3DMATERIAL9*)_material));
 }
 
 
@@ -233,7 +228,8 @@ void RenderDevice::CreateVertexBuffer( unsigned int vertexCount, DWORD usage, DW
     // NB: We always specify WRITEONLY since MSDN states,
     // "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
     // This means we cannot read from vertex buffers, but I don't think we need to.
-    CHECKD3D(m_pD3DDevice->CreateVertexBuffer(vertexCount * fvfToSize(fvf), D3DUSAGE_WRITEONLY | usage, fvf, D3DPOOL_DEFAULT, vBuffer));
+    CHECKD3D(m_pD3DDevice->CreateVertexBuffer(vertexCount * fvfToSize(fvf), D3DUSAGE_WRITEONLY | usage, fvf,
+                D3DPOOL_DEFAULT, (IDirect3DVertexBuffer9**)vBuffer, NULL));
 }
 
 
@@ -243,7 +239,7 @@ RenderTarget* RenderDevice::AttachZBufferTo(RenderTarget* surf)
     surf->GetDesc(&desc);
 
     IDirect3DSurface9 *pZBuf;
-    CHECKD3D(m_pD3DDevice->CreateDepthStencilSurface(desc.Width, desc.Height, D3DFORMAT_D16,
+    CHECKD3D(m_pD3DDevice->CreateDepthStencilSurface(desc.Width, desc.Height, D3DFMT_D16,
             desc.MultiSampleType, desc.MultiSampleQuality, FALSE, &pZBuf, NULL));
 
     return pZBuf;
@@ -252,7 +248,7 @@ RenderTarget* RenderDevice::AttachZBufferTo(RenderTarget* surf)
 
 void RenderDevice::DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount)
 {
-    m_pd3dDevice->SetFVF(fvf);
+    m_pD3DDevice->SetFVF(fvf);
     CHECKD3D(m_pD3DDevice->DrawPrimitiveUP(type, ComputePrimitiveCount(type, vertexCount), vertices, fvfToSize(fvf)));
 }
 
@@ -263,7 +259,7 @@ void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID
                 indices, D3DFMT_INDEX32, vertices, fvfToSize(fvf)));
 }
 
-void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD vertexCount)
+void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount)
 {
     D3DVERTEXBUFFER_DESC desc;
     vb->GetDesc(&desc);     // let's hope this is not very slow
@@ -275,17 +271,17 @@ void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER
     CHECKD3D(m_pD3DDevice->DrawPrimitive(type, startVertex, ComputePrimitiveCount(type, vertexCount)));
 }
 
-void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD vertexCount, LPWORD indices, DWORD indexCount)
+void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount, LPWORD indices, DWORD indexCount)
 {
     // TODO: no such draw call in DX9, we need an index buffer
 }
 
-void RenderDevice::SetTransform( TransformStateType p1, LPD3DMATRIX p2)
+void RenderDevice::SetTransform( TransformStateType p1, D3DMATRIX* p2)
 {
    CHECKD3D(m_pD3DDevice->SetTransform((D3DTRANSFORMSTATETYPE)p1, p2));
 }
 
-void RenderDevice::GetTransform( TransformStateType p1, LPD3DMATRIX p2)
+void RenderDevice::GetTransform( TransformStateType p1, D3DMATRIX* p2)
 {
    CHECKD3D(m_pD3DDevice->GetTransform((D3DTRANSFORMSTATETYPE)p1, p2));
 }
@@ -293,7 +289,7 @@ void RenderDevice::GetTransform( TransformStateType p1, LPD3DMATRIX p2)
 
 void RenderDevice::GetMaterial( BaseMaterial *_material )
 {
-   m_pD3DDevice->GetMaterial((LPD3DMATERIAL7)_material);
+   m_pD3DDevice->GetMaterial((D3DMATERIAL9*)_material);
 }
 
 void RenderDevice::SetLight( DWORD p1, BaseLight* p2)

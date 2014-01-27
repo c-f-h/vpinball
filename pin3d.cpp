@@ -93,10 +93,10 @@ void Pin3D::TransformVertices(const Vertex3D * rgv, const WORD * rgi, int count,
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
-	const float rClipWidth  = vp.dwWidth*0.5f;
-	const float rClipHeight = vp.dwHeight*0.5f;
-	const int xoffset = vp.dwX;
-	const int yoffset = vp.dwY;
+	const float rClipWidth  = vp.Width*0.5f;
+	const float rClipHeight = vp.Height*0.5f;
+	const int xoffset = vp.X;
+	const int yoffset = vp.Y;
 
 	// Transform each vertex through the current matrix set
 	for(int i=0; i<count; ++i)
@@ -135,10 +135,10 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * rgv, const WORD * rgi, int
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
-	const float rClipWidth  = vp.dwWidth*0.5f;
-	const float rClipHeight = vp.dwHeight*0.5f;
-	const int xoffset = vp.dwX;
-	const int yoffset = vp.dwY;
+	const float rClipWidth  = vp.Width*0.5f;
+	const float rClipHeight = vp.Height*0.5f;
+	const int xoffset = vp.X;
+	const int yoffset = vp.Y;
 
 	// Transform each vertex through the current matrix set
 	for(int i=0; i<count; ++i)
@@ -177,10 +177,10 @@ void Pin3D::TransformVertices(const Vertex3D_NoLighting * rgv, const WORD * rgi,
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
-	const float rClipWidth  = vp.dwWidth*0.5f;
-	const float rClipHeight = vp.dwHeight*0.5f;
-	const int xoffset = vp.dwX;
-	const int yoffset = vp.dwY;
+	const float rClipWidth  = vp.Width*0.5f;
+	const float rClipHeight = vp.Height*0.5f;
+	const int xoffset = vp.X;
+	const int yoffset = vp.Y;
 
 	// Transform each vertex through the current matrix set
 	for(int i=0; i<count; ++i)
@@ -218,10 +218,10 @@ void Pin3D::TransformVertices(const Vertex3D * rgv, const WORD * rgi, int count,
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
-	const float rClipWidth  = vp.dwWidth*0.5f;
-	const float rClipHeight = vp.dwHeight*0.5f;
-	const int xoffset = vp.dwX;
-	const int yoffset = vp.dwY;
+	const float rClipWidth  = vp.Width*0.5f;
+	const float rClipHeight = vp.Height*0.5f;
+	const int xoffset = vp.X;
+	const int yoffset = vp.Y;
 
 	// Transform each vertex through the current matrix set
 	for(int i=0; i<count; ++i)
@@ -257,10 +257,10 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * rgv, const WORD * rgi, int
 {
 	// Get the width and height of the viewport. This is needed to scale the
 	// transformed vertices to fit the render window.
-	const float rClipWidth  = vp.dwWidth*0.5f;
-	const float rClipHeight = vp.dwHeight*0.5f;
-	const int xoffset = vp.dwX;
-	const int yoffset = vp.dwY;
+	const float rClipWidth  = vp.Width*0.5f;
+	const float rClipHeight = vp.Height*0.5f;
+	const int xoffset = vp.X;
+	const int yoffset = vp.Y;
 
 	// Transform each vertex through the current matrix set
 	for(int i=0; i<count; ++i)
@@ -309,12 +309,12 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     SetUpdatePos(m_rcScreen.left, m_rcScreen.top);
 
     // set the viewport for the newly created device
-    vp.dwX=0;
-    vp.dwY=0;
-    vp.dwWidth=m_dwRenderWidth;
-    vp.dwHeight=m_dwRenderHeight;
-    vp.dvMinZ=0.0f;
-    vp.dvMaxZ=1.0f;
+    vp.X=0;
+    vp.Y=0;
+    vp.Width=m_dwRenderWidth;
+    vp.Height=m_dwRenderHeight;
+    vp.MinZ=0.0f;
+    vp.MaxZ=1.0f;
     m_pd3dDevice->SetViewport( &vp );
 
     m_pddsBackBuffer = m_pd3dDevice->GetBackBuffer();
@@ -522,10 +522,11 @@ void Pin3D::InitLights()
             light.setSpecular((float)(g_pplayer->m_ptable->m_Light[i].specular & 255) * (float)(1.0/255.0),
                     (float)(g_pplayer->m_ptable->m_Light[i].specular & 65280) * (float)(1.0/65280.0),
                     (float)(g_pplayer->m_ptable->m_Light[i].specular & 16711680) * (float)(1.0/16711680.0));
-            light.setRange( /*(light.getType() == D3DLIGHT_POINT) ? g_pplayer->m_ptable->m_Light[i].pointRange :*/ D3DLIGHT_RANGE_MAX); //!!  expose?
+            light.setRange( /*(light.getType() == D3DLIGHT_POINT) ? g_pplayer->m_ptable->m_Light[i].pointRange :*/
+                    /* DX9 D3DLIGHT_RANGE_MAX */ 1e6f); //!!  expose?
 
             if((light.getType() == D3DLIGHT_POINT) || (light.getType() == D3DLIGHT_SPOT))
-                light.dvAttenuation2 = 0.0000025f; //!!  expose? //!! real world: light.dvAttenuation2 = 1.0f; but due to low dynamic 255-level-RGB lighting, we have to stick with the old crap
+                light.setAttenuation2(0.0000025f); //!!  expose? //!! real world: light.dvAttenuation2 = 1.0f; but due to low dynamic 255-level-RGB lighting, we have to stick with the old crap
 
             if(light.getType() == D3DLIGHT_SPOT)
             {
@@ -582,20 +583,21 @@ void Pin3D::InitLights()
 	m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
 }
 
-void LookAt( Matrix3D &mat, D3DVECTOR eye, D3DVECTOR target, D3DVECTOR up )
-{
-   D3DVECTOR zaxis = Normalize(eye - target);
-   D3DVECTOR xaxis = Normalize(CrossProduct(up,zaxis));
-   D3DVECTOR yaxis = CrossProduct(zaxis,xaxis);
-   mat._11 = xaxis.x; mat._12 = yaxis.x; mat._13 = zaxis.x; mat._14=0.0f;
-   mat._21 = xaxis.y; mat._22 = yaxis.y; mat._23 = zaxis.y; mat._24=0.0f;
-   mat._31 = xaxis.z; mat._32 = yaxis.z; mat._33 = zaxis.z; mat._34=0.0f;
-   mat._41 = 0.0f;    mat._42 = 0.0f;    mat._43 = zaxis.x; mat._44=0.0f;
-   Matrix3D trans;
-   trans.SetIdentity();
-   trans._41 = eye.x; trans._42 = eye.y; trans._43=eye.z;
-   mat.Multiply( trans, mat );
-}
+// currently unused
+//void LookAt( Matrix3D &mat, D3DVECTOR eye, D3DVECTOR target, D3DVECTOR up )
+//{
+//   D3DVECTOR zaxis = Normalize(eye - target);
+//   D3DVECTOR xaxis = Normalize(CrossProduct(up,zaxis));
+//   D3DVECTOR yaxis = CrossProduct(zaxis,xaxis);
+//   mat._11 = xaxis.x; mat._12 = yaxis.x; mat._13 = zaxis.x; mat._14=0.0f;
+//   mat._21 = xaxis.y; mat._22 = yaxis.y; mat._23 = zaxis.y; mat._24=0.0f;
+//   mat._31 = xaxis.z; mat._32 = yaxis.z; mat._33 = zaxis.z; mat._34=0.0f;
+//   mat._41 = 0.0f;    mat._42 = 0.0f;    mat._43 = zaxis.x; mat._44=0.0f;
+//   Matrix3D trans;
+//   trans.SetIdentity();
+//   trans._41 = eye.x; trans._42 = eye.y; trans._43=eye.z;
+//   mat.Multiply( trans, mat );
+//}
 
 void Pin3D::InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD)
 {
@@ -633,7 +635,6 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAARG1, D3DTA_CURRENT );
 	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAARG2, D3DTA_CURRENT );
 	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_TEXCOORDINDEX, 1 );
-	m_pd3dDevice->SetRenderState( RenderDevice::TEXTUREPERSPECTIVE, TRUE );
 	m_pd3dDevice->SetColorKeyEnabled(false);
 
 	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLOROP,   D3DTOP_DISABLE);
@@ -1042,8 +1043,11 @@ void Pin3D::SetUpdatePos(const int left, const int top)
 	m_rcUpdate.right = left + m_dwRenderWidth;
 	m_rcUpdate.bottom = top + m_dwRenderHeight;
 
+#ifndef VPINBALL_DX9
+    // hack for DX7; TODO: remove
     if (m_pd3dDevice)
         m_pd3dDevice->m_rcUpdate = m_rcUpdate;
+#endif
 }
 
 void Pin3D::Flip(const int offsetx, const int offsety, bool vsync)
@@ -1219,9 +1223,9 @@ Vertex3Ds Pin3D::Unproject( Vertex3Ds *point)
    m2.Invert();
    Vertex3Ds p,p3;
 
-   p.x = 2.0f * (point->x-g_pplayer->m_pin3d.vp.dwX) / g_pplayer->m_pin3d.vp.dwWidth - 1.0f; 
-   p.y = 1.0f - 2.0f * (point->y-g_pplayer->m_pin3d.vp.dwY) / g_pplayer->m_pin3d.vp.dwHeight; 
-   p.z = (point->z - g_pplayer->m_pin3d.vp.dvMinZ) / (g_pplayer->m_pin3d.vp.dvMaxZ-g_pplayer->m_pin3d.vp.dvMinZ);
+   p.x = 2.0f * (point->x-g_pplayer->m_pin3d.vp.X) / g_pplayer->m_pin3d.vp.Width - 1.0f; 
+   p.y = 1.0f - 2.0f * (point->y-g_pplayer->m_pin3d.vp.Y) / g_pplayer->m_pin3d.vp.Height; 
+   p.z = (point->z - g_pplayer->m_pin3d.vp.MinZ) / (g_pplayer->m_pin3d.vp.MaxZ-g_pplayer->m_pin3d.vp.MinZ);
    p3 = m2.MultiplyVector( p );
    return p3;
 }
@@ -1229,8 +1233,8 @@ Vertex3Ds Pin3D::Unproject( Vertex3Ds *point)
 Vertex3Ds Pin3D::Get3DPointFrom2D( POINT *p )
 {
    Vertex3Ds p1,p2,pNear,pFar;
-   pNear.x = (float)p->x; pNear.y = (float)p->y; pNear.z = (float)vp.dvMinZ;
-   pFar.x = (float)p->x; pFar.y = (float)p->y; pFar.z = (float)vp.dvMaxZ;
+   pNear.x = (float)p->x; pNear.y = (float)p->y; pNear.z = (float)vp.MinZ;
+   pFar.x = (float)p->x; pFar.y = (float)p->y; pFar.z = (float)vp.MaxZ;
    p1 = Unproject( &pNear );
    p2 = Unproject( &pFar);
    float wz = 0.0f;
