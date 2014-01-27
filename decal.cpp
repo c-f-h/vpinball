@@ -380,7 +380,7 @@ void Decal::GetHitShapes(Vector<HitObject> * const pvho)
          m_d.m_color = RGB(0,0,1);
 
       HDC hdc;
-      m_pinimage.m_pdsBuffer->GetDC(&hdc);
+      m_pinimage.GetTextureDC(&hdc);
       /*if (m_d.m_color == RGB(255,255,255))
       {
       SelectObject(hdc, GetStockObject(BLACK_BRUSH));
@@ -413,7 +413,7 @@ void Decal::GetHitShapes(Vector<HitObject> * const pvho)
       SelectObject(hdcNull, hFontOld);
       ReleaseDC(NULL, hdcNull);
 
-      m_pinimage.m_pdsBuffer->ReleaseDC(hdc);
+      m_pinimage.ReleaseTextureDC(hdc);
 
       Texture::SetOpaque(m_pinimage.m_pdsBuffer, m_pinimage.m_width, m_pinimage.m_height);
       DeleteObject(hFont);

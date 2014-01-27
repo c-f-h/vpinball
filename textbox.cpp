@@ -327,11 +327,11 @@ void Textbox::RenderText()
 	if (m_d.m_fTransparent)
 		{
 		m_pobjframe->pdds->BltFast(0, 0, ppin3d->m_pddsStatic, &m_pobjframe->rc, DDBLTFAST_WAIT);
-		m_pobjframe->pdds->GetDC(&hdc);
+		m_pobjframe->GetTextureDC(&hdc);
 		}
 	else
 		{
-		m_pobjframe->pdds->GetDC(&hdc);
+		m_pobjframe->GetTextureDC(&hdc);
 
 		HBRUSH hbrush = CreateSolidBrush(m_d.m_backcolor);
 		HBRUSH hbrushold = (HBRUSH)SelectObject(hdc, hbrush);
@@ -389,7 +389,7 @@ void Textbox::RenderText()
 		DrawText(hdc, m_d.sztext, lstrlen(m_d.sztext), &rcOut, alignment | DT_NOCLIP | DT_NOPREFIX | DT_WORDBREAK);
 		}
 
-	m_pobjframe->pdds->ReleaseDC(hdc);
+	m_pobjframe->ReleaseTextureDC(hdc);
 
 	ppin3d->m_pddsBackBuffer->Blt(&m_pobjframe->rc, m_pobjframe->pdds, NULL, DDBLT_WAIT, NULL);
 

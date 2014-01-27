@@ -3009,7 +3009,6 @@ INT_PTR CALLBACK ImageManagerProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             lvitem.iSubItem = 0;
             ListView_GetItem(GetDlgItem(hwndDlg, IDC_SOUNDLIST), &lvitem);
             Texture * const ppi = (Texture *)lvitem.lParam;
-            HDC hdcDD;
 
             RECT rcClient;
             GetWindowRect(pdis->hwndItem , &rcClient);
@@ -3035,9 +3034,10 @@ INT_PTR CALLBACK ImageManagerProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             const int x = (xsize - width) / 2;
             const int y = (ysize - height) / 2;
 
-            ppi->m_pdsBuffer->GetDC(&hdcDD);
+            HDC hdcDD;
+            ppi->GetTextureDC(&hdcDD);
             StretchBlt(pdis->hDC, x, y, width, height, hdcDD, 0, 0, ppi->m_width, ppi->m_height, SRCCOPY);
-            ppi->m_pdsBuffer->ReleaseDC(hdcDD);
+            ppi->ReleaseTextureDC(hdcDD);
          }
          else
          {

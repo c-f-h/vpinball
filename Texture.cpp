@@ -432,6 +432,21 @@ void Texture::CreateGDIVersion()
    m_pdsBuffer->ReleaseDC(hdcImage);
 }
 
+void Texture::GetTextureDC(HDC *pdc)
+{
+    EnsureHBitmap();
+    *pdc = CreateCompatibleDC(NULL);
+    m_oldHBM = (HBITMAP)SelectObject(*pdc, m_hbmGDIVersion);
+}
+
+void Texture::ReleaseTextureDC(HDC dc)
+{
+    SelectObject(dc, m_oldHBM);
+    DeleteDC(dc);
+}
+
+
+
 void Texture::CreateFromResource(const int id, int * const pwidth, int * const pheight)
 {
    HBITMAP hbm = (HBITMAP)LoadImage(g_hinst, MAKEINTRESOURCE(id), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);

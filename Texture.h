@@ -57,8 +57,11 @@ public:
    static BOOL SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const int width, const int height);
    static void Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwidth, const int shadheight);
 
-
    void Unset( const DWORD textureChannel );
+
+   // create/release a DC which contains a (read-only) copy of the texture; for editor use
+   void GetTextureDC(HDC *pdc);
+   void ReleaseTextureDC(HDC dc);
 
 private:
    bool LoadFromMemory(BYTE *data, DWORD size);
@@ -93,4 +96,6 @@ private:
    BaseTexture* m_pdsBufferBackdrop;
 
    static RenderDevice *renderDevice;
+
+   HBITMAP m_oldHBM;        // this is to cache the result of SelectObject()
 };
