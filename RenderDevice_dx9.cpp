@@ -1,5 +1,7 @@
 #include "RenderDevice_dx9.h"
 
+#pragma comment(lib, "d3d9.lib")        // TODO: put into build system
+
 
 static void ReportError(HRESULT hr, const char *file, int line)
 {
@@ -29,6 +31,7 @@ static unsigned int fvfToSize(DWORD fvf)
             return sizeof(Vertex3D_NoTex);
         default:
             assert(0 && "Unknown FVF type in fvfToSize");
+            return 0;
     }
 }
 
@@ -61,6 +64,12 @@ RenderDevice::RenderDevice()
     m_pBackBuffer = NULL;
 
     m_adapter = D3DADAPTER_DEFAULT;     // for now, always use the default adapter
+}
+
+RenderDevice::~RenderDevice()
+{
+   m_pD3DDevice->Release();
+   m_pD3D->Release();
 }
 
 bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
@@ -105,6 +114,7 @@ bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscree
 
     // Retrieve a reference to the back buffer.
     CHECKD3D(m_pD3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &m_pBackBuffer));
+    return true;
 }
 
 void RenderDevice::DestroyRenderer()
@@ -112,6 +122,18 @@ void RenderDevice::DestroyRenderer()
     SAFE_RELEASE(m_pBackBuffer);
     SAFE_RELEASE(m_pD3DDevice);
     SAFE_RELEASE(m_pD3D);
+}
+
+void RenderDevice::BeginScene()
+{
+   m_pD3DDevice->BeginScene();
+}
+
+void RenderDevice::EndScene()
+{
+   memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
+   memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
+   m_pD3DDevice->EndScene();
 }
 
 void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
@@ -142,6 +164,11 @@ void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
     tex->GetLevelDesc(0, &desc);
     *width = desc.Width;
     *height = desc.Height;
+}
+
+void RenderDevice::SetTexture(DWORD p1, BaseTexture* p2 )
+{
+   m_pD3DDevice->SetTexture(p1, p2);
 }
 
 void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
@@ -185,6 +212,20 @@ void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 	}
 }
 
+void RenderDevice::SetTextureStageState( DWORD p1, D3DTEXTURESTAGESTATETYPE p2, DWORD p3)
+{
+   if( (unsigned int)p2 < TEXTURE_STATE_CACHE_SIZE && p1<8)
+   {
+      if( textureStateCache[p1][p2]==p3 )
+      {
+         // texture stage state hasn't changed since last call of this function -> do nothing here
+         return;
+      }
+      textureStateCache[p1][p2]=p3;
+   }
+   m_pD3DDevice->SetTextureStageState(p1,p2,p3);
+}
+
 void RenderDevice::SetMaterial( const BaseMaterial * const _material )
 {
 #if !defined(DEBUG_XXX) && !defined(_CRTDBG_MAP_ALLOC)
@@ -215,6 +256,20 @@ void RenderDevice::SetRenderTarget( RenderTarget* surf)
 void RenderDevice::SetZBuffer( RenderTarget* surf)
 {
     CHECKD3D(m_pD3DDevice->SetDepthStencilSurface(surf));
+}
+
+void RenderDevice::SetRenderState( const RenderStates p1, const DWORD p2 )
+{
+   if ( (unsigned int)p1 < RENDER_STATE_CACHE_SIZE)
+   {
+      if( renderStateCache[p1]==p2 )
+      {
+         // this render state is already set -> don't do anything then
+         return;
+      }
+      renderStateCache[p1]=p2;
+   }
+   m_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)p1,p2);
 }
 
 void RenderDevice::SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode)
@@ -300,5 +355,25 @@ void RenderDevice::SetLight( DWORD p1, BaseLight* p2)
 void RenderDevice::GetLight( DWORD p1, BaseLight* p2 )
 {
    m_pD3DDevice->GetLight(p1,p2);
+}
+
+void RenderDevice::LightEnable( DWORD p1, BOOL p2)
+{
+   m_pD3DDevice->LightEnable(p1,p2);
+}
+
+void RenderDevice::Clear(DWORD numRects, D3DRECT* rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil)
+{
+   m_pD3DDevice->Clear(numRects, rects, flags, color, z, stencil);
+}
+
+void RenderDevice::SetViewport( ViewPort* p1)
+{
+   m_pD3DDevice->SetViewport((D3DVIEWPORT9*)p1);
+}
+
+void RenderDevice::GetViewport( ViewPort* p1)
+{
+   m_pD3DDevice->GetViewport((D3DVIEWPORT9*)p1);
 }
 
