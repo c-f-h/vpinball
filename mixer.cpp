@@ -211,7 +211,7 @@ void mixer_draw()
 
     static /* const */ Matrix3D WorldMatrix; //(1.0f,0.0f,0.0f,0.0f,0.0f,1.0f,0.0f,0.0f,0.0f,0.0f,1.0f,0.0f,0.0f,0.0f,0.0f,1.0f);
     WorldMatrix.SetIdentity();
-	g_pplayer->m_pin3d.m_pd3dDevice->SetTransform ( TRANSFORMSTATE_WORLD, (LPD3DMATRIX)&WorldMatrix ); 
+	g_pplayer->m_pin3d.m_pd3dDevice->SetTransform ( TRANSFORMSTATE_WORLD, (D3DMATRIX*)&WorldMatrix );
 
     const U32 alpha = (U32) ( fade * 222.2f );
 
