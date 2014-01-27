@@ -286,6 +286,7 @@ void Textbox::RenderStatic(const RenderDevice* pd3dDevice)
 	
 void Textbox::RenderMovers(const RenderDevice* pd3dDevice)
 	{
+#ifndef VPINBALL_DX9
 	Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
 	m_pobjframe = new ObjFrame();
@@ -315,10 +316,12 @@ void Textbox::RenderMovers(const RenderDevice* pd3dDevice)
 	// and this way I don't have to change my tables
 	size.int64 = size.int64 / 912 * ppin3d->m_dwRenderWidth;
 	m_pIFontPlay->put_Size(size);
+#endif
 	}
 
 void Textbox::RenderText()
 	{
+#ifndef VPINBALL_DX9
 	//DDBLTFX ddbfx;
 	Pin3D *const ppin3d = &g_pplayer->m_pin3d;
 
@@ -327,11 +330,11 @@ void Textbox::RenderText()
 	if (m_d.m_fTransparent)
 		{
 		m_pobjframe->pdds->BltFast(0, 0, ppin3d->m_pddsStatic, &m_pobjframe->rc, DDBLTFAST_WAIT);
-		m_pobjframe->GetTextureDC(&hdc);
+		m_pobjframe->pdds->GetDC(&hdc);
 		}
 	else
 		{
-		m_pobjframe->GetTextureDC(&hdc);
+		m_pobjframe->pdds->GetDC(&hdc);
 
 		HBRUSH hbrush = CreateSolidBrush(m_d.m_backcolor);
 		HBRUSH hbrushold = (HBRUSH)SelectObject(hdc, hbrush);
@@ -389,7 +392,7 @@ void Textbox::RenderText()
 		DrawText(hdc, m_d.sztext, lstrlen(m_d.sztext), &rcOut, alignment | DT_NOCLIP | DT_NOPREFIX | DT_WORDBREAK);
 		}
 
-	m_pobjframe->ReleaseTextureDC(hdc);
+	m_pobjframe->pdds->ReleaseDC(hdc);
 
 	ppin3d->m_pddsBackBuffer->Blt(&m_pobjframe->rc, m_pobjframe->pdds, NULL, DDBLT_WAIT, NULL);
 
@@ -397,6 +400,7 @@ void Textbox::RenderText()
 	pur->m_rcupdate = m_pobjframe->rc;
 	pur->m_fSeeThrough = fFalse;
 	g_pplayer->m_vupdaterect.AddElement(pur);
+#endif
 	}
 
 void Textbox::SetObjectPos()
