@@ -749,7 +749,7 @@ void DispReelAnimObject::Check3D()
 //
 ObjFrame *DispReelAnimObject::Draw3D(const RECT * const prc)
 {
-	if(!m_pDispReel || !m_pDispReel->m_pobjframe)  //rlc-problem6 end bad pointers, fix needed
+	if(!m_pDispReel)  //rlc-problem6 end bad pointers, fix needed
 		return NULL;
 
 	return m_pDispReel->m_pobjframe;

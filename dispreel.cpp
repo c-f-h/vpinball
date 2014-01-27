@@ -574,6 +574,9 @@ void DispReel::RenderStatic(const RenderDevice* pd3dDevice)
 
 void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 {
+#ifdef VPINBALL_DX9
+    m_pobjframe = NULL;
+#else
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
     // set any defaults for the game rendering
     m_timenextupdate = g_pplayer->m_time_msec + m_d.m_updateinterval;
@@ -971,6 +974,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 	
 	// allocate the memory for this object (returns with a BaseTexture*)
 	m_pobjframe->pdds = g_pvp->m_pdd.CreateOffscreenWithCustomTransparency(m_pobjframe->rc.right - m_pobjframe->rc.left, m_pobjframe->rc.bottom - m_pobjframe->rc.top, m_rgbImageTransparent);
+#endif
 }
 
 // This function is called during Check3D.  It basically check to see if the update
@@ -1079,6 +1083,7 @@ bool DispReel::RenderAnimation()
 //
 void DispReel::RenderText()
 {
+#ifndef VPINBALL_DX9
     // update the object frame (or in this case, draw it for the first time)
     UpdateObjFrame();
 
@@ -1101,6 +1106,7 @@ void DispReel::RenderText()
 														 DDBLTFAST_SRCCOLORKEY);
 		}
 	}
+#endif
 }
 
 
@@ -1850,6 +1856,7 @@ float DispReel::getBoxHeight() const
 //
 void DispReel::UpdateObjFrame()
 {
+#ifndef VPINBALL_DX9
 	if( !GetPTable()->GetEMReelsEnabled() ) return;
 
 	// is the background box transparent?
@@ -1925,4 +1932,5 @@ void DispReel::UpdateObjFrame()
         }
     }
     // objframe is now upto date
+#endif
 }
