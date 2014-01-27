@@ -777,7 +777,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	//Display_InitializeRenderStates();
 	//Display_InitializeTextureStates();
 
-	hr = m_pin3d.m_pd3dDevice->BeginScene();
+	m_pin3d.m_pd3dDevice->BeginScene();
 
 	const float realFOV = (ptable->m_FOV < 0.01f) ? 0.01f : ptable->m_FOV; // Can't have a real zero FOV, but this will look the same
 
@@ -913,7 +913,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	m_shadowoctree.CreateNextLevel();
 
-	hr = m_pin3d.m_pd3dDevice->EndScene();
+	m_pin3d.m_pd3dDevice->EndScene();
 
 	SendMessage(hwndProgress, PBM_SETPOS, 60, 0);
 	SetWindowText(hwndProgressName, "Rendering Table...");
@@ -1159,7 +1159,7 @@ void Player::ReOrder() // Reorder playfield objects (for AMD/ATI configurations)
 void Player::InitStatic(HWND hwndProgress)
 {
 	// Start the frame.
-	HRESULT hr = m_pin3d.m_pd3dDevice->BeginScene();
+	m_pin3d.m_pd3dDevice->BeginScene();
 
 	// Direct all renders to the "static" buffer.
 	m_pin3d.SetRenderTarget(m_pin3d.m_pddsStatic, m_pin3d.m_pddsStaticZ);
@@ -1212,12 +1212,12 @@ void Player::InitStatic(HWND hwndProgress)
 			}
 		}
 	// Finish the frame.
-	hr = m_pin3d.m_pd3dDevice->EndScene();
+	m_pin3d.m_pd3dDevice->EndScene();
 }
 
 void Player::InitAnimations(HWND hwndProgress)
 {
-	HRESULT hr = m_pin3d.m_pd3dDevice->BeginScene();
+	m_pin3d.m_pd3dDevice->BeginScene();
 
 	// Direct all renders to the back buffer.
    m_pin3d.SetRenderTarget(m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsZBuffer);
@@ -1256,7 +1256,7 @@ void Player::InitAnimations(HWND hwndProgress)
 
 	m_pin3d.EnableLightMap(fFalse, -1);
 
-	hr = m_pin3d.m_pd3dDevice->EndScene();
+	m_pin3d.m_pd3dDevice->EndScene();
 
 	// Copy the "static" buffer to the back buffer.
 	m_pin3d.m_pd3dDevice->CopySurface( m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsStatic );
@@ -2861,7 +2861,7 @@ void Player::DrawBallShadow(Ball * const pball)
    Vertex3D_NoTex2 * const rgv3DShadow = pball->m_rgv3DShadow;
 
    if (!pball->fFrozen && rgv3DShadow[0].x <= m_ptable->m_right && rgv3DShadow[2].y >= m_ptable->m_top)
-      m_pin3d.m_pd3dDevice->renderPrimitive(D3DPT_TRIANGLEFAN, pball->vertexBuffer, 12, 4, (LPWORD)rgi0123, 4, 0 );
+      m_pin3d.m_pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, pball->vertexBuffer, 12, 4);
 
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 }
@@ -2963,7 +2963,7 @@ void Player::DrawBallLogo(Ball * const pball)
    {
       pball->m_pinFront->CreateAlphaChannel();
       pball->m_pinFront->Set( ePictureTexture );
-      m_pin3d.m_pd3dDevice->renderPrimitive(D3DPT_TRIANGLEFAN, pball->vertexBuffer, 4, 4, (LPWORD)rgi0123, 4, 0);
+      m_pin3d.m_pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, pball->vertexBuffer, 4, 4);
    }
 
    if (pball->m_pinBack)
@@ -2972,7 +2972,7 @@ void Player::DrawBallLogo(Ball * const pball)
       pball->m_pinBack->CreateAlphaChannel();
       pball->m_pinBack->Set( ePictureTexture );
 
-      m_pin3d.m_pd3dDevice->renderPrimitive(D3DPT_TRIANGLEFAN, pball->vertexBuffer, 8, 4, (LPWORD)rgi0123, 4, 0);
+      m_pin3d.m_pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, pball->vertexBuffer, 8, 4);
    }
 
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
@@ -3111,7 +3111,7 @@ void Player::DrawBalls()
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, factor);
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
 
-            m_pin3d.m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, pball->vertexBuffer, 16, 4, (LPWORD)rgi0123, 4, 0 );
+            m_pin3d.m_pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, pball->vertexBuffer, 16, 4);
 
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
@@ -3126,7 +3126,7 @@ void Player::DrawBalls()
         }
 
         // normal ball
-        m_pin3d.m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, pball->vertexBuffer, 0, 4, (LPWORD)rgi0123, 4, 0 );
+        m_pin3d.m_pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, pball->vertexBuffer, 0, 4);
 
         if(pball->m_disableLighting)
         {
@@ -3235,7 +3235,7 @@ void Player::DrawBalls()
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_DESTALPHA);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
 
-                m_pin3d.m_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_NOLIGHTING_VERTEX, rgv3D_all, num_rgv3D, (LPWORD)rgi_all, num_rgv3D, 0);
+                m_pin3d.m_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_NOLIGHTING_VERTEX, rgv3D_all, num_rgv3D, (LPWORD)rgi_all, num_rgv3D);
 
                 m_pin3d.ExpandExtents/*Plus*/(&pball->m_rcTrail, rgv3D_all, NULL, NULL, num_rgv3D, fFalse);
 

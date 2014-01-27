@@ -260,7 +260,6 @@ void LightSeq::RenderStatic(const RenderDevice* pd3dDevice)
 
 void LightSeq::RenderMovers(const RenderDevice* _pd3dDevice)
 {
-   RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
 	// zero pointers as a safe guard
 	m_pcollection = NULL;
 	m_pgridData	= NULL;

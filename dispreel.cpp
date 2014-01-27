@@ -545,7 +545,7 @@ void DispReel::RenderSetup(const RenderDevice* _pd3dDevice)
 
    if ( vertexBuffer==NULL )
    {
-      pd3dDevice->createVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &vertexBuffer );
+      pd3dDevice->CreateVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &vertexBuffer );
       NumVideoBytes += 4*sizeof(Vertex3D_NoTex2);
    }
 }
@@ -756,7 +756,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 			
 			{
 			   BaseMaterial mtrl;
-			   pd3dDevice->getMaterial(&mtrl);
+			   pd3dDevice->GetMaterial(&mtrl);
             Material tmp;
             tmp.setBaseMaterial( mtrl );
 			   SetDiffuseFromMaterial(rgv3D, 4, &tmp);
@@ -799,7 +799,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
             vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
             memcpy( buf, rgv3D, 4*sizeof(Vertex3D_NoTex2));
             vertexBuffer->unlock();
-            pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4, (LPWORD)rgi0123, 4, 0 );
+            pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4);
 
 				m_vreelframe.ElementAt(i)->pdds = g_pvp->m_pdd.CreateOffscreenWithCustomTransparency(/*m_reeldigitwidth*/m_renderwidth, /*m_reeldigitheight*/m_renderheight, m_rgbImageTransparent);
 				m_vreelframe.ElementAt(i)->pdds->BltFast(0, 0, ppin3d->m_pddsBackBuffer, &rectSrc, 0);

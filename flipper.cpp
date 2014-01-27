@@ -647,15 +647,15 @@ void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, const float angle, con
 
     SetNormal(rgv3D, rgi0123, 4, NULL, NULL, 0);
     // Draw top.
-    pd3dDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, rgv3D, 4, 0);
+    pd3dDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, rgv3D, 4);
 
     SetNormal(rgv3D, rgiFlipper1, 4, NULL, NULL, 0);
     // Draw front side wall of flipper (flipper and rubber).
-    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiFlipper1, 4, 0);
+    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiFlipper1, 4);
 
     SetNormal(rgv3D, rgiFlipper2, 4, NULL, NULL, 0);
     // Draw back side wall.
-    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiFlipper2, 4, 0);
+    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiFlipper2, 4);
 
     // Base circle
     for (int l=0;l<16;l++)
@@ -684,7 +684,7 @@ void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, const float angle, con
             rgi[l*3+2] = l+2;
             SetNormal(rgv3D, rgi+l*3, 3, NULL, NULL, 0);
         }
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, rgv3D,16, rgi,3*14, 0); //!! fan instead
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, rgv3D,16, rgi,3*14); //!! fan instead
     }
 
     for (int l=0;l<14;l++)
@@ -702,7 +702,7 @@ void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, const float angle, con
         SetNormal(rgv3D, rgiNormal, 3, NULL, rgi, 2);
         SetNormal(rgv3D, &rgiNormal[3], 3, NULL, &rgi[2], 2);
         // Draw vertical cylinders at large end of flipper.
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, rgv3D, 32,(LPWORD)rgi, 4, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, rgv3D, 32,(LPWORD)rgi, 4);
     }
 
     // End circle.
@@ -732,7 +732,7 @@ void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, const float angle, con
             rgi[l*3+2] = l+2;
             SetNormal(rgv3D, rgi+l*3, 3, NULL, NULL, 0);
         }
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, rgv3D,16, rgi,3*14, 0); //!! fan instead
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, rgv3D,16, rgi,3*14); //!! fan instead
     }
 
     for (int l=0;l<14;l++)
@@ -750,7 +750,7 @@ void Flipper::RenderAtThickness(RenderDevice* pd3dDevice, const float angle, con
         SetNormal(rgv3D, rgiNormal, 3, NULL, rgi, 2);
         SetNormal(rgv3D, &rgiNormal[3], 3, NULL, &rgi[2], 2);
         // Draw vertical cylinders at small end.
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 32,(LPWORD)rgi, 4, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 32,(LPWORD)rgi, 4);
     }
 }
 

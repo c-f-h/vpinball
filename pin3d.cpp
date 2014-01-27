@@ -315,11 +315,7 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     vp.dwHeight=m_dwRenderHeight;
     vp.dvMinZ=0.0f;
     vp.dvMaxZ=1.0f;
-    if( FAILED(m_pd3dDevice->SetViewport( &vp ) ) )
-    {
-        ShowError("Could not set viewport.");
-        return false; 
-    }
+    m_pd3dDevice->SetViewport( &vp );
 
     m_pddsBackBuffer = m_pd3dDevice->GetBackBuffer();
 
@@ -426,7 +422,7 @@ void Pin3D::InitRenderState()
 	//init background
 	if( !backgroundVBuffer )
 	{
-		m_pd3dDevice->createVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &backgroundVBuffer);
+		m_pd3dDevice->CreateVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &backgroundVBuffer);
 		NumVideoBytes += 4*sizeof(Vertex3D_NoTex2); //!! never cleared up again here
 	}
 	PinTable * const ptable = g_pplayer->m_ptable;
@@ -485,7 +481,7 @@ void Pin3D::DrawBackground()
 
 		SetTexture(pin);
 
-		m_pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, backgroundVBuffer, 0, 4, (LPWORD)rgi0123, 4, 0 );
+		m_pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, backgroundVBuffer, 0, 4);
 		m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 	}
 	else
@@ -508,7 +504,7 @@ void Pin3D::InitLights()
 	const float cs = cosf(m_inclination + (float)(M_PI - (M_PI*3.0/16.0)));
 
 	Matrix3D matWorld;
-	m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_WORLD, &matWorld );
+	m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD, &matWorld );
 
 	for(unsigned int i = 0; i < MAX_LIGHT_SOURCES; ++i)
     {
@@ -659,7 +655,7 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	SetFieldOfView(FOV, aspect, m_rznear, m_rzfar);
 //    Matrix3D viewMat;
 //    LookAt(viewMat, D3DVECTOR(0.0f, 0.0f, 0.0f), D3DVECTOR(0.0f, 0.0f, 1.0f), D3DVECTOR(0.0f, -1.0f, 0.0f));
-//    m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, &viewMat);
+//    m_pd3dDevice->SetTransform(TRANSFORMSTATE_VIEW, &viewMat);
 
 	// skew the coordinate system from kartesian to non kartesian.
 	skewX = -sinf(m_rotation)*skew;
@@ -680,9 +676,9 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	matTrans._41 = skewtan*skewX;
 	matTrans._31 = skewX;
 	Matrix3D matTemp;
-	m_pd3dDevice->GetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 	matTemp.Multiply(matTrans, matTemp);
-	m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 
 	Scale( m_scalex != 0.0f ? m_scalex : 1.0f, m_scaley != 0.0f ? m_scaley : 1.0f, 1.0f );
 	Rotate( 0, 0, m_rotation );
@@ -720,7 +716,7 @@ void Pin3D::InitPlayfieldGraphics()
 	numVerts = (TRIANGULATE_BACK+1)*(TRIANGULATE_BACK+1);
 	if( !tableVBuffer )
 	{
-		m_pd3dDevice->createVertexBuffer( numVerts+7, 0, MY_D3DFVF_VERTEX, &tableVBuffer); //+7 verts for second rendering step
+		m_pd3dDevice->CreateVertexBuffer( numVerts+7, 0, MY_D3DFVF_VERTEX, &tableVBuffer); //+7 verts for second rendering step
 		NumVideoBytes += numVerts*sizeof(Vertex3D); 
 	}
 
@@ -829,11 +825,11 @@ void Pin3D::RenderPlayfieldGraphics()
 	}
 	m_pd3dDevice->SetMaterial(mtrl);
 
-	m_pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, tableVBuffer, 0, numVerts, playfieldPolyIndices, numPolys, 0 );
+	m_pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, tableVBuffer, 0, numVerts, playfieldPolyIndices, numPolys);
 	EnableLightMap(fFalse, -1);
 
 	SetTexture(NULL);
-	m_pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, tableVBuffer, numVerts, 7, (LPWORD)rgiPin3D1, 4, 0 );
+	m_pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, tableVBuffer, numVerts, 7, (LPWORD)rgiPin3D1, 4);
 }
 
 const int rgfilterwindow[7][7] =
@@ -1156,14 +1152,14 @@ void Pin3D::Identity()
 	matTrans._31 = matTrans._32 = matTrans._34 = 0.0f;
 	matTrans._41 = matTrans._42 = matTrans._43 = 0.0f;
 
-	m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matTrans);
+	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTrans);
 }
 
 void Pin3D::Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z)
 {
 	Matrix3D matTemp, matRotateX, matRotateY, matRotateZ;
 
-	m_pd3dDevice->GetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 
 	matRotateX.RotateXMatrix(x);
 	matTemp.Multiply(matRotateX, matTemp);
@@ -1172,15 +1168,15 @@ void Pin3D::Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z)
 	matRotateZ.RotateZMatrix(z);
 	matTemp.Multiply(matRotateZ, matTemp);        // matTemp = rotZ * rotY * rotX * matWorld
 
-	m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 }
 
 void Pin3D::Scale(const float x, const float y, const float z)
 {
 	Matrix3D matTemp;
-	m_pd3dDevice->GetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 	matTemp.Scale( x, y, z );
-	m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 }
 
 void Pin3D::Translate(const float x, const float y, const float z)
@@ -1193,9 +1189,9 @@ void Pin3D::Translate(const float x, const float y, const float z)
 	matTrans._41 = x;
 	matTrans._42 = y;
 	matTrans._43 = z;
-	m_pd3dDevice->GetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 	matTemp.Multiply(matTrans, matTemp);
-	m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 }
 
 Vertex3Ds Pin3D::Unproject( Vertex3Ds *point)
@@ -1212,9 +1208,9 @@ Vertex3Ds Pin3D::Unproject( Vertex3Ds *point)
 //    D3DXVec3TransformCoord(pout, &vec, &m3);
 //    return pout;
    Matrix3D matProj, matView, matWorld,m1,m2;
-   g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_PROJECTION, &matProj );
-   g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_VIEW, &matView );
-   g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_WORLD, &matWorld );
+   g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( TRANSFORMSTATE_PROJECTION, &matProj );
+   g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( TRANSFORMSTATE_VIEW, &matView );
+   g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD, &matWorld );
 //    matWorld.Multiply( matView, m1);
 //    m1.Multiply(matProj,m2);
    matProj.Multiply(matView,m1);    // m1 = matView * matProj
@@ -1263,22 +1259,22 @@ void Pin3D::SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect, const 
 
 	//mat._41 = 200;
 
-	m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, &mat);
+	m_pd3dDevice->SetTransform(TRANSFORMSTATE_PROJECTION, &mat);
 
 	mat._11 = mat._22 = mat._44 = 1.0f;
 	mat._12 = mat._13 = mat._14 = mat._41 = 0.0f;
 	mat._21 = mat._23 = mat._24 = mat._42 = 0.0f;
 	mat._31 = mat._32 = mat._34 = mat._43 = 0.0f;
 	mat._33 = -1.0f;
-	m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, &mat);
+	m_pd3dDevice->SetTransform(TRANSFORMSTATE_VIEW, &mat);
 }
 
 void Pin3D::CacheTransform()
 {
 	Matrix3D matWorld, matView, matProj;
-	m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_WORLD,      &matWorld );
-	m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_VIEW,       &matView );
-	m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_PROJECTION, &matProj );
+	m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD,      &matWorld );
+	m_pd3dDevice->GetTransform( TRANSFORMSTATE_VIEW,       &matView );
+	m_pd3dDevice->GetTransform( TRANSFORMSTATE_PROJECTION, &matProj );
 	matProj.Multiply(matView, matView);             // matView = matView * matProj
 	matView.Multiply(matWorld, m_matrixTotal);      // total = matWorld * matView
 }
@@ -1456,7 +1452,7 @@ void PinProjection::Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT
 {
 	Matrix3D /*matTemp,*/ matRotateX, matRotateY, matRotateZ;
 
-	//m_pd3dDevice->GetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	//m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 
 	matRotateX.RotateXMatrix(x);
 	m_matWorld.Multiply(matRotateX, m_matWorld);
@@ -1465,14 +1461,14 @@ void PinProjection::Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT
 	matRotateZ.RotateZMatrix(z);
 	m_matWorld.Multiply(matRotateZ, m_matWorld);        // matWorld = rotZ * rotY * rotX * origMatWorld
 
-	//m_pd3dDevice->SetTransform( D3DTRANSFORMSTATE_WORLD, &matTemp);
+	//m_pd3dDevice->SetTransform( TRANSFORMSTATE_WORLD, &matTemp);
 }
 
 void PinProjection::Translate(const float x, const float y, const float z)
 {
 	Matrix3D matTrans;
 
-	//m_pd3dDevice->GetTransform(D3DTRANSFORMSTATE_WORLD, &matTemp);
+	//m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 
 	matTrans._11 = matTrans._22 = matTrans._33 = matTrans._44 = 1.0f;
 	matTrans._12 = matTrans._13 = matTrans._14 = 0.0f;
@@ -1484,7 +1480,7 @@ void PinProjection::Translate(const float x, const float y, const float z)
 	matTrans._43 = z;
 	m_matWorld.Multiply(matTrans, m_matWorld);
 
-	//m_pd3dDevice->SetTransform( D3DTRANSFORMSTATE_WORLD, &matTemp);
+	//m_pd3dDevice->SetTransform( TRANSFORMSTATE_WORLD, &matTemp);
 }
 
 void PinProjection::Scale(const float x, const float y, const float z)
@@ -1595,14 +1591,14 @@ void PinProjection::SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect
 	m_matProj._34 = 1.0f;
 	m_matProj._43 = -Q*(float)rznear;
 
-	//m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_PROJECTION, &mat);
+	//m_pd3dDevice->SetTransform(TRANSFORMSTATE_PROJECTION, &mat);
 
 	m_matView._11 = m_matView._22 = m_matView._44 = 1.0f;
 	m_matView._12 = m_matView._13 = m_matView._14 = m_matView._41 = 0.0f;
 	m_matView._21 = m_matView._23 = m_matView._24 = m_matView._42 = 0.0f;
 	m_matView._31 = m_matView._32 = m_matView._34 = m_matView._43 = 0.0f;
 	m_matView._33 = -1.0f;
-	//m_pd3dDevice->SetTransform(D3DTRANSFORMSTATE_VIEW, &mat);
+	//m_pd3dDevice->SetTransform(TRANSFORMSTATE_VIEW, &mat);
 
 	m_matWorld.SetIdentity();
 }
@@ -1611,9 +1607,9 @@ void PinProjection::CacheTransform()
 {
 	//Matrix3D matWorld, matView, matProj;
 	Matrix3D matT;
-	//m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_WORLD,      &matWorld );
-	//m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_VIEW,       &matView );
-	//m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_PROJECTION, &matProj );
+	//m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD,      &matWorld );
+	//m_pd3dDevice->GetTransform( TRANSFORMSTATE_VIEW,       &matView );
+	//m_pd3dDevice->GetTransform( TRANSFORMSTATE_PROJECTION, &matProj );
 	m_matProj.Multiply(m_matView, matT);        // matT = matView * matProj
 	matT.Multiply(m_matWorld, m_matrixTotal);   // total = matWorld * matT
 }

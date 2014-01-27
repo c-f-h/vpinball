@@ -203,14 +203,14 @@ void mixer_draw()
 	D3DMATRIX			RestoreWorldMatrix;
 
 	// Save the current transformation state.
-	g_pplayer->m_pin3d.m_pd3dDevice->GetTransform ( D3DTRANSFORMSTATE_WORLD, &RestoreWorldMatrix ); 
+	g_pplayer->m_pin3d.m_pd3dDevice->GetTransform ( TRANSFORMSTATE_WORLD, &RestoreWorldMatrix ); 
 	// Save the current render state.
 	//Display_GetRenderState(g_pplayer->m_pin3d.m_pd3dDevice, &(RestoreRenderState));
 	// Save the current texture state.
 	//Display_GetTextureState (g_pplayer->m_pin3d.m_pd3dDevice, &(RestoreTextureState));
 
     static const D3DMATRIX WorldMatrix(1.0f,0.0f,0.0f,0.0f,0.0f,1.0f,0.0f,0.0f,0.0f,0.0f,1.0f,0.0f,0.0f,0.0f,0.0f,1.0f);
-	g_pplayer->m_pin3d.m_pd3dDevice->SetTransform ( D3DTRANSFORMSTATE_WORLD, (LPD3DMATRIX)&WorldMatrix ); 
+	g_pplayer->m_pin3d.m_pd3dDevice->SetTransform ( TRANSFORMSTATE_WORLD, (LPD3DMATRIX)&WorldMatrix ); 
 
     const U32 alpha = (U32) ( fade * 222.2f );
 
@@ -291,7 +291,7 @@ void mixer_draw()
 	// Restore the texture state.
 	//Display_SetTextureState(g_pplayer->m_pin3d.m_pd3dDevice, &(RestoreTextureState));
 	// Restore the transformation state.
-	g_pplayer->m_pin3d.m_pd3dDevice->SetTransform ( D3DTRANSFORMSTATE_WORLD, &RestoreWorldMatrix ); 
+	g_pplayer->m_pin3d.m_pd3dDevice->SetTransform ( TRANSFORMSTATE_WORLD, &RestoreWorldMatrix ); 
 }
 
 // Flags that the region behind the mixer volume should be refreshed.

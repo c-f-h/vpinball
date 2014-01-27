@@ -470,7 +470,7 @@ void Trigger::RenderSetup(const RenderDevice* _pd3dDevice)
 
    if ( vertexBuffer==NULL )
    {
-      ppin3d->m_pd3dDevice->createVertexBuffer( 40, 0, MY_D3DFVF_VERTEX, &vertexBuffer );
+      ppin3d->m_pd3dDevice->CreateVertexBuffer( 40, 0, MY_D3DFVF_VERTEX, &vertexBuffer );
       NumVideoBytes += 40*sizeof(Vertex3D);
    }
    Vertex3D *buf;
@@ -507,7 +507,7 @@ void Trigger::RenderStatic(const RenderDevice* _pd3dDevice)
             rgtriggerface[l][4]
          };
          const int cpt = (rgtriggerface[l][4] == 0xFFFF) ? 4 : 5;
-         pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer, offset, 10, (LPWORD)rgi, cpt, 0 );
+         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, offset, 10, (LPWORD)rgi, cpt);
       }
    }
 

@@ -299,7 +299,7 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
 
         SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32);
 
         int t=0;
         k=0;
@@ -320,7 +320,7 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
             memcpy( &verts[ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
             ofs+=8;
         }
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32);
     }
 
     if (m_d.m_fSideVisible)
@@ -352,7 +352,7 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         {
             SetNormal(moverVertices[i], &normalIndices[t], 3, NULL, &indices[k], 2);
             SetNormal(moverVertices[i], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,moverVertices[i],64,(LPWORD)&indices[k], 4, 0);
+            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,moverVertices[i],64,(LPWORD)&indices[k], 4);
         }
     }
 
@@ -394,7 +394,7 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
 
         SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32);
 
         int t=0;
         k=0;
@@ -415,7 +415,7 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
             memcpy( &verts[ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
             ofs+=8;
         }
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32);
 
         // Reset all the texture coordinates
         if (i == 1)
@@ -594,7 +594,7 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
 
       pd3dDevice->SetMaterial(staticMaterial);
 
-      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, staticVertices, 32, (LPWORD)rgiBumperStatic, 32, 0);
+      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, staticVertices, 32, (LPWORD)rgiBumperStatic, 32);
       int t=0;
       int k=0;
       Vertex3D verts[8*32];
@@ -627,7 +627,7 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
          memcpy( &verts[ofs+7], &staticVertices[32+indices[k+3]], sizeof(Vertex3D));
          ofs+=8;
       }
-      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32, 0);
+      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32);
 
       pd3dDevice->SetRenderState( RenderDevice::ALPHABLENDENABLE, FALSE);
 

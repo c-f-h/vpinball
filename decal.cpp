@@ -525,7 +525,7 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
       if ( m_fBackglass && GetPTable()->GetDecalsEnabled() )
          vertexType = MY_D3DTRANSFORMED_NOTEX2_VERTEX;
 
-	  g_pplayer->m_pin3d.m_pd3dDevice->createVertexBuffer( 4, 0, vertexType, &vertexBuffer );
+	  g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 4, 0, vertexType, &vertexBuffer );
       NumVideoBytes += 4*sizeof(Vertex3D_NoTex2);
    }
    Vertex3D_NoTex2 *buf;
@@ -588,12 +588,8 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
    }
    if( !m_fBackglass || GetPTable()->GetDecalsEnabled())
    {
-      pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4, (LPWORD)rgi0123, 4, 0 );
+      pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4 );
    }
-//    else if( GetPTable()->GetDecalsEnabled() )
-//    {
-//       pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4, (LPWORD)rgi0123, 4, 0 );
-//    }
 
    // Set the texture state.
    pd3dDevice->SetTexture(ePictureTexture, NULL);

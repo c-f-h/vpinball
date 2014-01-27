@@ -804,7 +804,7 @@ void Primitive::UpdateMesh()
    if ( m_d.sphereMapping )
    {
       Matrix3D matWorld;
-      g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( D3DTRANSFORMSTATE_WORLD, &matWorld );
+      g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD, &matWorld );
       matWorld.Multiply(rotMatrix, rotMatrix);
    }
    // could be optimized, if not everything is drawn.
@@ -887,9 +887,9 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       }
       
 	  if( m_d.use3DMesh )
-         pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, indexList, indexListSize, 0 );
+         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, indexList, indexListSize);
       else
-         pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, builtin_indices, m_d.m_DrawTexturesInside ? 24*m_d.m_Sides : 12*m_d.m_Sides, 0 );
+         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, builtin_indices, m_d.m_DrawTexturesInside ? 24*m_d.m_Sides : 12*m_d.m_Sides);
 
       if ( !m_d.useLighting )
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
@@ -927,7 +927,7 @@ void Primitive::RenderSetup( const RenderDevice* _pd3dDevice )
 
    if( !vertexBuffer )
    {
-      pd3dDevice->createVertexBuffer( numVertices, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
+      pd3dDevice->CreateVertexBuffer( numVertices, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
       NumVideoBytes += numVertices*sizeof(Vertex3D_NoTex2); //!! never cleared up again here
    }
 

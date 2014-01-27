@@ -55,11 +55,7 @@ inline void Display_DrawSprite( RenderDevice* Direct3DDevice, const float x, con
 	Direct3DDevice->SetTexture ( 0, Texture );
 
     // Draw the quad.
-    //Direct3DDevice->DrawPrimitive ( D3DPT_TRIANGLESTRIP, MY_D3DTRANSFORMED_NOTEX2_VERTEX, Vertices, 4, 0 ); //!!!! retest
-
-	Direct3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DTRANSFORMED_NOTEX2_VERTEX,
-											  Vertices, 4,
-											  (LPWORD)rgi0123, 4, NULL);
+	Direct3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DTRANSFORMED_NOTEX2_VERTEX, Vertices, 4);
 }
 
 #endif

@@ -939,13 +939,13 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
 
    if(!m_d.m_fEnableLighting)
    {
-      pd3dDevice->createVertexBuffer( numVertices*4, 0, MY_D3DFVF_NOLIGHTING_VERTEX, &sideVBuffer );
+      pd3dDevice->CreateVertexBuffer( numVertices*4, 0, MY_D3DFVF_NOLIGHTING_VERTEX, &sideVBuffer );
       NumVideoBytes += numVertices*4*sizeof(Vertex3D_NoLighting);
       vertsNotLit = new Vertex3D_NoLighting[numVertices*4];
    }
    else
    {
-      pd3dDevice->createVertexBuffer( numVertices*4, 0, MY_D3DFVF_VERTEX, &sideVBuffer );
+      pd3dDevice->CreateVertexBuffer( numVertices*4, 0, MY_D3DFVF_VERTEX, &sideVBuffer );
       NumVideoBytes += numVertices*4*sizeof(Vertex3D);
       verts = new Vertex3D[numVertices*4];
    }
@@ -1148,18 +1148,18 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
       
 	  if(!m_d.m_fEnableLighting)
       {
-         pd3dDevice->createVertexBuffer( numPolys*3, 0, MY_D3DFVF_NOLIGHTING_VERTEX, &topVBuffer[0] );
+         pd3dDevice->CreateVertexBuffer( numPolys*3, 0, MY_D3DFVF_NOLIGHTING_VERTEX, &topVBuffer[0] );
          NumVideoBytes += numPolys*3*sizeof(Vertex3D_NoLighting);
-         pd3dDevice->createVertexBuffer( numPolys*3, 0, MY_D3DFVF_NOLIGHTING_VERTEX, &topVBuffer[1] );
+         pd3dDevice->CreateVertexBuffer( numPolys*3, 0, MY_D3DFVF_NOLIGHTING_VERTEX, &topVBuffer[1] );
          NumVideoBytes += numPolys*3*sizeof(Vertex3D_NoLighting);
          vertsTopNotLit[0] = new Vertex3D_NoLighting[numPolys*3];
          vertsTopNotLit[1] = new Vertex3D_NoLighting[numPolys*3];
       }
       else
       {
-         pd3dDevice->createVertexBuffer( numPolys*3, 0, MY_D3DFVF_VERTEX, &topVBuffer[0] );
+         pd3dDevice->CreateVertexBuffer( numPolys*3, 0, MY_D3DFVF_VERTEX, &topVBuffer[0] );
          NumVideoBytes += numPolys*3*sizeof(Vertex3D);
-         pd3dDevice->createVertexBuffer( numPolys*3, 0, MY_D3DFVF_VERTEX, &topVBuffer[1] );
+         pd3dDevice->CreateVertexBuffer( numPolys*3, 0, MY_D3DFVF_VERTEX, &topVBuffer[1] );
          NumVideoBytes += numPolys*3*sizeof(Vertex3D);
          vertsTop[0] = new Vertex3D[numPolys*3];
          vertsTop[1] = new Vertex3D[numPolys*3];
@@ -1367,7 +1367,7 @@ void Surface::RenderSetup(const RenderDevice* _pd3dDevice)
    {
       if( !slingshotVBuffer )
       {
-         pd3dDevice->createVertexBuffer(m_vlinesling.Size()*24, 0, MY_D3DFVF_VERTEX, &slingshotVBuffer);
+         pd3dDevice->CreateVertexBuffer(m_vlinesling.Size()*24, 0, MY_D3DFVF_VERTEX, &slingshotVBuffer);
          NumVideoBytes += m_vlinesling.Size()*24*sizeof(Vertex3D);
       }
       slingShotMaterial.setColor( 1.0f, m_d.m_slingshotColor );
@@ -1469,7 +1469,7 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
 
       pd3dDevice->SetMaterial(slingShotMaterial);
 
-      pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, slingshotVBuffer, i*24, 24, (LPWORD)rgisling, 36, 0 );
+      pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, slingshotVBuffer, i*24, 24, (LPWORD)rgisling, 36);
    }
 }
 
@@ -1532,7 +1532,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
             rgi[offset+5] = offset2+3;
         }
 
-        pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, sideVBuffer, 0, numVertices*4, (LPWORD)rgi, numVertices*6, 0);
+        pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, sideVBuffer, 0, numVertices*4, (LPWORD)rgi, numVertices*6);
 
         delete [] rgi;
     }
@@ -1604,7 +1604,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
             for (int i=0;i<numPolys*3;i++)
                 rgi[i] = i;
 
-            pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, !fDrop ? topVBuffer[0] : topVBuffer[1], 0, numPolys*3, (LPWORD)rgi, numPolys*3, 0);
+            pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, !fDrop ? topVBuffer[0] : topVBuffer[1], 0, numPolys*3, (LPWORD)rgi, numPolys*3);
 
             delete [] rgi;
         }

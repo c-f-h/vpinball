@@ -1,110 +1,18 @@
-#include <d3d9.h>
-
-typedef IDirect3dTexture9 BaseTexture;
-typedef D3DVIEWPORT9 ViewPort;
-typedef IDirect3DSurface9 RenderTarget;
+#include "RenderDevice_dx9.h"
 
 
-// adds simple setters and getters on top of D3DLIGHT9, for compatibility
-struct BaseLight : public D3DLIGHT9
+static void ReportError(HRESULT hr, const char *file, int line)
 {
-    BaseLight()
-    {
-		ZeroMemory(this, sizeof(*this));
-    }
-
-    D3DLIGHTTYPE getType()          { return Type; }
-    void setType(D3DLIGHTTYPE lt)   { Type = lt; }
-
-    const D3DCOLORVALUE& getDiffuse()      { return Diffuse; }
-    const D3DCOLORVALUE& getSpecular()     { return Specular; }
-    const D3DCOLORVALUE& getAmbient()      { return Ambient; }
-
-    void setDiffuse(float r, float g, float b)
-    {
-        Diffuse.r = r;
-        Diffuse.g = g;
-        Diffuse.b = b;
-    }
-    void setSpecular(float r, float g, float b)
-    {
-        Specular.r = r;
-        Specular.g = g;
-        Specular.b = b;
-    }
-    void setAmbient(float r, float g, float b)
-    {
-        Ambient.r = r;
-        Ambient.g = g;
-        Ambient.b = b;
-    }
-    void setPosition(float x, float y, float z)
-    {
-        Position.x = x;
-        Position.y = y;
-        Position.z = z;
-    }
-    void setDirection(float x, float y, float z)
-    {
-        Direction.x = x;
-        Direction.y = y;
-        Direction.z = z;
-    }
-    void setRange(float r)          { Range = r; }
-    void setFalloff(float r)        { Falloff = r; }
-    void setAttenuation0(float r)   { Attenuation0 = r; }
-    void setAttenuation1(float r)   { Attenuation1 = r; }
-    void setAttenuation2(float r)   { Attenuation2 = r; }
-    void setTheta(float r)          { Theta = r; }
-    void setPhi(float r)            { Phi = r; }
-};
-
-
-
-class RenderDevice
-{
-public:
-   typedef enum RenderStates
-   {
-      ALPHABLENDENABLE   = D3DRENDERSTATE_ALPHABLENDENABLE,
-      ALPHATESTENABLE    = D3DRENDERSTATE_ALPHATESTENABLE,
-      ALPHAREF           = D3DRENDERSTATE_ALPHAREF,
-      ALPHAFUNC          = D3DRENDERSTATE_ALPHAFUNC,
-      CLIPPING           = D3DRENDERSTATE_CLIPPING,
-      CLIPPLANEENABLE    = D3DRENDERSTATE_CLIPPLANEENABLE,
-      COLORKEYENABLE     = D3DRENDERSTATE_COLORKEYENABLE,
-      CULLMODE           = D3DRENDERSTATE_CULLMODE,
-      DITHERENABLE       = D3DRENDERSTATE_DITHERENABLE,
-      DESTBLEND          = D3DRENDERSTATE_DESTBLEND,
-      LIGHTING           = D3DRENDERSTATE_LIGHTING,
-      SPECULARENABLE     = D3DRENDERSTATE_SPECULARENABLE,
-      SRCBLEND           = D3DRENDERSTATE_SRCBLEND,
-      TEXTUREPERSPECTIVE = D3DRENDERSTATE_TEXTUREPERSPECTIVE,
-      ZENABLE            = D3DRENDERSTATE_ZENABLE,
-      ZFUNC              = D3DRENDERSTATE_ZFUNC,
-      ZWRITEENABLE       = D3DRENDERSTATE_ZWRITEENABLE,
-	  NORMALIZENORMALS   = D3DRENDERSTATE_NORMALIZENORMALS,
-      TEXTUREFACTOR      = D3DRENDERSTATE_TEXTUREFACTOR
-   };
-
-   enum TextureAddressMode {
-       TEX_WRAP          = D3DTADDRESS_WRAP,
-       TEX_CLAMP         = D3DTADDRESS_CLAMP,
-       TEX_MIRROR        = D3DTADDRESS_MIRROR
-   };
-
-
-private:
-   IDirect3D9* m_pD3D;
-   IDirect3DDevice9* m_pD3DDevice;
-   IDirect3DSurface9* m_pBackBuffer;
-
-   UINT m_adapter;      // index of the display adapter to use
-};
+    char msg[128];
+    sprintf(msg, "Fatal error: HRESULT %x at %s:%d", hr, file, line);
+    ShowError(msg);
+    exit(-1);
+}
 
 #define CHECKD3D(s) { HRESULT hr = (s); if (FAILED(hr)) ReportError(hr, __FILE__, __LINE__); }
 
-unsigned int fvfToSize(DWORD fvf)
+
+static unsigned int fvfToSize(DWORD fvf)
 {
     switch (fvf)
     {
@@ -124,38 +32,26 @@ unsigned int fvfToSize(DWORD fvf)
     }
 }
 
-void ReportError(HRESULT hr, const char *file, int line)
+static UINT ComputePrimitiveCount(D3DPRIMITIVETYPE type, DWORD vertexCount)
 {
-    char msg[128];
-    sprintf(msg, "Fatal error: HRESULT %x at %s:%d", hr, file, line);
-    ShowError(msg);
-    exit(-1);
+    switch (type)
+    {
+        case D3DPT_POINTLIST:
+            return vertexCount;
+        case D3DPT_LINELIST:
+            return vertexCount / 2;
+        case D3DPT_LINESTRIP:
+            return std::max(0, vertexCount - 1);
+        case D3DPT_TRIANGLELIST:
+            return vertexCount / 3;
+        case D3DPT_TRIANGLESTRIP:
+        case D3DPT_TRIANGLEFAN:
+            return std::max(0, vertexCount - 2);
+        default:
+            return 0;
+    }
 }
 
-
-class VertexBuffer : public IDirect3DVertexBuffer9
-{
-public:
-   enum LockFlags
-   {
-      WRITEONLY = 0,                        // in DX9, this is specified during VB creation
-      NOOVERWRITE = D3DLOCK_NOOVERWRITE,    // meaning: no recently drawn vertices are overwritten
-      DISCARDCONTENTS = D3DLOCK_DISCARD     // WARNING: this only works with dynamic VBs
-   };
-   bool lock( unsigned int offsetToLock, unsigned int sizeToLock, void **dataBuffer, DWORD flags )
-   {
-      return !FAILED(this->Lock(offsetToLock, sizeToLock, dataBuffer, flags) );
-   }
-   bool unlock(void)
-   {
-      return ( !FAILED(this->Unlock() ) );
-   }
-   ULONG release(void)
-   {
-      while ( this->Release()!=0 );
-      return 0;
-   }
-};
 ////////////////////////////////////////////////////////////////////
 
 RenderDevice::RenderDevice()
@@ -227,7 +123,7 @@ void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
 {
     // TODO: we can't handle shake or vsync here
     // (vsync should be set when creating the device)
-    m_pD3DDevice->Present(NULL, NULL, NULL, NULL);
+    CHECKD3D(m_pD3DDevice->Present(NULL, NULL, NULL, NULL));
 }
 
 RenderTarget* RenderDevice::DuplicateRenderTarget(RenderTarget* src)
@@ -242,7 +138,7 @@ RenderTarget* RenderDevice::DuplicateRenderTarget(RenderTarget* src)
 
 void RenderDevice::CopySurface(RenderTarget* dest, RenderTarget* src)
 {
-    m_pD3DDevice->StretchRect(src, NULL, dest, NULL, D3DTEXF_NONE);
+    CHECKD3D(m_pD3DDevice->StretchRect(src, NULL, dest, NULL, D3DTEXF_NONE));
 }
 
 void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
@@ -312,30 +208,101 @@ void RenderDevice::SetMaterial( const BaseMaterial * const _material )
     materialStateCache.power = _material->power;
 #endif
 
-    m_pD3DDevice->SetMaterial((LPD3DMATERIAL9)_material);
+    CHECKD3D(m_pD3DDevice->SetMaterial((LPD3DMATERIAL9)_material));
 }
 
 
 void RenderDevice::SetRenderTarget( RenderTarget* surf)
 {
-    m_pD3DDevice->SetRenderTarget(0, surf);
+    CHECKD3D(m_pD3DDevice->SetRenderTarget(0, surf));
 }
 
 void RenderDevice::SetZBuffer( RenderTarget* surf)
 {
-    dx7Device->SetDepthStencilSurface(surf);
+    CHECKD3D(m_pD3DDevice->SetDepthStencilSurface(surf));
 }
 
 void RenderDevice::SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode)
 {
-    m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_ADDRESSU, mode);
-    m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_ADDRESSV, mode);
+    CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_ADDRESSU, mode));
+    CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_ADDRESSV, mode));
 }
 
-void RenderDevice::createVertexBuffer( unsigned int numVertices, DWORD usage, DWORD fvf, VertexBuffer **vBuffer )
+void RenderDevice::CreateVertexBuffer( unsigned int vertexCount, DWORD usage, DWORD fvf, VertexBuffer **vBuffer )
 {
     // NB: We always specify WRITEONLY since MSDN states,
     // "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
     // This means we cannot read from vertex buffers, but I don't think we need to.
-    CHECKD3D(m_pD3DDevice->CreateVertexBuffer(numVertices * fvfToSize(fvf), D3DUSAGE_WRITEONLY | usage, fvf, D3DPOOL_DEFAULT, vBuffer));
+    CHECKD3D(m_pD3DDevice->CreateVertexBuffer(vertexCount * fvfToSize(fvf), D3DUSAGE_WRITEONLY | usage, fvf, D3DPOOL_DEFAULT, vBuffer));
 }
+
+
+RenderTarget* RenderDevice::AttachZBufferTo(RenderTarget* surf)
+{
+    D3DSURFACE_DESC desc;
+    surf->GetDesc(&desc);
+
+    IDirect3DSurface9 *pZBuf;
+    CHECKD3D(m_pD3DDevice->CreateDepthStencilSurface(desc.Width, desc.Height, D3DFORMAT_D16,
+            desc.MultiSampleType, desc.MultiSampleQuality, FALSE, &pZBuf, NULL));
+
+    return pZBuf;
+}
+
+
+void RenderDevice::DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount)
+{
+    m_pd3dDevice->SetFVF(fvf);
+    CHECKD3D(m_pD3DDevice->DrawPrimitiveUP(type, ComputePrimitiveCount(type, vertexCount), vertices, fvfToSize(fvf)));
+}
+
+void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount)
+{
+    m_pD3DDevice->SetFVF(fvf);
+    CHECKD3D(m_pD3DDevice->DrawIndexedPrimitiveUP(type, 0, vertexCount, ComputePrimitiveCount(type, vertexCount),
+                indices, D3DFMT_INDEX32, vertices, fvfToSize(fvf)));
+}
+
+void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD vertexCount)
+{
+    D3DVERTEXBUFFER_DESC desc;
+    vb->GetDesc(&desc);     // let's hope this is not very slow
+
+    const unsigned int vsize = fvfToSize(desc.FVF);
+
+    m_pD3DDevice->SetFVF(desc.FVF);
+    m_pD3DDevice->SetStreamSource(0, vb, 0, vsize);
+    CHECKD3D(m_pD3DDevice->DrawPrimitive(type, startVertex, ComputePrimitiveCount(type, vertexCount)));
+}
+
+void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD vertexCount, LPWORD indices, DWORD indexCount)
+{
+    // TODO: no such draw call in DX9, we need an index buffer
+}
+
+void RenderDevice::SetTransform( TransformStateType p1, LPD3DMATRIX p2)
+{
+   CHECKD3D(m_pD3DDevice->SetTransform((D3DTRANSFORMSTATETYPE)p1, p2));
+}
+
+void RenderDevice::GetTransform( TransformStateType p1, LPD3DMATRIX p2)
+{
+   CHECKD3D(m_pD3DDevice->GetTransform((D3DTRANSFORMSTATETYPE)p1, p2));
+}
+
+
+void RenderDevice::GetMaterial( BaseMaterial *_material )
+{
+   m_pD3DDevice->GetMaterial((LPD3DMATERIAL7)_material);
+}
+
+void RenderDevice::SetLight( DWORD p1, BaseLight* p2)
+{
+   m_pD3DDevice->SetLight(p1,p2);
+}
+
+void RenderDevice::GetLight( DWORD p1, BaseLight* p2 )
+{
+   m_pD3DDevice->GetLight(p1,p2);
+}
+

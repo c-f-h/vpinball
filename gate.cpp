@@ -468,7 +468,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetMaterial(solidMaterial);
         }
         SetNormal(rgv3D, rgiGate2, 4, NULL, NULL, 0);
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4);
 
         // Draw Frontside
         if (pinfront) 
@@ -500,7 +500,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
 
         SetNormal(rgv3D, rgiGate3, 4, NULL, NULL, 0);
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4);
 
         pd3dDevice->SetMaterial(solidMaterial);
         ppin3d->SetTexture(NULL);
@@ -513,14 +513,14 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             memcpy(&verts[1], &rgv3D[rgiGate4[1]], sizeof(Vertex3D));
             memcpy(&verts[2], &rgv3D[rgiGate4[2]], sizeof(Vertex3D));
             memcpy(&verts[3], &rgv3D[rgiGate4[3]], sizeof(Vertex3D));
-            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4,(LPWORD)rgiGate4, 4, 0);
+            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 4,(LPWORD)rgiGate4, 4);
 
             SetNormal(rgv3D, rgiGate5, 4, NULL, NULL, 0);
             memcpy(&verts[4], &rgv3D[rgiGate5[0]], sizeof(Vertex3D));
             memcpy(&verts[5], &rgv3D[rgiGate5[1]], sizeof(Vertex3D));
             memcpy(&verts[6], &rgv3D[rgiGate5[2]], sizeof(Vertex3D));
             memcpy(&verts[7], &rgv3D[rgiGate5[3]], sizeof(Vertex3D));
-            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate5, 4, 0);
+            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate5, 4);
 
             // Sides
             SetNormal(rgv3D, rgiGate6, 4, NULL, NULL, 0);
@@ -528,15 +528,15 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             memcpy(&verts[9], &rgv3D[rgiGate6[1]], sizeof(Vertex3D));
             memcpy(&verts[10], &rgv3D[rgiGate6[2]], sizeof(Vertex3D));
             memcpy(&verts[11], &rgv3D[rgiGate6[3]], sizeof(Vertex3D));
-            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 7,(LPWORD)rgiGate6, 4, 0);
+            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 7,(LPWORD)rgiGate6, 4);
 
             SetNormal(rgv3D, rgiGate7, 4, NULL, NULL, 0);
             memcpy(&verts[12], &rgv3D[rgiGate7[0]], sizeof(Vertex3D));
             memcpy(&verts[13], &rgv3D[rgiGate7[1]], sizeof(Vertex3D));
             memcpy(&verts[14], &rgv3D[rgiGate7[2]], sizeof(Vertex3D));
             memcpy(&verts[15], &rgv3D[rgiGate7[3]], sizeof(Vertex3D));
-            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate7, 4, 0);
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,verts, 16,(LPWORD)idx, 24, 0);
+            //pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiGate7, 4);
+            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,verts, 16,(LPWORD)idx, 24);
         }
     }
     else // copy pasted from above, just without lighting
@@ -584,7 +584,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetMaterial(solidMaterial);
         }
 
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 6,(LPWORD)rgiGate2, 4);
 
         // Draw Frontside
         if (pinfront) 
@@ -615,7 +615,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetMaterial(solidMaterial);
         }
 
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_NOLIGHTING_VERTEX,rgv3D, 8,(LPWORD)rgiGate3, 4);
         pd3dDevice->SetMaterial(solidMaterial);
         ppin3d->SetTexture(NULL);
 
@@ -642,7 +642,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
             memcpy(&verts[13], &rgv3D[rgiGate7[1]], sizeof(Vertex3D_NoLighting));
             memcpy(&verts[14], &rgv3D[rgiGate7[2]], sizeof(Vertex3D_NoLighting));
             memcpy(&verts[15], &rgv3D[rgiGate7[3]], sizeof(Vertex3D_NoLighting));
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_NOLIGHTING_VERTEX,verts, 16,(LPWORD)idx, 24, 0);
+            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_NOLIGHTING_VERTEX,verts, 16,(LPWORD)idx, 24);
         }
     }
     pd3dDevice->SetColorKeyEnabled(false);
@@ -922,10 +922,10 @@ void Gate::RenderStatic(const RenderDevice* _pd3dDevice) // only the support str
    static const WORD rgiGate0[8] = {0,1,2,3,6,7,4,5};
    static const WORD rgiGate1[8] = {4,5,6,7,2,3,0,1};
    SetNormal(rgv3D, rgiGateNormal, 3, rgv3D, rgiGate0, 8);
-   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX,rgv3D,8,(LPWORD)rgiGate0, 8, 0);
+   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX,rgv3D,8,(LPWORD)rgiGate0, 8);
 
    SetNormal(rgv3D, rgiGateNormal, 3, rgv3D, rgiGate1, 8);
-   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX,rgv3D,8,(LPWORD)rgiGate1, 8, 0);
+   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX,rgv3D,8,(LPWORD)rgiGate1, 8);
 }
 
 void Gate::RenderMovers(const RenderDevice* _pd3dDevice)

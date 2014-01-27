@@ -308,7 +308,7 @@ void Flasher::RenderSetup(const RenderDevice* _pd3dDevice)
 {
    RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
 
-   pd3dDevice->createVertexBuffer(4, 0, MY_D3DFVF_NOLIGHTING_VERTEX, &dynamicVertexBuffer);
+   pd3dDevice->CreateVertexBuffer(4, 0, MY_D3DFVF_NOLIGHTING_VERTEX, &dynamicVertexBuffer);
    NumVideoBytes += 4*sizeof(Vertex3D_NoLighting);     
    solidMaterial.setColor( 1.0f, m_d.m_color );
 
@@ -1016,7 +1016,7 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
 		 dynamicVertexBuffer->unlock();
       }
 
-      pd3dDevice->renderPrimitive( D3DPT_TRIANGLESTRIP, dynamicVertexBuffer, 0, 4, (LPWORD)indices, 4, 0 );
+      pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLESTRIP, dynamicVertexBuffer, 0, 4, (LPWORD)indices, 4);
 
       pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
       pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );

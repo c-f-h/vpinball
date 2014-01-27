@@ -624,7 +624,7 @@ void Light::PrepareStaticCustom()
    if ( customVBuffer==NULL )
    {
       DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
-      g_pplayer->m_pin3d.m_pd3dDevice->createVertexBuffer( staticCustomVertexNum, 0, vertexType, &customVBuffer);
+      g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( staticCustomVertexNum, 0, vertexType, &customVBuffer);
       NumVideoBytes += staticCustomVertexNum*sizeof(Vertex3D);     
    }
 
@@ -708,7 +708,7 @@ void Light::PrepareMoversCustom()
    if ( customMoverVBuffer==NULL )
    {
       DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
-      g_pplayer->m_pin3d.m_pd3dDevice->createVertexBuffer( customMoverVertexNum*2, 0, vertexType, &customMoverVBuffer);
+      g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( customMoverVertexNum*2, 0, vertexType, &customMoverVBuffer);
       NumVideoBytes += (customMoverVertexNum*2)*sizeof(Vertex3D);     
    }
    const int offsetOnState = customMoverVertexNum;
@@ -874,7 +874,7 @@ void Light::RenderSetup(const RenderDevice* _pd3dDevice)
       if ( normalVBuffer==NULL )
       {
          DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
-         g_pplayer->m_pin3d.m_pd3dDevice->createVertexBuffer( 32, 0, vertexType, &normalVBuffer);
+         g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 32, 0, vertexType, &normalVBuffer);
          NumVideoBytes += 32*sizeof(Vertex3D);     
       }
 
@@ -924,10 +924,10 @@ void Light::RenderStatic(const RenderDevice* _pd3dDevice)
 		   if(m_d.m_shape == ShapeCustom)
            {
 			   for (int t=0; t<staticCustomVertexNum; t+=3)
-					pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, customVBuffer, t,3, (LPWORD)rgi0123, 3,0 );
+					pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customVBuffer, t, 3);
 		   }
            else
-            pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, normalVBuffer, 0, 32, (LPWORD)rgiLightStatic1, 32, 0);
+            pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLEFAN, normalVBuffer, 0, 32, (LPWORD)rgiLightStatic1, 32);
 	   }
 
 	   ppin3d->EnableLightMap(fFalse, -1);
@@ -1031,7 +1031,7 @@ void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
 	  for( int t=0; t<customMoverVertexNum; t+=3 ) //!! optimize into single call!
          if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
          {
-            pd3dDevice->renderPrimitive(D3DPT_TRIANGLELIST, customMoverVBuffer, (i*customMoverVertexNum)+t, 3, (LPWORD)rgi0123,3 ,0 );
+            pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customMoverVBuffer, (i*customMoverVertexNum)+t, 3);
          }
      if ( useLightmap )
      {
@@ -1123,7 +1123,7 @@ void Light::RenderMovers(const RenderDevice* _pd3dDevice)
    if ( normalMoverVBuffer==NULL )
    {
       DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
-      g_pplayer->m_pin3d.m_pd3dDevice->createVertexBuffer( 32, 0, vertexType, &normalMoverVBuffer);
+      g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 32, 0, vertexType, &normalMoverVBuffer);
       NumVideoBytes += 32*sizeof(Vertex3D);     
    }
 
@@ -1175,7 +1175,7 @@ void Light::RenderMovers(const RenderDevice* _pd3dDevice)
 
       if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
       {
-         pd3dDevice->renderPrimitive(D3DPT_TRIANGLEFAN, normalMoverVBuffer, 0, 32, (LPWORD)rgiLightStatic1,32,0 );
+         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLEFAN, normalMoverVBuffer, 0, 32, (LPWORD)rgiLightStatic1,32);
       }
 
 	  if((!m_d.m_EnableLighting))

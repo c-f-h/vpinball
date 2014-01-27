@@ -265,7 +265,7 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
 
          SetNormal(borderVerices, rgi+l*3, 3, NULL, NULL, 0);
       }
-      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,borderVerices,16,rgi, 3*14, 0);
+      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,borderVerices,16,rgi, 3*14);
    }
 
    //BaseTexture* pddsBufferBack = g_pvp->m_pdd.CreateOffscreenPlain(recBounds.right - recBounds.left, recBounds.bottom - recBounds.top);
@@ -292,7 +292,7 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
 
    //      SetNormal(vertices+16, rgi+l*3, 3, NULL, NULL, 0);
    //   }
-   //   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices+16, 16,rgi, 3*14, 0);
+   //   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices+16, 16,rgi, 3*14);
    //}
 
    //DDSURFACEDESC2 ddsd;
@@ -370,7 +370,7 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
 
                SetNormal(vertices, rgi+l*3, 3, NULL, NULL, 0);
             }
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices, 16,rgi, 3*14, 0);
+            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices, 16,rgi, 3*14);
          }
 /*
          mtrl.diffuse.r = mtrl.ambient.r = r;//0.7f;
@@ -399,7 +399,7 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
 
                   SetNormal(vertices, rgiNormal, 3, NULL, rgi, 2);
                   SetNormal(vertices, &rgiNormal[3], 3, NULL, &rgi[2], 2);
-                  pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,vertices, 32,(LPWORD)rgi, 4, 0);
+                  pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,vertices, 32,(LPWORD)rgi, 4);
          }
          break;
       }
@@ -422,7 +422,7 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
             vertices[48].ny = 0;
             vertices[48].nz = -1.0f;
          }
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices+16, 49-16,rgi, 3*16, 0);
+         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices+16, 49-16,rgi, 3*16);
          break;
       }
 

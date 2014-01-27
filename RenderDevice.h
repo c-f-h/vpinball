@@ -7,6 +7,11 @@ typedef IDirectDrawSurface7 BaseTexture;
 typedef D3DVIEWPORT7 ViewPort;
 typedef IDirectDrawSurface7 RenderTarget;
 
+enum TransformStateType {
+    TRANSFORMSTATE_WORLD      = D3DTRANSFORMSTATE_WORLD,
+    TRANSFORMSTATE_VIEW       = D3DTRANSFORMSTATE_VIEW,
+    TRANSFORMSTATE_PROJECTION = D3DTRANSFORMSTATE_PROJECTION
+};
 
 struct BaseLight : public D3DLIGHT7
 {
@@ -100,124 +105,88 @@ public:
    RenderDevice();
    ~RenderDevice();
 
-   bool CreateDevice(BaseTexture *_backBuffer);
    bool InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate);
-   void Flip(int offsetx, int offsety, bool vsync);
    void DestroyRenderer();
+
+   void BeginScene();
+   void EndScene();
+
+   void Clear(DWORD numRects, LPD3DRECT rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil);
+   void Flip(int offsetx, int offsety, bool vsync);
 
    RenderTarget* GetBackBuffer() { return m_pddsBackBuffer; }
    RenderTarget* DuplicateRenderTarget(RenderTarget* src);
 
+   void SetRenderTarget( RenderTarget* );
+   void SetZBuffer( RenderTarget* );
+
+   RenderTarget* AttachZBufferTo(RenderTarget* surf);
    void CopySurface(RenderTarget* dest, RenderTarget* src);
 
    void GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height);
 
    void SetRenderState( const RenderStates p1, const DWORD p2 );
+   void SetTexture( DWORD, BaseTexture* );
    void SetTextureFilter(DWORD texUnit, DWORD mode);
    void SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode);
-   void SetMaterial( const BaseMaterial * const _material );
+   void SetTextureStageState(DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD value);
+   void SetMaterial( const BaseMaterial * const material );
    void SetMaterial( const Material & material )        { SetMaterial(&material.getBaseMaterial()); }
 
-   void createVertexBuffer( unsigned int _length, DWORD _usage, DWORD _fvf, VertexBuffer **_vBuffer );
-   void renderPrimitive(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, LPWORD _indices, DWORD _numIndices, DWORD _flags);
-   void renderPrimitiveListed(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, DWORD _flags);
+   void CreateVertexBuffer( unsigned int numVerts, DWORD usage, DWORD fvf, VertexBuffer **vBuffer );
+
+   void DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount);
+   void DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount);
+   void DrawPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD numVertices);
+   void DrawIndexedPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD numVertices, LPWORD indices, DWORD indexCount);
+
+   void GetMaterial( BaseMaterial *_material );
+
+   void LightEnable( DWORD, BOOL );
+   void SetLight( DWORD, BaseLight* );
+   void GetLight( DWORD, BaseLight* );
+   void SetViewport( ViewPort* );
+   void GetViewport( ViewPort* );
+
+   void SetTransform( TransformStateType, LPD3DMATRIX );
+   void GetTransform( TransformStateType, LPD3DMATRIX );
 
    void SetColorKeyEnabled(bool enable)
    {
        SetRenderState(RenderDevice::COLORKEYENABLE, enable);
    }
 
-   inline void setVBInVRAM( const BOOL _state )
+   void setVBInVRAM( const BOOL state )
    {
-      vbInVRAM=(_state==1);
+      vbInVRAM=(state==1);
    }
-
-   void SetRenderTarget( RenderTarget* );
-   void SetZBuffer( RenderTarget* );
-
-   RenderTarget* AttachZBufferTo(RenderTarget* surf);
-private:
-
 
 public:  //########################## simple wrapper functions (interface for DX7)##################################
 
-   HRESULT BeginScene( THIS );
-
-   HRESULT EndScene( THIS );
-
-   HRESULT GetRenderTarget( THIS_ RenderTarget* * );
-
-   HRESULT SetTexture( THIS_ DWORD, BaseTexture* );
-
-   void getMaterial( THIS_ BaseMaterial *_material );
-
-   HRESULT SetLight( THIS_ DWORD, BaseLight* );
-
-   HRESULT GetLight( THIS_ DWORD, BaseLight* );
-
-   HRESULT SetViewport( THIS_ ViewPort* );
-
-   HRESULT GetViewport( THIS_ ViewPort* );
-
-
-   HRESULT Clear( THIS_ DWORD,LPD3DRECT,DWORD,D3DCOLOR,D3DVALUE,DWORD );
-
-   HRESULT SetTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
-
-   HRESULT GetTransform( THIS_ D3DTRANSFORMSTATETYPE,LPD3DMATRIX );
-
+   //HRESULT GetRenderTarget( THIS_ RenderTarget* * );
    //HRESULT SetMaterial( THIS_ LPD3DMATERIAL7 );
-
    //HRESULT GetMaterial( THIS_ LPD3DMATERIAL7 );
-
-   HRESULT SetRenderState( THIS_ D3DRENDERSTATETYPE,DWORD );
-
-   HRESULT GetRenderState( THIS_ D3DRENDERSTATETYPE,LPDWORD );
-
+   //HRESULT GetRenderState( THIS_ D3DRENDERSTATETYPE,LPDWORD );
    //HRESULT BeginStateBlock( THIS );
-
    //HRESULT EndStateBlock( THIS_ LPDWORD );
-
-   HRESULT DrawPrimitive( THIS_ D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, DWORD flags);
-
-   HRESULT DrawIndexedPrimitive( THIS_ D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount, DWORD flags);
-
    //HRESULT SetClipStatus( THIS_ LPD3DCLIPSTATUS );
-
    //HRESULT GetClipStatus( THIS_ LPD3DCLIPSTATUS );
-
-   HRESULT DrawPrimitiveVB( THIS_ D3DPRIMITIVETYPE,LPDIRECT3DVERTEXBUFFER7,DWORD,DWORD,DWORD );
-
-   HRESULT DrawIndexedPrimitiveVB( THIS_ D3DPRIMITIVETYPE,LPDIRECT3DVERTEXBUFFER7,DWORD,DWORD,LPWORD,DWORD,DWORD );
-
-   HRESULT GetTexture( THIS_ DWORD,LPDIRECTDRAWSURFACE7 * );
-
-   HRESULT GetTextureStageState( THIS_ DWORD,D3DTEXTURESTAGESTATETYPE,LPDWORD );
-
-   HRESULT SetTextureStageState( THIS_ DWORD,D3DTEXTURESTAGESTATETYPE,DWORD );
-
-   HRESULT ValidateDevice( THIS_ LPDWORD );
-
-   HRESULT ApplyStateBlock( THIS_ DWORD );
-
-   HRESULT CaptureStateBlock( THIS_ DWORD );
-
-   HRESULT DeleteStateBlock( THIS_ DWORD );
-
-   HRESULT CreateStateBlock( THIS_ D3DSTATEBLOCKTYPE,LPDWORD );
-
-   HRESULT LightEnable( THIS_ DWORD,BOOL );
-
-   HRESULT GetLightEnable( THIS_ DWORD,BOOL* );
-
-   HRESULT SetClipPlane( THIS_ DWORD,D3DVALUE* );
-
-   HRESULT GetClipPlane( THIS_ DWORD,D3DVALUE* );
+   //HRESULT GetTexture( THIS_ DWORD,LPDIRECTDRAWSURFACE7 * );
+   //HRESULT GetTextureStageState( THIS_ DWORD,D3DTEXTURESTAGESTATETYPE,LPDWORD );
+   //HRESULT ValidateDevice( THIS_ LPDWORD );
+   //HRESULT ApplyStateBlock( THIS_ DWORD );
+   //HRESULT CaptureStateBlock( THIS_ DWORD );
+   //HRESULT DeleteStateBlock( THIS_ DWORD );
+   //HRESULT CreateStateBlock( THIS_ D3DSTATEBLOCKTYPE,LPDWORD );
+   //HRESULT GetLightEnable( THIS_ DWORD,BOOL* );
+   //HRESULT SetClipPlane( THIS_ DWORD,D3DVALUE* );
+   //HRESULT GetClipPlane( THIS_ DWORD,D3DVALUE* );
 
    // TODO make private
-   LPDIRECT3D7 m_pD3D;
-   RECT m_rcUpdate;
+   RECT m_rcUpdate;     // HACK
 private:
+   LPDIRECT3D7 m_pD3D;
+
    static const DWORD RENDER_STATE_CACHE_SIZE=256;
    static const DWORD TEXTURE_STATE_CACHE_SIZE=256;
 
@@ -242,15 +211,15 @@ public:
       NOOVERWRITE = DDLOCK_NOOVERWRITE,
       DISCARDCONTENTS = DDLOCK_DISCARDCONTENTS
    };
-   inline bool lock( unsigned int _offsetToLock, unsigned int _sizeToLock, void **_dataBuffer, DWORD _flags )
+   bool lock( unsigned int _offsetToLock, unsigned int _sizeToLock, void **_dataBuffer, DWORD _flags )
    {
       return ( !FAILED(this->Lock( (DWORD)_flags, _dataBuffer, 0 )) );
    }
-   inline bool unlock(void)
+   bool unlock(void)
    {
       return ( !FAILED(this->Unlock() ) );
    }
-   inline ULONG release(void)
+   ULONG release(void)
    {
       while ( this->Release()!=0 );
       return 0;

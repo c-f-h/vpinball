@@ -414,7 +414,7 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
     }
 
     SetNormal(rgv3D, rgiSpinner2, 4, NULL, NULL, 0);
-    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiSpinner2,4, 0);
+    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 6,(LPWORD)rgiSpinner2,4);
 
     // Draw Frontside
     if (pinfront)
@@ -445,7 +445,7 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
         pd3dDevice->SetMaterial(solidMaterial);
     }
     SetNormal(rgv3D, rgiSpinner3, 4, NULL, NULL, 0);
-    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiSpinner3, 4, 0);
+    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,rgv3D, 8,(LPWORD)rgiSpinner3, 4);
 
     pd3dDevice->SetMaterial(solidMaterial);
     ppin3d->SetTexture(NULL);
@@ -478,7 +478,7 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
         memcpy( &verts[13], &rgv3D[ rgiSpinner7[1]], sizeof(Vertex3D));
         memcpy( &verts[14], &rgv3D[ rgiSpinner7[2]], sizeof(Vertex3D));
         memcpy( &verts[15], &rgv3D[ rgiSpinner7[3]], sizeof(Vertex3D));
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,verts, 16,(LPWORD)idx, 24, 0);
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,verts, 16,(LPWORD)idx, 24);
     }
 
     pd3dDevice->SetColorKeyEnabled(FALSE);
@@ -720,10 +720,10 @@ void Spinner::RenderStatic(const RenderDevice* _pd3dDevice)
    memcpy( rgv3D, staticVertices, sizeof(Vertex3D)*8);
 
    SetNormal(rgv3D, rgiSpinnerNormal, 3, rgv3D, rgiSpinner0, 8);
-   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX, rgv3D, 8, (LPWORD)rgiSpinner0, 8, 0);
+   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX, rgv3D, 8, (LPWORD)rgiSpinner0, 8);
 
    SetNormal(rgv3D, rgiSpinnerNormal, 3, rgv3D, rgiSpinner1, 8);
-   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX, rgv3D, 8, (LPWORD)rgiSpinner1, 8, 0);
+   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX, rgv3D, 8, (LPWORD)rgiSpinner1, 8);
 }
 
 void Spinner::RenderMovers(const RenderDevice* _pd3dDevice)

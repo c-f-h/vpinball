@@ -299,7 +299,7 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
             ppin3d->EnableAlphaBlend( 1, false );
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
             static const WORD idx[6] = {0,1,2,2,3,0};
-            pd3dDevice->renderPrimitive( D3DPT_TRIANGLELIST, vertexBuffer, frame*4, 4, (LPWORD)idx, 6, 0 );
+            pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, frame*4, 4, (LPWORD)idx, 6);
             pin->Unset(ePictureTexture);
             pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE );
         }
@@ -320,7 +320,7 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
             {
                 for (int m=0;m<(PLUNGEPOINTS1-1);m++,k+=4)
                 {
-                    pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer, frame*(16*PLUNGEPOINTS1), (16*PLUNGEPOINTS1), (LPWORD)&indices[k], 4, 0 );
+                    pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, frame*(16*PLUNGEPOINTS1), (16*PLUNGEPOINTS1), (LPWORD)&indices[k], 4);
                 }
             }
             if ( pin )
@@ -338,8 +338,8 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
             const int offset = l*PLUNGEPOINTS0;
             for (int m=0;m<(PLUNGEPOINTS0-1);m++,k+=4)
             {
-                pd3dDevice->renderPrimitive( D3DPT_TRIANGLEFAN, vertexBuffer,
-                        frame*(16*PLUNGEPOINTS0), (16*PLUNGEPOINTS0), (LPWORD)&indices[k], 4, 0 );
+                pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer,
+                        frame*(16*PLUNGEPOINTS0), (16*PLUNGEPOINTS0), (LPWORD)&indices[k], 4);
             }
         }
     }
@@ -420,12 +420,12 @@ void Plunger::RenderSetup(const RenderDevice* _pd3dDevice )
    {
       if ( m_d.m_type == PlungerTypeModern )
       {
-         g_pplayer->m_pin3d.m_pd3dDevice->createVertexBuffer( cframes*16*PLUNGEPOINTS1, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
+         g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( cframes*16*PLUNGEPOINTS1, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
          NumVideoBytes += (cframes*16*PLUNGEPOINTS1)*sizeof(Vertex3D_NoTex2);
       }
       else
       {
-         g_pplayer->m_pin3d.m_pd3dDevice->createVertexBuffer( cframes*16*PLUNGEPOINTS0, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
+         g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( cframes*16*PLUNGEPOINTS0, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
          NumVideoBytes += (cframes*16*PLUNGEPOINTS0)*sizeof(Vertex3D_NoTex2);
       }
    }

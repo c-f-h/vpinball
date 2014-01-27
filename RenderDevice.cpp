@@ -3,23 +3,6 @@
 #include "Material.h"
 #include "Texture.h"
 
-bool RenderDevice::CreateDevice(BaseTexture *_backBuffer )
-{
-    memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
-    for( int i=0;i<8;i++ )
-        for( unsigned int j=0;j<TEXTURE_STATE_CACHE_SIZE;j++ )
-            textureStateCache[i][j]=0xFFFFFFFF;
-    memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
-
-    HRESULT hr;
-    const GUID* pDeviceGUID = (g_pvp->m_pdd.m_fHardwareAccel) ? &IID_IDirect3DHALDevice : &IID_IDirect3DRGBDevice;
-    if( FAILED( hr = m_pD3D->CreateDevice( *pDeviceGUID, (LPDIRECTDRAWSURFACE7)_backBuffer, &dx7Device ) ) )
-    {
-        return false;
-    }
-    return true;
-}
-
 bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
 {
     LPDIRECTDRAW7 dd = g_pvp->m_pdd.m_pDD;
@@ -125,14 +108,21 @@ retry2:
     // Update the count.
     NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
 
+    memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
+    for( int i=0;i<8;i++ )
+        for( unsigned int j=0;j<TEXTURE_STATE_CACHE_SIZE;j++ )
+            textureStateCache[i][j]=0xFFFFFFFF;
+    memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
+
     // Create the D3D device.  This device will pre-render everything once...
     // Then it will render only the ball and its shadow in real time.
 
-	if( !CreateDevice(m_pddsBackBuffer) )
-	{
+    const GUID* pDeviceGUID = (g_pvp->m_pdd.m_fHardwareAccel) ? &IID_IDirect3DHALDevice : &IID_IDirect3DRGBDevice;
+    if( FAILED( hr = m_pD3D->CreateDevice( *pDeviceGUID, (LPDIRECTDRAWSURFACE7)m_pddsBackBuffer, &dx7Device ) ) )
+    {
 		ShowError("Could not create Direct 3D device.");
-		return false;
-	}
+        return false;
+    }
 
 	return true;
 
@@ -197,6 +187,18 @@ RenderDevice::~RenderDevice()
    dx7Device->Release();
 }
 
+void RenderDevice::BeginScene()
+{
+   dx7Device->BeginScene();
+}
+
+void RenderDevice::EndScene()
+{
+   memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
+   memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
+   dx7Device->EndScene();
+}
+
 RenderTarget* RenderDevice::DuplicateRenderTarget(RenderTarget* src)
 {
 	DDSURFACEDESC2 ddsd;
@@ -236,6 +238,12 @@ void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
     *width = ddsd.dwWidth;
     *height = ddsd.dwHeight;
 }
+
+void RenderDevice::SetTexture(DWORD p1, LPDIRECTDRAWSURFACE7 p2 )
+{
+   dx7Device->SetTexture(p1, p2);
+}
+
 
 void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 {
@@ -319,7 +327,7 @@ void RenderDevice::SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode)
 }
 
 
-void RenderDevice::createVertexBuffer( unsigned int _length, DWORD _usage, DWORD _fvf, VertexBuffer **_vBuffer )
+void RenderDevice::CreateVertexBuffer( unsigned int numVerts, DWORD usage, DWORD fvf, VertexBuffer **vBuffer )
 {
    D3DVERTEXBUFFERDESC vbd;
    vbd.dwSize = sizeof(vbd);
@@ -328,20 +336,32 @@ void RenderDevice::createVertexBuffer( unsigned int _length, DWORD _usage, DWORD
    else
       vbd.dwCaps = D3DVBCAPS_WRITEONLY | D3DVBCAPS_SYSTEMMEMORY; // essential on some setups to enforce this variant
 
-   vbd.dwFVF = _fvf;
-   vbd.dwNumVertices = _length;
-   m_pD3D->CreateVertexBuffer(&vbd, (LPDIRECT3DVERTEXBUFFER7*)_vBuffer, 0);  //!! Later-on/DX9: CreateIndexBuffer (and release/realloc them??)
+   vbd.dwFVF = fvf;
+   vbd.dwNumVertices = numVerts;
+   m_pD3D->CreateVertexBuffer(&vbd, (LPDIRECT3DVERTEXBUFFER7*)vBuffer, 0);  //!! Later-on/DX9: CreateIndexBuffer (and release/realloc them??)
 }
 
-void RenderDevice::renderPrimitive(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, LPWORD _indices, DWORD _numIndices, DWORD _flags)
+
+void RenderDevice::DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount)
 {
-   dx7Device->DrawIndexedPrimitiveVB( _primType, (LPDIRECT3DVERTEXBUFFER7)_vbuffer, _startVertex, _numVertices, _indices, _numIndices, _flags );
+   dx7Device->DrawPrimitive(type, fvf, vertices, vertexCount, 0);
 }
 
-void RenderDevice::renderPrimitiveListed(D3DPRIMITIVETYPE _primType, VertexBuffer* _vbuffer, DWORD _startVertex, DWORD _numVertices, DWORD _flags)
+void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount)
 {
-   dx7Device->DrawPrimitiveVB( _primType, (LPDIRECT3DVERTEXBUFFER7)_vbuffer, _startVertex, _numVertices, _flags );
+   dx7Device->DrawIndexedPrimitive(type, fvf, vertices, vertexCount, indices, indexCount, 0);
 }
+
+void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD numVertices)
+{
+   dx7Device->DrawPrimitiveVB(type, vb, startVertex, numVertices, 0);
+}
+
+void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD numVertices, LPWORD indices, DWORD indexCount)
+{
+   dx7Device->DrawIndexedPrimitiveVB(type, vb, startVertex, numVertices, indices, indexCount, 0);
+}
+
 
 
 static HRESULT WINAPI EnumZBufferFormatsCallback( DDPIXELFORMAT * pddpf,
@@ -445,53 +465,39 @@ void RenderDevice::SetZBuffer( RenderTarget* surf)
 //   return dx7Device->EnumTextureFormats(p1,p2);
 //}
 
-HRESULT RenderDevice::BeginScene( THIS )
-{
-   return dx7Device->BeginScene();
-}
-
-HRESULT RenderDevice::EndScene( THIS )
-{
-   memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
-   memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
-   return dx7Device->EndScene();
-}
-
 //HRESULT RenderDevice::GetDirect3D( THIS_ LPDIRECT3D7* p1)
 //{
 //   return dx7Device->GetDirect3D(p1);
 //}
 
-   void SetZBuffer( RenderTarget* );
+//HRESULT RenderDevice::GetRenderTarget( THIS_ LPDIRECTDRAWSURFACE7 *p1 )
+//{
+//   return dx7Device->GetRenderTarget(p1);
+//}
 
-HRESULT RenderDevice::GetRenderTarget( THIS_ LPDIRECTDRAWSURFACE7 *p1 )
+void RenderDevice::Clear(DWORD numRects, LPD3DRECT rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil)
 {
-   return dx7Device->GetRenderTarget(p1);
+   dx7Device->Clear(numRects, rects, flags, color, z, stencil);
 }
 
-HRESULT RenderDevice::Clear( THIS_ DWORD p1,LPD3DRECT p2,DWORD p3,D3DCOLOR p4,D3DVALUE p5,DWORD p6)
+void RenderDevice::SetTransform( TransformStateType p1, LPD3DMATRIX p2)
 {
-   return dx7Device->Clear(p1,p2,p3,p4,p5,p6);
+   dx7Device->SetTransform((D3DTRANSFORMSTATETYPE)p1, p2);
 }
 
-HRESULT RenderDevice::SetTransform( THIS_ D3DTRANSFORMSTATETYPE p1,LPD3DMATRIX p2)
+void RenderDevice::GetTransform( TransformStateType p1, LPD3DMATRIX p2)
 {
-   return dx7Device->SetTransform(p1,p2);
+   dx7Device->GetTransform((D3DTRANSFORMSTATETYPE)p1, p2);
 }
 
-HRESULT RenderDevice::GetTransform( THIS_ D3DTRANSFORMSTATETYPE p1,LPD3DMATRIX p2)
+void RenderDevice::SetViewport( LPD3DVIEWPORT7 p1)
 {
-   return dx7Device->GetTransform(p1,p2);
+   dx7Device->SetViewport(p1);
 }
 
-HRESULT RenderDevice::SetViewport( THIS_ LPD3DVIEWPORT7 p1)
+void RenderDevice::GetViewport( LPD3DVIEWPORT7 p1)
 {
-   return dx7Device->SetViewport(p1);
-}
-
-HRESULT RenderDevice::GetViewport( THIS_ LPD3DVIEWPORT7 p1)
-{
-   return dx7Device->GetViewport(p1);
+   dx7Device->GetViewport(p1);
 }
 
 //HRESULT RenderDevice::SetMaterial( THIS_ LPD3DMATERIAL7 p1)
@@ -504,30 +510,25 @@ HRESULT RenderDevice::GetViewport( THIS_ LPD3DVIEWPORT7 p1)
 //   return dx7Device->GetMaterial(p1);
 //}
 
-void RenderDevice::getMaterial( THIS_ BaseMaterial *_material )
+void RenderDevice::GetMaterial( BaseMaterial *_material )
 {
    dx7Device->GetMaterial((LPD3DMATERIAL7)_material);
 }
 
-HRESULT RenderDevice::SetLight( THIS_ DWORD p1, BaseLight* p2)
+void RenderDevice::SetLight( DWORD p1, BaseLight* p2)
 {
-   return dx7Device->SetLight(p1,p2);
+   dx7Device->SetLight(p1,p2);
 }
 
-HRESULT RenderDevice::GetLight( THIS_ DWORD p1, BaseLight* p2 )
+void RenderDevice::GetLight( DWORD p1, BaseLight* p2 )
 {
-   return dx7Device->GetLight(p1,p2);
+   dx7Device->GetLight(p1,p2);
 }
 
-HRESULT RenderDevice::SetRenderState( THIS_ D3DRENDERSTATETYPE p1,DWORD p2)
-{
-   return dx7Device->SetRenderState(p1,p2);
-}
-
-HRESULT RenderDevice::GetRenderState( THIS_ D3DRENDERSTATETYPE p1,LPDWORD p2)
-{
-   return dx7Device->GetRenderState(p1,p2);
-}
+//HRESULT RenderDevice::GetRenderState( THIS_ D3DRENDERSTATETYPE p1,LPDWORD p2)
+//{
+//   return dx7Device->GetRenderState(p1,p2);
+//}
 
 //HRESULT RenderDevice::BeginStateBlock( THIS )
 //{
@@ -539,16 +540,6 @@ HRESULT RenderDevice::GetRenderState( THIS_ D3DRENDERSTATETYPE p1,LPDWORD p2)
 //   return dx7Device->EndStateBlock(p1);
 //}
 
-HRESULT RenderDevice::DrawPrimitive( THIS_ D3DPRIMITIVETYPE type,DWORD fvf,LPVOID vertices,DWORD vertexCount,DWORD flags)
-{
-   return dx7Device->DrawPrimitive(type, fvf, vertices, vertexCount, flags);
-}
-
-HRESULT RenderDevice::DrawIndexedPrimitive( THIS_ D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount, DWORD flags)
-{
-   return dx7Device->DrawIndexedPrimitive(type, fvf, vertices, vertexCount, indices, indexCount, flags);
-}
-
 //HRESULT RenderDevice::SetClipStatus( THIS_ LPD3DCLIPSTATUS p1)
 //{
 //   return dx7Device->SetClipStatus(p1);
@@ -559,87 +550,72 @@ HRESULT RenderDevice::DrawIndexedPrimitive( THIS_ D3DPRIMITIVETYPE type, DWORD f
 //   return dx7Device->GetClipStatus(p1);
 //}
 
-HRESULT RenderDevice::DrawPrimitiveVB( THIS_ D3DPRIMITIVETYPE type, LPDIRECT3DVERTEXBUFFER7 vb, DWORD startVertex, DWORD numVertices, DWORD flags)
-{
-   return dx7Device->DrawPrimitiveVB(type, vb, startVertex, numVertices, flags);
-}
+//HRESULT RenderDevice::GetTexture( THIS_ DWORD p1,LPDIRECTDRAWSURFACE7 *p2 )
+//{
+//   return dx7Device->GetTexture(p1,p2);
+//}
 
-HRESULT RenderDevice::DrawIndexedPrimitiveVB( THIS_ D3DPRIMITIVETYPE type,LPDIRECT3DVERTEXBUFFER7 vb,DWORD startVertex,DWORD numVertices,LPWORD indices,DWORD indexCount,DWORD flags)
-{
-   return dx7Device->DrawIndexedPrimitiveVB(type,vb,startVertex,numVertices,indices,indexCount,flags);
-}
+//HRESULT RenderDevice::GetTextureStageState( THIS_ DWORD p1,D3DTEXTURESTAGESTATETYPE p2,LPDWORD p3)
+//{
+//   return dx7Device->GetTextureStageState(p1,p2,p3);
+//}
 
-HRESULT RenderDevice::GetTexture( THIS_ DWORD p1,LPDIRECTDRAWSURFACE7 *p2 )
-{
-   return dx7Device->GetTexture(p1,p2);
-}
-
-HRESULT RenderDevice::SetTexture( THIS_ DWORD p1,LPDIRECTDRAWSURFACE7 p2 )
-{
-   return dx7Device->SetTexture(p1,p2);
-}
-
-HRESULT RenderDevice::GetTextureStageState( THIS_ DWORD p1,D3DTEXTURESTAGESTATETYPE p2,LPDWORD p3)
-{
-   return dx7Device->GetTextureStageState(p1,p2,p3);
-}
-
-HRESULT RenderDevice::SetTextureStageState( THIS_ DWORD p1,D3DTEXTURESTAGESTATETYPE p2,DWORD p3)
+void RenderDevice::SetTextureStageState( DWORD p1, D3DTEXTURESTAGESTATETYPE p2, DWORD p3)
 {
    if( (unsigned int)p2 < TEXTURE_STATE_CACHE_SIZE && p1<8) 
    {
       if( textureStateCache[p1][p2]==p3 )
       {
          // texture stage state hasn't changed since last call of this function -> do nothing here
-         return D3D_OK;
+         return;
       }
       textureStateCache[p1][p2]=p3;
    }
-   return dx7Device->SetTextureStageState(p1,p2,p3);
+   dx7Device->SetTextureStageState(p1,p2,p3);
 }
 
-HRESULT RenderDevice::ValidateDevice( THIS_ LPDWORD p1)
+//HRESULT RenderDevice::ValidateDevice( THIS_ LPDWORD p1)
+//{
+//   return dx7Device->ValidateDevice(p1);
+//}
+
+//HRESULT RenderDevice::ApplyStateBlock( THIS_ DWORD p1)
+//{
+//   return dx7Device->ApplyStateBlock(p1);
+//}
+
+//HRESULT RenderDevice::CaptureStateBlock( THIS_ DWORD p1)
+//{
+//   return dx7Device->CaptureStateBlock(p1);
+//}
+
+//HRESULT RenderDevice::DeleteStateBlock( THIS_ DWORD p1)
+//{
+//   return dx7Device->DeleteStateBlock(p1);
+//}
+
+//HRESULT RenderDevice::CreateStateBlock( THIS_ D3DSTATEBLOCKTYPE p1,LPDWORD p2)
+//{
+//   return dx7Device->CaptureStateBlock(*p2);
+//}
+
+void RenderDevice::LightEnable( DWORD p1, BOOL p2)
 {
-   return dx7Device->ValidateDevice(p1);
+   dx7Device->LightEnable(p1,p2);
 }
 
-HRESULT RenderDevice::ApplyStateBlock( THIS_ DWORD p1)
-{
-   return dx7Device->ApplyStateBlock(p1);
-}
+//HRESULT RenderDevice::GetLightEnable( THIS_ DWORD p1,BOOL* p2)
+//{
+//   return dx7Device->GetLightEnable(p1,p2);
+//}
 
-HRESULT RenderDevice::CaptureStateBlock( THIS_ DWORD p1)
-{
-   return dx7Device->CaptureStateBlock(p1);
-}
+//HRESULT RenderDevice::SetClipPlane( THIS_ DWORD p1,D3DVALUE* p2)
+//{
+//   return dx7Device->SetClipPlane(p1,p2);
+//}
 
-HRESULT RenderDevice::DeleteStateBlock( THIS_ DWORD p1)
-{
-   return dx7Device->DeleteStateBlock(p1);
-}
-
-HRESULT RenderDevice::CreateStateBlock( THIS_ D3DSTATEBLOCKTYPE p1,LPDWORD p2)
-{
-   return dx7Device->CaptureStateBlock(*p2);
-}
-
-HRESULT RenderDevice::LightEnable( THIS_ DWORD p1,BOOL p2)
-{
-   return dx7Device->LightEnable(p1,p2);
-}
-
-HRESULT RenderDevice::GetLightEnable( THIS_ DWORD p1,BOOL* p2)
-{
-   return dx7Device->GetLightEnable(p1,p2);
-}
-
-HRESULT RenderDevice::SetClipPlane( THIS_ DWORD p1,D3DVALUE* p2)
-{
-   return dx7Device->SetClipPlane(p1,p2);
-}
-
-HRESULT RenderDevice::GetClipPlane( THIS_ DWORD p1,D3DVALUE* p2)
-{
-   return dx7Device->GetClipPlane(p1,p2);
-}
+//HRESULT RenderDevice::GetClipPlane( THIS_ DWORD p1,D3DVALUE* p2)
+//{
+//   return dx7Device->GetClipPlane(p1,p2);
+//}
 
