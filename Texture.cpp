@@ -387,11 +387,13 @@ void Texture::EnsureBackdrop(const COLORREF color)
 
 void Texture::EnsureMaxTextureCoordinates()
 {
-   DWORD texWidth, texHeight;
-   g_pplayer->m_pin3d.m_pd3dDevice->GetTextureSize(m_pdsBuffer, &texWidth, &texHeight);
+   //DWORD texWidth, texHeight;
+   //g_pplayer->m_pin3d.m_pd3dDevice->GetTextureSize(m_pdsBuffer, &texWidth, &texHeight);
 
-   m_maxtu = (float)m_width / (float)texWidth;
-   m_maxtv = (float)m_height / (float)texHeight;
+   //m_maxtu = (float)m_width / (float)texWidth;
+   //m_maxtv = (float)m_height / (float)texHeight;
+   // TODO (DX9): tex coords
+   m_maxtu = m_maxtv = 1.0f;
 }
 
 void Texture::FreeStuff()

@@ -50,6 +50,9 @@ HRESULT PinDirectDraw::InitDD()
 
 BaseTexture* PinDirectDraw::CreateTextureOffscreen(const int width, const int height, DWORD* out_texWidth, DWORD* out_texHeight)
 {
+#ifdef VPINBALL_DX9
+    return NULL;
+#else
    DDSURFACEDESC2 ddsd;
    ZeroMemory( &ddsd, sizeof(ddsd) );
    ddsd.dwSize = sizeof(ddsd);
@@ -110,7 +113,7 @@ BaseTexture* PinDirectDraw::CreateTextureOffscreen(const int width, const int he
    HRESULT hr;
    bool retryflag = (m_fHardwareAccel != 0);
 retryimage:
-   if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&pdds, NULL ) ) )
+   if( FAILED( hr = m_pDD->CreateSurface( &ddsd, &pdds, NULL ) ) )
    {
       if(retryflag)
       {
@@ -132,6 +135,7 @@ retryimage:
    pdds->SetLOD(0);
 
    return pdds;
+#endif
 }
 
 BaseTexture* PinDirectDraw::CreateFromFile(char *szfile, int * const pwidth, int * const pheight, int& originalWidth, int& originalHeight)
@@ -248,6 +252,9 @@ BaseTexture* PinDirectDraw::CreateFromHBitmap(HBITMAP hbm, int * const pwidth, i
 
 BaseTexture* PinDirectDraw::CreateOffscreenPlain(const int width, const int height)
 {
+#ifdef VPINBALL_DX9
+    return NULL;
+#else
 	DDSURFACEDESC2 ddsd;
 	ZeroMemory( &ddsd, sizeof(ddsd) );
 	ddsd.dwSize = sizeof(ddsd);
@@ -268,7 +275,7 @@ BaseTexture* PinDirectDraw::CreateOffscreenPlain(const int width, const int heig
 retry1:
 	HRESULT hr;
 	BaseTexture* pdds;
-	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&pdds, NULL ) ) )
+	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, &pdds, NULL ) ) )
 	{
 		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
 			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
@@ -283,10 +290,14 @@ retry1:
 	NumVideoBytes += ddsd.dwWidth * ddsd.dwHeight * (ddsd.ddpfPixelFormat.dwRGBBitCount/8);
 
 	return pdds;
+#endif
 }
 
 BaseTexture* PinDirectDraw::CreateOffscreenWithCustomTransparency(const int width, const int height, const int color)
 {
+#ifdef VPINBALL_DX9
+    return NULL;
+#else
 	DDSURFACEDESC2 ddsd;
 	ZeroMemory( &ddsd, sizeof(ddsd) );
 	ddsd.dwSize = sizeof(ddsd);
@@ -312,7 +323,7 @@ BaseTexture* PinDirectDraw::CreateOffscreenWithCustomTransparency(const int widt
 retry0:
 	BaseTexture* pdds;
 	HRESULT hr;
-	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&pdds, NULL ) ) )
+	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, &pdds, NULL ) ) )
 	{
 		if((ddsd.ddsCaps.dwCaps & DDSCAPS_NONLOCALVIDMEM) == 0) {
 			ddsd.ddsCaps.dwCaps |= DDSCAPS_NONLOCALVIDMEM;
@@ -323,5 +334,6 @@ retry0:
 	}
 
 	return pdds;
+#endif
 }
 
