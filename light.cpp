@@ -936,6 +936,7 @@ void Light::RenderStatic(const RenderDevice* _pd3dDevice)
 
 void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
 {
+#ifndef VPINBALL_DX9
    RenderDevice *pd3dDevice=(RenderDevice*)_pd3dDevice;
    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
 
@@ -1073,10 +1074,12 @@ void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
 
    ppin3d->SetTexture(NULL);
    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+#endif
 }
 
 void Light::RenderMovers(const RenderDevice* _pd3dDevice)
 {
+#ifndef VPINBALL_DX9
    if (m_d.m_shape == ShapeCustom)
    {
       RenderCustomMovers(_pd3dDevice);
@@ -1203,6 +1206,7 @@ void Light::RenderMovers(const RenderDevice* _pd3dDevice)
 
    ppin3d->SetTexture(NULL);
    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+#endif
 }
 
 void Light::SetObjectPos()
@@ -1566,6 +1570,7 @@ STDMETHODIMP Light::put_State(LightState newVal)
 
 void Light::DrawFrame(BOOL fOn)
 {
+#ifndef VPINBALL_DX9
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
    const int frame = fOn;
@@ -1581,6 +1586,7 @@ void Light::DrawFrame(BOOL fOn)
 
       g_pplayer->InvalidateRect(&m_pobjframe[frame]->rc);
    }
+#endif
 }
 
 void Light::FlipY(Vertex2D * const pvCenter)
