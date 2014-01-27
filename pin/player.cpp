@@ -2999,25 +2999,21 @@ void Player::DrawBalls()
         // just calculate the vertices once!
         float zheight = (!pball->fFrozen) ? pball->z : (pball->z - pball->radius);
 
-        float maxz = pball->defaultZ+3.0f;
-        float minz = pball->defaultZ-1.0f;
-        if( m_ptable->m_useReflectionForBalls )
-        {
-            // don't draw reflection if the ball is not on the playfield (e.g. on a ramp/kicker)
-            if( (zheight > maxz) || (pball->z < minz) )
-            {
-                drawReflection=false;
-            }
-        }
-        if( (zheight > maxz) || (pball->z < minz) )
-        {
-            // scaling the ball height by the z scale value results in a flying ball over the playfield/ramp
-            // by reducing it with 0.96f (a factor found by trial'n error) the ball is on the ramp again
-            if ( m_ptable->m_zScale!=1.0f )
-            {
-                zheight *= (m_ptable->m_zScale*0.96f); 
-            }
-        }
+      float maxz = pball->defaultZ+3.0f;
+      float minz = pball->defaultZ-1.0f;
+      if( m_ptable->m_useReflectionForBalls )
+      {
+         // don't draw reflection if the ball is not on the playfield (e.g. on a ramp/kicker)
+         if( (zheight > maxz) || (pball->z < minz) )
+            drawReflection=false;
+      }
+      if( (zheight > maxz) || (pball->z < minz) )
+      {
+         // scaling the ball height by the z scale value results in a flying ball over the playfield/ramp
+         // by reducing it with 0.96f (a factor found by trial'n error) the ball is on the ramp again
+         if ( m_ptable->m_zScale!=1.0f )
+            zheight *= (m_ptable->m_zScale*0.96f); 
+      }
 
         const float radiusX = pball->radius * m_BallStretchX;
         const float radiusY = pball->radius * m_BallStretchY;
@@ -3116,6 +3112,7 @@ void Player::DrawBalls()
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+			m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA);
         }
 
@@ -3239,6 +3236,7 @@ void Player::DrawBalls()
 
                 m_pin3d.ExpandExtents/*Plus*/(&pball->m_rcTrail, rgv3D_all, NULL, NULL, num_rgv3D, fFalse);
 
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA);
@@ -3287,6 +3285,8 @@ void Player::DrawBalls()
 
     m_pin3d.m_pd3dDevice->SetTexture(0, NULL);
     m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
+    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
+    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
 }
 
 
