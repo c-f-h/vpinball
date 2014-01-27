@@ -46,6 +46,7 @@ void Texture::Unset( const DWORD textureChannel )
 
 HRESULT Texture::SaveToStream(IStream *pstream, PinTable *pt)
 {
+#ifndef VPINBALL_DX9
    BiffWriter bw(pstream, NULL, NULL);
 
    bw.WriteString(FID(NAME), m_szName);
@@ -90,6 +91,7 @@ HRESULT Texture::SaveToStream(IStream *pstream, PinTable *pt)
    }
 
    bw.WriteTag(FID(ENDB));
+#endif
 
    return S_OK;
 }
@@ -186,6 +188,7 @@ BOOL Texture::LoadToken(int id, BiffReader *pbr)
       if (!(m_pdsBuffer = g_pvp->m_pdd.CreateTextureOffscreen(m_width, m_height)))
           return FALSE;
 
+#ifndef VPINBALL_DX9
       DDSURFACEDESC2 ddsd;
       ddsd.dwSize = sizeof(ddsd);
       /*const HRESULT hr =*/ m_pdsBuffer->Lock(NULL, &ddsd, DDLOCK_WRITEONLY | DDLOCK_DISCARDCONTENTS | DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
@@ -220,6 +223,7 @@ BOOL Texture::LoadToken(int id, BiffReader *pbr)
                pch[i*lpitch + 4*l + 3] = 0xff;
 
       m_pdsBuffer->Unlock(NULL);
+#endif
 
    }
    else if (id == FID(JPEG))
@@ -344,6 +348,7 @@ void Texture::SetTransparentColor(const COLORREF color)
 
 void Texture::CreateAlphaChannel()
 {
+#ifndef VPINBALL_DX9
    if (!m_pdsBufferColorKey)
    {
       DDSURFACEDESC2 ddsd;
@@ -356,10 +361,12 @@ void Texture::CreateAlphaChannel()
          m_rgbTransparent = NOTRANSCOLOR; // set to magic color to disable future checking
       CreateNextMipMapLevel(m_pdsBufferColorKey);
    }
+#endif
 }
 
 void Texture::EnsureBackdrop(const COLORREF color)
 {
+#ifndef VPINBALL_DX9
    if (!m_pdsBufferBackdrop || color != m_rgbBackdropCur)
    {
       DDSURFACEDESC2 ddsd;
@@ -375,17 +382,16 @@ void Texture::EnsureBackdrop(const COLORREF color)
 
       m_rgbBackdropCur = color;
    }
+#endif
 }
 
 void Texture::EnsureMaxTextureCoordinates()
 {
-   DDSURFACEDESC2 ddsd;
-   ddsd.dwSize = sizeof(ddsd);
+   DWORD texWidth, texHeight;
+   g_pplayer->m_pin3d.m_pd3dDevice->GetTextureSize(m_pdsBuffer, &texWidth, &texHeight);
 
-   m_pdsBuffer->GetSurfaceDesc(&ddsd);
-
-   m_maxtu = (float)m_width / (float)ddsd.dwWidth;
-   m_maxtv = (float)m_height / (float)ddsd.dwHeight;
+   m_maxtu = (float)m_width / (float)texWidth;
+   m_maxtv = (float)m_height / (float)texHeight;
 }
 
 void Texture::FreeStuff()
@@ -415,21 +421,21 @@ void Texture::EnsureHBitmap()
 
 void Texture::CreateGDIVersion()
 {
-   HDC hdcImage;
-   m_pdsBuffer->GetDC(&hdcImage);
-
    HDC hdcScreen = GetDC(NULL);
    m_hbmGDIVersion = CreateCompatibleBitmap(hdcScreen, m_width, m_height);
    HDC hdcNew = CreateCompatibleDC(hdcScreen);
    HBITMAP hbmOld = (HBITMAP)SelectObject(hdcNew, m_hbmGDIVersion);
 
+#ifndef VPINBALL_DX9
+   HDC hdcImage;
+   m_pdsBuffer->GetDC(&hdcImage);
    StretchBlt(hdcNew, 0, 0, m_width, m_height, hdcImage, 0, 0, m_width, m_height, SRCCOPY);
+   m_pdsBuffer->ReleaseDC(hdcImage);
+#endif
 
    SelectObject(hdcNew, hbmOld);
    DeleteDC(hdcNew);
    ReleaseDC(NULL,hdcScreen);
-
-   m_pdsBuffer->ReleaseDC(hdcImage);
 }
 
 void Texture::GetTextureDC(HDC *pdc)
@@ -460,6 +466,7 @@ void Texture::CreateFromResource(const int id, int * const pwidth, int * const p
    m_pdsBufferColorKey = CreateFromHBitmap(hbm, pwidth, pheight);
 }
 
+// TODO: duplicate from Texture::
 BaseTexture* Texture::CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * const pheight)
 {
    BITMAP bm;
@@ -482,6 +489,7 @@ BaseTexture* Texture::CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * c
 
    BaseTexture* pdds = CreateBaseTexture(bm.bmWidth, bm.bmHeight);
 
+#ifndef VPINBALL_DX9
    HDC hdc;
    pdds->GetDC(&hdc);
 
@@ -497,6 +505,7 @@ BaseTexture* Texture::CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * c
 
    if (bm.bmBitsPixel != 32) 
       SetOpaque(pdds, bm.bmWidth, bm.bmHeight);
+#endif
 
    return pdds;
 }
@@ -523,6 +532,7 @@ BaseTexture* Texture::CreateBaseTexture(const int width, const int height)
 
 void Texture::SetOpaque(BaseTexture* pdds, const int width, const int height)
 {
+#ifndef VPINBALL_DX9
     DDSURFACEDESC2 ddsd;
     ddsd.dwSize = sizeof(ddsd);
 
@@ -544,11 +554,13 @@ void Texture::SetOpaque(BaseTexture* pdds, const int width, const int height)
     }
 
     pdds->Unlock(NULL);
+#endif
 }
 
 
 void Texture::SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop, const int width, const int height)
 {
+#ifndef VPINBALL_DX9
    DDSURFACEDESC2 ddsd;
    ddsd.dwSize = sizeof(ddsd);
    pdds->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
@@ -582,6 +594,7 @@ void Texture::SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent
    }
 
    pdds->Unlock(NULL);
+#endif
 }
 
 void Texture::CreateMipMap()
@@ -591,6 +604,7 @@ void Texture::CreateMipMap()
 
 void Texture::CreateNextMipMapLevel(BaseTexture* pdds)
 {
+#ifndef VPINBALL_DX9
     DDSURFACEDESC2 ddsd, ddsdNext;
     ddsd.dwSize = sizeof(ddsd);
     ddsdNext.dwSize = sizeof(ddsd);
@@ -708,6 +722,7 @@ void Texture::CreateNextMipMapLevel(BaseTexture* pdds)
 
         CreateNextMipMapLevel(pddsNext);
     }
+#endif
 }
 
 BOOL Texture::SetAlpha(const COLORREF rgbTransparent, const int width, const int height)
@@ -739,6 +754,7 @@ void Texture::Unlock()
 
 BOOL Texture::SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const int width, const int height)
 {
+#ifndef VPINBALL_DX9
     // Set alpha of each pixel
     DDSURFACEDESC2 ddsd;
     ddsd.dwSize = sizeof(ddsd);
@@ -802,6 +818,9 @@ BOOL Texture::SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const i
     pdds->Unlock(NULL);
 
     return fTransparent;
+#else
+    return FALSE;
+#endif
 }
 
 static const int rgfilterwindow[7][7] =
@@ -817,6 +836,7 @@ static const int rgfilterwindow[7][7] =
 
 void Texture::Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwidth, const int shadheight)
 {
+#ifndef VPINBALL_DX9
     if (!pbits) return;	// found this pointer to be NULL after some graphics errors
 
     /*int window[7][7]; // custom filter kernel
@@ -899,4 +919,5 @@ void Texture::Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwi
     }
 
     pdds->Unlock(NULL);
+#endif
 }

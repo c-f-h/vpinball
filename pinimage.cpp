@@ -225,6 +225,7 @@ BaseTexture* PinDirectDraw::CreateFromHBitmap(HBITMAP hbm, int * const pwidth, i
 
    BaseTexture* pdds = CreateTextureOffscreen(bm.bmWidth, bm.bmHeight);
 
+#ifndef VPINBALL_DX9
    HDC hdc;
    pdds->GetDC(&hdc);
 
@@ -240,6 +241,7 @@ BaseTexture* PinDirectDraw::CreateFromHBitmap(HBITMAP hbm, int * const pwidth, i
 
    if (bm.bmBitsPixel != 32) 
       Texture::SetOpaque(pdds, bm.bmWidth, bm.bmHeight);
+#endif
 
    return pdds;
 }
