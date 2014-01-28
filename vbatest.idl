@@ -1487,6 +1487,21 @@ typedef [uuid(D09B9F0E-C1AE-40dd-84D6-B1F74053AA8E)]
   		[propget, id(396), helpstring("property sphere mapping")] HRESULT EnableSphereMapping([out, retval] VARIANT_BOOL *pVal);
 		[propput, id(396), helpstring("property sphere mapping")] HRESULT EnableSphereMapping([in] VARIANT_BOOL newVal);
 
+  		[propget, id(110), helpstring("property Elasticity")] HRESULT Elasticity([out, retval] float *pVal);
+		[propput, id(110), helpstring("property Elasticity")] HRESULT Elasticity([in] float newVal);
+		
+		[propget, id(111), helpstring("property Collidable")] HRESULT Collidable([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(111), helpstring("property Collidable")] HRESULT Collidable([in] VARIANT_BOOL newVal);
+		[propget, id(34), helpstring("property HasHitEvent")] HRESULT HasHitEvent([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(34), helpstring("property HasHitEvent")] HRESULT HasHitEvent([in] VARIANT_BOOL newVal);
+		[propget, id(33), helpstring("property Threshold")] HRESULT Threshold([out, retval] float *pVal);
+		[propput, id(33), helpstring("property Threshold")] HRESULT Threshold([in] float newVal);
+		[propget, id(114), helpstring("property Friction")] HRESULT Friction([out, retval] float *pVal);
+		[propput, id(114), helpstring("property Friction")] HRESULT Friction([in] float newVal);
+		[propget, id(115), helpstring("property Scatter")] HRESULT Scatter([out, retval] float *pVal);
+		[propput, id(115), helpstring("property Scatter")] HRESULT Scatter([in] float newVal);
+
+
 	};
 
 	[
@@ -1497,10 +1512,8 @@ typedef [uuid(D09B9F0E-C1AE-40dd-84D6-B1F74053AA8E)]
 	properties:
 	methods:
 		[id(DISPID_GameEvents_Init)]  void Init();
-		[id(DISPID_TimerEvents_Timer)]  void Timer();
+//		[id(DISPID_TimerEvents_Timer)]  void Timer();
 		[id(DISPID_HitEvents_Hit)]  void Hit();
-		[id(DISPID_LimitEvents_EOS)]  void LimitEOS( [in] float parm);
-		[id(DISPID_LimitEvents_BOS)]  void LimitBOS( [in] float parm);
 	}
 
 	//////////////////////////////
@@ -2237,6 +2250,7 @@ typedef [uuid(D09B9F0E-C1AE-40dd-84D6-B1F74053AA8E)]
 	coclass Primitive
 	{
 		[default] interface IPrimitive;
+		[default, source]  dispinterface IPrimitiveEvents;
 	};
 
 };
