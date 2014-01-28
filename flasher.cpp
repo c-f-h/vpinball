@@ -935,7 +935,7 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
          dynamicVertexBufferRegenerate = false;
 
          Vertex3D_NoLighting *buf;
-         dynamicVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+         dynamicVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
 
          const float halfwidth = m_d.m_sizeX*0.5f;
          const float halfheight = m_d.m_sizeY*0.5f;

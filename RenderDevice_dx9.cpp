@@ -3,7 +3,7 @@
 #pragma comment(lib, "d3d9.lib")        // TODO: put into build system
 
 
-static void ReportError(HRESULT hr, const char *file, int line)
+void ReportError(HRESULT hr, const char *file, int line)
 {
     char msg[128];
     sprintf(msg, "Fatal error: HRESULT %x at %s:%d", hr, file, line);
@@ -57,6 +57,9 @@ static UINT ComputePrimitiveCount(D3DPRIMITIVETYPE type, int vertexCount)
 
 ////////////////////////////////////////////////////////////////////
 
+//#define MY_IDX_BUF_SIZE 8192
+#define MY_IDX_BUF_SIZE 65536
+
 RenderDevice::RenderDevice()
 {
     m_pD3D = NULL;
@@ -68,8 +71,8 @@ RenderDevice::RenderDevice()
 
 RenderDevice::~RenderDevice()
 {
-   m_pD3DDevice->Release();
-   m_pD3D->Release();
+   //m_pD3DDevice->Release();
+   //m_pD3D->Release();
 }
 
 bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
@@ -81,10 +84,24 @@ bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscree
         return false;
     }
 
+    D3DFORMAT format;
+
+    // get the current display format
+    if (!fullscreen)
+    {
+        D3DDISPLAYMODE mode;
+        CHECKD3D(m_pD3D->GetAdapterDisplayMode(m_adapter, &mode));
+        format = mode.Format;
+    }
+    else
+    {
+        format = (colordepth == 16) ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
+    }
+
     D3DPRESENT_PARAMETERS params;
     params.BackBufferWidth = fullscreen ? screenWidth : width;
     params.BackBufferHeight = fullscreen ? screenHeight : height;
-    params.BackBufferFormat = (colordepth == 32) ? D3DFMT_R8G8B8 : D3DFMT_R5G6B5;
+    params.BackBufferFormat = format;
     params.BackBufferCount = 1;
     params.MultiSampleType = D3DMULTISAMPLE_NONE;
     params.MultiSampleQuality = 0;
@@ -109,11 +126,14 @@ bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscree
 
     // Get the display mode so that we can report back the actual refresh rate.
     D3DDISPLAYMODE mode;
-    CHECKD3D(m_pD3DDevice->GetDisplayMode(0, &mode));
+    CHECKD3D(m_pD3DDevice->GetDisplayMode(m_adapter, &mode));
     refreshrate = mode.RefreshRate;
 
     // Retrieve a reference to the back buffer.
     CHECKD3D(m_pD3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &m_pBackBuffer));
+
+    // Set up a dynamic index buffer to cache passed indices in
+    CreateIndexBuffer(MY_IDX_BUF_SIZE, D3DUSAGE_DYNAMIC, IndexBuffer::FMT_INDEX16, &m_dynIndexBuffer);
     return true;
 }
 
@@ -160,6 +180,11 @@ void RenderDevice::CopySurface(RenderTarget* dest, RenderTarget* src)
 
 void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
 {
+    if (tex == NULL)
+    {
+        *width = *height = 1;       // HACK/TODO: remove
+        return;
+    }
     D3DSURFACE_DESC desc;
     tex->GetLevelDesc(0, &desc);
     *width = desc.Width;
@@ -168,7 +193,7 @@ void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
 
 void RenderDevice::SetTexture(DWORD p1, BaseTexture* p2 )
 {
-   m_pD3DDevice->SetTexture(p1, p2);
+   //m_pD3DDevice->SetTexture(p1, p2);
 }
 
 void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
@@ -287,6 +312,14 @@ void RenderDevice::CreateVertexBuffer( unsigned int vertexCount, DWORD usage, DW
                 D3DPOOL_DEFAULT, (IDirect3DVertexBuffer9**)vBuffer, NULL));
 }
 
+void RenderDevice::CreateIndexBuffer(unsigned int numIndices, DWORD usage, IndexBuffer::Format format, IndexBuffer **idxBuffer)
+{
+    // NB: We always specify WRITEONLY since MSDN states,
+    // "Buffers created with D3DPOOL_DEFAULT that do not specify D3DUSAGE_WRITEONLY may suffer a severe performance penalty."
+    const unsigned idxSize = (format == IndexBuffer::FMT_INDEX16) ? 2 : 4;
+    CHECKD3D(m_pD3DDevice->CreateIndexBuffer(idxSize * numIndices, usage | D3DUSAGE_WRITEONLY, (D3DFORMAT)format,
+                D3DPOOL_DEFAULT, (IDirect3DIndexBuffer9**)idxBuffer, NULL));
+}
 
 RenderTarget* RenderDevice::AttachZBufferTo(RenderTarget* surf)
 {
@@ -310,8 +343,8 @@ void RenderDevice::DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertic
 void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount)
 {
     m_pD3DDevice->SetFVF(fvf);
-    CHECKD3D(m_pD3DDevice->DrawIndexedPrimitiveUP(type, 0, vertexCount, ComputePrimitiveCount(type, vertexCount),
-                indices, D3DFMT_INDEX32, vertices, fvfToSize(fvf)));
+    CHECKD3D(m_pD3DDevice->DrawIndexedPrimitiveUP(type, 0, vertexCount, ComputePrimitiveCount(type, indexCount),
+                indices, D3DFMT_INDEX16, vertices, fvfToSize(fvf)));
 }
 
 void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount)
@@ -328,7 +361,31 @@ void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWOR
 
 void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount, LPWORD indices, DWORD indexCount)
 {
-    // TODO: no such draw call in DX9, we need an index buffer
+    if (indexCount > MY_IDX_BUF_SIZE)
+    {
+        ShowError("Call to DrawIndexedPrimitiveVB has too many indices. Use an index buffer.");
+        return;
+    }
+
+    // get VB description (for FVF)
+    D3DVERTEXBUFFER_DESC desc;
+    vb->GetDesc(&desc);     // let's hope this is not very slow
+
+    const unsigned int vsize = fvfToSize(desc.FVF);
+
+    // copy the indices to the dynamic index buffer
+    WORD *buffer;
+    m_dynIndexBuffer->lock(0, indexCount * sizeof(WORD), (void**)&buffer, IndexBuffer::DISCARD);
+    memcpy(buffer, indices, indexCount * sizeof(WORD));
+    m_dynIndexBuffer->unlock();
+
+    // bind the vertex and index buffers
+    CHECKD3D(m_pD3DDevice->SetFVF(desc.FVF));
+    CHECKD3D(m_pD3DDevice->SetStreamSource(0, vb, 0, vsize));
+    CHECKD3D(m_pD3DDevice->SetIndices(m_dynIndexBuffer));
+
+    // render
+    CHECKD3D(m_pD3DDevice->DrawIndexedPrimitive(type, startVertex, 0, vertexCount, 0, ComputePrimitiveCount(type, indexCount)));
 }
 
 void RenderDevice::SetTransform( TransformStateType p1, D3DMATRIX* p2)

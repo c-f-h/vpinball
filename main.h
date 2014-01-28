@@ -30,13 +30,16 @@ using namespace MSAPC;
 #define D3D_OVERLOADS 1
 #include <dinput.h>
 #include <ddraw.h>
-#ifdef VPINBALL_DX9
-#define D3D_DEBUG_INFO
-#include <d3d9.h>
-#else
-#include <d3d.h>
-#endif
 #include <dsound.h>
+
+#ifdef VPINBALL_DX9
+# ifdef _DEBUG
+#  define D3D_DEBUG_INFO
+# endif
+# include <d3d9.h>
+#else
+# include <d3d.h>
+#endif
 
 #include "stdio.h"
 #include "wchar.h"

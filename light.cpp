@@ -660,7 +660,7 @@ void Light::PrepareStaticCustom()
    }
 
    Vertex3D *buf;
-   customVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+   customVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
    memcpy( buf, staticCustomVertex, staticCustomVertexNum*sizeof(Vertex3D));
    customVBuffer->unlock();
 
@@ -842,7 +842,7 @@ void Light::PrepareMoversCustom()
 
 
    Vertex3D *buf;
-   customMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+   customMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
    memcpy( buf, customMoverVertex[0], customMoverVertexNum*sizeof(Vertex3D));
    memcpy( &buf[offsetOnState], customMoverVertex[1], customMoverVertexNum*sizeof(Vertex3D));
    customMoverVBuffer->unlock();
@@ -898,7 +898,7 @@ void Light::RenderSetup(const RenderDevice* _pd3dDevice)
       }
 
       Vertex3D *buf;
-      normalVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+      normalVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
       memcpy( buf, circleVertex, 32*sizeof(Vertex3D));
       normalVBuffer->unlock();
 
@@ -1161,7 +1161,7 @@ void Light::RenderMovers(const RenderDevice* _pd3dDevice)
 
       pd3dDevice->SetMaterial(mtrl);
       Vertex3D *buf;
-      normalMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+      normalMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
       memcpy( buf, rgv3D, 32*sizeof(Vertex3D));
       normalMoverVBuffer->unlock();
 

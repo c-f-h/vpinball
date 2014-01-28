@@ -474,7 +474,7 @@ void Trigger::RenderSetup(const RenderDevice* _pd3dDevice)
       NumVideoBytes += 40*sizeof(Vertex3D);
    }
    Vertex3D *buf;
-   vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+   vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
    memcpy( buf, staticVertices, 40*sizeof(Vertex3D));
    vertexBuffer->unlock();
 

@@ -799,7 +799,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 				rgv3D[2].tv = rgv3D[3].tv = rgv3D[0].tv + ratioy;
 
             Vertex3D_NoTex2 *buf;
-            vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+            vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
             memcpy( buf, rgv3D, 4*sizeof(Vertex3D_NoTex2));
             vertexBuffer->unlock();
             pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4);

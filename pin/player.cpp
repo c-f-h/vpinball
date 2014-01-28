@@ -1217,14 +1217,14 @@ void Player::InitStatic(HWND hwndProgress)
 
 void Player::InitAnimations(HWND hwndProgress)
 {
-	m_pin3d.m_pd3dDevice->BeginScene();
-
 	// Direct all renders to the back buffer.
-   m_pin3d.SetRenderTarget(m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsZBuffer);
+    m_pin3d.SetRenderTarget(m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsZBuffer);
 
 	// Set up z-buffer to the static one, so movers can clip to it
     m_pin3d.m_pd3dDevice->CopySurface(m_pin3d.m_pddsZBuffer, m_pin3d.m_pddsStaticZ);
 	m_pin3d.m_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET, 0x00000000, 1.0f, 0L );
+
+	m_pin3d.m_pd3dDevice->BeginScene();
 
 	// Draw stuff
 	for (int i=0;i<m_ptable->m_vedit.Size();i++)
@@ -3047,7 +3047,7 @@ void Player::DrawBalls()
 
         // prepare the vertex buffer for all possible options (ball,logo,shadow)
         Vertex3D_NoTex2 *buf;
-        Ball::vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+        Ball::vertexBuffer->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY);
         memcpy( buf, pball->vertices, sizeof(Vertex3D_NoTex2)*4 );
         if ( m_ptable->m_useReflectionForBalls )
             memcpy( &buf[16], pball->reflectVerts, sizeof(Vertex3D_NoTex2)*4 );
@@ -3598,7 +3598,7 @@ LRESULT CALLBACK PlayerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
       }
 
 		case WM_PAINT:
-			g_pplayer->m_pin3d.Flip(0,0,0);
+			//g_pplayer->m_pin3d.Flip(0,0,0);
 			break;
 
 		case WM_KEYDOWN:

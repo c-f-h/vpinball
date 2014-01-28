@@ -965,7 +965,7 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
 
    Vertex3D_NoLighting *noLightBuf[2];
    Vertex3D *texelBuf[2];
-   sideVBuffer->lock( 0, 0, !m_d.m_fEnableLighting ? (void**)&noLightBuf[0] : (void**)&texelBuf[0], VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE );
+   sideVBuffer->lock( 0, 0, !m_d.m_fEnableLighting ? (void**)&noLightBuf[0] : (void**)&texelBuf[0], VertexBuffer::WRITEONLY);
 
    int offset=0;
    // Render side
@@ -1167,13 +1167,13 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
       
       if(!m_d.m_fEnableLighting)
       {
-         topVBuffer[0]->lock(0,0,(void**)&noLightBuf[0], VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE );
-         topVBuffer[1]->lock(0,0,(void**)&noLightBuf[1], VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE );
+         topVBuffer[0]->lock(0,0,(void**)&noLightBuf[0], VertexBuffer::WRITEONLY);
+         topVBuffer[1]->lock(0,0,(void**)&noLightBuf[1], VertexBuffer::WRITEONLY);
       }
       else
       {
-         topVBuffer[0]->lock(0,0,(void**)&texelBuf[0], VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE );
-         topVBuffer[1]->lock(0,0,(void**)&texelBuf[1], VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE );
+         topVBuffer[0]->lock(0,0,(void**)&texelBuf[0], VertexBuffer::WRITEONLY);
+         topVBuffer[1]->lock(0,0,(void**)&texelBuf[1], VertexBuffer::WRITEONLY);
       }
 
       offset=0;
@@ -1278,7 +1278,7 @@ void Surface::PrepareSlingshots( RenderDevice *pd3dDevice )
    const float inv_height = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
 
    Vertex3D *buf;
-   slingshotVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+   slingshotVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
    int offset=0;
    for (int i=0;i<m_vlinesling.Size();i++)
    {

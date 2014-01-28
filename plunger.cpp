@@ -432,7 +432,7 @@ void Plunger::RenderSetup(const RenderDevice* _pd3dDevice )
 
    int vbOffset=0;
    Vertex3D_NoTex2 *buf;
-   vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+   vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
 
    renderNewPlunger=false;
 /*

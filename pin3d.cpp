@@ -457,7 +457,7 @@ void Pin3D::InitRenderState()
 		SetHUDVertices(rgv3D, 4);
 		SetDiffuse(rgv3D, 4, 0xFFFFFF);
 		Vertex3D_NoTex2 *buf;
-		backgroundVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE );
+		backgroundVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
 		memcpy( buf, rgv3D, sizeof(Vertex3D_NoTex2)*4);
 		backgroundVBuffer->unlock();
 	}
@@ -794,7 +794,7 @@ void Pin3D::InitPlayfieldGraphics()
 	}
 
 	Vertex3D *buf;
-	tableVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE );
+	tableVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
 	memcpy( buf, buffer, sizeof(Vertex3D)*numVerts);
 	SetNormal(rgv, rgiPin3D1, 4, NULL, NULL, 0);
 	memcpy( &buf[numVerts], rgv, 7*sizeof(Vertex3D));

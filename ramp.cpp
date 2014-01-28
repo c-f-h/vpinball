@@ -1312,7 +1312,7 @@ void Ramp::prepareStatic(RenderDevice* pd3dDevice)
    const float inv_height2 = maxtv / tableheight;
 
    Vertex3D_NoTex2 *buf;
-   staticVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+   staticVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
 
    int offset=0;
    for (int i=0;i<(rampVertex-1);i++)
@@ -2695,7 +2695,7 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
          dynamicVertexBufferRegenerate = false;
 
          Vertex3D_NoTex2 *buf;
-         dynamicVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+         dynamicVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
 
          float *rgheight, *rgratio;
          const Vertex2D * const rgvLocal = GetRampVertex(rampVertex, &rgheight, NULL, &rgratio);

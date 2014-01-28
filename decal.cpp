@@ -529,7 +529,7 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
       NumVideoBytes += 4*sizeof(Vertex3D_NoTex2);
    }
    Vertex3D_NoTex2 *buf;
-   vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::NOOVERWRITE);
+   vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
    memcpy( buf, vertices, 4*sizeof(Vertex3D_NoTex2));
    vertexBuffer->unlock();
 

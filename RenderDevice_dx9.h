@@ -4,6 +4,11 @@
 #include <d3d9.h>
 #include "Material.h"
 
+
+#define CHECKD3D(s) { HRESULT hr = (s); if (FAILED(hr)) ReportError(hr, __FILE__, __LINE__); }
+
+void ReportError(HRESULT hr, const char *file, int line);
+
 typedef IDirect3DTexture9 BaseTexture;
 typedef D3DVIEWPORT9 ViewPort;
 typedef IDirect3DSurface9 RenderTarget;
@@ -76,9 +81,9 @@ public:
     enum LockFlags
     {
         WRITEONLY = 0,                        // in DX9, this is specified during VB creation
-        NOOVERWRITE = 0, //D3DLOCK_NOOVERWRITE,// meaning: no recently drawn vertices are overwritten. only works with dynamic VBs.
-        // it's only needed for VBs which are locked several times per frame
-        DISCARDCONTENTS = D3DLOCK_DISCARD     // WARNING: this only works with dynamic VBs
+        NOOVERWRITE = D3DLOCK_NOOVERWRITE,    // meaning: no recently drawn vertices are overwritten. only works with dynamic VBs.
+                                              // it's only needed for VBs which are locked several times per frame
+        DISCARDCONTENTS = D3DLOCK_DISCARD     // discard previous contents; only works with dynamic VBs
     };
     bool lock( unsigned int offsetToLock, unsigned int sizeToLock, void **dataBuffer, DWORD flags )
     {
@@ -93,6 +98,39 @@ public:
         while ( this->Release()!=0 );
         return 0;
     }
+private:
+    VertexBuffer();     // disable default constructor
+};
+
+
+class IndexBuffer : public IDirect3DIndexBuffer9
+{
+public:
+    enum Format {
+        FMT_INDEX16 = D3DFMT_INDEX16,
+        FMT_INDEX32 = D3DFMT_INDEX32
+    };
+    enum LockFlags
+    {
+        WRITEONLY = 0,                      // in DX9, this is specified during VB creation
+        NOOVERWRITE = D3DLOCK_NOOVERWRITE,  // meaning: no recently drawn vertices are overwritten. only works with dynamic VBs.
+                                            // it's only needed for VBs which are locked several times per frame
+        DISCARD = D3DLOCK_DISCARD           // discard previous contents; only works with dynamic VBs
+    };
+    void lock( unsigned int offsetToLock, unsigned int sizeToLock, void **dataBuffer, DWORD flags )
+    {
+        CHECKD3D(this->Lock(offsetToLock, sizeToLock, dataBuffer, flags) );
+    }
+    void unlock(void)
+    {
+        CHECKD3D(this->Unlock());
+    }
+    void release(void)
+    {
+        while ( this->Release()!=0 );
+    }
+private:
+    IndexBuffer();      // disable default constructor
 };
 
 
@@ -160,6 +198,7 @@ public:
    void SetMaterial( const Material & material )        { SetMaterial(&material.getBaseMaterial()); }
 
    void CreateVertexBuffer( unsigned int numVerts, DWORD usage, DWORD fvf, VertexBuffer **vBuffer );
+   void CreateIndexBuffer(unsigned int numIndices, DWORD usage, IndexBuffer::Format format, IndexBuffer **idxBuffer);
 
    void DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount);
    void DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount);
@@ -191,6 +230,7 @@ private:
    IDirect3D9* m_pD3D;
    IDirect3DDevice9* m_pD3DDevice;
    IDirect3DSurface9* m_pBackBuffer;
+   IndexBuffer* m_dynIndexBuffer;      // workaround for DrawIndexedPrimitiveVB
 
    UINT m_adapter;      // index of the display adapter to use
 
