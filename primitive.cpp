@@ -13,7 +13,6 @@ Primitive::Primitive()
    indexList=0;
    indexListSize=0;
    m_d.use3DMesh=false;
-   g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
    m_d.meshFileName[0]=0;
    m_d.useLighting=false;
    m_d.staticRendering=false;
@@ -448,7 +447,6 @@ void Primitive::EndPlay()
 		objMesh = 0;
 	}
 
-    g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
     m_d.m_triggerSingleUpdateRegion = true;
 }
 
@@ -902,10 +900,6 @@ void Primitive::CalculateBuiltin()
    } //else { //!! this is missing completely!!???
    //}
 
-   // 4 update the bounding box for the primitive to tell the renderer where to update the back buffer
-   g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
-   g_pplayer->m_pin3d.ExpandExtents(&m_d.m_boundRectangle, builtin_rgv, NULL, NULL, numVertices, fFalse);
-
    // 5 store in vertexbuffer
    Vertex3D_NoTex2 *buf;
    vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
@@ -945,9 +939,6 @@ void Primitive::UpdateMesh()
       fullMatrix.MultiplyVector(tempVert->x, tempVert->y, tempVert->z, tempVert);
       tempVert->z *= m_ptable->m_zScale;
    }
-   // update the bounding box for the primitive to tell the renderer where to update the back buffer
-   g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
-   g_pplayer->m_pin3d.ExpandExtents(&m_d.m_boundRectangle, objMesh, NULL, NULL, numVertices, fFalse);
 
    Vertex3D_NoTex2 *buf;
    vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
@@ -1054,8 +1045,6 @@ void Primitive::RenderSetup( const RenderDevice* _pd3dDevice )
 
    if( !m_d.use3DMesh )
       CalculateBuiltinOriginal();
-
-   g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
 }
 
 void Primitive::RenderStatic(const RenderDevice* _pd3dDevice)

@@ -25,7 +25,6 @@ public:
    COLORREF m_SideColor;
 
    TimerDataRoot m_tdr;
-   RECT m_boundRectangle;
 
    BOOL m_fHitEvent;
    float m_threshold;			// speed at which ball needs to hit to register a hit
