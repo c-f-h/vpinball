@@ -114,11 +114,28 @@ bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscree
     params.FullScreen_RefreshRateInHz = fullscreen ? refreshrate : 0;
     params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // D3DPRESENT_INTERVAL_ONE for vsync
 
+    D3DDEVTYPE devtype = D3DDEVTYPE_HAL;
+
+    // Look for 'NVIDIA PerfHUD' adapter
+    // If it is present, override default settings
+    // This only takes effect if run under NVPerfHud, otherwise does nothing
+    for (UINT adapter=0; adapter < m_pD3D->GetAdapterCount(); adapter++)
+    {
+        D3DADAPTER_IDENTIFIER9 Identifier;
+        m_pD3D->GetAdapterIdentifier(adapter, 0, &Identifier);
+        if (strstr(Identifier.Description, "PerfHUD") != 0)
+        {
+            m_adapter = adapter;
+            devtype = D3DDEVTYPE_REF;
+            break;
+        }
+    }
+
     // Create the D3D device. This optionally goes to the proper fullscreen mode.
     // It also creates the default swap chain (front and back buffer).
     CHECKD3D(m_pD3D->CreateDevice(
                m_adapter,
-               D3DDEVTYPE_HAL,
+               devtype,
                hwnd,
                D3DCREATE_HARDWARE_VERTEXPROCESSING,
                &params,
