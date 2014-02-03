@@ -54,6 +54,7 @@ public:
 	bool m_fEnabled;
    bool m_fVisible;
 	bool m_lastHitFace;
+   bool m_fCompatibility;
 	};
 
 class HitFlipper :

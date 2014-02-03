@@ -129,6 +129,12 @@ void Flipper::SetDefaults(bool fromMouseClick)
       m_d.m_fEnabled = iTmp == 0 ? false : true;
    else
       m_d.m_fEnabled = fTrue;
+
+   hr = GetRegInt("DefaultProps\\Flipper","CompatibilityMode", &iTmp);
+   if ((hr == S_OK) && fromMouseClick)
+      m_d.m_fCompatibility = iTmp == 0 ? false : true;
+   else
+      m_d.m_fCompatibility = fTrue;
 }
 
 void Flipper::WriteRegDefaults()
@@ -175,6 +181,7 @@ void Flipper::WriteRegDefaults()
    SetRegValue("DefaultProps\\Flipper","RubberWidth", REG_DWORD, &m_d.m_rubberwidth, 4);
    SetRegValue("DefaultProps\\Flipper","Visible",REG_DWORD,&m_d.m_fVisible,4);
    SetRegValue("DefaultProps\\Flipper","Enabled",REG_DWORD,&m_d.m_fEnabled,4);
+   SetRegValue("DefaultProps\\Flipper","CompatibilityMode",REG_DWORD,&m_d.m_fCompatibility,4);
 }
 
 
@@ -284,6 +291,7 @@ void Flipper::GetHitShapes(Vector<HitObject> * const pvho)
    pvho->AddElement(phf);
    phf->m_pflipper = this;
    phf->m_flipperanim.m_pflipper = this;
+   phf->m_flipperanim.m_fCompatibility = (m_d.m_fCompatibility==fTrue);
    m_phitflipper = phf;	
 }
 
@@ -583,6 +591,11 @@ STDMETHODIMP Flipper::RotateToStart() // return to park
 
 void Flipper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    if (m_phitflipper && !m_phitflipper->m_flipperanim.m_fVisible)
+        return;
+    if (m_phitflipper == NULL && !m_d.m_fVisible)
+        return;
+
     const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_Center.x, m_d.m_Center.y);
     const float anglerad = ANGTORAD(m_d.m_StartAngle);
     const float anglerad2 = ANGTORAD(m_d.m_EndAngle);
@@ -609,7 +622,6 @@ void Flipper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
 void Flipper::RenderSetup(const RenderDevice* _pd3dDevice)
 {
-
 }
 
 void Flipper::RenderStatic(const RenderDevice* pd3dDevice)
@@ -790,6 +802,7 @@ HRESULT Flipper::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcrypt
    bw.WriteFloat(FID(ELAS), m_d.m_elasticity);
    bw.WriteBool(FID(VSBL), m_d.m_fVisible);
    bw.WriteBool(FID(ENBL), m_d.m_fEnabled);
+   bw.WriteBool(FID(COMP), m_d.m_fCompatibility);
    bw.WriteFloat(FID(FPWL), m_d.m_powerlaw);	
    bw.WriteFloat(FID(FOCR), m_d.m_obliquecorrection);	
    bw.WriteFloat(FID(FSCT), m_d.m_scatterangle);	
@@ -938,6 +951,10 @@ BOOL Flipper::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(ENBL))
    {
       pbr->GetBool(&m_d.m_fEnabled);
+   }
+   else if (id == FID(COMP))
+   {
+      pbr->GetBool(&m_d.m_fCompatibility);
    }
    else
    {
@@ -1340,11 +1357,19 @@ STDMETHODIMP Flipper::put_Visible(VARIANT_BOOL newVal)
    {
       //m_phitflipper->m_flipperanim.m_fEnabled = m_d.m_fVisible; //rlc error 
       m_phitflipper->m_flipperanim.m_fVisible = VBTOF(newVal);
+      if( m_d.m_fCompatibility )
+      {
+         m_phitflipper->m_flipperanim.m_fEnabled = VBTOF(newVal);
+      }
    }
    else
    {
       STARTUNDO
       m_d.m_fVisible = VBTOF(newVal);
+      if( m_d.m_fCompatibility )
+      {
+         m_d.m_fEnabled = m_d.m_fVisible;
+      }
       STOPUNDO
    }
    return S_OK;
@@ -1370,6 +1395,21 @@ STDMETHODIMP Flipper::put_Enabled(VARIANT_BOOL newVal)
          m_d.m_fEnabled = VBTOF(newVal);
       STOPUNDO
    }
+   return S_OK;
+}
+
+STDMETHODIMP Flipper::get_CompatibilityMode(VARIANT_BOOL *pVal)
+{
+   *pVal = (VARIANT_BOOL)FTOVB(m_d.m_fCompatibility);
+
+   return S_OK;
+}
+
+STDMETHODIMP Flipper::put_CompatibilityMode(VARIANT_BOOL newVal)
+{
+   STARTUNDO
+      m_d.m_fCompatibility = VBTOF(newVal);
+   STOPUNDO
    return S_OK;
 }
 

@@ -1,5 +1,7 @@
 VP 9.2.1 Changelog
 ------------------------
+- ass "Is Toy" checkbox to disable collision handling on mesh primitives completely. 
+
 - add collision detection to mesh primitives together with hit threshold and hit event
 
 - add Z offset to the backdrop options. With this settings you're able to zoom in/out the table without changing FOV/Inclination/Layback settings
@@ -57,7 +59,9 @@ VP 9.2.1 Changelog
 
 - separate/new texture maps for the lighting of lights (more details) and bumpers (brighter)
 
-- script editor updated to use latest scintilla (3.3.7)
+- fix problem with DMD/VPinMAME window being hidden behind VP window
+
+- script editor updated to use latest scintilla (3.3.9)
 
 VP 9.2.0 Changelog
 ------------------------
