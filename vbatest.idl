@@ -852,8 +852,10 @@ typedef [uuid(D09B9F0E-C1AE-40dd-84D6-B1F74053AA8E)]
 		[propput, id(19), helpstring("property Strength")] HRESULT Strength([in] float newVal);
 		[propget, id(20), helpstring("property Visible")] HRESULT Visible([out, retval] VARIANT_BOOL *pVal);
 		[propput, id(20), helpstring("property Visible")] HRESULT Visible([in] VARIANT_BOOL newVal);
-		[propget, id(394), helpstring("property Visible")] HRESULT Enabled([out, retval] VARIANT_BOOL *pVal);
-		[propput, id(394), helpstring("property Visible")] HRESULT Enabled([in] VARIANT_BOOL newVal);
+		[propget, id(394), helpstring("property Enabled")] HRESULT Enabled([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(394), helpstring("property Enabled")] HRESULT Enabled([in] VARIANT_BOOL newVal);
+		[propget, id(398), helpstring("property Compatibility")] HRESULT CompatibilityMode([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(398), helpstring("property Compatibility")] HRESULT CompatibilityMode([in] VARIANT_BOOL newVal);
 		[propget, id(21), helpstring("property Elasticity")] HRESULT Elasticity([out, retval] float *pVal);
 		[propput, id(21), helpstring("property Elasticity")] HRESULT Elasticity([in] float newVal);
 		[propget, id(22), helpstring("property Recoil")] HRESULT Recoil([out, retval] float *pVal);
@@ -1492,6 +1494,8 @@ typedef [uuid(D09B9F0E-C1AE-40dd-84D6-B1F74053AA8E)]
 		
 		[propget, id(111), helpstring("property Collidable")] HRESULT Collidable([out, retval] VARIANT_BOOL *pVal);
 		[propput, id(111), helpstring("property Collidable")] HRESULT Collidable([in] VARIANT_BOOL newVal);
+		[propget, id(395), helpstring("property IsToy")] HRESULT IsToy([out, retval] VARIANT_BOOL *pVal);
+		[propput, id(395), helpstring("property IsToy")] HRESULT IsToy([in] VARIANT_BOOL newVal);
 		[propget, id(34), helpstring("property HasHitEvent")] HRESULT HasHitEvent([out, retval] VARIANT_BOOL *pVal);
 		[propput, id(34), helpstring("property HasHitEvent")] HRESULT HasHitEvent([in] VARIANT_BOOL newVal);
 		[propget, id(33), helpstring("property Threshold")] HRESULT Threshold([out, retval] float *pVal);
