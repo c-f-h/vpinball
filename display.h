@@ -52,7 +52,7 @@ inline void Display_DrawSprite( RenderDevice* Direct3DDevice, const float x, con
 	Vertices[3].z = 0.0f;
 	Vertices[3].rhw = 1.0f;
 
-	Direct3DDevice->SetTexture ( 0, Texture );
+	// Direct3DDevice->SetTexture ( 0, Texture ); // TODO DX9
 
     // Draw the quad.
 	Direct3DDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DTRANSFORMED_NOTEX2_VERTEX, Vertices, 4);

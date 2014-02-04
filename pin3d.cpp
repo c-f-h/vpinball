@@ -16,7 +16,6 @@ Pin3D::Pin3D()
 	m_pd3dDevice = NULL;
 	m_pddsStatic = NULL;
 	m_pddsStaticZ = NULL;
-	m_pddsLightWhite = NULL;
 	backgroundVBuffer = NULL;
 	tableVBuffer = NULL;
    playfieldPolyIndices = NULL;
@@ -46,9 +45,7 @@ Pin3D::~Pin3D()
 	SAFE_RELEASE(m_pddsStaticZ);
 
 	for (int i=0; i<m_xvShadowMap.AbsoluteSize(); ++i)
-		((BaseTexture*)m_xvShadowMap.AbsoluteElementAt(i))->Release();
-
-	SAFE_RELEASE(m_pddsLightWhite);
+		delete (BaseTexture*)m_xvShadowMap.AbsoluteElementAt(i);
 
     m_pd3dDevice->DestroyRenderer();
 
@@ -330,22 +327,21 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
 
     CreateBallShadow();
 
-    int width, height;
-    ballTexture.CreateFromResource( IDB_BALLTEXTURE, &width, &height );
-    ballTexture.SetAlpha(RGB(0,0,0), width, height);
+    ballTexture.CreateFromResource(IDB_BALLTEXTURE);
+    ballTexture.SetAlpha(RGB(0,0,0));
     ballTexture.CreateMipMap();
 
-    lightTexture[0].CreateFromResource(IDB_SUNBURST, &width, &height);
-    lightTexture[0].SetAlpha(RGB(0,0,0), width, height);
+    lightTexture[0].CreateFromResource(IDB_SUNBURST);
+    lightTexture[0].SetAlpha(RGB(0,0,0));
     lightTexture[0].CreateMipMap();
 
-    lightTexture[1].CreateFromResource(IDB_SUNBURST5, &width, &height);
-    lightTexture[1].SetAlpha(RGB(0,0,0), width, height);
+    lightTexture[1].CreateFromResource(IDB_SUNBURST5);
+    lightTexture[1].SetAlpha(RGB(0,0,0));
     lightTexture[1].CreateMipMap();
 
-    m_pddsLightWhite = g_pvp->m_pdd.CreateFromResource(IDB_WHITE, &width, &height);
-    Texture::SetAlpha(m_pddsLightWhite, RGB(0,0,0), width, height);
-    Texture::CreateNextMipMapLevel(m_pddsLightWhite);
+    m_pddsLightWhite.CreateFromResource(IDB_WHITE);
+    m_pddsLightWhite.SetAlpha(RGB(0,0,0));
+    m_pddsLightWhite.CreateMipMap();
 
     if(stereo3DFXAA) {
         // TODO (DX9): disabled for now
@@ -813,10 +809,13 @@ void Pin3D::RenderPlayfieldGraphics()
 	Material mtrl;
 
 	Texture * const pin = g_pplayer->m_ptable->GetImage((char *)g_pplayer->m_ptable->m_szImage);
+    D3DTexture *d3dtex = NULL;      // TODO DX9: remove this when texture manager finished
 
 	if (pin)
 	{
 		SetTexture(pin);
+        d3dtex = m_pd3dDevice->UploadTexture(pin->m_pdsBuffer);
+        m_pd3dDevice->SetTexture(0, d3dtex);
 	}
 	else // No image by that name
 	{
@@ -830,6 +829,11 @@ void Pin3D::RenderPlayfieldGraphics()
 	EnableLightMap(fFalse, -1);
 
 	SetTexture(NULL);
+    if (pin)
+    {
+        d3dtex->Release();
+        m_pd3dDevice->SetTexture(0, NULL);
+    }
 	m_pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, tableVBuffer, numVerts, 7, (LPWORD)rgiPin3D1, 4);
 }
 
@@ -970,11 +974,11 @@ BaseTexture* Pin3D::CreateShadow(const float z)
 
 	delete psur;
 
-	BaseTexture* pddsProjectTexture = g_pvp->m_pdd.CreateTextureOffscreen(shadwidth, shadheight);
+	BaseTexture* pddsProjectTexture = new MemTexture(shadwidth, shadheight);
 	m_xvShadowMap.AddElement(pddsProjectTexture, (int)z);
 
-    DWORD texWidth, texHeight;
-    m_pd3dDevice->GetTextureSize(pddsProjectTexture, &texWidth, &texHeight);
+    DWORD texWidth = pddsProjectTexture->width();
+    DWORD texHeight = pddsProjectTexture->height();
 	m_maxtu = (float)shadwidth/(float)texWidth;
 	m_maxtv = (float)shadheight/(float)texHeight;
 
@@ -996,7 +1000,7 @@ void Pin3D::SetTexture(Texture* pTexture)
 
 void Pin3D::SetBaseTexture(BaseTexture* pddsTexture)
 {
-	m_pd3dDevice->SetTexture(ePictureTexture, (pddsTexture == NULL) ? m_pddsLightWhite : pddsTexture);
+	// TODO DX9 m_pd3dDevice->SetTexture(ePictureTexture, (pddsTexture == NULL) ? m_pddsLightWhite : pddsTexture);
 }
 
 
@@ -1007,7 +1011,7 @@ void Pin3D::EnableLightMap(const BOOL fEnable, const float z)
 		BaseTexture* pdds = (BaseTexture*)m_xvShadowMap.ElementAt((int)z);
 		if (!pdds)
 			pdds = CreateShadow(z);
-		m_pd3dDevice->SetTexture(eLightProject1, pdds);
+		// TODO DX9 m_pd3dDevice->SetTexture(eLightProject1, pdds);
 	}
 	else
 		m_pd3dDevice->SetTexture(eLightProject1, NULL);

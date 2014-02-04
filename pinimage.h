@@ -23,11 +23,7 @@ public:
 	LPDIRECTDRAW7 m_pDD;
 
 	BaseTexture* CreateTextureOffscreen(const int width, const int height, DWORD* texWidth = NULL, DWORD* texHeight = NULL);
-	BaseTexture* CreateFromFile(char *szfile, int * const pwidth, int * const pheight, int& originalWidth, int& originalHeight);
-	BaseTexture* CreateFromResource(const int id, int * const pwidth, int * const pheight);
-	BaseTexture* CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * const pheight);
     BaseTexture* CreateOffscreenWithCustomTransparency(const int width, const int height, const int color);
-    BaseTexture* CreateOffscreenPlain(const int width, const int height);   // this is only used by a few elements, maybe can be removed
 
 	BOOL m_fHardwareAccel;
 	BOOL m_fAlternateRender;

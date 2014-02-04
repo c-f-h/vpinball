@@ -195,22 +195,35 @@ void RenderDevice::CopySurface(RenderTarget* dest, RenderTarget* src)
     CHECKD3D(m_pD3DDevice->StretchRect(src, NULL, dest, NULL, D3DTEXF_NONE));
 }
 
-void RenderDevice::GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height)
+D3DTexture* RenderDevice::UploadTexture(MemTexture* surf)
 {
-    if (tex == NULL)
+    IDirect3DTexture9 *sysTex, *tex;
+
+    CHECKD3D(m_pD3DDevice->CreateTexture(surf->width(), surf->height(), 1, 0, D3DFMT_A8R8G8B8,
+                D3DPOOL_SYSTEMMEM, &sysTex, NULL));
+
+    // copy data into system memory texture
+    D3DLOCKED_RECT locked;
+    CHECKD3D(sysTex->LockRect(0, &locked, NULL, 0));
+    BYTE *pdest = (BYTE*)locked.pBits;
+    for (int y = 0; y < surf->height(); ++y)
     {
-        *width = *height = 1;       // HACK/TODO: remove
-        return;
+        memcpy(pdest + y*locked.Pitch, surf->data() + y*surf->pitch(), 4 * surf->width());
     }
-    D3DSURFACE_DESC desc;
-    tex->GetLevelDesc(0, &desc);
-    *width = desc.Width;
-    *height = desc.Height;
+    CHECKD3D(sysTex->UnlockRect(0));
+
+    CHECKD3D(m_pD3DDevice->CreateTexture(surf->width(), surf->height(), 0, D3DUSAGE_AUTOGENMIPMAP, D3DFMT_A8R8G8B8,
+                D3DPOOL_DEFAULT, &tex, NULL));
+
+    CHECKD3D(m_pD3DDevice->UpdateTexture(sysTex, tex));
+    CHECKD3D(sysTex->Release());
+
+    return tex;
 }
 
-void RenderDevice::SetTexture(DWORD p1, BaseTexture* p2 )
+void RenderDevice::SetTexture(DWORD p1, D3DTexture* p2 )
 {
-   //m_pD3DDevice->SetTexture(p1, p2);
+    m_pD3DDevice->SetTexture(p1, p2);
 }
 
 void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)

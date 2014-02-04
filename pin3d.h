@@ -267,7 +267,7 @@ public:
 	Texture ballTexture;
 	Texture ballShadowTexture;
 	Texture lightTexture[2]; // 0=bumper, 1=lights
-	BaseTexture* m_pddsLightWhite;
+	Texture m_pddsLightWhite;
 
    VertexBuffer *backgroundVBuffer;
    VertexBuffer *tableVBuffer;

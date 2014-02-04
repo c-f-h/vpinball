@@ -4,6 +4,116 @@
 
 RenderDevice *Texture::renderDevice=0;
 
+
+MemTexture* MemTexture::CreateFromFreeImage(FIBITMAP* dib)
+{
+    FIBITMAP* dib32 = FreeImage_ConvertTo32Bits(dib);
+
+    MemTexture* tex = new MemTexture(FreeImage_GetWidth(dib32), FreeImage_GetHeight(dib32));
+
+    BYTE *psrc = FreeImage_GetBits(dib32), *pdst = tex->data();
+    int pitchdst = FreeImage_GetPitch(dib32), pitchsrc = tex->pitch();
+    const int height = tex->height();
+
+    for (int y = 0; y < height; ++y)
+    {
+        memcpy(pdst + (height-y-1)*pitchdst, psrc + y*pitchsrc, 4 * tex->width());
+    }
+
+    //memcpy(tex->data(), FreeImage_GetBits(dib32), tex->pitch()*tex->height());
+
+    FreeImage_Unload(dib32);
+    return tex;
+}
+
+BaseTexture* MemTexture::CreateFromFile(const char *szfile)
+{
+   FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+
+   // check the file signature and deduce its format
+   // (the second argument is currently not used by FreeImage)
+   fif = FreeImage_GetFileType(szfile, 0);
+   if(fif == FIF_UNKNOWN) {
+      // no signature ?
+      // try to guess the file format from the file extension
+      fif = FreeImage_GetFIFFromFilename(szfile);
+   }
+   // check that the plugin has reading capabilities ...
+   if((fif != FIF_UNKNOWN) && FreeImage_FIFSupportsReading(fif)) {
+      // ok, let's load the file
+      FIBITMAP *dib = FreeImage_Load(fif, szfile, 0);
+
+      // check if Textures exceed the maximum texture diemension
+      int maxTexDim;
+      HRESULT hrMaxTex = GetRegInt("Player", "MaxTexDimension", &maxTexDim);
+      if (hrMaxTex != S_OK)
+      {
+         maxTexDim = 0; // default: Don't resize textures
+      }
+      if((maxTexDim <= 0) || (maxTexDim > MAX_TEXTURE_SIZE))
+      {
+         maxTexDim = MAX_TEXTURE_SIZE;
+      }
+      int pictureWidth = FreeImage_GetWidth(dib);
+      int pictureHeight = FreeImage_GetHeight(dib);
+      // save original width and height, if the texture is rescaled
+      //originalWidth = pictureWidth;
+      //originalHeight = pictureHeight;
+      if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
+      {
+         dib = FreeImage_Rescale(dib, min(pictureWidth,maxTexDim), min(pictureHeight,maxTexDim), FILTER_BILINEAR);
+      }
+
+      MemTexture* mySurface = MemTexture::CreateFromFreeImage(dib);
+
+      FreeImage_Unload(dib);
+
+      //if (bitsPerPixel == 24)
+      //   Texture::SetOpaque(mySurface);
+
+      return mySurface;
+   }
+   else
+      return NULL;
+}
+
+MemTexture* MemTexture::CreateFromHBitmap(HBITMAP hbm)
+{
+   BITMAP bm;
+   GetObject(hbm, sizeof(bm), &bm);
+
+   if (bm.bmWidth > MAX_TEXTURE_SIZE || bm.bmHeight > MAX_TEXTURE_SIZE)
+   {
+      return NULL; // MAX_TEXTURE_SIZE is the limit for directx7 textures
+   }
+
+   BaseTexture* pdds = new MemTexture(bm.bmWidth, bm.bmHeight);
+
+#ifndef VPINBALL_DX9
+   HDC hdc;
+   pdds->GetDC(&hdc);
+
+   HDC hdcFoo = CreateCompatibleDC(hdc);
+   HBITMAP hbmOld = (HBITMAP)SelectObject(hdcFoo, hbm);
+
+   BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcFoo, 0, 0, SRCCOPY);
+
+   SelectObject(hdcFoo, hbmOld);
+   DeleteDC(hdcFoo);
+   DeleteObject(hbm);
+   pdds->ReleaseDC(hdc);
+
+   if (bm.bmBitsPixel != 32)
+      SetOpaque(pdds);
+#endif
+
+   return pdds;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 Texture::Texture()
 {
    m_pdsBuffer = NULL;
@@ -30,7 +140,7 @@ void Texture::Release()
 
 void Texture::SetBackDrop( DWORD textureChannel )
 {
-    renderDevice->SetTexture( textureChannel, m_pdsBufferBackdrop ? m_pdsBufferBackdrop : NULL);
+    // TODO DX9 renderDevice->SetTexture( textureChannel, m_pdsBufferBackdrop ? m_pdsBufferBackdrop : NULL);
 }
 
 /*
@@ -46,7 +156,6 @@ void Texture::Unset( const DWORD textureChannel )
 
 HRESULT Texture::SaveToStream(IStream *pstream, PinTable *pt)
 {
-#ifndef VPINBALL_DX9
    BiffWriter bw(pstream, NULL, NULL);
 
    bw.WriteString(FID(NAME), m_szName);
@@ -62,19 +171,11 @@ HRESULT Texture::SaveToStream(IStream *pstream, PinTable *pt)
 
    if (!m_ppb)
    {
-      DDSURFACEDESC2 ddsd;
-      ddsd.dwSize = sizeof(ddsd);
-
-      m_pdsBuffer->Lock(NULL, &ddsd, DDLOCK_READONLY | DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-
       bw.WriteTag(FID(BITS));
 
       // 32-bit picture
-      LZWWriter lzwwriter(pstream, (int *)ddsd.lpSurface, m_width*4, m_height, ddsd.lPitch);
-
+      LZWWriter lzwwriter(pstream, (int *)m_pdsBuffer->data(), m_width*4, m_height, m_pdsBuffer->pitch());
       lzwwriter.CompressBits(8+1);
-
-      m_pdsBuffer->Unlock(NULL);
    }
    else // JPEG (or other binary format)
    {
@@ -91,7 +192,6 @@ HRESULT Texture::SaveToStream(IStream *pstream, PinTable *pt)
    }
 
    bw.WriteTag(FID(ENDB));
-#endif
 
    return S_OK;
 }
@@ -137,21 +237,12 @@ bool Texture::LoadFromMemory(BYTE *data, DWORD size)
         m_height = min(pictureHeight,maxTexDim);
     }
 
-    HDC hDC = GetDC(NULL);
-    HBITMAP hbm = CreateDIBitmap(hDC, FreeImage_GetInfoHeader(dib),CBM_INIT, FreeImage_GetBits(dib), FreeImage_GetInfo(dib), DIB_RGB_COLORS);
-
-    int bitsPerPixel = FreeImage_GetBPP(dib);
-    int dibWidth = FreeImage_GetWidth(dib);
-    int dibHeight = FreeImage_GetHeight(dib);
+    m_pdsBuffer = MemTexture::CreateFromFreeImage(dib);
+    SetSizeFrom(m_pdsBuffer);
 
     FreeImage_Unload(dib);
 
-    m_pdsBuffer =  g_pvp->m_pdd.CreateFromHBitmap(hbm, NULL, NULL);
-
-    if (bitsPerPixel == 24)
-        SetOpaque(m_pdsBuffer, dibWidth, dibHeight);
-
-    return m_pdsBuffer != NULL;
+    return true;
 }
 
 
@@ -185,23 +276,17 @@ BOOL Texture::LoadToken(int id, BiffReader *pbr)
    }
    else if (id == FID(BITS))
    {
-      if (!(m_pdsBuffer = g_pvp->m_pdd.CreateTextureOffscreen(m_width, m_height)))
-          return FALSE;
-
-#ifndef VPINBALL_DX9
-      DDSURFACEDESC2 ddsd;
-      ddsd.dwSize = sizeof(ddsd);
-      /*const HRESULT hr =*/ m_pdsBuffer->Lock(NULL, &ddsd, DDLOCK_WRITEONLY | DDLOCK_DISCARDCONTENTS | DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
+       m_pdsBuffer = new MemTexture(m_width, m_height);
 
       // 32-bit picture
-      LZWReader lzwreader(pbr->m_pistream, (int *)ddsd.lpSurface, m_width*4, m_height, ddsd.lPitch);
+      LZWReader lzwreader(pbr->m_pistream, (int *)m_pdsBuffer->data(), m_width*4, m_height, m_pdsBuffer->pitch());
       lzwreader.Decoder();
 
-      const int lpitch = ddsd.lPitch;
+      const int lpitch = m_pdsBuffer->pitch();
 
       // Assume our 32 bit color structure
       // Find out if all alpha values are zero
-      BYTE * const pch = (BYTE *)ddsd.lpSurface;
+      BYTE * const pch = (BYTE *)m_pdsBuffer->data();
       bool allAlphaZero = true;
       for (int i=0;i<m_height;i++)
       {
@@ -221,64 +306,15 @@ BOOL Texture::LoadToken(int id, BiffReader *pbr)
          for (int i=0;i<m_height;i++)
             for (int l=0;l<m_width;l++)
                pch[i*lpitch + 4*l + 3] = 0xff;
-
-      m_pdsBuffer->Unlock(NULL);
-#endif
-
    }
    else if (id == FID(JPEG))
    {
       m_ppb = new PinBinary();
       m_ppb->LoadFromStream(pbr->m_pistream, pbr->m_version);
-
       // m_ppb->m_szPath has the original filename
       // m_ppb->m_pdata() is the buffer
       // m_ppb->m_cdata() is the filesize
-      FIMEMORY *hmem = FreeImage_OpenMemory((BYTE *)m_ppb->m_pdata, m_ppb->m_cdata);
-      FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem, 0);
-      FIBITMAP *dib = FreeImage_LoadFromMemory(fif, hmem, 0);
-
-      // check if Textures exceed the maximum texture dimension
-      int maxTexDim;
-      HRESULT hrMaxTex = GetRegInt("Player", "MaxTexDimension", &maxTexDim);
-      if (hrMaxTex != S_OK)
-      {
-         maxTexDim = 0; // default: Don't resize textures
-      }
-      if((maxTexDim <= 0) || (maxTexDim > MAX_TEXTURE_SIZE))
-      {
-         maxTexDim = MAX_TEXTURE_SIZE;
-      }
-      int pictureWidth = FreeImage_GetWidth(dib);
-      int pictureHeight = FreeImage_GetHeight(dib);
-      // save original width and height, if the texture is rescaled
-      m_originalWidth = pictureWidth;
-      m_originalHeight = pictureHeight;
-      if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
-      {
-         dib = FreeImage_Rescale(dib, min(pictureWidth,maxTexDim), min(pictureHeight,maxTexDim), FILTER_BILINEAR);
-         m_width = min(pictureWidth,maxTexDim);
-         m_height = min(pictureHeight,maxTexDim);
-      }
-
-      HDC hDC = GetDC(NULL);
-      HBITMAP hbm = CreateDIBitmap(hDC, FreeImage_GetInfoHeader(dib),CBM_INIT, FreeImage_GetBits(dib), FreeImage_GetInfo(dib), DIB_RGB_COLORS);
-
-      int bitsPerPixel = FreeImage_GetBPP(dib);
-      int dibWidth = FreeImage_GetWidth(dib);
-      int dibHeight = FreeImage_GetHeight(dib);
-
-      FreeImage_Unload(dib);
-
-      m_pdsBuffer =  g_pvp->m_pdd.CreateFromHBitmap(hbm, NULL, NULL);
-
-      if (bitsPerPixel == 24)
-         SetOpaque(m_pdsBuffer, dibWidth, dibHeight);
-
-      if (m_pdsBuffer == NULL)
-      {
-         return fFalse;
-      }
+      return LoadFromMemory((BYTE*)m_ppb->m_pdata, m_ppb->m_cdata);
    }
    else if (id == FID(LINK))
    {
@@ -286,51 +322,7 @@ BOOL Texture::LoadToken(int id, BiffReader *pbr)
       PinTable * const pt = (PinTable *)pbr->m_pdata;
       pbr->GetInt(&linkid);
       m_ppb = pt->GetImageLinkBinary(linkid);
-      FIMEMORY *hmem = FreeImage_OpenMemory((BYTE *)m_ppb->m_pdata, m_ppb->m_cdata);
-      FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem, 0);
-      FIBITMAP *dib = FreeImage_LoadFromMemory(fif, hmem, 0);
-
-      // check if Textures exceed the maximum texture dimension
-      int maxTexDim;
-      HRESULT hrMaxTex = GetRegInt("Player", "MaxTexDimension", &maxTexDim);
-      if (hrMaxTex != S_OK)
-      {
-         maxTexDim = 0; // default: Don't resize textures
-      }
-      if((maxTexDim <= 0) || (maxTexDim > MAX_TEXTURE_SIZE))
-      {
-         maxTexDim = MAX_TEXTURE_SIZE;
-      }
-      int pictureWidth = FreeImage_GetWidth(dib);
-      int pictureHeight = FreeImage_GetHeight(dib);
-      // save original width and height, if the texture is rescaled
-      m_originalWidth = pictureWidth;
-      m_originalHeight = pictureHeight;
-      if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
-      {
-         dib = FreeImage_Rescale(dib, min(pictureWidth,maxTexDim), min(pictureHeight,maxTexDim), FILTER_BILINEAR);
-         m_width = min(pictureWidth,maxTexDim);
-         m_height = min(pictureHeight,maxTexDim);
-      }
-
-      HDC hDC = GetDC(NULL);
-      HBITMAP hbm = CreateDIBitmap(hDC, FreeImage_GetInfoHeader(dib),CBM_INIT, FreeImage_GetBits(dib), FreeImage_GetInfo(dib), DIB_RGB_COLORS);
-
-      int bitsPerPixel = FreeImage_GetBPP(dib);
-      int dibWidth = FreeImage_GetWidth(dib);
-      int dibHeight = FreeImage_GetHeight(dib);
-
-      FreeImage_Unload(dib);
-
-      m_pdsBuffer =  g_pvp->m_pdd.CreateFromHBitmap(hbm, NULL, NULL);
-
-      if (bitsPerPixel == 24)
-         SetOpaque(m_pdsBuffer, dibWidth, dibHeight);
-
-      if (m_pdsBuffer == NULL)
-      {
-         return fFalse;
-      }
+      return LoadFromMemory((BYTE*)m_ppb->m_pdata, m_ppb->m_cdata);
    }
    return fTrue;
 }
@@ -341,48 +333,37 @@ void Texture::SetTransparentColor(const COLORREF color)
    if (m_rgbTransparent != color)
    {
       m_rgbTransparent = color;
-      SAFE_RELEASE(m_pdsBufferColorKey);
-      SAFE_RELEASE(m_pdsBufferBackdrop);
+      delete m_pdsBufferColorKey; m_pdsBufferColorKey = NULL;
+      delete m_pdsBufferBackdrop; m_pdsBufferBackdrop = NULL;
    }
 }
 
 void Texture::CreateAlphaChannel()
 {
-#ifndef VPINBALL_DX9
    if (!m_pdsBufferColorKey)
    {
-      DDSURFACEDESC2 ddsd;
-      ddsd.dwSize = sizeof(ddsd);
-      m_pdsBuffer->GetSurfaceDesc(&ddsd);
-      m_pdsBufferColorKey = g_pvp->m_pdd.CreateTextureOffscreen(ddsd.dwWidth, ddsd.dwHeight);
-      m_pdsBufferColorKey->Blt(NULL,m_pdsBuffer,NULL,DDBLT_WAIT,NULL);
-      m_fTransparent = Texture::SetAlpha(m_pdsBufferColorKey, m_rgbTransparent, m_width, m_height);
+      // copy buffer into new color key buffer
+      m_pdsBufferColorKey = new MemTexture(*m_pdsBuffer);
+      m_fTransparent = Texture::SetAlpha(m_pdsBufferColorKey, m_rgbTransparent);
       if (!m_fTransparent)
          m_rgbTransparent = NOTRANSCOLOR; // set to magic color to disable future checking
       CreateNextMipMapLevel(m_pdsBufferColorKey);
    }
-#endif
 }
 
 void Texture::EnsureBackdrop(const COLORREF color)
 {
-#ifndef VPINBALL_DX9
    if (!m_pdsBufferBackdrop || color != m_rgbBackdropCur)
    {
-      DDSURFACEDESC2 ddsd;
-      ddsd.dwSize = sizeof(ddsd);
-      m_pdsBuffer->GetSurfaceDesc(&ddsd);
       if (!m_pdsBufferBackdrop)
       {
-         m_pdsBufferBackdrop = g_pvp->m_pdd.CreateTextureOffscreen(ddsd.dwWidth, ddsd.dwHeight);
+          m_pdsBufferBackdrop = new MemTexture;
       }
-      m_pdsBufferBackdrop->Blt(NULL,m_pdsBuffer,NULL,DDBLT_WAIT,NULL);
-      SetOpaqueBackdrop(m_pdsBufferBackdrop, m_rgbTransparent, color, ddsd.dwWidth, ddsd.dwHeight);
+      *m_pdsBufferBackdrop = *m_pdsBuffer;  // copy texture
+      SetOpaqueBackdrop(m_pdsBufferBackdrop, m_rgbTransparent, color);
       CreateNextMipMapLevel(m_pdsBufferBackdrop);
-
       m_rgbBackdropCur = color;
    }
-#endif
 }
 
 void Texture::EnsureMaxTextureCoordinates()
@@ -398,9 +379,9 @@ void Texture::EnsureMaxTextureCoordinates()
 
 void Texture::FreeStuff()
 {
-   SAFE_RELEASE(m_pdsBuffer);
-   SAFE_RELEASE(m_pdsBufferColorKey);
-   SAFE_RELEASE(m_pdsBufferBackdrop);
+   delete m_pdsBuffer; m_pdsBuffer = NULL;
+   delete m_pdsBufferColorKey; m_pdsBufferColorKey = NULL;
+   delete m_pdsBufferBackdrop; m_pdsBufferBackdrop = NULL;
    if (m_hbmGDIVersion)
    {
       DeleteObject(m_hbmGDIVersion);
@@ -428,12 +409,21 @@ void Texture::CreateGDIVersion()
    HDC hdcNew = CreateCompatibleDC(hdcScreen);
    HBITMAP hbmOld = (HBITMAP)SelectObject(hdcNew, m_hbmGDIVersion);
 
-#ifndef VPINBALL_DX9
-   HDC hdcImage;
-   m_pdsBuffer->GetDC(&hdcImage);
-   StretchBlt(hdcNew, 0, 0, m_width, m_height, hdcImage, 0, 0, m_width, m_height, SRCCOPY);
-   m_pdsBuffer->ReleaseDC(hdcImage);
-#endif
+   BITMAPINFO bmi;
+   ZeroMemory(&bmi, sizeof(bmi));
+   bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+   bmi.bmiHeader.biWidth = m_width;
+   bmi.bmiHeader.biHeight = -m_height;
+   bmi.bmiHeader.biPlanes = 1;
+   bmi.bmiHeader.biBitCount = 32;
+   bmi.bmiHeader.biCompression = BI_RGB;
+   bmi.bmiHeader.biSizeImage = 0;
+
+   SetStretchBltMode(hdcNew, COLORONCOLOR);
+   StretchDIBits(hdcNew,
+           0, 0, m_width, m_height,
+           0, 0, m_width, m_height,
+           m_pdsBuffer->data(), &bmi, DIB_RGB_COLORS, SRCCOPY);
 
    SelectObject(hdcNew, hbmOld);
    DeleteDC(hdcNew);
@@ -468,106 +458,48 @@ void Texture::CreateFromResource(const int id, int * const pwidth, int * const p
    m_pdsBufferColorKey = CreateFromHBitmap(hbm, pwidth, pheight);
 }
 
-// TODO: duplicate from Texture::
+
 BaseTexture* Texture::CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * const pheight)
 {
-   BITMAP bm;
-   GetObject(hbm, sizeof(bm), &bm);
-
-   if (pwidth)
-   {
-      *pwidth = bm.bmWidth;
-   }
-
-   if (pheight)
-   {
-      *pheight = bm.bmHeight;
-   }
-
-   if (bm.bmWidth > MAX_TEXTURE_SIZE || bm.bmHeight > MAX_TEXTURE_SIZE)
-   {
-      return NULL; // MAX_TEXTURE_SIZE is the limit for directx7 textures
-   }
-
-   BaseTexture* pdds = CreateBaseTexture(bm.bmWidth, bm.bmHeight);
-
-#ifndef VPINBALL_DX9
-   HDC hdc;
-   pdds->GetDC(&hdc);
-
-   HDC hdcFoo = CreateCompatibleDC(hdc);
-   HBITMAP hbmOld = (HBITMAP)SelectObject(hdcFoo, hbm);
-
-   BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcFoo, 0, 0, SRCCOPY);
-
-   SelectObject(hdcFoo, hbmOld);
-   DeleteDC(hdcFoo);
-   DeleteObject(hbm);
-   pdds->ReleaseDC(hdc); 
-
-   if (bm.bmBitsPixel != 32) 
-      SetOpaque(pdds, bm.bmWidth, bm.bmHeight);
-#endif
-
+   BaseTexture* pdds = MemTexture::CreateFromHBitmap(hbm);
+   SetSizeFrom(pdds);
+   if (pwidth) *pwidth = pdds->width();
+   if (pheight) *pheight = pdds->height();
    return pdds;
 }
 
 void Texture::CreateTextureOffscreen(const int width, const int height)
 {
-   m_pdsBufferColorKey = CreateBaseTexture( width, height );
-}
-
-BaseTexture* Texture::CreateBaseTexture(const int width, const int height)
-{
-    DWORD texWidth, texHeight;
-    BaseTexture* pdds = g_pvp->m_pdd.CreateTextureOffscreen(width, height, &texWidth, &texHeight);
-
-    m_width = texWidth;
-    m_height = texHeight;
-    m_maxtu = 1.0f; //(float)m_width / (float)texWidth;
-    m_maxtv = 1.0f; //(float)m_height / (float)texHeight;
-    //pitch = ddsd.lPitch;
-
-    return pdds;
+   m_pdsBufferColorKey = new MemTexture( width, height );
+   SetSizeFrom( m_pdsBufferColorKey );
 }
 
 
-void Texture::SetOpaque(BaseTexture* pdds, const int width, const int height)
+void Texture::SetOpaque(BaseTexture* pdds)
 {
-#ifndef VPINBALL_DX9
-    DDSURFACEDESC2 ddsd;
-    ddsd.dwSize = sizeof(ddsd);
-
-    pdds->Lock(NULL, &ddsd, DDLOCK_WRITEONLY | DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-
-    const int pitch = ddsd.lPitch;
+    const int width = pdds->width();
+    const int height = pdds->height();
+    const int pitch = pdds->pitch();
 
     // Assume our 32 bit color structure
-    BYTE *pch = (BYTE *)ddsd.lpSurface;
+    BYTE *pch = pdds->data();
 
     for (int i=0;i<height;i++)
     {
         for (int l=0;l<width;l++)
         {
-            pch[3] = 0xff;
-            pch += 4;
+            pch[4*l + 3] = 0xff;
         }
-        pch += pitch-(width*4);
+        pch += pitch;
     }
-
-    pdds->Unlock(NULL);
-#endif
 }
 
 
-void Texture::SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop, const int width, const int height)
+void Texture::SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop)
 {
-#ifndef VPINBALL_DX9
-   DDSURFACEDESC2 ddsd;
-   ddsd.dwSize = sizeof(ddsd);
-   pdds->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-
-   const int lpitch = ddsd.lPitch;
+   const int width = pdds->width();
+   const int height = pdds->height();
+   const int lpitch = pdds->pitch();
 
    const unsigned int rback = (rgbBackdrop & 0x00ff0000) >> 16;
    const unsigned int gback = (rgbBackdrop & 0x0000ff00) >> 8;
@@ -576,7 +508,7 @@ void Texture::SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent
    const unsigned int rgbBd = rback | (gback << 8) | (bback << 16) | ((unsigned int)0xff << 24);
 
    // Assume our 32 bit color structure
-   BYTE *pch = (BYTE *)ddsd.lpSurface;
+   BYTE *pch = pdds->data();
 
    for (int i=0;i<height;i++)
    {
@@ -594,9 +526,6 @@ void Texture::SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent
       }
       pch += lpitch-(width*4);
    }
-
-   pdds->Unlock(NULL);
-#endif
 }
 
 void Texture::CreateMipMap()
@@ -727,44 +656,25 @@ void Texture::CreateNextMipMapLevel(BaseTexture* pdds)
 #endif
 }
 
-BOOL Texture::SetAlpha(const COLORREF rgbTransparent, const int width, const int height)
+BOOL Texture::SetAlpha(const COLORREF rgbTransparent)
 {
     if (!m_pdsBufferColorKey)
         return FALSE;
     else
-        return Texture::SetAlpha(m_pdsBufferColorKey, rgbTransparent, width, height);
-}
-
-void Texture::Lock()
-{
-    // TODO (DX9): disabled. DX9 can only lock DYNAMIC textures, so we have to take that into account.
-    ShowError("Texture locking is disabled during DX9 port. Please come back later.");
-    //DDSURFACEDESC2 ddsd;
-    //ddsd.dwSize = sizeof(ddsd);
-    //m_pdsBufferColorKey->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-    //pitch = ddsd.lPitch;
-    //surfaceData = (BYTE*)ddsd.lpSurface;
-}
-
-void Texture::Unlock()
-{
-    // TODO: ditto, see Lock() above.
-    //m_pdsBufferColorKey->Unlock(NULL);
+        return Texture::SetAlpha(m_pdsBufferColorKey, rgbTransparent);
 }
 
 
 
-BOOL Texture::SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const int width, const int height)
+BOOL Texture::SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent)
 {
-#ifndef VPINBALL_DX9
     // Set alpha of each pixel
-    DDSURFACEDESC2 ddsd;
-    ddsd.dwSize = sizeof(ddsd);
-    pdds->Lock(NULL, &ddsd, DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
+    const int width = pdds->width();
+    const int height = pdds->height();
 
     BOOL fTransparent = fFalse;
 
-    const int pitch = ddsd.lPitch;
+    const int pitch = pdds->pitch();
 
     const COLORREF rtrans = (rgbTransparent & 0x000000ff);
     const COLORREF gtrans = (rgbTransparent & 0x0000ff00) >> 8;
@@ -773,7 +683,7 @@ BOOL Texture::SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const i
     const COLORREF bgrTransparent = btrans | (gtrans << 8) | (rtrans << 16) | 0xff000000;  // color order different in DirectX texture buffer
     // Assume our 32 bit color structure
 
-    BYTE *pch = (BYTE *)ddsd.lpSurface;
+    BYTE *pch = pdds->data();
     if (rgbTransparent != NOTRANSCOLOR)
     {
         // check if image has it's own alpha channel -- compute min and max alpha
@@ -792,7 +702,7 @@ BOOL Texture::SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const i
             pch += pitch-(width*4);
         }
         slintf("amax:%d amin:%d\n",aMax,aMin);
-        pch = (BYTE *)ddsd.lpSurface;
+        pch = pdds->data();
 
         for (int i=0;i<height;i++)
         {
@@ -817,12 +727,8 @@ BOOL Texture::SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const i
             pch += pitch-(width*4);
         }
     }
-    pdds->Unlock(NULL);
 
     return fTransparent;
-#else
-    return FALSE;
-#endif
 }
 
 static const int rgfilterwindow[7][7] =
@@ -838,17 +744,20 @@ static const int rgfilterwindow[7][7] =
 
 void Texture::Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwidth, const int shadheight)
 {
-#ifndef VPINBALL_DX9
     if (!pbits) return;	// found this pointer to be NULL after some graphics errors
 
-    /*int window[7][7]; // custom filter kernel
-      for (int i=0;i<4;i++)
-      {
+    const int width = pdds->width();
+    const int height = pdds->height();
+    const int pitch = pdds->pitch();
+
+/*  int window[7][7]; // custom filter kernel
+    for (int i=0;i<4;i++)
+    {
       window[0][i] = i+1;
       window[0][6-i] = i+1;
       window[i][0] = i+1;
       window[6-i][0] = i+1;
-      }*/
+    }  */
 
     int totalwindow = 0;
     for (int i=0;i<7;i++)
@@ -862,14 +771,8 @@ void Texture::Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwi
 
     // Gaussian Blur the sharp shadows
 
-    DDSURFACEDESC2 ddsd;
-    ddsd.dwSize = sizeof(ddsd);
-
-    pdds->Lock(NULL, &ddsd, DDLOCK_WRITEONLY | DDLOCK_NOSYSLOCK | DDLOCK_DISCARDCONTENTS | DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-
-    const int pitch = ddsd.lPitch;
     const int pitchSharp = 256*3;
-    BYTE *pc = (BYTE *)ddsd.lpSurface;
+    BYTE *pc = pdds->data();
 
     for (int i=0;i<shadheight;i++)
     {
@@ -919,7 +822,4 @@ void Texture::Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwi
 
         pc += pitch - shadwidth*4;
     }
-
-    pdds->Unlock(NULL);
-#endif
 }

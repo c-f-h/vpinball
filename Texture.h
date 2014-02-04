@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "RenderDevice.h"
 #pragma once
 
 #ifdef RGB
@@ -9,6 +8,37 @@
 #define RGB(r,g,b) ((COLORREF)(((DWORD)(r)) | (((DWORD)(g))<<8) | (((DWORD)(b))<<16)))
 
 #define NOTRANSCOLOR  RGB(123,123,123)
+
+struct FIBITMAP;
+class RenderDevice;
+
+// texture stored in main memory in 32bit ARGB format
+struct MemTexture
+{
+public:
+    MemTexture()
+        : m_width(0), m_height(0)
+    { }
+
+    MemTexture(int w, int h)
+        : m_width(w), m_height(h), m_data(4*w*h)
+    { }
+
+    int width() const   { return m_width; }
+    int height() const  { return m_height; }
+    int pitch() const   { return 4*m_width; }
+    BYTE* data()        { return &m_data[0]; }
+
+    int m_width;
+    int m_height;
+    std::vector<BYTE> m_data;
+
+    static MemTexture *CreateFromHBitmap(HBITMAP hbm);
+    static MemTexture *CreateFromFile(const char *filename);
+    static MemTexture *CreateFromFreeImage(FIBITMAP* dib);
+};
+
+typedef struct MemTexture BaseTexture;
 
 
 class Texture : public ILoadable
@@ -33,28 +63,24 @@ public:
    void SetBackDrop( DWORD textureChannel );
    inline void Set( DWORD textureChannel )
    {
-      renderDevice->SetTexture( textureChannel, m_pdsBufferColorKey);
+      //renderDevice->SetTexture( textureChannel, m_pdsBufferColorKey); // TODO DX9
    }
 
    void Release();
    void EnsureHBitmap();
    void CreateGDIVersion();
-   void CreateFromResource(const int id, int * const pwidth, int * const pheight);
-
-   BaseTexture *CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * const pheight);
-   BaseTexture *CreateBaseTexture(const int width, const int height);
 
    void CreateTextureOffscreen(const int width, const int height);
-   void CreateMipMap();
-   BOOL SetAlpha(const COLORREF rgbTransparent, const int width, const int height);
+   BaseTexture *CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * const pheight);
+   void CreateFromResource(const int id, int * const pwidth = NULL, int * const pheight = NULL);
 
-   void Lock();
-   void Unlock();
+   void CreateMipMap();
+   BOOL SetAlpha(const COLORREF rgbTransparent);
 
    static void CreateNextMipMapLevel(BaseTexture* pdds);
-   static void SetOpaque(BaseTexture* pdds, const int width, const int height);
-   static void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop, const int width, const int height);
-   static BOOL SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent, const int width, const int height);
+   static void SetOpaque(BaseTexture* pdds);
+   static void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop);
+   static BOOL SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent);
    static void Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwidth, const int shadheight);
 
    void Unset( const DWORD textureChannel );
@@ -65,6 +91,12 @@ public:
 
 private:
    bool LoadFromMemory(BYTE *data, DWORD size);
+
+   void SetSizeFrom(MemTexture* tex)
+   {
+      m_width = tex->width();
+      m_height = tex->height();
+   }
 
 public:
 

@@ -371,8 +371,7 @@ void Decal::GetHitShapes(Vector<HitObject> * const pvho)
 
       m_pinimage.m_width = rcOut.right;
       m_pinimage.m_height = rcOut.bottom;
-      m_pinimage.m_pdsBuffer = NULL;
-      m_pinimage.m_pdsBuffer = g_pvp->m_pdd.CreateTextureOffscreen(m_pinimage.m_width, m_pinimage.m_height);
+      m_pinimage.m_pdsBuffer = new MemTexture(rcOut.right, rcOut.bottom);
 
       if (m_d.m_color == RGB(255,255,255))
          m_d.m_color = RGB(254,255,255); //m_pinimage.SetTransparentColor(RGB(0,0,0));
@@ -415,7 +414,7 @@ void Decal::GetHitShapes(Vector<HitObject> * const pvho)
 
       m_pinimage.ReleaseTextureDC(hdc);
 
-      Texture::SetOpaque(m_pinimage.m_pdsBuffer, m_pinimage.m_width, m_pinimage.m_height);
+      Texture::SetOpaque(m_pinimage.m_pdsBuffer);
       DeleteObject(hFont);
    }
 }

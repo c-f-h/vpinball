@@ -6604,11 +6604,9 @@ void PinTable::ReImportImage(HWND hwndListView, Texture *ppi, char *filename)
       ppb->ReadFromFile(filename);
    }
 
-   Texture piT;
-   // Make sure we can import the new file before blowing away anything we had before
-   piT.m_pdsBuffer = g_pvp->m_pdd.CreateFromFile(filename, &ppi->m_width, &ppi->m_height, ppi->m_originalWidth, ppi->m_originalHeight);
+   MemTexture *tex = MemTexture::CreateFromFile(filename);
 
-   if (piT.m_pdsBuffer == NULL)
+   if (tex == NULL)
    {
       if( ppb ) delete ppb;
       return;
@@ -6623,8 +6621,9 @@ void PinTable::ReImportImage(HWND hwndListView, Texture *ppi, char *filename)
 
    //SAFE_RELEASE(ppi->m_pdsBuffer);
 
-   ppi->m_pdsBuffer = piT.m_pdsBuffer;
-   ppi->m_pdsBuffer->AddRef();
+   ppi->m_width = ppi->m_originalWidth = tex->width();
+   ppi->m_height = ppi->m_originalHeight = tex->height();
+   ppi->m_pdsBuffer = tex;
 
    lstrcpy(ppi->m_szPath, filename);
 
@@ -6636,10 +6635,11 @@ void PinTable::ReImportImage(HWND hwndListView, Texture *ppi, char *filename)
 
 bool PinTable::ExportImage(HWND hwndListView, Texture *ppi, char *szfilename)
 {
+#ifdef VPINBALL_DX9
     // TODO (DX9): reenable image exporting
     ShowError("ExportImage disabled during DX9 port, please come back later.");
     return false;
-#if 0
+#else
    if (ppi->m_ppb != NULL)return ppi->m_ppb->WriteToFile(szfilename); 
    else if (ppi->m_pdsBuffer != NULL)
    {

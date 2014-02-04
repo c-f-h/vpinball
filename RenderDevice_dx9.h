@@ -3,13 +3,13 @@
 #include "stdafx.h"
 #include <d3d9.h>
 #include "Material.h"
-
+#include "Texture.h"
 
 #define CHECKD3D(s) { HRESULT hr = (s); if (FAILED(hr)) ReportError(hr, __FILE__, __LINE__); }
 
 void ReportError(HRESULT hr, const char *file, int line);
 
-typedef IDirect3DTexture9 BaseTexture;
+typedef IDirect3DTexture9 D3DTexture;
 typedef D3DVIEWPORT9 ViewPort;
 typedef IDirect3DSurface9 RenderTarget;
 
@@ -187,10 +187,9 @@ public:
    RenderTarget* AttachZBufferTo(RenderTarget* surf);
    void CopySurface(RenderTarget* dest, RenderTarget* src);
 
-   void GetTextureSize(BaseTexture* tex, DWORD *width, DWORD *height);
-
+   D3DTexture* RenderDevice::UploadTexture(MemTexture* surf);
    void SetRenderState( const RenderStates p1, const DWORD p2 );
-   void SetTexture( DWORD, BaseTexture* );
+   void SetTexture( DWORD, D3DTexture* );
    void SetTextureFilter(DWORD texUnit, DWORD mode);
    void SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode);
    void SetTextureStageState(DWORD stage, D3DTEXTURESTAGESTATETYPE type, DWORD value);

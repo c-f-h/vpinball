@@ -1,5 +1,6 @@
 #pragma once
 #include "Material.h"
+#include "Texture.h"
 
 class Triangle
 {
@@ -21,8 +22,8 @@ public:
 	}
 	
 	inline ~ObjFrame() {
-		SAFE_RELEASE(pdds);
-		SAFE_RELEASE(pddsZBuffer);
+        delete pdds;
+        delete pddsZBuffer;
 	}
 
 	RECT rc;
