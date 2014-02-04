@@ -2858,7 +2858,7 @@ void Player::DrawBallShadow(Ball * const pball)
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
    m_pin3d.SetColorKeyEnabled(FALSE);
 
-   m_pin3d.ballShadowTexture.Set( ePictureTexture );
+   m_pin3d.SetBaseTexture(ePictureTexture, m_pin3d.ballShadowTexture);
    m_pin3d.m_pd3dDevice->SetTextureAddressMode(0, RenderDevice::TEX_CLAMP);
    Vertex3D_NoTex2 * const rgv3DShadow = pball->m_rgv3DShadow;
 

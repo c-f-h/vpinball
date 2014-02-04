@@ -11,6 +11,48 @@ void ReportError(HRESULT hr, const char *file, int line)
     exit(-1);
 }
 
+
+
+D3DTexture* TextureManager::LoadTexture(MemTexture* memtex)
+{
+    Iter it = m_map.find(memtex);
+    if (it == m_map.end())
+    {
+        TexInfo texinfo;
+        texinfo.d3dtex = m_rd.UploadTexture(memtex, &texinfo.texWidth, &texinfo.texHeight);
+        if (!texinfo.d3dtex)
+            return 0;
+        m_map[memtex] = texinfo;
+        return texinfo.d3dtex;
+    }
+    else
+    {
+        return it->second.d3dtex;
+    }
+}
+
+void TextureManager::UnloadTexture(MemTexture* memtex)
+{
+    Iter it = m_map.find(memtex);
+    if (it != m_map.end())
+    {
+        it->second.d3dtex->Release();
+        m_map.erase(it);
+    }
+}
+
+void TextureManager::UnloadAll()
+{
+    for (Iter it = m_map.begin(); it != m_map.end(); ++it)
+    {
+        it->second.d3dtex->Release();
+    }
+    m_map.clear();
+}
+
+
+
+
 #define CHECKD3D(s) { HRESULT hr = (s); if (FAILED(hr)) ReportError(hr, __FILE__, __LINE__); }
 
 
@@ -60,30 +102,16 @@ static UINT ComputePrimitiveCount(D3DPRIMITIVETYPE type, int vertexCount)
 //#define MY_IDX_BUF_SIZE 8192
 #define MY_IDX_BUF_SIZE 65536
 
-RenderDevice::RenderDevice()
+RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
+    : m_texMan(*this)
 {
-    m_pD3D = NULL;
-    m_pD3DDevice = NULL;
-    m_pBackBuffer = NULL;
-
     m_adapter = D3DADAPTER_DEFAULT;     // for now, always use the default adapter
 
-    Texture::SetRenderDevice(this);
-}
-
-RenderDevice::~RenderDevice()
-{
-   //m_pD3DDevice->Release();
-   //m_pD3D->Release();
-}
-
-bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
-{
     m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
     if (m_pD3D == NULL)
     {
         ShowError("Could not create D3D9 object.");
-        return false;
+        throw 0;
     }
 
     D3DFORMAT format;
@@ -153,14 +181,15 @@ bool RenderDevice::InitRenderer(HWND hwnd, int width, int height, bool fullscree
 
     // Set up a dynamic index buffer to cache passed indices in
     CreateIndexBuffer(MY_IDX_BUF_SIZE, D3DUSAGE_DYNAMIC, IndexBuffer::FMT_INDEX16, &m_dynIndexBuffer);
-    return true;
+
+    Texture::SetRenderDevice(this);
 }
 
-void RenderDevice::DestroyRenderer()
+RenderDevice::~RenderDevice()
 {
     SAFE_RELEASE(m_pBackBuffer);
-    SAFE_RELEASE(m_pD3DDevice);
-    SAFE_RELEASE(m_pD3D);
+    // m_pD3DDevice.Release();  // automatic
+    // m_pD3D.Release();        // automatic
 }
 
 void RenderDevice::BeginScene()
@@ -197,11 +226,33 @@ void RenderDevice::CopySurface(RenderTarget* dest, RenderTarget* src)
     CHECKD3D(m_pD3DDevice->StretchRect(src, NULL, dest, NULL, D3DTEXF_NONE));
 }
 
-D3DTexture* RenderDevice::UploadTexture(MemTexture* surf)
+const bool usePowerOfTwoTextures = true;
+
+D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth, int *pTexHeight)
 {
     IDirect3DTexture9 *sysTex, *tex;
 
-    CHECKD3D(m_pD3DDevice->CreateTexture(surf->width(), surf->height(), 1, 0, D3DFMT_A8R8G8B8,
+    int texwidth = 8; // Minimum size 8
+    int texheight = 8;
+
+    // determine texture size
+    if (usePowerOfTwoTextures)
+    {
+        while (texwidth < surf->width())
+            texwidth <<= 1;
+        while (texheight < surf->height())
+            texheight <<= 1;
+    }
+    else
+    {
+        texwidth = surf->width();
+        texheight = surf->height();
+    }
+
+    if (pTexWidth) *pTexWidth = texwidth;
+    if (pTexHeight) *pTexHeight = texheight;
+
+    CHECKD3D(m_pD3DDevice->CreateTexture(texwidth, texheight, 1, 0, D3DFMT_A8R8G8B8,
                 D3DPOOL_SYSTEMMEM, &sysTex, NULL));
 
     // copy data into system memory texture
@@ -214,7 +265,7 @@ D3DTexture* RenderDevice::UploadTexture(MemTexture* surf)
     }
     CHECKD3D(sysTex->UnlockRect(0));
 
-    CHECKD3D(m_pD3DDevice->CreateTexture(surf->width(), surf->height(), 0, D3DUSAGE_AUTOGENMIPMAP, D3DFMT_A8R8G8B8,
+    CHECKD3D(m_pD3DDevice->CreateTexture(texwidth, texheight, 0, D3DUSAGE_AUTOGENMIPMAP, D3DFMT_A8R8G8B8,
                 D3DPOOL_DEFAULT, &tex, NULL));
 
     CHECKD3D(m_pD3DDevice->UpdateTexture(sysTex, tex));
@@ -271,16 +322,16 @@ void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 
 void RenderDevice::SetTextureStageState( DWORD p1, D3DTEXTURESTAGESTATETYPE p2, DWORD p3)
 {
-   if( (unsigned int)p2 < TEXTURE_STATE_CACHE_SIZE && p1<8)
-   {
-      if( textureStateCache[p1][p2]==p3 )
-      {
-         // texture stage state hasn't changed since last call of this function -> do nothing here
-         return;
-      }
-      textureStateCache[p1][p2]=p3;
-   }
-   m_pD3DDevice->SetTextureStageState(p1,p2,p3);
+    if( (unsigned int)p2 < TEXTURE_STATE_CACHE_SIZE && p1 < 8)
+    {
+        if(textureStateCache[p1][p2] == p3)
+        {
+            // texture stage state hasn't changed since last call of this function -> do nothing here
+            return;
+        }
+        textureStateCache[p1][p2] = p3;
+    }
+    m_pD3DDevice->SetTextureStageState(p1, p2, p3);
 }
 
 void RenderDevice::SetMaterial( const BaseMaterial * const _material )

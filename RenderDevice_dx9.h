@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include "stdafx.h"
 #include <d3d9.h>
 #include "Material.h"
@@ -18,6 +19,37 @@ enum TransformStateType {
     TRANSFORMSTATE_VIEW       = D3DTS_VIEW,
     TRANSFORMSTATE_PROJECTION = D3DTS_PROJECTION
 };
+
+
+class TextureManager
+{
+public:
+    TextureManager(RenderDevice& rd) : m_rd(rd)
+    { }
+
+    ~TextureManager()
+    {
+        UnloadAll();
+    }
+
+    D3DTexture* LoadTexture(MemTexture* memtex);
+    void UnloadTexture(MemTexture* memtex);
+
+    void UnloadAll();
+
+private:
+    struct TexInfo
+    {
+        D3DTexture* d3dtex;
+        int texWidth;
+        int texHeight;
+    };
+
+    RenderDevice& m_rd;
+    std::map<MemTexture*, TexInfo> m_map;
+    typedef std::map<MemTexture*, TexInfo>::iterator Iter;
+};
+
 
 // adds simple setters and getters on top of D3DLIGHT9, for compatibility
 struct BaseLight : public D3DLIGHT9
@@ -166,11 +198,8 @@ public:
        TEX_MIRROR        = D3DTADDRESS_MIRROR
    };
 
-   RenderDevice();
+   RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate);
    ~RenderDevice();
-
-   bool InitRenderer(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate);
-   void DestroyRenderer();
 
    void BeginScene();
    void EndScene();
@@ -187,7 +216,7 @@ public:
    RenderTarget* AttachZBufferTo(RenderTarget* surf);
    void CopySurface(RenderTarget* dest, RenderTarget* src);
 
-   D3DTexture* RenderDevice::UploadTexture(MemTexture* surf);
+   D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth=NULL, int *pTexHeight=NULL);
    void SetRenderState( const RenderStates p1, const DWORD p2 );
    void SetTexture( DWORD, D3DTexture* );
    void SetTextureFilter(DWORD texUnit, DWORD mode);
@@ -226,8 +255,9 @@ public:
    }
 
 private:
-   IDirect3D9* m_pD3D;
-   IDirect3DDevice9* m_pD3DDevice;
+   CComPtr<IDirect3D9> m_pD3D;
+   CComPtr<IDirect3DDevice9> m_pD3DDevice;
+
    IDirect3DSurface9* m_pBackBuffer;
    IndexBuffer* m_dynIndexBuffer;      // workaround for DrawIndexedPrimitiveVB
 
@@ -239,4 +269,7 @@ private:
    DWORD renderStateCache[RENDER_STATE_CACHE_SIZE];
    DWORD textureStateCache[8][TEXTURE_STATE_CACHE_SIZE];
    BaseMaterial materialStateCache;
+
+public:
+   TextureManager m_texMan;
 };

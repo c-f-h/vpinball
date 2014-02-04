@@ -77,37 +77,31 @@ BaseTexture* MemTexture::CreateFromFile(const char *szfile)
       return NULL;
 }
 
+// from the FreeImage FAQ page
+static FIBITMAP* HBitmapToFreeImage(HBITMAP hbmp)
+{
+    BITMAP bm;
+    GetObject(hbmp, sizeof(BITMAP), &bm);
+    FIBITMAP* dib = FreeImage_Allocate(bm.bmWidth, bm.bmHeight, bm.bmBitsPixel);
+    // The GetDIBits function clears the biClrUsed and biClrImportant BITMAPINFO members (dont't know why)
+    // So we save these infos below. This is needed for palettized images only.
+    int nColors = FreeImage_GetColorsUsed(dib);
+    HDC dc = GetDC(NULL);
+    int Success = GetDIBits(dc, hbmp, 0, FreeImage_GetHeight(dib),
+            FreeImage_GetBits(dib), FreeImage_GetInfo(dib), DIB_RGB_COLORS);
+    ReleaseDC(NULL, dc);
+    // restore BITMAPINFO members
+    FreeImage_GetInfoHeader(dib)->biClrUsed = nColors;
+    FreeImage_GetInfoHeader(dib)->biClrImportant = nColors;
+    return dib;
+}
+
 MemTexture* MemTexture::CreateFromHBitmap(HBITMAP hbm)
 {
-   BITMAP bm;
-   GetObject(hbm, sizeof(bm), &bm);
-
-   if (bm.bmWidth > MAX_TEXTURE_SIZE || bm.bmHeight > MAX_TEXTURE_SIZE)
-   {
-      return NULL; // MAX_TEXTURE_SIZE is the limit for directx7 textures
-   }
-
-   BaseTexture* pdds = new MemTexture(bm.bmWidth, bm.bmHeight);
-
-#ifndef VPINBALL_DX9
-   HDC hdc;
-   pdds->GetDC(&hdc);
-
-   HDC hdcFoo = CreateCompatibleDC(hdc);
-   HBITMAP hbmOld = (HBITMAP)SelectObject(hdcFoo, hbm);
-
-   BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcFoo, 0, 0, SRCCOPY);
-
-   SelectObject(hdcFoo, hbmOld);
-   DeleteDC(hdcFoo);
-   DeleteObject(hbm);
-   pdds->ReleaseDC(hdc);
-
-   if (bm.bmBitsPixel != 32)
-      SetOpaque(pdds);
-#endif
-
-   return pdds;
+    FIBITMAP *dib = HBitmapToFreeImage(hbm);
+    BaseTexture* pdds = MemTexture::CreateFromFreeImage(dib);
+    FreeImage_Unload(dib);
+    return pdds;
 }
 
 
@@ -138,20 +132,19 @@ void Texture::Release()
 {
 }
 
-void Texture::SetBackDrop( DWORD textureChannel )
+void Texture::Set(DWORD textureChannel)
 {
-    // TODO DX9 renderDevice->SetTexture( textureChannel, m_pdsBufferBackdrop ? m_pdsBufferBackdrop : NULL);
+    g_pplayer->m_pin3d.SetBaseTexture( textureChannel, m_pdsBufferColorKey);
 }
 
-/*
-void Texture::Set( const DWORD textureChannel )
+void Texture::SetBackDrop( DWORD textureChannel )
 {
-    renderDevice->SetTexture( textureChannel, m_pdsBufferColorKey ? m_pdsBufferColorKey : NULL);
+    g_pplayer->m_pin3d.SetBaseTexture( textureChannel, m_pdsBufferBackdrop ? m_pdsBufferBackdrop : NULL);
 }
-*/
-void Texture::Unset( const DWORD textureChannel )
+
+void Texture::Unset( DWORD textureChannel )
 {
-   renderDevice->SetTexture( textureChannel, NULL );
+    g_pplayer->m_pin3d.SetBaseTexture(textureChannel, NULL);
 }
 
 HRESULT Texture::SaveToStream(IStream *pstream, PinTable *pt)

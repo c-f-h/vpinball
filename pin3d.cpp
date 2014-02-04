@@ -16,6 +16,7 @@ Pin3D::Pin3D()
 	m_pd3dDevice = NULL;
 	m_pddsStatic = NULL;
 	m_pddsStaticZ = NULL;
+    ballShadowTexture = NULL;
 	backgroundVBuffer = NULL;
 	tableVBuffer = NULL;
    playfieldPolyIndices = NULL;
@@ -47,16 +48,12 @@ Pin3D::~Pin3D()
 	for (int i=0; i<m_xvShadowMap.AbsoluteSize(); ++i)
 		delete (BaseTexture*)m_xvShadowMap.AbsoluteElementAt(i);
 
-    m_pd3dDevice->DestroyRenderer();
-
-	delete m_pd3dDevice;
-
    if( spriteVertexBuffer )
    {
       spriteVertexBuffer->release();
       spriteVertexBuffer=0;
    }
-   ballShadowTexture.FreeStuff();
+   delete ballShadowTexture;
    ballTexture.FreeStuff();
    lightTexture[0].FreeStuff();
    lightTexture[1].FreeStuff();
@@ -67,6 +64,8 @@ Pin3D::~Pin3D()
 		tableVBuffer->release();
 	if(playfieldPolyIndices)
 		delete [] playfieldPolyIndices;
+
+	delete m_pd3dDevice;
 }
 
 void Pin3D::ClearSpriteRectangle( AnimObject *animObj, ObjFrame *pof )
@@ -301,8 +300,11 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     m_dwRenderWidth  = m_rcScreen.right  - m_rcScreen.left;
     m_dwRenderHeight = m_rcScreen.bottom - m_rcScreen.top;
 
-    m_pd3dDevice = new RenderDevice;
-    m_pd3dDevice->InitRenderer(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate);
+    try {
+        m_pd3dDevice = new RenderDevice(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate);
+    } catch (...) {
+        return E_FAIL;
+    }
     SetUpdatePos(m_rcScreen.left, m_rcScreen.top);
 
     // set the viewport for the newly created device
@@ -403,7 +405,7 @@ void Pin3D::InitRenderState()
 
 	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-	g_pplayer->m_pin3d.SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR );															
+	SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR );
 	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_TEXCOORDINDEX, 0);
 
 	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLOROP, D3DTOP_MODULATE);
@@ -623,7 +625,7 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	m_pd3dDevice->SetRenderState( RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA );
 	m_pd3dDevice->SetRenderState( RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA );
 
-	g_pplayer->m_pin3d.SetTextureFilter( eLightProject1, TEXTURE_MODE_BILINEAR ); 
+	SetTextureFilter( eLightProject1, TEXTURE_MODE_BILINEAR );
 	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLORARG1, D3DTA_TEXTURE );
 	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLORARG2, D3DTA_CURRENT );
 	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLOROP,   D3DTOP_MODULATE );
@@ -808,18 +810,14 @@ void Pin3D::RenderPlayfieldGraphics()
 	Material mtrl;
 
 	Texture * const pin = g_pplayer->m_ptable->GetImage((char *)g_pplayer->m_ptable->m_szImage);
-    D3DTexture *d3dtex = NULL;      // TODO DX9: remove this when texture manager finished
 
 	if (pin)
 	{
 		SetTexture(pin);
-        d3dtex = m_pd3dDevice->UploadTexture(pin->m_pdsBuffer);
-        m_pd3dDevice->SetTexture(0, d3dtex);
 	}
 	else // No image by that name
 	{
 		SetTexture(NULL);
-
 		mtrl.setColor( 1.0f, g_pplayer->m_ptable->m_colorplayfield );
 	}
 	m_pd3dDevice->SetMaterial(mtrl);
@@ -830,8 +828,8 @@ void Pin3D::RenderPlayfieldGraphics()
 	SetTexture(NULL);
     if (pin)
     {
-        d3dtex->Release();
         m_pd3dDevice->SetTexture(0, NULL);
+        m_pd3dDevice->m_texMan.UnloadTexture(pin->m_pdsBuffer);
     }
 	m_pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, tableVBuffer, numVerts, 7, (LPWORD)rgiPin3D1, 4);
 }
@@ -847,14 +845,12 @@ const int rgfilterwindow[7][7] =
 
 void Pin3D::CreateBallShadow()
 {
-#if 0   // TODO: disabled for DX9 port (can't lock texture in VRAM)
-	ballShadowTexture.CreateTextureOffscreen(16,16);
-	ballShadowTexture.Lock();
+	ballShadowTexture = new MemTexture(16, 16);
 
-	const int pitch = ballShadowTexture.pitch;
-	const int width = ballShadowTexture.m_width;
-	const int height = ballShadowTexture.m_height;
-	BYTE * const pc = ballShadowTexture.surfaceData;
+	const int pitch = ballShadowTexture->pitch();
+	const int width = ballShadowTexture->width();
+	const int height = ballShadowTexture->height();
+	BYTE * const pc = ballShadowTexture->data();
 
 	// Sharp Shadow
 	int offset = 0;
@@ -915,9 +911,6 @@ void Pin3D::CreateBallShadow()
 		}
 		offset += pitch;
 	}
-
-	ballShadowTexture.Unlock();
-#endif
 }
 
 BaseTexture* Pin3D::CreateShadow(const float z)
@@ -994,12 +987,13 @@ BaseTexture* Pin3D::CreateShadow(const float z)
 
 void Pin3D::SetTexture(Texture* pTexture)
 {
-    SetBaseTexture(pTexture ? pTexture->m_pdsBuffer : NULL);
+    SetBaseTexture(ePictureTexture, pTexture ? pTexture->m_pdsBuffer : NULL);
 }
 
-void Pin3D::SetBaseTexture(BaseTexture* pddsTexture)
+void Pin3D::SetBaseTexture(DWORD texUnit, BaseTexture* pddsTexture)
 {
-	// TODO DX9 m_pd3dDevice->SetTexture(ePictureTexture, (pddsTexture == NULL) ? m_pddsLightWhite : pddsTexture);
+    m_pd3dDevice->SetTexture(texUnit,
+            m_pd3dDevice->m_texMan.LoadTexture((pddsTexture == NULL) ? m_pddsLightWhite.m_pdsBufferColorKey : pddsTexture));
 }
 
 
@@ -1010,7 +1004,7 @@ void Pin3D::EnableLightMap(const BOOL fEnable, const float z)
 		BaseTexture* pdds = (BaseTexture*)m_xvShadowMap.ElementAt((int)z);
 		if (!pdds)
 			pdds = CreateShadow(z);
-		// TODO DX9 m_pd3dDevice->SetTexture(eLightProject1, pdds);
+        SetBaseTexture(eLightProject1, pdds);
 	}
 	else
 		m_pd3dDevice->SetTexture(eLightProject1, NULL);

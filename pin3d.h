@@ -213,7 +213,7 @@ public:
 	void SetTextureFilter(const int TextureNum, const int Mode) const;
 	
     void SetTexture(Texture* pTexture);
-	void SetBaseTexture(BaseTexture* pddsTexture);
+	void SetBaseTexture(DWORD texUnit, BaseTexture* pddsTexture);
 	void EnableLightMap(const BOOL fEnable, const float z);
 
 	void SetColorKeyEnabled(bool fColorKey);
@@ -265,7 +265,7 @@ public:
 
    BaseTexture *antiAliasTexture;
 	Texture ballTexture;
-	Texture ballShadowTexture;
+	MemTexture *ballShadowTexture;
 	Texture lightTexture[2]; // 0=bumper, 1=lights
 	Texture m_pddsLightWhite;
 

@@ -60,11 +60,9 @@ public:
    void EnsureMaxTextureCoordinates();
 
    static void SetRenderDevice( RenderDevice *_device );
-   void SetBackDrop( DWORD textureChannel );
-   inline void Set( DWORD textureChannel )
-   {
-      //renderDevice->SetTexture( textureChannel, m_pdsBufferColorKey); // TODO DX9
-   }
+   void Set(DWORD textureChannel);
+   void SetBackDrop(DWORD textureChannel);
+   void Unset(DWORD textureChannel);
 
    void Release();
    void EnsureHBitmap();
@@ -82,8 +80,6 @@ public:
    static void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop);
    static BOOL SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent);
    static void Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwidth, const int shadheight);
-
-   void Unset( const DWORD textureChannel );
 
    // create/release a DC which contains a (read-only) copy of the texture; for editor use
    void GetTextureDC(HDC *pdc);
@@ -111,6 +107,8 @@ public:
    float m_maxtu, m_maxtv;
 
    BaseTexture* m_pdsBuffer;
+   BaseTexture* m_pdsBufferColorKey;
+
    HBITMAP m_hbmGDIVersion; // HBitmap at screen depth so GDI draws it fast
    PinBinary *m_ppb;  // if this image should be saved as a binary stream, otherwise just LZW compressed from the live bitmap
 
@@ -124,7 +122,6 @@ public:
 private:
    COLORREF m_rgbBackdropCur;
 
-   BaseTexture* m_pdsBufferColorKey;
    BaseTexture* m_pdsBufferBackdrop;
 
    static RenderDevice *renderDevice;
