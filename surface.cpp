@@ -906,9 +906,6 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
    Texture * const pinSide = m_ptable->GetImage(m_d.m_szSideImage);
    float maxtuSide=1.0f, maxtvSide=1.0f;
 
-   const float inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
-   const float inv_height = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
-
    Vector<RenderVertex> vvertex;
    GetRgVertex(&vvertex);
    float *rgtexcoord = NULL;
@@ -1062,10 +1059,10 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
             verts[offset+3].tv = maxtvSide;
          }
 
-         ppin3d->m_lightproject.CalcCoordinates(&verts[offset],inv_width,inv_height);
-         ppin3d->m_lightproject.CalcCoordinates(&verts[offset+1],inv_width,inv_height);
-         ppin3d->m_lightproject.CalcCoordinates(&verts[offset+2],inv_width,inv_height);
-         ppin3d->m_lightproject.CalcCoordinates(&verts[offset+3],inv_width,inv_height);
+         ppin3d->m_lightproject.CalcCoordinates(&verts[offset]);
+         ppin3d->m_lightproject.CalcCoordinates(&verts[offset+1]);
+         ppin3d->m_lightproject.CalcCoordinates(&verts[offset+2]);
+         ppin3d->m_lightproject.CalcCoordinates(&verts[offset+3]);
 
          verts[offset].nx = verts[offset+1].nx = -vnormal[0].x;
          verts[offset].ny = verts[offset+1].ny = vnormal[0].y;
@@ -1228,13 +1225,13 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
             vertsTop[1][offset+1].z = heightDropped;
             vertsTop[1][offset+2].z = heightDropped;
             
-			ppin3d->m_lightproject.CalcCoordinates(&vertsTop[0][offset],inv_width,inv_height);
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[0][offset+1],inv_width,inv_height);
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[0][offset+2],inv_width,inv_height);
+			ppin3d->m_lightproject.CalcCoordinates(&vertsTop[0][offset]);
+            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[0][offset+1]);
+            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[0][offset+2]);
 
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[1][offset],inv_width,inv_height);
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[1][offset+1],inv_width,inv_height);
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[1][offset+2],inv_width,inv_height);
+            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[1][offset]);
+            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[1][offset+1]);
+            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[1][offset+2]);
 
             for (int l=offset;l<offset+3;l++)
             {
@@ -1274,9 +1271,6 @@ void Surface::PrepareSlingshots( RenderDevice *pd3dDevice )
    const float slingbottom = (m_d.m_heighttop - m_d.m_heightbottom) * 0.2f + m_d.m_heightbottom;
    const float slingtop    = (m_d.m_heighttop - m_d.m_heightbottom) * 0.8f + m_d.m_heightbottom;
 
-   const float inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
-   const float inv_height = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
-
    Vertex3D *buf;
    slingshotVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
    int offset=0;
@@ -1313,7 +1307,7 @@ void Surface::PrepareSlingshots( RenderDevice *pd3dDevice )
       }
 
       for (int l=0;l<12;l++)
-         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l],inv_width,inv_height);
+         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
       
       SetNormal(rgv3D, rgiSlingshot0, 4, NULL, NULL, NULL);
       buf[offset++] = rgv3D[rgiSlingshot0[0]];
@@ -1460,9 +1454,6 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
 
    const float slingbottom = (m_d.m_heighttop - m_d.m_heightbottom) * 0.2f + m_d.m_heightbottom;
    const float slingtop    = (m_d.m_heighttop - m_d.m_heightbottom) * 0.8f + m_d.m_heightbottom;
-
-   const float inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
-   const float inv_height = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
 
    for (int i=0;i<m_vlinesling.Size();i++)
    {

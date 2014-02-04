@@ -67,7 +67,7 @@ void PolygonToTriangles(const Vector<RenderVertex> &rgv, Vector<void> * const pv
 		}
 	}
 
-void LightProjected::CalcCoordinates(Vertex3D * const pv, const float inv_width, const float inv_height) const
+void LightProjected::CalcCoordinates(Vertex3D * const pv) const
 	{
 	const Vertex2D vOrigin(
 	// light is rotated around the light as the origin
