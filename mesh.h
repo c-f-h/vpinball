@@ -241,11 +241,11 @@ inline float GetAngle(const Vertex2D * const pvEnd1, const Vertex2D * const pvJo
 }
 */
 
-inline void SetNormal(Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex3D * rgvApply, const WORD * rgiApply, int applycount)
+template <class VtxType>
+void SetNormal(VtxType * const rgv, const WORD * const rgi, const int count, void * prgvApply, const WORD * rgiApply, int applycount)
 {
 	// If apply-to array is null, just apply the resulting normal to incoming array
-	if (rgvApply == NULL)
-		rgvApply = rgv;
+    VtxType * rgvApply = prgvApply ? (VtxType*)prgvApply : rgv;
 
 	if (rgiApply == NULL)
 		rgiApply = rgi;
@@ -280,47 +280,8 @@ inline void SetNormal(Vertex3D * const rgv, const WORD * const rgi, const int co
 	}
 }
 
-//copy pasted from above
-inline void SetNormal(Vertex3D_NoTex2 * const rgv, const WORD * const rgi, const int count, Vertex3D_NoTex2 * rgvApply, const WORD * rgiApply, int applycount)
-{
-	// If apply-to array is null, just apply the resulting normal to incoming array
-	if (rgvApply == NULL)
-		rgvApply = rgv;
-
-	if (rgiApply == NULL)
-		rgiApply = rgi;
-
-	if (applycount == 0)
-		applycount = count;
-
-	Vertex3Ds vnormal(0.0f,0.0f,0.0f);
-
-	for (int i=0; i<count; ++i)
-	{
-		const int l = rgi[i];
-		const int m = rgi[(i < count-1) ? (i+1) : 0];
-
-		vnormal.x += (rgv[l].y - rgv[m].y) * (rgv[l].z + rgv[m].z);
-		vnormal.y += (rgv[l].z - rgv[m].z) * (rgv[l].x + rgv[m].x);
-		vnormal.z += (rgv[l].x - rgv[m].x) * (rgv[l].y + rgv[m].y);		
-	}
-
-	const float len = vnormal.x * vnormal.x + vnormal.y * vnormal.y + vnormal.z * vnormal.z;
-	const float inv_len = (len > 0.0f) ? -1.0f/sqrtf(len) : 0.0f; //!! opt.
-	vnormal.x *= inv_len;
-	vnormal.y *= inv_len;
-	vnormal.z *= inv_len;
-
-	for (int i=0; i<applycount; ++i)
-	{
-		const int l = rgiApply[i];
-		rgvApply[l].nx = vnormal.x;
-		rgvApply[l].ny = vnormal.y;
-		rgvApply[l].nz = vnormal.z;
-	}
-}
-
-inline void SetDiffuseFromMaterial(Vertex3D *rgv, int count, Material *pmtrl) // get rid of this?
+template <class VtxType>
+void SetDiffuseFromMaterial(VtxType *rgv, int count, Material *pmtrl) // get rid of this?
 {
    D3DCOLORVALUE diffuse = pmtrl->getDiffuse();
    D3DCOLORVALUE emissive = pmtrl->getEmissive();
@@ -334,29 +295,8 @@ inline void SetDiffuseFromMaterial(Vertex3D *rgv, int count, Material *pmtrl) //
       rgv[i].color = color;
 }
 
-//copy pasted from above
-inline void SetDiffuseFromMaterial(Vertex3D_NoTex2 *rgv, int count, Material *pmtrl) // get rid of this?
-{
-   D3DCOLORVALUE diffuse = pmtrl->getDiffuse();
-   D3DCOLORVALUE emissive = pmtrl->getEmissive();
-   unsigned int r = (int)(((diffuse.r + emissive.r) * 255.0f) + 0.5f);
-   unsigned int g = (int)(((diffuse.g + emissive.g) * 255.0f) + 0.5f);
-   unsigned int b = (int)(((diffuse.b + emissive.b) * 255.0f) + 0.5f);
-
-   unsigned int color = (r<<16) | (g<<8) | b;
-
-   for (int i=0; i<count; ++i)
-      rgv[i].color = color;
-}
-
-inline void SetDiffuse(Vertex3D * const rgv, const int count, const unsigned int color) // get rid of this?
-{
-	for (int i=0; i<count; ++i)
-		rgv[i].color = color;
-}
-
-//copy pasted from above
-inline void SetDiffuse(Vertex3D_NoTex2 * const rgv, const int count, const unsigned int color) // get rid of this?
+template <class VtxType>
+void SetDiffuse(VtxType * const rgv, const int count, const unsigned int color) // get rid of this?
 {
 	for (int i=0; i<count; ++i)
 		rgv[i].color = color;
