@@ -67,6 +67,8 @@ RenderDevice::RenderDevice()
     m_pBackBuffer = NULL;
 
     m_adapter = D3DADAPTER_DEFAULT;     // for now, always use the default adapter
+
+    Texture::SetRenderDevice(this);
 }
 
 RenderDevice::~RenderDevice()
