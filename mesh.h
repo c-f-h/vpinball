@@ -69,8 +69,10 @@ class LightProjected
 {
 public:
 	Vertex3Ds m_v;
+    float inv_width;
+    float inv_height;
 
-	void CalcCoordinates(Vertex3D * const pv, const float inv_width, const float inv_height) const;
+	void CalcCoordinates(Vertex3D * const pv) const;
 };
 
 class RenderVertex : public Vertex2D
