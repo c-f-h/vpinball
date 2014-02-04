@@ -6635,18 +6635,9 @@ void PinTable::ReImportImage(HWND hwndListView, Texture *ppi, char *filename)
 
 bool PinTable::ExportImage(HWND hwndListView, Texture *ppi, char *szfilename)
 {
-#ifdef VPINBALL_DX9
-    // TODO (DX9): reenable image exporting
-    ShowError("ExportImage disabled during DX9 port, please come back later.");
-    return false;
-#else
    if (ppi->m_ppb != NULL)return ppi->m_ppb->WriteToFile(szfilename); 
    else if (ppi->m_pdsBuffer != NULL)
    {
-      DDSURFACEDESC2 ddsd;
-      ddsd.dwSize = sizeof(ddsd);
-      ppi->m_pdsBuffer->Lock(NULL, &ddsd, DDLOCK_READONLY | DDLOCK_SURFACEMEMORYPTR | DDLOCK_WAIT, NULL);
-
       HANDLE hFile = CreateFile(szfilename,GENERIC_WRITE, FILE_SHARE_READ,
          NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -6700,12 +6691,13 @@ bool PinTable::ExportImage(HWND hwndListView, Texture *ppi, char *szfilename)
       unsigned char* info;
       for (info = sinfo + surfwidth*3; info < sinfo + bmplnsize; *info++ = 0); //fill padding with 0			
 
-      const BYTE *spch = (BYTE *)ddsd.lpSurface + (surfheight * ddsd.lPitch);	// just past the end of the Texture part of DD surface
+      const int pitch = ppi->m_pdsBuffer->pitch();
+      const BYTE *spch = ppi->m_pdsBuffer->data() + (surfheight * pitch);	// just past the end of the Texture part of DD surface
 
       for (int i=0;i<surfheight;i++)
       {
          info = sinfo; //reset to start	
-         const BYTE *pch = (spch -= ddsd.lPitch);  // start on previous previous line			
+         const BYTE *pch = (spch -= pitch);  // start on previous previous line
 
          for (int l=0;l<surfwidth;l++)
          {					
@@ -6718,13 +6710,11 @@ bool PinTable::ExportImage(HWND hwndListView, Texture *ppi, char *szfilename)
          foo = GetLastError();			
       }
 
-      ppi->m_pdsBuffer->Unlock(NULL);	
       delete [] sinfo; sinfo = NULL;
       CloseHandle(hFile);	
       return true;
    }
    return false;
-#endif
 }
 
 
