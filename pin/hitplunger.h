@@ -21,8 +21,6 @@ public:
 	Joint m_jointBase[2];
 	Joint m_jointEnd[2];
 
-	int m_iframe; //Frame index that this flipper is currently displaying
-
 	float m_speed;
 	float m_pos;
 	float m_posdesired;

@@ -63,8 +63,6 @@ HitPlunger::HitPlunger(const float x, const float y, const float x2, const float
 		m_plungeranim.m_jointEnd[1].zhigh = zheight+PLUNGERHEIGHT;
 
 		m_plungeranim.SetObjects(m_plungeranim.m_pos);
-
-		m_plungeranim.m_iframe = -1;
 		}
 
 void HitPlunger::CalcHitRect()
