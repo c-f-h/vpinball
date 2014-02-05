@@ -1012,7 +1012,7 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
       }
       ppin3d->EnableAlphaBlend( 1, m_d.m_fAddBlend );
 
-      pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, (g_pplayer->m_fStereo3D == 0) || !g_pplayer->m_fStereo3Denabled );
+      pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
       pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
 
       static const WORD indices[4] = {0,1,3,2};
