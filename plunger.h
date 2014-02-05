@@ -103,8 +103,8 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Plunger)
 
 	PlungerData m_d;
     int cframes;
-    WORD indices[16*PLUNGEPOINTS1*6];
     VertexBuffer *vertexBuffer;
+    IndexBuffer *indexBuffer;
 
 	HitPlunger *m_phitplunger;
     Material material;

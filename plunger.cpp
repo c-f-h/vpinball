@@ -2,17 +2,23 @@
 
 Plunger::Plunger()
 {
-	m_phitplunger = NULL;
-   vertexBuffer = NULL;
+    m_phitplunger = NULL;
+    vertexBuffer = NULL;
+    indexBuffer = NULL;
 }
 
 Plunger::~Plunger()
 {
-   if(vertexBuffer)
-   {
-      vertexBuffer->release();
-      vertexBuffer = NULL;
-   }
+    if(vertexBuffer)
+    {
+        vertexBuffer->release();
+        vertexBuffer = NULL;
+    }
+    if(indexBuffer)
+    {
+        indexBuffer->release();
+        indexBuffer = NULL;
+    }
 }
 
 HRESULT Plunger::Init(PinTable *ptable, float x, float y, bool fromMouseClick)
@@ -233,6 +239,11 @@ void Plunger::EndPlay()
         vertexBuffer->release();
         vertexBuffer = NULL;
     }
+    if(indexBuffer)
+    {
+        indexBuffer->release();
+        indexBuffer = NULL;
+    }
 }
 
 void Plunger::SetObjectPos()
@@ -307,7 +318,7 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
                 ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
             }
 
-            pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, frame*(16*PLUNGEPOINTS1), 16*PLUNGEPOINTS1, indices, 16*6*(PLUNGEPOINTS1-1));
+            pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, frame*(16*PLUNGEPOINTS1), 16*PLUNGEPOINTS1, indexBuffer, 0, 16*6*(PLUNGEPOINTS1-1));
 
             if ( pin )
             {
@@ -318,7 +329,7 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
     }
     else if (m_d.m_type == PlungerTypeOrig)
     {
-        pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, frame*(16*PLUNGEPOINTS0), 16*PLUNGEPOINTS0, indices, 16*6*(PLUNGEPOINTS0-1));
+        pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, frame*(16*PLUNGEPOINTS0), 16*PLUNGEPOINTS0, indexBuffer, 0, 16*6*(PLUNGEPOINTS0-1));
     }
 }
 
@@ -378,6 +389,8 @@ const float rgPlunger[][2]=
 
 void Plunger::RenderSetup(const RenderDevice* _pd3dDevice )
 {
+   RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
+
    const float zheight = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_v.x, m_d.m_v.y);
    const float stroke = m_d.m_stroke;
    const float beginy = m_d.m_v.y;
@@ -390,7 +403,7 @@ void Plunger::RenderSetup(const RenderDevice* _pd3dDevice )
    const int vtsPerFrame = 16 * plungePoints;
 
    if ( vertexBuffer == NULL )
-       g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( cframes*vtsPerFrame, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
+       pd3dDevice->CreateVertexBuffer( cframes*vtsPerFrame, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
 
    int vbOffset=0;
    Vertex3D_NoTex2 *buf;
@@ -495,6 +508,8 @@ void Plunger::RenderSetup(const RenderDevice* _pd3dDevice )
    // set up index buffer
    if (!(m_d.m_type == PlungerTypeModern && renderNewPlunger))
    {
+       WORD indices[16*PLUNGEPOINTS1*6];
+
        int k=0;
        for (int l=0; l<16; l++)
        {
@@ -510,6 +525,10 @@ void Plunger::RenderSetup(const RenderDevice* _pd3dDevice )
                indices[k++] = m + offset;
            }
        }
+
+       if (indexBuffer)
+           indexBuffer->release();
+       indexBuffer = pd3dDevice->CreateAndFillIndexBuffer(k, indices);
    }
 
 

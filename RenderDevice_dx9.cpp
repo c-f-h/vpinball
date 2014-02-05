@@ -404,6 +404,20 @@ void RenderDevice::CreateIndexBuffer(unsigned int numIndices, DWORD usage, Index
                 D3DPOOL_DEFAULT, (IDirect3DIndexBuffer9**)idxBuffer, NULL));
 }
 
+IndexBuffer* RenderDevice::CreateAndFillIndexBuffer(unsigned int numIndices, const WORD * indices)
+{
+    IndexBuffer* ib;
+    CreateIndexBuffer(numIndices, 0, IndexBuffer::FMT_INDEX16, &ib);
+
+    void* buf;
+    ib->lock(0, 0, &buf, 0);
+    memcpy(buf, indices, numIndices * sizeof(indices[0]));
+    ib->unlock();
+
+    return ib;
+}
+
+
 RenderTarget* RenderDevice::AttachZBufferTo(RenderTarget* surf)
 {
     D3DSURFACE_DESC desc;
@@ -450,25 +464,30 @@ void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, VertexBuffer* 
         return;
     }
 
-    // get VB description (for FVF)
-    D3DVERTEXBUFFER_DESC desc;
-    vb->GetDesc(&desc);     // let's hope this is not very slow
-
-    const unsigned int vsize = fvfToSize(desc.FVF);
-
     // copy the indices to the dynamic index buffer
     WORD *buffer;
     m_dynIndexBuffer->lock(0, indexCount * sizeof(WORD), (void**)&buffer, IndexBuffer::DISCARD);
     memcpy(buffer, indices, indexCount * sizeof(WORD));
     m_dynIndexBuffer->unlock();
 
+    DrawIndexedPrimitiveVB(type, vb, startVertex, vertexCount, m_dynIndexBuffer, 0, indexCount);
+}
+
+void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount, IndexBuffer* ib, DWORD startIndex, DWORD indexCount)
+{
+    // get VB description (for FVF)
+    D3DVERTEXBUFFER_DESC desc;
+    vb->GetDesc(&desc);     // let's hope this is not very slow
+
+    const unsigned int vsize = fvfToSize(desc.FVF);
+
     // bind the vertex and index buffers
     CHECKD3D(m_pD3DDevice->SetFVF(desc.FVF));
     CHECKD3D(m_pD3DDevice->SetStreamSource(0, vb, 0, vsize));
-    CHECKD3D(m_pD3DDevice->SetIndices(m_dynIndexBuffer));
+    CHECKD3D(m_pD3DDevice->SetIndices(ib));
 
     // render
-    CHECKD3D(m_pD3DDevice->DrawIndexedPrimitive(type, startVertex, 0, vertexCount, 0, ComputePrimitiveCount(type, indexCount)));
+    CHECKD3D(m_pD3DDevice->DrawIndexedPrimitive(type, startVertex, 0, vertexCount, startIndex, ComputePrimitiveCount(type, indexCount)));
 }
 
 void RenderDevice::SetTransform( TransformStateType p1, D3DMATRIX* p2)
