@@ -117,18 +117,17 @@ public:
                                               // it's only needed for VBs which are locked several times per frame
         DISCARDCONTENTS = D3DLOCK_DISCARD     // discard previous contents; only works with dynamic VBs
     };
-    bool lock( unsigned int offsetToLock, unsigned int sizeToLock, void **dataBuffer, DWORD flags )
+    void lock( unsigned int offsetToLock, unsigned int sizeToLock, void **dataBuffer, DWORD flags )
     {
-        return !FAILED(this->Lock(offsetToLock, sizeToLock, dataBuffer, flags) );
+        CHECKD3D(this->Lock(offsetToLock, sizeToLock, dataBuffer, flags));
     }
-    bool unlock(void)
+    void unlock(void)
     {
-        return ( !FAILED(this->Unlock() ) );
+        CHECKD3D(this->Unlock());
     }
-    ULONG release(void)
+    void release(void)
     {
         while ( this->Release()!=0 );
-        return 0;
     }
 private:
     VertexBuffer();     // disable default constructor
