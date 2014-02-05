@@ -1482,17 +1482,13 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
 
         if (pinSide->m_fTransparent)
         {
-            if (g_pvp->m_pdd.m_fHardwareAccel)
-                g_pplayer->m_pin3d.EnableAlphaTestReference(128);
-            else
-                pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-
+            g_pplayer->m_pin3d.EnableAlphaTestReference(128);
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
         }
         else
         {
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-            g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
+            g_pplayer->m_pin3d.EnableAlphaBlend( 128, fFalse );
         }
 
         pd3dDevice->SetColorKeyEnabled(true);
@@ -1548,10 +1544,10 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
                 pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
                 pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
             }
-            else // ppin3d->SetTexture(pin->m_pdsBuffer);
+            else
             {
                 pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-                g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
+                g_pplayer->m_pin3d.EnableAlphaBlend( 128, fFalse );
             }
 
             pd3dDevice->SetColorKeyEnabled(true);
@@ -1575,7 +1571,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
             else
             {
                 pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-                g_pplayer->m_pin3d.EnableAlphaBlend( g_pvp->m_pdd.m_fHardwareAccel ? 128 : 1, fFalse );
+                g_pplayer->m_pin3d.EnableAlphaBlend( 128, fFalse );
             }
 
             pd3dDevice->SetColorKeyEnabled(true);

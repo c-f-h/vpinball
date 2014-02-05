@@ -1039,12 +1039,6 @@ void Pin3D::SetUpdatePos(const int left, const int top)
 	m_rcUpdate.top = top;
 	m_rcUpdate.right = left + m_dwRenderWidth;
 	m_rcUpdate.bottom = top + m_dwRenderHeight;
-
-#ifndef VPINBALL_DX9
-    // hack for DX7; TODO: remove
-    if (m_pd3dDevice)
-        m_pd3dDevice->m_rcUpdate = m_rcUpdate;
-#endif
 }
 
 void Pin3D::Flip(const int offsetx, const int offsety, bool vsync)

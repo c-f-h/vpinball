@@ -226,7 +226,7 @@ void RenderDevice::CopySurface(RenderTarget* dest, RenderTarget* src)
     CHECKD3D(m_pD3DDevice->StretchRect(src, NULL, dest, NULL, D3DTEXF_NONE));
 }
 
-const bool usePowerOfTwoTextures = true;
+const bool usePowerOfTwoTextures = false;
 
 D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth, int *pTexHeight)
 {
