@@ -262,21 +262,8 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
     if(!m_d.m_fVisible)	return;
 
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-    int k=0;
-    Vertex3D verts[8*32];
-    WORD idx[12*32];
 
-    for( int l=0;l<32*12;l+=6,k+=4 )
-    {
-        idx[l  ]= k;
-        idx[l+1]= k+1;
-        idx[l+2]= k+2;
-        idx[l+3]= k;
-        idx[l+4]= k+2;
-        idx[l+5]= k+3;
-    }
-
-    const int i = m_pbumperhitcircle->m_bumperanim.m_iframe;    // 0 = off, 1 = lit
+    const int i = m_pbumperhitcircle->m_bumperanim.m_iframe ? 1 : 0;    // 0 = off, 1 = lit
 
     Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
     if (!pin) // Top solid color
@@ -299,28 +286,10 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
 
         SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
+        // render the top circle
         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32);
-
-        int t=0;
-        k=0;
-        int ofs=0;
-        for (int l=0;l<32;l++,t+=6,k+=4)
-        {
-            SetNormal(&moverVertices[i][64], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(&moverVertices[i][96], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(&moverVertices[i][64], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            SetNormal(&moverVertices[i][96], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            memcpy( &verts[ofs  ], &moverVertices[i][64+indices[k  ]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+1], &moverVertices[i][64+indices[k+1]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+2], &moverVertices[i][64+indices[k+2]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+3], &moverVertices[i][64+indices[k+3]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+4], &moverVertices[i][96+indices[k  ]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+5], &moverVertices[i][96+indices[k+1]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+6], &moverVertices[i][96+indices[k+2]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
-            ofs+=8;
-        }
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32);
+        // render the "mushroom"
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, dynVerts[i], 8*32, (LPWORD)idx, 12*32);
     }
 
     if (m_d.m_fSideVisible)
@@ -346,9 +315,8 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
                 }
         }
 
-        int t=0;
-        int k=0;
-        for (int l=0;l<32;l++,t+=6,k+=4)
+        // render the side walls
+        for (int l=0,t=0,k=0;l<32;l++,t+=6,k+=4)
         {
             SetNormal(moverVertices[i], &normalIndices[t], 3, NULL, &indices[k], 2);
             SetNormal(moverVertices[i], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
@@ -363,18 +331,6 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
         pin->EnsureBackdrop(m_d.m_color);
         pin->SetBackDrop( ePictureTexture );
-
-        //pd3dDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, FALSE);
-        //pd3dDevice->SetRenderState(D3DRENDERSTATE_COLORKEYENABLE, TRUE);
-
-        //pd3dDevice->SetRenderState(D3DRENDERSTATE_DITHERENABLE, FALSE);
-
-        /*// HACK!!! I think this is the last place we ever use COLORKEY instead
-        // of Alpha transparency.  We do this because the D3D software
-        // rasterizer can only handle transparency on the first texture,
-        // but we need to layer textures to light up the bitmap provided
-        // by the user.  We could solve this by creating a bitmap
-        // with the background color swapped out in a pre-processing step.*/
 
         switch (i)
         {
@@ -394,28 +350,10 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
 
         SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
+        // render the top circle
         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32);
-
-        int t=0;
-        k=0;
-        int ofs=0;
-        for (int l=0;l<32;l++,t+=6,k+=4)
-        {
-            SetNormal(&moverVertices[i][64], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(&moverVertices[i][96], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(&moverVertices[i][64], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            SetNormal(&moverVertices[i][96], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            memcpy( &verts[ofs  ], &moverVertices[i][64+indices[k  ]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+1], &moverVertices[i][64+indices[k+1]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+2], &moverVertices[i][64+indices[k+2]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+3], &moverVertices[i][64+indices[k+3]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+4], &moverVertices[i][96+indices[k  ]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+5], &moverVertices[i][96+indices[k+1]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+6], &moverVertices[i][96+indices[k+2]], sizeof(Vertex3D));
-            memcpy( &verts[ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
-            ofs+=8;
-        }
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32);
+        // render the "mushroom"
+        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, dynVerts[i], 8*32, (LPWORD)idx, 12*32);
 
         // Reset all the texture coordinates
         if (i == 1)
@@ -465,9 +403,7 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
    if ( pin )
       m_ptable->GetTVTU(pin, &maxtu, &maxtv);
 
-   int t=0;
-   int i=0;
-   for (int l=0;l<32;l++,t+=6,i+=4)
+   for (int l=0,i=0,t=0;l<32;l++,t+=6,i+=4)
    {
       normalIndices[t  ] = (l==0) ? 31 : (l-1);
       normalIndices[t+1] = (l==0) ? 63 : (l+31);
@@ -569,6 +505,36 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
       memcpy( moverVertices[1], moverVertices[0], sizeof(Vertex3D)*160 );
    }
    SetNormal(staticVertices, rgiBumperStatic, 32, NULL, NULL, 0);
+
+   // TODO: use index and vertex buffers
+   for( int l=0,k=0;l<32*12;l+=6,k+=4 )
+   {
+      idx[l  ]= k;
+      idx[l+1]= k+1;
+      idx[l+2]= k+2;
+      idx[l+3]= k;
+      idx[l+4]= k+2;
+      idx[l+5]= k+3;
+   }
+   for (int i = 0; i <= 1; ++i)
+   {
+      // TODO: is there even any difference between off and on state here?
+      for (int l=0,t=0,k=0,ofs=0; l<32; l++,t+=6,k+=4,ofs+=8)
+      {
+         SetNormal(&moverVertices[i][64], &normalIndices[t], 3, NULL, &indices[k], 2);
+         SetNormal(&moverVertices[i][96], &normalIndices[t], 3, NULL, &indices[k], 2);
+         SetNormal(&moverVertices[i][64], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
+         SetNormal(&moverVertices[i][96], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
+         memcpy( &dynVerts[i][ofs  ], &moverVertices[i][64+indices[k  ]], sizeof(Vertex3D));
+         memcpy( &dynVerts[i][ofs+1], &moverVertices[i][64+indices[k+1]], sizeof(Vertex3D));
+         memcpy( &dynVerts[i][ofs+2], &moverVertices[i][64+indices[k+2]], sizeof(Vertex3D));
+         memcpy( &dynVerts[i][ofs+3], &moverVertices[i][64+indices[k+3]], sizeof(Vertex3D));
+         memcpy( &dynVerts[i][ofs+4], &moverVertices[i][96+indices[k  ]], sizeof(Vertex3D));
+         memcpy( &dynVerts[i][ofs+5], &moverVertices[i][96+indices[k+1]], sizeof(Vertex3D));
+         memcpy( &dynVerts[i][ofs+6], &moverVertices[i][96+indices[k+2]], sizeof(Vertex3D));
+         memcpy( &dynVerts[i][ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
+      }
+   }
 }
 
 void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
@@ -580,6 +546,7 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
    if(!m_d.m_fVisible)	return;
    
    // All this function does is render the bumper image so the black shows through where it's missing in the animated form
+   // TODO: is this still needed with the dynamic renderer? Probably not
    Texture * const pin = m_ptable->GetImage(m_d.m_szImage);	
    if (pin)
    {
@@ -593,23 +560,9 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
       pd3dDevice->SetMaterial(staticMaterial);
 
       pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, staticVertices, 32, (LPWORD)rgiBumperStatic, 32);
-      int t=0;
-      int k=0;
+
       Vertex3D verts[8*32];
-      WORD idx[12*32];
-      for( int l=0;l<32*12;l+=6,k+=4 )
-      {
-         idx[l  ]= k;
-         idx[l+1]= k+1;
-         idx[l+2]= k+2;
-         idx[l+3]= k;
-         idx[l+4]= k+2;
-         idx[l+5]= k+3;
-      }
-      t=0;
-      k=0;
-      int ofs=0;
-      for (int l=0;l<32;l++,t+=6,k+=4)
+      for (int l=0,t=0,k=0,ofs=0; l<32; l++,t+=6,k+=4,ofs+=8)
       {
          SetNormal(staticVertices, &normalIndices[t], 3, NULL, &indices[k], 2);
          SetNormal(&staticVertices[32], &normalIndices[t], 3, NULL, &indices[k], 2);
@@ -623,8 +576,8 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
          memcpy( &verts[ofs+5], &staticVertices[32+indices[k+1]], sizeof(Vertex3D));
          memcpy( &verts[ofs+6], &staticVertices[32+indices[k+2]], sizeof(Vertex3D));
          memcpy( &verts[ofs+7], &staticVertices[32+indices[k+3]], sizeof(Vertex3D));
-         ofs+=8;
       }
+
       pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32);
 
       pd3dDevice->SetRenderState( RenderDevice::ALPHABLENDENABLE, FALSE);
