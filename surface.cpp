@@ -1082,7 +1082,7 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
    SAFE_VECTOR_DELETE(rgtexcoord);
    if (m_d.m_fVisible)
    {
-      Vector<void> vpoly;
+      VectorVoid vpoly;
 
       for (int i=0;i<numVertices;i++)
          vpoly.AddElement((void *)i);
