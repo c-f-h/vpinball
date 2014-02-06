@@ -261,7 +261,7 @@ private:
    CComPtr<IDirect3DDevice9> m_pD3DDevice;
 
    IDirect3DSurface9* m_pBackBuffer;
-   IndexBuffer* m_dynIndexBuffer;      // workaround for DrawIndexedPrimitiveVB
+   CComPtr<IndexBuffer> m_dynIndexBuffer;      // workaround for DrawIndexedPrimitiveVB
 
    UINT m_adapter;      // index of the display adapter to use
 
