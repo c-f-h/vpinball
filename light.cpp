@@ -609,7 +609,7 @@ void Light::PrepareStaticCustom()
    for (int i=0; i<cvertex; i++)
       delete vvertex.ElementAt(i);
 
-   Vector<void> vpoly;
+   VectorVoid vpoly;
    for (int i=0; i<cvertex; i++)
       vpoly.AddElement((void *)i);
 
@@ -671,7 +671,7 @@ void Light::PrepareMoversCustom()
    GetRgVertex(&vvertex);
    const int cvertex = vvertex.Size();
 
-   Vector<void> vpoly;
+   VectorVoid vpoly;
    float maxdist = 0;
    for (int i=0; i<cvertex; i++)
    {
