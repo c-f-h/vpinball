@@ -137,7 +137,6 @@ private:
 
 	Vector<LineSegSlingshot> m_vlinesling;
 
-	Hit3DPolyDrop *m_phitdrop;
 	Vector<HitObject> m_vhoDrop; // Objects to disable when dropped
 	Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
 
@@ -149,6 +148,7 @@ private:
    VertexBuffer *slingshotVBuffer;
    VertexBuffer *sideVBuffer;
    VertexBuffer *topVBuffer[2];
+   IndexBuffer *sideIBuffer;
    Material slingShotMaterial;
    Material sideMaterial;
    Material topMaterial;

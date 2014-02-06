@@ -760,12 +760,6 @@ void Hit3DCylinder::CalcHitRect()
 }
 
 
-Hit3DPolyDrop::Hit3DPolyDrop(Vertex3Ds * const rgv, const int count) : Hit3DPoly(rgv, count)
-{
-	m_fVisible = fFalse;
-}
-
-
 
 
 

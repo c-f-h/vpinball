@@ -228,6 +228,7 @@ public:
    void CreateIndexBuffer(unsigned int numIndices, DWORD usage, IndexBuffer::Format format, IndexBuffer **idxBuffer);
 
    IndexBuffer* CreateAndFillIndexBuffer(unsigned int numIndices, const WORD * indices);
+   IndexBuffer* CreateAndFillIndexBuffer(const std::vector<WORD>& indices);
 
    void DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount);
    void DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount);

@@ -4,7 +4,6 @@ Surface::Surface()
 {
    m_menuid = IDR_SURFACEMENU;
 
-   m_phitdrop = NULL;
    m_d.m_fCollidable = fTrue;
    m_d.m_fSlingshotAnimation = fTrue;
    m_d.m_fInner = fTrue;
@@ -13,6 +12,7 @@ Surface::Surface()
    sideVBuffer = 0;
    topVBuffer[0] = 0;
    topVBuffer[1] = 0;
+   sideIBuffer = 0;
    vertsTopNotLit[0] = 0;
    vertsTopNotLit[1] = 0;
    vertsTop[0] = 0;
@@ -23,57 +23,7 @@ Surface::Surface()
 
 Surface::~Surface()
 {
-   if( slingshotVBuffer )
-   {
-      slingshotVBuffer->release();
-      slingshotVBuffer=0;
-   }
-   if( sideVBuffer )
-   {
-      sideVBuffer->release();
-      sideVBuffer=0;
-   }
-   if( vertsNotLit )
-   {
-	   delete [] vertsNotLit;
-	   vertsNotLit = 0;
-   }
-   if( verts )
-   {
-	   delete [] verts;
-	   verts = 0;
-   }
-   if( topVBuffer[0] )
-   {
-      topVBuffer[0]->release();
-      topVBuffer[0]=0;
-   }
-   if( vertsTopNotLit[0] )
-   {
-	   delete [] vertsTopNotLit[0];
-	   vertsTopNotLit[0] = 0;
-   }
-   if( vertsTop[0] )
-   {
-	   delete [] vertsTop[0];
-	   vertsTop[0] = 0;
-   }
-
-   if( topVBuffer[1] )
-   {
-      topVBuffer[1]->release();
-      topVBuffer[1]=0;
-   }
-   if( vertsTopNotLit[1] )
-   {
-	   delete [] vertsTopNotLit[1];
-	   vertsTopNotLit[1] = 0;
-   }
-   if( vertsTop[1] )
-   {
-	   delete [] vertsTop[1];
-	   vertsTop[1] = 0;
-   }
+    FreeBuffers();
 }
 
 HRESULT Surface::Init(PinTable *ptable, float x, float y, bool fromMouseClick)
@@ -705,33 +655,17 @@ void Surface::CurvesToShapes(Vector<HitObject> * const pvho)
    for (int i=0;i<count;i++)
       delete vvertex.ElementAt(i);
 
+   Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,count);
+   ph3dpoly->m_pfe = (IFireEvents *)this;
+   ph3dpoly->m_fVisible = fTrue;
+   ph3dpoly->m_fEnabled = m_d.m_fCollidable;
+
+   pvho->AddElement(ph3dpoly);
+
+   m_vhoCollidable.AddElement(ph3dpoly);
+
    if (m_d.m_fDroppable)
-   {
-      // Special hit object that will allow us to animate the surface
-      m_phitdrop = new Hit3DPolyDrop(rgv3D,count);
-      m_phitdrop->m_pfe = (IFireEvents *)this;
-
-      m_phitdrop->m_fVisible = fTrue;
-
-      pvho->AddElement(m_phitdrop);			
-
-      m_vhoDrop.AddElement(m_phitdrop);	
-
-      m_vhoCollidable.AddElement(m_phitdrop);
-      m_phitdrop->m_fEnabled = m_d.m_fCollidable;
-   }
-   else
-   {
-      Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,count);
-      ph3dpoly->m_pfe = (IFireEvents *)this;
-
-      ph3dpoly->m_fVisible = fTrue;
-
-      pvho->AddElement(ph3dpoly);
-
-      m_vhoCollidable.AddElement(ph3dpoly);
-      ph3dpoly->m_fEnabled = m_d.m_fCollidable;
-   }
+       m_vhoDrop.AddElement(ph3dpoly);
 }
 
 void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const pv1, const RenderVertex * const pv2, const RenderVertex * const pv3, const bool fSlingshot)
@@ -853,8 +787,6 @@ void Surface::GetBoundingVertices(Vector<Vertex3Ds> * const pvvertex3D)
 void Surface::EndPlay()
 {
    IEditable::EndPlay();
-
-   m_phitdrop = NULL;       // possible memory leak here?
 
    m_vlinesling.RemoveAllElements();
    m_vhoDrop.RemoveAllElements();
@@ -997,16 +929,8 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
          vnormal[1].y = rgnormal[i].y;
       }
 
-      {
-         const float inv_len = 1.0f/sqrtf(vnormal[0].x * vnormal[0].x + vnormal[0].y * vnormal[0].y);
-         vnormal[0].x *= inv_len;
-         vnormal[0].y *= inv_len;
-      }
-      {
-         const float inv_len = 1.0f/sqrtf(vnormal[1].x * vnormal[1].x + vnormal[1].y * vnormal[1].y);
-         vnormal[1].x *= inv_len;
-         vnormal[1].y *= inv_len;
-      }
+      vnormal[0].Normalize();
+      vnormal[1].Normalize();
 
       if(!m_d.m_fEnableLighting)
       {
@@ -1080,7 +1004,7 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
    // draw top
    delete[] rgnormal;
    SAFE_VECTOR_DELETE(rgtexcoord);
-   if (m_d.m_fVisible)
+   if (m_d.m_fVisible)      // BUG? Visible could still be set later if rendered dynamically?
    {
       VectorVoid vpoly;
 
@@ -1255,14 +1179,38 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
 
    for (int i=0;i<numVertices;i++)
       delete vvertex.ElementAt(i);
+
+   // prepare index buffer for sides
+   {
+       std::vector<WORD> rgi;
+       rgi.reserve(numVertices*6);
+
+       int offset2=0;
+       for (int i=0; i<numVertices; i++, offset2+=4)
+       {
+           rgi.push_back( offset2 );
+           rgi.push_back( offset2+1 );
+           rgi.push_back( offset2+2 );
+           rgi.push_back( offset2 );
+           rgi.push_back( offset2+2 );
+           rgi.push_back( offset2+3 );
+       }
+
+       if (sideIBuffer)
+           sideIBuffer->release();
+       sideIBuffer = pd3dDevice->CreateAndFillIndexBuffer(rgi);
+   }
 }
 
+static const WORD rgisling[36] = {0,1,2,0,2,3, 4+0,4+1,4+2,4+0,4+2,4+3, 8+0,8+1,8+2,8+0,8+2,8+3, 12+0,12+1,12+2,12+0,12+2,12+3, 16+0,16+1,16+2,16+0,16+2,16+3, 20+0,20+1,20+2,20+0,20+2,20+3};
 static const WORD rgiSlingshot0[4] = {0,1,4,3};
 static const WORD rgiSlingshot1[4] = {1,2,5,4};
 static const WORD rgiSlingshot2[4] = {0,3,4,1};
 static const WORD rgiSlingshot3[4] = {1,4,5,2};
 static const WORD rgiSlingshot4[4] = {3,9,10,4};
 static const WORD rgiSlingshot5[4] = {4,10,11,5};
+
+static IndexBuffer* slingIBuffer = NULL;        // this is constant so we only have one global instance
 
 void Surface::PrepareSlingshots( RenderDevice *pd3dDevice )
 {
@@ -1347,6 +1295,9 @@ void Surface::PrepareSlingshots( RenderDevice *pd3dDevice )
    }
 
    slingshotVBuffer->unlock();
+
+   if (!slingIBuffer)
+       slingIBuffer = pd3dDevice->CreateAndFillIndexBuffer(36, rgisling);
 }
 
 void Surface::RenderSetup(const RenderDevice* _pd3dDevice)
@@ -1394,6 +1345,11 @@ void Surface::FreeBuffers()
       sideVBuffer->release();
       sideVBuffer=0;
    }
+   if (sideIBuffer)
+   {
+       sideIBuffer->release();
+       sideIBuffer = 0;
+   }
    if( vertsNotLit )
    {
       delete [] vertsNotLit;
@@ -1435,6 +1391,11 @@ void Surface::FreeBuffers()
       delete [] vertsTop[1];
       vertsTop[1] = 0;
    }
+   if (slingIBuffer)    // NB: global instance
+   {
+       slingIBuffer->release();
+       slingIBuffer = 0;
+   }
 }
 
 void Surface::RenderStatic(const RenderDevice* pd3dDevice)
@@ -1443,7 +1404,6 @@ void Surface::RenderStatic(const RenderDevice* pd3dDevice)
       RenderWallsAtHeight( (RenderDevice*)pd3dDevice, fFalse, fFalse);
 }
 
-static const WORD rgisling[36] = {0,1,2,0,2,3, 4+0,4+1,4+2,4+0,4+2,4+3, 8+0,8+1,8+2,8+0,8+2,8+3, 12+0,12+1,12+2,12+0,12+2,12+3, 16+0,16+1,16+2,16+0,16+2,16+3, 20+0,20+1,20+2,20+0,20+2,20+3};
 
 void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
 {
@@ -1463,7 +1423,7 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
 
       pd3dDevice->SetMaterial(slingShotMaterial);
 
-      pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, slingshotVBuffer, i*24, 24, (LPWORD)rgisling, 36);
+      pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, slingshotVBuffer, i*24, 24, slingIBuffer, 0, 36);
    }
 }
 
@@ -1507,25 +1467,10 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
     if (!fDrop && m_d.m_fSideVisible && (numVertices > 0)) // Don't need to render walls if dropped
     {
         // combine drawcalls into one (hopefully faster)
-        // TODO: eliminate this allocation
-        WORD* const rgi = new WORD[numVertices*6];
-
-        int offset=0;
-        int offset2=0;
-        for (int i=0;i<numVertices;i++, offset+=6,offset2+=4)
-        {
-            rgi[offset]   = offset2;
-            rgi[offset+1] = offset2+1;
-            rgi[offset+2] = offset2+2;
-            rgi[offset+3] = offset2;
-            rgi[offset+4] = offset2+2;
-            rgi[offset+5] = offset2+3;
-        }
-
-        pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, sideVBuffer, 0, numVertices*4, (LPWORD)rgi, numVertices*6);
-
-        delete [] rgi;
+        pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, sideVBuffer, 0, numVertices*4, sideIBuffer, 0, numVertices*6);
     }
+
+    // render top
 
     if (m_d.m_fVisible)
     {
@@ -1587,16 +1532,7 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
 
         if(numPolys > 0)
         {
-            // combine drawcalls into one (hopefully faster)
-            // TODO: eliminate this allocation
-            WORD* const rgi = new WORD[numPolys*3];
-
-            for (int i=0;i<numPolys*3;i++)
-                rgi[i] = i;
-
-            pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, !fDrop ? topVBuffer[0] : topVBuffer[1], 0, numPolys*3, (LPWORD)rgi, numPolys*3);
-
-            delete [] rgi;
+            pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLELIST, !fDrop ? topVBuffer[0] : topVBuffer[1], 0, numPolys*3);
         }
     }
 

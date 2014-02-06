@@ -212,24 +212,6 @@ public:
 	float transangle;
 };
 
-// TODO: this class is a no-op now, get rid of it if possible
-class PolyDropAnimObject : public AnimObject
-{
-public:
-	virtual void Check3D()                              { }
-	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
-	virtual void Reset()                                { }
-};
-
-class Hit3DPolyDrop : public Hit3DPoly
-{
-public:
-	Hit3DPolyDrop(Vertex3Ds * const rgv, const int count);
-
-	virtual AnimObject *GetAnimObject() {return &m_polydropanim;}
-
-	PolyDropAnimObject m_polydropanim;
-};
 
 class TextboxAnimObject : public AnimObject
 {

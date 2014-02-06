@@ -419,6 +419,10 @@ IndexBuffer* RenderDevice::CreateAndFillIndexBuffer(unsigned int numIndices, con
     return ib;
 }
 
+IndexBuffer* RenderDevice::CreateAndFillIndexBuffer(const std::vector<WORD>& indices)
+{
+    return CreateAndFillIndexBuffer(indices.size(), &indices[0]);
+}
 
 RenderTarget* RenderDevice::AttachZBufferTo(RenderTarget* surf)
 {
