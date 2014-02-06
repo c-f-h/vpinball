@@ -8,6 +8,7 @@ Ramp::Ramp()
    g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
    staticVertexBuffer = 0;
    dynamicVertexBuffer = 0;
+   dynamicIndexBuffer = 0;
    dynamicVertexBufferRegenerate = true;
    m_d.m_enableLightingImage = true;
    m_d.m_triggerUpdateRegion = false;
@@ -16,19 +17,18 @@ Ramp::Ramp()
 
 Ramp::~Ramp()
 {
-	if(staticVertexBuffer) {
+	if(staticVertexBuffer)
 		staticVertexBuffer->release();
-		staticVertexBuffer = 0;
-	}
 
 	if(dynamicVertexBuffer) {
 		dynamicVertexBuffer->release();
-		dynamicVertexBuffer = 0;
-		//dynamicVertexBufferRegenerate = true;
 
 		delete [] rgvbuf;
         delete [] rgibuf;
 	}
+
+    if (dynamicIndexBuffer)
+        dynamicIndexBuffer->release();
 }
 
 HRESULT Ramp::Init(PinTable *ptable, float x, float y, bool fromMouseClick)
@@ -1040,6 +1040,11 @@ void Ramp::EndPlay()
         delete [] rgibuf;
 	}
 
+	if(dynamicIndexBuffer) {
+		dynamicIndexBuffer->release();
+		dynamicIndexBuffer = 0;
+    }
+
     g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
     m_d.m_triggerSingleUpdateRegion = true;
 }
@@ -1556,7 +1561,7 @@ void Ramp::RenderSetup(const RenderDevice* _pd3dDevice)
    habitrailMaterial.setPower( 8.0f );
    habitrailMaterial.setSpecular( 1.0f, 1.0f, 1.0f, 1.0f );
 
-   if( !staticVertexBuffer && m_d.m_IsVisible && !(m_d.m_fAlpha && g_pvp->m_pdd.m_fHardwareAccel) )
+   if( !staticVertexBuffer && m_d.m_IsVisible && !m_d.m_fAlpha )
    {
       if (isHabitrail())
          prepareHabitrail( pd3dDevice );
@@ -1591,7 +1596,7 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
    if (!m_d.m_IsVisible) return;		// return if no Visible
 
    // dont render alpha shaded ramps into static buffer, these are done per frame later-on
-   if (m_d.m_fAlpha && g_pvp->m_pdd.m_fHardwareAccel) return;
+   if (m_d.m_fAlpha) return;
 
    if (isHabitrail())
    {
@@ -2784,6 +2789,10 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
          memcpy( &buf[offset], rgvbuf, sizeof(Vertex3D_NoTex2)*numVertices );
          offset+=numVertices;
 
+         if (dynamicIndexBuffer)
+             dynamicIndexBuffer->release();
+         dynamicIndexBuffer = pd3dDevice->CreateAndFillIndexBuffer((rampVertex-1)*6*2*2, rgibuf);
+
          for (int i=0;i<(rampVertex-1);i++)
          {
             Vertex3D_NoTex2 * const rgv3D = rgvbuf+i*4;
@@ -2916,7 +2925,7 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
          numVertices=(rampVertex-1)*4;
 
       unsigned int offset=0;
-      pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices, (LPWORD)rgibuf, (rampVertex-1)*6);
+      pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices, dynamicIndexBuffer, 0, (rampVertex-1)*6);
       offset+=numVertices;
 
       if (pin && !m_d.m_fImageWalls)
@@ -2928,15 +2937,15 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
       }
 
 	  if(m_d.m_rightwallheightvisible!=0.f && m_d.m_leftwallheightvisible!=0.f) //only render left & right side if the height is >0
-         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2*2, (LPWORD)rgibuf, (rampVertex-1)*6*2*2);
+         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2*2, dynamicIndexBuffer, 0, (rampVertex-1)*6*2*2);
 	  else
 	  {
 		if ( m_d.m_rightwallheightvisible!=0.f ) //only render right side if the height is >0
-			pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2, (LPWORD)rgibuf, (rampVertex-1)*6*2);
+			pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2, dynamicIndexBuffer, 0, (rampVertex-1)*6*2);
 		offset+=2*numVertices;
 
 		if ( m_d.m_leftwallheightvisible!=0.f ) //only render left side if the height is >0
-			pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2, (LPWORD)rgibuf, (rampVertex-1)*6*2);
+			pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, numVertices*2, dynamicIndexBuffer, 0, (rampVertex-1)*6*2);
 	  }
 
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);

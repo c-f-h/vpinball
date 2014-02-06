@@ -839,32 +839,18 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 			ph->GetTimers(&m_vht);
 
-    		if (g_pvp->m_pdd.m_fHardwareAccel)
-			{
-				if ((pe->GetItemType() == eItemRamp && ((Ramp*)pe)->m_d.m_fAlpha) ||
-					(pe->GetItemType() == eItemPrimitive && !((Primitive *)m_ptable->m_vedit.ElementAt(i))->m_d.staticRendering) ||
-					(pe->GetItemType() == eItemFlasher) ||
-					(pe->GetItemType() == eItemFlipper) ||
-					(pe->GetItemType() == eItemPlunger) ||
-					(pe->GetItemType() == eItemSurface) ||
-					(pe->GetItemType() == eItemSpinner) ||
-					(pe->GetItemType() == eItemGate) ||
-					(pe->GetItemType() == eItemBumper) )
-					{
-					  m_vhitalpha.AddElement(ph);
-					}
-			}
-			else
-				if ((pe->GetItemType() == eItemPrimitive) ||
-					(pe->GetItemType() == eItemFlipper) ||
-					(pe->GetItemType() == eItemPlunger) ||
-					(pe->GetItemType() == eItemSurface) ||
-					(pe->GetItemType() == eItemSpinner) ||
-					(pe->GetItemType() == eItemGate) ||
-                    (pe->GetItemType() == eItemBumper))
-					{
-					  m_vhitalpha.AddElement(ph);
-					}
+			if ((pe->GetItemType() == eItemRamp && ((Ramp*)pe)->m_d.m_fAlpha) ||
+				(pe->GetItemType() == eItemPrimitive && !((Primitive *)pe)->m_d.staticRendering) ||
+				(pe->GetItemType() == eItemFlasher) ||
+				(pe->GetItemType() == eItemFlipper) ||
+				(pe->GetItemType() == eItemPlunger) ||
+				(pe->GetItemType() == eItemSurface) ||
+				(pe->GetItemType() == eItemSpinner) ||
+				(pe->GetItemType() == eItemGate) ||
+				(pe->GetItemType() == eItemBumper) )
+				{
+				  m_vhitalpha.AddElement(ph);
+				}
 		}
 	}
 
