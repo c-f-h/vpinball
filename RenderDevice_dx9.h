@@ -272,6 +272,8 @@ private:
    DWORD textureStateCache[8][TEXTURE_STATE_CACHE_SIZE];
    BaseMaterial materialStateCache;
 
+   IndexBuffer* m_curIndexBuffer;       // for caching
+
 public:
    TextureManager m_texMan;
 };

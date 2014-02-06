@@ -183,6 +183,8 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     CreateIndexBuffer(MY_IDX_BUF_SIZE, D3DUSAGE_DYNAMIC, IndexBuffer::FMT_INDEX16, &m_dynIndexBuffer);
 
     Texture::SetRenderDevice(this);
+
+    m_curIndexBuffer = 0;
 }
 
 RenderDevice::~RenderDevice()
@@ -442,6 +444,7 @@ void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID
     m_pD3DDevice->SetFVF(fvf);
     CHECKD3D(m_pD3DDevice->DrawIndexedPrimitiveUP(type, 0, vertexCount, ComputePrimitiveCount(type, indexCount),
                 indices, D3DFMT_INDEX16, vertices, fvfToSize(fvf)));
+    m_curIndexBuffer = 0;       // DrawIndexedPrimitiveUP sets the IB to NULL
 }
 
 void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount)
@@ -484,7 +487,11 @@ void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, VertexBuffer* 
     // bind the vertex and index buffers
     CHECKD3D(m_pD3DDevice->SetFVF(desc.FVF));
     CHECKD3D(m_pD3DDevice->SetStreamSource(0, vb, 0, vsize));
-    CHECKD3D(m_pD3DDevice->SetIndices(ib));
+    if (m_curIndexBuffer != ib)
+    {
+        CHECKD3D(m_pD3DDevice->SetIndices(ib));
+        m_curIndexBuffer = ib;
+    }
 
     // render
     CHECKD3D(m_pD3DDevice->DrawIndexedPrimitive(type, startVertex, 0, vertexCount, startIndex, ComputePrimitiveCount(type, indexCount)));
