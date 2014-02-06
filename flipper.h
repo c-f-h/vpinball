@@ -76,7 +76,7 @@ public:
 	Flipper();
 	virtual ~Flipper();
 
-	void SetVertices(const float angle, Vertex2D * const pvEndCenter, Vertex2D * const rgvTangents, const float baseradius, const float endradius) const;
+	void SetVertices(float basex, float basey, const float angle, Vertex2D * const pvEndCenter, Vertex2D * const rgvTangents, const float baseradius, const float endradius) const;
 
 	//virtual HRESULT GetTypeName(BSTR *pVal);
 	virtual void GetDialogPanes(Vector<PropertyPane> *pvproppane);
@@ -105,7 +105,7 @@ END_CONNECTION_POINT_MAP()
 
 	virtual void RenderShadow(ShadowSur * const psur, const float height);
 
-	void RenderAtThickness(RenderDevice* pd3dDevice, const float angle, const float height, const COLORREF color, const float baseradius, const float endradius, const float flipperheight);
+    void RenderAtThickness(RenderDevice* pd3dDevice, float angle, float height, float baseradius, float endradius, float flipperheight, bool isRubber, VertexBuffer* vb);
 
 	void WriteRegDefaults();
 
@@ -121,6 +121,8 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Flipper)
 
 	FlipperData m_d;
    bool setupMode;
+    VertexBuffer *vertexBuffer;
+    IndexBuffer *indexBuffer;
 
 	HitFlipper *m_phitflipper;
 
