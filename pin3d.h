@@ -193,8 +193,6 @@ public:
 
 	void InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD);
 
-    void ClearSpriteRectangle( AnimObject *animObj, ObjFrame *pof );
-
 	void CacheTransform();      // compute m_matrixTotal = mWorld * mView * mProj
 
 	void TransformVertices(const Vertex3D * rgv,            const WORD * rgi, int count, Vertex3D * rgvout) const;
@@ -226,8 +224,6 @@ public:
 	void ExpandExtents(RECT * const prc, Vertex3D* const rgv, float * const pznear, float * const pzfar, const int count, const BOOL fTransformed);
 	void ExpandExtents(RECT * const prc, Vertex3D_NoTex2* const rgv, float * const pznear, float * const pzfar, const int count, const BOOL fTransformed);
 	void ExpandExtents(RECT * const prc, Vertex3D_NoLighting* const rgv, float * const pznear, float * const pzfar, const int count, const BOOL fTransformed);
-	void ExpandExtentsPlus(RECT * const prc, Vertex3D_NoTex2* const rgv, float * const pznear, float * const pzfar, const int count, const BOOL fTransformed);
-	void ExpandRectByRect(RECT * const prc, const RECT * const prcNew) const;
 
 	void ClipRectToVisibleArea(RECT * const prc) const;
 

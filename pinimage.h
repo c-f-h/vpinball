@@ -22,7 +22,6 @@ public:
 
 	LPDIRECTDRAW7 m_pDD;
 
-	BaseTexture* CreateTextureOffscreen(const int width, const int height, DWORD* texWidth = NULL, DWORD* texHeight = NULL);
     BaseTexture* CreateOffscreenWithCustomTransparency(const int width, const int height, const int color);
 
 	BOOL m_fHardwareAccel;

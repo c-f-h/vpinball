@@ -1427,7 +1427,7 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
    }
 }
 
-ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, BOOL fDrop)
+void Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, BOOL fDrop)
 {
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
@@ -1541,8 +1541,6 @@ ObjFrame *Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, B
 
     if(!m_d.m_fEnableLighting)
         pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
-
-    return NULL;
 }
 
 void Surface::RenderMovers(const RenderDevice* pd3dDevice)

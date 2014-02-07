@@ -4,7 +4,6 @@ Flasher::Flasher()
 {
    m_d.m_IsVisible = true;
    m_d.m_wasVisible = false;
-   g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
    dynamicVertexBuffer = 0;
    dynamicVertexBufferRegenerate = true;
    m_d.m_triggerUpdateRegion = false;
@@ -298,7 +297,6 @@ void Flasher::EndPlay()
 		dynamicVertexBufferRegenerate = true;
 	}
 
-    g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
     m_d.m_wasVisible = false;
     m_d.m_triggerSingleUpdateRegion = true;
 }
@@ -370,8 +368,6 @@ void Flasher::RenderMovers(const RenderDevice* pd3dDevice)
    m_d.m_wasVisible = false;
 //   m_d.m_wasAlpha = false;
    m_d.m_triggerSingleUpdateRegion = false;
-
-   g_pplayer->InvalidateRect(&m_d.m_boundRectangle);
 }
 
 void Flasher::SetObjectPos()
@@ -997,9 +993,6 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
          }
 
          memcpy( buf, lvertices, sizeof(Vertex3D_NoLighting)*4 );
-		 // update the bounding box for the primitive to tell the renderer where to update the back buffer
- 		 g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
- 		 g_pplayer->m_pin3d.ExpandExtents(&m_d.m_boundRectangle, lvertices, NULL, NULL, 4, fFalse);
      
 		 dynamicVertexBuffer->unlock();
       }

@@ -68,15 +68,6 @@ Pin3D::~Pin3D()
 	delete m_pd3dDevice;
 }
 
-void Pin3D::ClearSpriteRectangle( AnimObject *animObj, ObjFrame *pof )
-{
-	if ( animObj )
-		ClearExtents(&animObj->m_rcBounds, &animObj->m_znear, &animObj->m_zfar);
-
-	if( pof )
-		ClearExtents(&pof->rc, NULL, NULL);
-}
-
 void Pin3D::ClipRectToVisibleArea(RECT * const prc) const
 {
 	prc->top = max(prc->top, 0);
@@ -1392,55 +1383,6 @@ void Pin3D::ExpandExtents(RECT * const prc, Vertex3D_NoLighting* const rgv, floa
 
 	if (!fTransformed)
 		delete [] rgvOut;
-}
-
-//copy pasted from above , +/- 2 instead
-void Pin3D::ExpandExtentsPlus(RECT * const prc, Vertex3D_NoTex2* const rgv, float * const pznear, float * const pzfar, const int count, const BOOL fTransformed)
-{
-	Vertex3D_NoTex2 * const rgvOut = (!fTransformed) ? new Vertex3D_NoTex2[count] : rgv;
-
-	if (!fTransformed)
-		TransformVertices(rgv, NULL, count, rgvOut);
-
-	for (int i=0; i<count; ++i)
-	{
-		const int x = (int)(rgvOut[i].x + 0.5f);
-		const int y = (int)(rgvOut[i].y + 0.5f);
-
-		prc->left = min(prc->left, x - 2);
-		prc->top = min(prc->top, y - 2);
-		prc->right = max(prc->right, x + 2);
-		prc->bottom = max(prc->bottom, y + 2);
-      // clip the update rectangle to the screen boundary, 
-      // if something gets out of the screen the result can be a slow-down, render destortion or a crash
-      prc->bottom = min( prc->bottom, m_dwRenderHeight-1);
-      prc->right  = min( prc->right, m_dwRenderWidth-1 );
-      prc->top    = min( prc->top, m_dwRenderHeight-2 );
-      prc->left   = min( prc->left, m_dwRenderWidth-2 );
-
-		if (pznear)
-		{
-			*pznear = min(*pznear, rgvOut[i].z);
-			*pzfar = max(*pzfar, rgvOut[i].z);
-		}
-	}
-
-	if (!fTransformed)
-		delete [] rgvOut;
-}
-
-void Pin3D::ExpandRectByRect(RECT * const prc, const RECT * const prcNew) const
-{
-	prc->left = min(prc->left, prcNew->left);
-	prc->top = min(prc->top, prcNew->top);
-	prc->right = max(prc->right, prcNew->right);
-	prc->bottom = max(prc->bottom, prcNew->bottom);
-   // clip the update rectangle to the screen boundary, 
-   // if something gets out of the screen the result can be a slow-down, render distortion or a crash
-   prc->bottom = min( prc->bottom, m_dwRenderHeight-1);
-   prc->right  = min( prc->right, m_dwRenderWidth-1 );
-   prc->top    = min( prc->top, m_dwRenderHeight-2 );
-   prc->left   = min( prc->left, m_dwRenderWidth-2 );
 }
 
 void PinProjection::Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z)

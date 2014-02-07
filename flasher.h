@@ -17,7 +17,6 @@ public:
     COLORREF m_color;
 	TimerDataRoot m_tdr;
 	char m_szImage[MAXTOKEN];
-    RECT m_boundRectangle;
 	float m_rotX,m_rotY,m_rotZ;
 
 	long m_fAlpha;

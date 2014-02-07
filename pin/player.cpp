@@ -2042,11 +2042,6 @@ void Player::RenderDynamics()
 
 unsigned int Player::CheckAndUpdateRegions()
 {
-    // For alphas (alpha ramps & primitives), abuse the RenderMovers call to (optionally) invalidate regions that need updates.
-    // TODO: still needed without update regions?
-    for (int i=0;i<m_vhitalpha.Size();i++)
-        m_vhitalpha.ElementAt(i)->RenderMovers(m_pin3d.m_pd3dDevice);
-
     //rlc BUG -- moved this code before copy of static buffers being copied to back and z buffers
     //rlc  JEP placed code for copy of static buffers too soon 
     // Notice - the light can only update once per frame, so if the light
@@ -2915,10 +2910,6 @@ void Player::CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
          }
 
       }
-      if (pball->m_pinFront && (m_ptable->m_layback > 0))
-         m_pin3d.ExpandExtentsPlus(&pball->m_rcScreen, rgv3DArrowTransformed, NULL, NULL, 4, fFalse);
-      if (pball->m_pinBack && (m_ptable->m_layback > 0))
-         m_pin3d.ExpandExtentsPlus(&pball->m_rcScreen, rgv3DArrowTransformed2, NULL, NULL, 4, fFalse);
    }
    else
    {
@@ -3115,8 +3106,6 @@ void Player::DrawBalls()
         // ball trails //!! misses lighting disabled part!
         if( m_ptable->m_useTrailForBalls==fTrue && m_fBallAntialias )
         {
-            m_pin3d.ClearExtents(&pball->m_rcTrail, NULL, NULL);
-
             Vertex3D_NoLighting rgv3D_all[10*2];
             unsigned int num_rgv3D = 0;
 
@@ -3214,8 +3203,6 @@ void Player::DrawBalls()
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
 
                 m_pin3d.m_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_NOLIGHTING_VERTEX, rgv3D_all, num_rgv3D, (LPWORD)rgi_all, num_rgv3D);
-
-                m_pin3d.ExpandExtents/*Plus*/(&pball->m_rcTrail, rgv3D_all, NULL, NULL, num_rgv3D, fFalse);
 
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
@@ -4135,12 +4122,6 @@ float Player::ParseLog(LARGE_INTEGER *pli1, LARGE_INTEGER *pli2)
 // Draws all transparent ramps and primitives.
 void Player::DrawAlphas()
 {
-	if (g_pvp->m_pdd.m_fHardwareAccel)
-	{
-		// Turn off z writes for same values.  It fixes the problem of ramps rendering twice. //!! really still needed?
-        //m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZFUNC,D3DCMP_LESS);
-	}
-
 	// the helper list of m_vhitalpha only contains objects which evaluated to true in the old code.
 	// it is created once on startup and never changed during play. (SnailGary)
 	for (int i=0;i<m_vhitalpha.Size();i++)

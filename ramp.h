@@ -27,8 +27,6 @@ public:
 	float m_friction;
 	float m_scatter;
 
-    RECT m_boundRectangle;
-	
 	bool m_fCollidable;
 	bool m_IsVisible;
 	bool m_fModify3DStereo;

@@ -596,8 +596,6 @@ void Spinner::PrepareMovers( RenderDevice* pd3dDevice )
    const float halflength = m_d.m_length * 0.5f;
    const float halfwidth = m_d.m_height * 0.5f;
 
-   ppin3d->ClearExtents(&m_phitspinner->m_spinneranim.m_rcBounds, &m_phitspinner->m_spinneranim.m_znear, &m_phitspinner->m_spinneranim.m_zfar);
-
    const float r = (float)(m_d.m_color & 255) * (float)(1.0/255.0);
    const float g = (float)(m_d.m_color & 65280) * (float)(1.0/65280.0);
    const float b = (float)(m_d.m_color & 16711680) * (float)(1.0/16711680.0);

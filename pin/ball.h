@@ -48,11 +48,6 @@ public:
 
 	Vertex3D_NoTex2 m_rgv3DShadow[4];			// Last vertices of the ball shadow
 
-	RECT m_rcScreen;							// rect where the ball appears on the screen
-    RECT m_rcScreenShadow;
-    RECT m_rcReflection;
-    RECT m_rcTrail;
-	
 	COLORREF m_color;
 
 	// Per frame info

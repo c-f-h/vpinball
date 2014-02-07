@@ -184,8 +184,6 @@ void Kicker::RenderSetup(const RenderDevice* _pd3dDevice)
 
    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
 
-   ppin3d->ClearExtents(&recBounds, NULL, NULL);	
-
    for (int l=0;l<16;l++)
    {
       const float angle = (float)(M_PI*2.0/16.0)*(float)l;
@@ -212,8 +210,6 @@ void Kicker::RenderSetup(const RenderDevice* _pd3dDevice)
    ppin3d->m_lightproject.CalcCoordinates(&vertices[48]);
 
    ppin3d->EnableLightMap(fTrue, height);
-
-   ppin3d->ExpandExtents(&recBounds, &vertices[16], NULL, NULL, 16, fFalse);
 }
 
 

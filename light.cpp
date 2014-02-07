@@ -1020,7 +1020,6 @@ void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
      pd3dDevice->SetMaterial(mtrl);    
 
      m_pobjframe[i] = new ObjFrame();
-     ppin3d->ClearExtents(&m_pobjframe[i]->rc, NULL, NULL);
       
 	  for( int t=0; t<customMoverVertexNum; t+=3 ) //!! optimize into single call!
          if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
@@ -1034,7 +1033,6 @@ void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
         ppin3d->SetTexture(pin);
         pd3dDevice->SetTexture(1,NULL);
      }
-	  ppin3d->ExpandExtents(&m_pobjframe[i]->rc, customMoverVertex[i], NULL, NULL, customMoverVertexNum, m_fBackglass);
 
 	  if((!m_d.m_EnableLighting))
 	      pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
@@ -1156,9 +1154,6 @@ void Light::RenderMovers(const RenderDevice* _pd3dDevice)
       normalMoverVBuffer->unlock();
 
       m_pobjframe[i] = new ObjFrame();
-
-      ppin3d->ClearSpriteRectangle( NULL, m_pobjframe[i] );
-      ppin3d->ExpandExtents(&m_pobjframe[i]->rc, rgv3D, NULL, NULL, 32, m_fBackglass);
 
       ppin3d->ClipRectToVisibleArea(&m_pobjframe[i]->rc);
       m_pobjframe[i]->pdds = g_pvp->m_pdd.CreateOffscreenPlain(m_pobjframe[i]->rc.right - m_pobjframe[i]->rc.left, m_pobjframe[i]->rc.bottom - m_pobjframe[i]->rc.top);

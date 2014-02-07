@@ -119,7 +119,7 @@ private:
     void AddLine(Vector<HitObject> * const pvho, const RenderVertex * const pv1, const RenderVertex * const pv2, const RenderVertex * const pv3, const bool fSlingshot);
 
     void RenderSlingshots(RenderDevice* pd3dDevice);
-    ObjFrame *RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, BOOL fDrop);
+    void RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, BOOL fDrop);
     void PrepareWallsAtHeight( RenderDevice* pd3dDevice );
     void PrepareSlingshots( RenderDevice *pd3dDevice );
 

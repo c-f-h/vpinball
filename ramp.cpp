@@ -5,7 +5,6 @@ Ramp::Ramp()
    m_menuid = IDR_SURFACEMENU;
    m_d.m_fCollidable = true;
    m_d.m_IsVisible = true;
-   g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
    staticVertexBuffer = 0;
    dynamicVertexBuffer = 0;
    dynamicIndexBuffer = 0;
@@ -1045,7 +1044,6 @@ void Ramp::EndPlay()
 		dynamicIndexBuffer = 0;
     }
 
-    g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
     m_d.m_triggerSingleUpdateRegion = true;
 }
 
@@ -2907,14 +2905,6 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
             memcpy( &buf[offset], rgvbuf, sizeof(Vertex3D_NoTex2)*numVertices );
          }
 
-		 // update the bounding box for the primitive to tell the renderer where to update the back buffer
-		 g_pplayer->m_pin3d.ClearExtents(&m_d.m_boundRectangle,NULL,NULL);
-		 g_pplayer->m_pin3d.ExpandExtents(&m_d.m_boundRectangle, buf, NULL, NULL, numVertices, fFalse);
-		 if ( m_d.m_rightwallheightvisible!=0.f )
-			 g_pplayer->m_pin3d.ExpandExtents(&m_d.m_boundRectangle, buf+numVertices, NULL, NULL, numVertices*2, fFalse);
-	     if ( m_d.m_leftwallheightvisible!=0.f )
-			 g_pplayer->m_pin3d.ExpandExtents(&m_d.m_boundRectangle, buf+numVertices*3, NULL, NULL, numVertices*2, fFalse);
-	     
 		 dynamicVertexBuffer->unlock();
 
          delete [] rgvLocal;
