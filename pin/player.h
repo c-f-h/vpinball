@@ -63,8 +63,6 @@ public:
 	void DrawAlphas();
 
 	void PhysicsSimulateCycle(float dtime);
-
-	void InvalidateRect(RECT * const prc);
 #ifdef ULTRAPIN
 	void DrawLightHack();
 #endif
@@ -114,7 +112,6 @@ public:
 	Ball *m_pactiveballDebug;	// ball the debugger will use as Activeball when firing events
 
 	Vector<Ball> m_vball;
-	Vector<UpdateRect> m_vupdaterect;
 	Vector<AnimObject> m_vscreenupdate;
 	Vector<HitTimer> m_vht;
 	Vector<IBlink> m_vblink;	// Lights which are set to blink

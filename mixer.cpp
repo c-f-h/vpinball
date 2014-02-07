@@ -8,7 +8,6 @@ static DWORD m_dwVolumeControlID;
 static F32 gMixerVolume;
 static int nmixers;
 static U32 volume_stamp = 0;
-static bool m_regionUpdate = false;
 
 const F32 volume_adjustment_bar_pos[2] = { 15.0f, 400.0f };
 const F32 volume_adjustment_bar_big_size[2] = { 20.0f, 4.0f };
@@ -187,8 +186,6 @@ void mixer_draw()
 	if( !volume_stamp )
 		return;
 
-	m_regionUpdate = true;
-
 	F32 fade = 1.0f - ( ( (F32) ( g_pplayer->m_time_msec - volume_stamp ) ) * 0.001f );
     if( fade > 1.0f )
 		fade = 1.0f;
@@ -293,30 +290,4 @@ void mixer_draw()
 	//Display_SetTextureState(g_pplayer->m_pin3d.m_pd3dDevice, &(RestoreTextureState));
 	// Restore the transformation state.
 	g_pplayer->m_pin3d.m_pd3dDevice->SetTransform ( TRANSFORMSTATE_WORLD, &RestoreWorldMatrix ); 
-}
-
-// Flags that the region behind the mixer volume should be refreshed.
-void mixer_erase()
-{
-	if( !m_regionUpdate )
-		return;
-
-	// Calculate the scale.
-	const float sX = - (float)g_pplayer->m_pin3d.m_dwRenderHeight*(float)(1.0/600.0);
-
-	// Set the position.  
-	//const float fX = ((float) g_pplayer->m_pin3d.m_dwRenderHeight) + (volume_adjustment_bar_pos[0] * sX);
-
-	// Set the width and height.
-	const float Width = volume_adjustment_bar_big_size[0] * sX;
-
-	// Invalidate the window region to signal an update from the back buffer (after render is complete).
-	RECT Rect;
-	Rect.top = (LONG) ((float)g_pplayer->m_pin3d.m_dwRenderHeight + volume_adjustment_bar_pos[0] * sX + Width);
-	Rect.left = 0;
-	Rect.bottom = g_pplayer->m_pin3d.m_dwRenderHeight - 1;
-	Rect.right = g_pplayer->m_pin3d.m_dwRenderWidth - 1;
-	g_pplayer->InvalidateRect(&Rect);
-
-	m_regionUpdate = false;
 }

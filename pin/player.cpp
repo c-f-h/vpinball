@@ -2447,11 +2447,6 @@ void Player::Render()
     sync = usec();
 #endif
 
-    // Erase the mixer volume.
-    mixer_erase();
-    // Plumb only (broken?) debug code
-    plumb_erase();
-
 #ifdef _DEBUGPHYSICS
     c_collisioncnt = 0; 
     c_hitcnts = 0;
@@ -3255,11 +3250,6 @@ void Player::DrawBalls()
     m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
     m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
     m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-}
-
-
-void Player::InvalidateRect(RECT * const prc)
-{
 }
 
 
