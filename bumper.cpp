@@ -3,10 +3,16 @@
 Bumper::Bumper()
 {
    m_pbumperhitcircle = NULL;
+   vtxBuf = NULL;
 }
 
 Bumper::~Bumper()
 {
+    if (vtxBuf)
+    {
+        vtxBuf->release();
+        vtxBuf = 0;
+    }
 }
 
 HRESULT Bumper::Init(PinTable *ptable, float x, float y, bool fromMouseClick)
@@ -251,77 +257,63 @@ void Bumper::EndPlay()
    m_fLockedByLS = false;
 
    m_pbumperhitcircle = NULL;
+
+   if (vtxBuf)
+   {
+       vtxBuf->release();
+       vtxBuf = 0;
+   }
 }
 
 static const WORD rgiBumperStatic[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
 
 void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
-    // TODO: this whole method is very inefficient, needs to be optimized
+    // TODO: should use index buffers
     RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
     if(!m_d.m_fVisible)	return;
 
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
-    const int i = m_pbumperhitcircle->m_bumperanim.m_iframe ? 1 : 0;    // 0 = off, 1 = lit
+    const int state = m_pbumperhitcircle->m_bumperanim.m_iframe ? 1 : 0;    // 0 = off, 1 = lit
 
     Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
     if (!pin) // Top solid color
     {
-        switch (i)
+        if (state == 0) // off
         {
-            case 0:
-                {
-                    ppin3d->SetTexture(NULL);
-                    pd3dDevice->SetMaterial(topNonLitMaterial);
-                    break;
-                }
-            case 1:
-                {
-                    ppin3d->lightTexture[0].Set( ePictureTexture );
-                    ppin3d->EnableLightMap(fFalse, -1);
-                    pd3dDevice->SetMaterial(topLitMaterial);
-                }
-                break;
+            ppin3d->SetTexture(NULL);
+            pd3dDevice->SetMaterial(topNonLitMaterial);
+        }
+        else            // on
+        {
+            ppin3d->lightTexture[0].Set( ePictureTexture );
+            ppin3d->EnableLightMap(fFalse, -1);
+            pd3dDevice->SetMaterial(topLitMaterial);
         }
 
-        SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
         // render the top circle
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32);
+        pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, vtxBuf, 0, 32);
         // render the "mushroom"
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, dynVerts[i], 8*32, (LPWORD)idx, 12*32);
+        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32, 8*32, (LPWORD)idx, 12*32);
     }
 
     if (m_d.m_fSideVisible)
     {
-        const float rside = (float)(m_d.m_sidecolor & 255) * (float) (1.0/255.0);
-        const float gside = (float)(m_d.m_sidecolor & 65280) * (float) (1.0/65280.0);
-        const float bside = (float)(m_d.m_sidecolor & 16711680) * (float) (1.0/16711680.0);
-        // Side color
-        switch (i)
+        if (state == 0)
         {
-            case 0:
-                {
-                    ppin3d->SetTexture(NULL);
-                    pd3dDevice->SetMaterial(sideNonLitMaterial);
-                    break;
-                }
-            case 1:
-                {
-                    ppin3d->lightTexture[0].Set( ePictureTexture );
-                    ppin3d->EnableLightMap(fFalse, -1);
-                    pd3dDevice->SetMaterial(sideLitMaterial);
-                    break;
-                }
+            ppin3d->SetTexture(NULL);
+            pd3dDevice->SetMaterial(sideNonLitMaterial);
+        }
+        else
+        {
+            ppin3d->lightTexture[0].Set( ePictureTexture );
+            ppin3d->EnableLightMap(fFalse, -1);
+            pd3dDevice->SetMaterial(sideLitMaterial);
         }
 
         // render the side walls
-        for (int l=0,t=0,k=0;l<32;l++,t+=6,k+=4)
-        {
-            SetNormal(moverVertices[i], &normalIndices[t], 3, NULL, &indices[k], 2);
-            SetNormal(moverVertices[i], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,moverVertices[i],64,(LPWORD)&indices[k], 4);
-        }
+        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32+8*32, 2*32, &sideTriIdx[0], 6*32);
     }
 
     if (pin)
@@ -332,31 +324,24 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         pin->EnsureBackdrop(m_d.m_color);
         pin->SetBackDrop( ePictureTexture );
 
-        switch (i)
+        if (state == 0)
         {
-            case 0:
-                {
-                    ppin3d->EnableLightMap(fFalse, -1);
-                    pd3dDevice->SetMaterial(nonLitMaterial);
-                    break;
-                }
-
-            case 1:
-                {
-                    ppin3d->lightTexture[0].Set( eLightProject1 );
-                    pd3dDevice->SetMaterial(litMaterial);
-                    break;
-                }
+            ppin3d->EnableLightMap(fFalse, -1);
+            pd3dDevice->SetMaterial(nonLitMaterial);
+        }
+        else
+        {
+            ppin3d->lightTexture[0].Set( eLightProject1 );
+            pd3dDevice->SetMaterial(litMaterial);
         }
 
-        SetNormal(&moverVertices[i][64], rgiBumperStatic, 32, NULL, NULL, 0);
         // render the top circle
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, &moverVertices[i][64], 32, (LPWORD)rgiBumperStatic, 32);
+        pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, vtxBuf, 0, 32);
         // render the "mushroom"
-        pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, dynVerts[i], 8*32, (LPWORD)idx, 12*32);
+        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32, 8*32, (LPWORD)idx, 12*32);
 
         // Reset all the texture coordinates
-        if (i == 1)
+        if (state == 1)
         {
             ppin3d->EnableLightMap(fFalse, -1);
         }
@@ -403,7 +388,10 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
    if ( pin )
       m_ptable->GetTVTU(pin, &maxtu, &maxtv);
 
-   for (int l=0,i=0,t=0;l<32;l++,t+=6,i+=4)
+   sideTriIdx.clear();
+   sideTriIdx.reserve(32*6);
+
+   for (int l=0,i=0,t=0; l<32; l++,t+=6,i+=4)
    {
       normalIndices[t  ] = (l==0) ? 31 : (l-1);
       normalIndices[t+1] = (l==0) ? 63 : (l+31);
@@ -413,9 +401,16 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
       normalIndices[t+5] = (l<30) ? (l+2) : (l-30);
 
       indices[i  ] = l;
-      indices[i+1] = l+32;
-      indices[i+2] = (l==31) ? 32 : (l+33);
-      indices[i+3] = (l==31) ? 0  : (l+1);
+      indices[i+1] = 32 + l;
+      indices[i+2] = 32 + (l+1) % 32;
+      indices[i+3] = (l+1) % 32;
+
+      sideTriIdx.push_back(l);
+      sideTriIdx.push_back(32 + l);
+      sideTriIdx.push_back(32 + (l+1) % 32);
+      sideTriIdx.push_back(l);
+      sideTriIdx.push_back(32 + (l+1) % 32);
+      sideTriIdx.push_back((l+1) % 32);
 
       const float angle = (float)(M_PI*2.0/32.0)*(float)l;
       const float sinangle =  sinf(angle);
@@ -443,70 +438,77 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
          staticVertices[l+64].tv = (0.5f+cosangle*0.5f)*maxtv;
       }
 
-      moverVertices[0][l].x = sinangle*m_d.m_radius + m_d.m_vCenter.x;
-      moverVertices[0][l].y = cosangle*m_d.m_radius + m_d.m_vCenter.y;
-      moverVertices[0][l].z = height+(40.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
-      moverVertices[0][l+32].x = moverVertices[0][l].x;
-      moverVertices[0][l+32].y = moverVertices[0][l].y;
-      moverVertices[0][l+32].z = height;
+      // top circle of base cylinder
+      moverVertices[l].x = sinangle*m_d.m_radius + m_d.m_vCenter.x;
+      moverVertices[l].y = cosangle*m_d.m_radius + m_d.m_vCenter.y;
+      moverVertices[l].z = height+(40.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
+      moverVertices[l].nx = sinangle;
+      moverVertices[l].ny = cosangle;
+      moverVertices[l].nz = 0.0f;
 
-      moverVertices[0][l+64].x = sinangle*outerradius*0.5f + m_d.m_vCenter.x;
-      moverVertices[0][l+64].y = cosangle*outerradius*0.5f + m_d.m_vCenter.y;
-      moverVertices[0][l+64].z = height+(60.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
+      // bottom circle of base cylinder
+      moverVertices[l+32] = moverVertices[l];
+      moverVertices[l+32].z = height;
 
-      moverVertices[0][l+96].x = sinangle*outerradius*0.9f + m_d.m_vCenter.x;
-      moverVertices[0][l+96].y = cosangle*outerradius*0.9f + m_d.m_vCenter.y;
-      moverVertices[0][l+96].z = height+(50.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
+      // top circle of cap
+      moverVertices[l+64].x = sinangle*outerradius*0.5f + m_d.m_vCenter.x;
+      moverVertices[l+64].y = cosangle*outerradius*0.5f + m_d.m_vCenter.y;
+      moverVertices[l+64].z = height+(60.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
 
-      moverVertices[0][l+128].x = sinangle*outerradius + m_d.m_vCenter.x;
-      moverVertices[0][l+128].y = cosangle*outerradius + m_d.m_vCenter.y;
-      moverVertices[0][l+128].z = height+(40.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
+      // middle ring of cap
+      moverVertices[l+96].x = sinangle*outerradius*0.9f + m_d.m_vCenter.x;
+      moverVertices[l+96].y = cosangle*outerradius*0.9f + m_d.m_vCenter.y;
+      moverVertices[l+96].z = height+(50.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
 
-      moverVertices[0][l].tu = 0.5f+sinangle*0.5f;
-      moverVertices[0][l].tv = 0.5f-cosangle*0.5f;
-      moverVertices[0][l+32].tu = 0.5f+sinangle*0.5f;
-      moverVertices[0][l+32].tv = 0.5f-cosangle*0.5f;
-      moverVertices[0][l+64].tu = 0.5f+sinangle*0.25f;
-      moverVertices[0][l+64].tv = 0.5f-cosangle*0.25f;
-      moverVertices[0][l+96].tu = 0.5f+sinangle*(float)(0.5*0.9);
-      moverVertices[0][l+96].tv = 0.5f-cosangle*(float)(0.5*0.9);
-      moverVertices[0][l+128].tu = 0.5f+sinangle*0.5f;
-      moverVertices[0][l+128].tv = 0.5f-cosangle*0.5f;
+      // outer rim of cap
+      moverVertices[l+128].x = sinangle*outerradius + m_d.m_vCenter.x;
+      moverVertices[l+128].y = cosangle*outerradius + m_d.m_vCenter.y;
+      moverVertices[l+128].z = height+(40.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
+
+      moverVertices[l].tu = 0.5f+sinangle*0.5f;
+      moverVertices[l].tv = 0.5f-cosangle*0.5f;
+      moverVertices[l+32].tu = 0.5f+sinangle*0.5f;
+      moverVertices[l+32].tv = 0.5f-cosangle*0.5f;
+      moverVertices[l+64].tu = 0.5f+sinangle*0.25f;
+      moverVertices[l+64].tv = 0.5f-cosangle*0.25f;
+      moverVertices[l+96].tu = 0.5f+sinangle*(float)(0.5*0.9);
+      moverVertices[l+96].tv = 0.5f-cosangle*(float)(0.5*0.9);
+      moverVertices[l+128].tu = 0.5f+sinangle*0.5f;
+      moverVertices[l+128].tv = 0.5f-cosangle*0.5f;
 
       if ( pin )
       {
-         moverVertices[0][l+64].tu = (0.5f+sinangle*0.25f)*maxtu;
-         moverVertices[0][l+64].tv = (0.5f+cosangle*0.25f)*maxtv;
-         moverVertices[0][l+96].tu = (0.5f+sinangle*(float)(0.5*0.9))*maxtu;
-         moverVertices[0][l+96].tv = (0.5f+cosangle*(float)(0.5*0.9))*maxtv;
-         moverVertices[0][l+128].tu = (0.5f+sinangle*0.5f)*maxtu;
-         moverVertices[0][l+128].tv = (0.5f+cosangle*0.5f)*maxtv;
+         moverVertices[l+64].tu = (0.5f+sinangle*0.25f)*maxtu;
+         moverVertices[l+64].tv = (0.5f+cosangle*0.25f)*maxtv;
+         moverVertices[l+96].tu = (0.5f+sinangle*(float)(0.5*0.9))*maxtu;
+         moverVertices[l+96].tv = (0.5f+cosangle*(float)(0.5*0.9))*maxtv;
+         moverVertices[l+128].tu = (0.5f+sinangle*0.5f)*maxtu;
+         moverVertices[l+128].tv = (0.5f+cosangle*0.5f)*maxtv;
 
          const float lightmaxtu = 0.8f;
          const float lightmaxtv = 0.8f;
 
-         moverVertices[0][l].tu2 = moverVertices[0][l].tu;
-         moverVertices[0][l+32].tu2 = moverVertices[0][l+32].tu;
-         moverVertices[0][l].tv2 = moverVertices[0][l].tv;
-         moverVertices[0][l+32].tv2 = moverVertices[0][l+32].tv;
-         moverVertices[0][l+64].tu2 = (0.5f+sinangle*0.25f)*lightmaxtu;
-         moverVertices[0][l+64].tv2 = (0.5f+cosangle*0.25f)*lightmaxtv;
-         moverVertices[0][l+96].tu2 = (0.5f+sinangle*(float)(0.5*0.9))*lightmaxtu;
-         moverVertices[0][l+96].tv2 = (0.5f+cosangle*(float)(0.5*0.9))*lightmaxtv;
-         moverVertices[0][l+128].tu2 = (0.5f+sinangle*0.5f)*lightmaxtu;
-         moverVertices[0][l+128].tv2 = (0.5f+cosangle*0.5f)*lightmaxtv;
+         moverVertices[l].tu2 = moverVertices[l].tu;
+         moverVertices[l+32].tu2 = moverVertices[l+32].tu;
+         moverVertices[l].tv2 = moverVertices[l].tv;
+         moverVertices[l+32].tv2 = moverVertices[l+32].tv;
+         moverVertices[l+64].tu2 = (0.5f+sinangle*0.25f)*lightmaxtu;
+         moverVertices[l+64].tv2 = (0.5f+cosangle*0.25f)*lightmaxtv;
+         moverVertices[l+96].tu2 = (0.5f+sinangle*(float)(0.5*0.9))*lightmaxtu;
+         moverVertices[l+96].tv2 = (0.5f+cosangle*(float)(0.5*0.9))*lightmaxtv;
+         moverVertices[l+128].tu2 = (0.5f+sinangle*0.5f)*lightmaxtu;
+         moverVertices[l+128].tv2 = (0.5f+cosangle*0.5f)*lightmaxtv;
       }
 
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[0][l]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[0][l+32]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[0][l+64]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[0][l+96]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[0][l+128]);
-      memcpy( moverVertices[1], moverVertices[0], sizeof(Vertex3D)*160 );
+      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l]);
+      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+32]);
+      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+64]);
+      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+96]);
+      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+128]);
    }
    SetNormal(staticVertices, rgiBumperStatic, 32, NULL, NULL, 0);
 
-   // TODO: use index and vertex buffers
+   // TODO: use index buffers
    for( int l=0,k=0;l<32*12;l+=6,k+=4 )
    {
       idx[l  ]= k;
@@ -516,25 +518,36 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
       idx[l+4]= k+2;
       idx[l+5]= k+3;
    }
-   for (int i = 0; i <= 1; ++i)
+
+   Vertex3D dynVerts[8*32];
+   for (int l=0,t=0,k=0,ofs=0; l<32; l++,t+=6,k+=4,ofs+=8)
    {
-      // TODO: is there even any difference between off and on state here?
-      for (int l=0,t=0,k=0,ofs=0; l<32; l++,t+=6,k+=4,ofs+=8)
-      {
-         SetNormal(&moverVertices[i][64], &normalIndices[t], 3, NULL, &indices[k], 2);
-         SetNormal(&moverVertices[i][96], &normalIndices[t], 3, NULL, &indices[k], 2);
-         SetNormal(&moverVertices[i][64], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-         SetNormal(&moverVertices[i][96], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-         memcpy( &dynVerts[i][ofs  ], &moverVertices[i][64+indices[k  ]], sizeof(Vertex3D));
-         memcpy( &dynVerts[i][ofs+1], &moverVertices[i][64+indices[k+1]], sizeof(Vertex3D));
-         memcpy( &dynVerts[i][ofs+2], &moverVertices[i][64+indices[k+2]], sizeof(Vertex3D));
-         memcpy( &dynVerts[i][ofs+3], &moverVertices[i][64+indices[k+3]], sizeof(Vertex3D));
-         memcpy( &dynVerts[i][ofs+4], &moverVertices[i][96+indices[k  ]], sizeof(Vertex3D));
-         memcpy( &dynVerts[i][ofs+5], &moverVertices[i][96+indices[k+1]], sizeof(Vertex3D));
-         memcpy( &dynVerts[i][ofs+6], &moverVertices[i][96+indices[k+2]], sizeof(Vertex3D));
-         memcpy( &dynVerts[i][ofs+7], &moverVertices[i][96+indices[k+3]], sizeof(Vertex3D));
-      }
+      SetNormal(&moverVertices[64], &normalIndices[t], 3, NULL, &indices[k], 2);
+      SetNormal(&moverVertices[96], &normalIndices[t], 3, NULL, &indices[k], 2);
+      SetNormal(&moverVertices[64], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
+      SetNormal(&moverVertices[96], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
+      dynVerts[ofs  ] = moverVertices[64+indices[k  ]];
+      dynVerts[ofs+1] = moverVertices[64+indices[k+1]];
+      dynVerts[ofs+2] = moverVertices[64+indices[k+2]];
+      dynVerts[ofs+3] = moverVertices[64+indices[k+3]];
+      dynVerts[ofs+4] = moverVertices[96+indices[k  ]];
+      dynVerts[ofs+5] = moverVertices[96+indices[k+1]];
+      dynVerts[ofs+6] = moverVertices[96+indices[k+2]];
+      dynVerts[ofs+7] = moverVertices[96+indices[k+3]];
    }
+
+   SetNormal(&moverVertices[64], rgiBumperStatic, 32, NULL, NULL, 0);
+
+   RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
+   if (!vtxBuf)
+       pd3dDevice->CreateVertexBuffer(32+8*32+2*32, 0, MY_D3DFVF_VERTEX, &vtxBuf);
+
+   Vertex3D *buf;
+   vtxBuf->lock(0, 0, (void**)&buf, 0);
+   memcpy(buf, &moverVertices[64], 32*sizeof(buf[0]));
+   memcpy(buf+32, dynVerts, 8*32*sizeof(buf[0]));
+   memcpy(buf+32+8*32, moverVertices, 2*32*sizeof(buf[0]));
+   vtxBuf->unlock();
 }
 
 void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
@@ -559,7 +572,7 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
 
       pd3dDevice->SetMaterial(staticMaterial);
 
-      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, staticVertices, 32, (LPWORD)rgiBumperStatic, 32);
+      pd3dDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, staticVertices, 32);
 
       Vertex3D verts[8*32];
       for (int l=0,t=0,k=0,ofs=0; l<32; l++,t+=6,k+=4,ofs+=8)
@@ -568,14 +581,14 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
          SetNormal(&staticVertices[32], &normalIndices[t], 3, NULL, &indices[k], 2);
          SetNormal(staticVertices, &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
          SetNormal(&staticVertices[32], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-         memcpy( &verts[ofs  ], &staticVertices[indices[k  ]], sizeof(Vertex3D));
-         memcpy( &verts[ofs+1], &staticVertices[indices[k+1]], sizeof(Vertex3D));
-         memcpy( &verts[ofs+2], &staticVertices[indices[k+2]], sizeof(Vertex3D));
-         memcpy( &verts[ofs+3], &staticVertices[indices[k+3]], sizeof(Vertex3D));
-         memcpy( &verts[ofs+4], &staticVertices[32+indices[k  ]], sizeof(Vertex3D));
-         memcpy( &verts[ofs+5], &staticVertices[32+indices[k+1]], sizeof(Vertex3D));
-         memcpy( &verts[ofs+6], &staticVertices[32+indices[k+2]], sizeof(Vertex3D));
-         memcpy( &verts[ofs+7], &staticVertices[32+indices[k+3]], sizeof(Vertex3D));
+         verts[ofs  ] = staticVertices[indices[k  ]];
+         verts[ofs+1] = staticVertices[indices[k+1]];
+         verts[ofs+2] = staticVertices[indices[k+2]];
+         verts[ofs+3] = staticVertices[indices[k+3]];
+         verts[ofs+4] = staticVertices[32+indices[k  ]];
+         verts[ofs+5] = staticVertices[32+indices[k+1]];
+         verts[ofs+6] = staticVertices[32+indices[k+2]];
+         verts[ofs+7] = staticVertices[32+indices[k+3]];
       }
 
       pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32);

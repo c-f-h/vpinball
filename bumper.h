@@ -124,12 +124,17 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Bumper)
 	void		setLightStateBypass(const LightState newVal);
 	void		setLightState(const LightState newVal);
 //<<<
-    Vertex3D staticVertices[96];
-    Vertex3D moverVertices[2][160];
+
+private:
+    Vertex3D staticVertices[3*32];
+    Vertex3D moverVertices[5*32];
     WORD     normalIndices[6*32];
     WORD     indices[4*32];
     WORD     idx[12*32];
-    Vertex3D dynVerts[2][8*32];
+
+    std::vector<WORD> sideTriIdx;
+
+    VertexBuffer *vtxBuf;
 
     Material topLitMaterial;
     Material topNonLitMaterial;
