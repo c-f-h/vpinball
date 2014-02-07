@@ -5,6 +5,8 @@
 #if !defined(AFX_PINTABLE_H__D14A2DAB_2984_4FE7_A102_D0283ECE31B4__INCLUDED_)
 #define AFX_PINTABLE_H__D14A2DAB_2984_4FE7_A102_D0283ECE31B4__INCLUDED_
 
+#include <unordered_map>
+
 #define MIN_ZOOM 0.126f // purposely make them offset from powers to 2 to account for roundoff error
 #define MAX_ZOOM 63.9f
 
@@ -688,6 +690,9 @@ END_CONNECTION_POINT_MAP()
 	bool m_activeLayers[8];
     bool m_toggleAllLayers;   
     bool m_savingActive;
+
+private:
+    std::tr1::unordered_map<unsigned long, Texture*> m_textureMap;      // hash table to speed up texture lookup by name
 };
 
 #endif // !defined(AFX_PINTABLE_H__D14A2DAB_2984_4FE7_A102_D0283ECE31B4__INCLUDED_)

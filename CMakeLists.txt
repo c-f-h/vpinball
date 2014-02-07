@@ -117,6 +117,7 @@ set(SOURCES
   flasher.cpp
   flipper.cpp
   gate.cpp
+  hash.cpp
   hid.cpp
   hitrectsur.cpp
   hitsur.cpp

@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #include "buildnumber.h"
 #include "resource.h"
+#include "hash.h"
+#include <algorithm>
 
 #define HASHLENGTH 16
 
@@ -1716,6 +1718,15 @@ void PinTable::Play()
 
    if (!m_pcv->m_fScriptError)
    {
+      // set up the texture hashtable for fast access
+      m_textureMap.clear();
+      for (int i=0;i<m_vimage.Size();i++)
+      {
+          std::string name = m_vimage.ElementAt(i)->m_szInternalName;
+          std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+          m_textureMap[ StringHash(name.c_str()) ] = m_vimage.ElementAt(i);
+      }
+
       g_pplayer = new Player();
       HRESULT hr = g_pplayer->Init(this, hwndProgressBar, hwndStatusName);
       if (!m_pcv->m_fScriptError) 
@@ -1830,6 +1841,8 @@ void PinTable::StopPlaying()
    ClearOldSounds();
 
    m_pcv->EndSession();
+
+   m_textureMap.clear();
 
    ShowWindow(g_pvp->m_hwndWork, SW_SHOW);
    //	EnableWindow(g_pvp->m_hwndWork, fTrue); // Disable modal state after game ends
@@ -6557,7 +6570,18 @@ STDMETHODIMP PinTable::PlaySound(BSTR bstr, int loopcount, float volume, float p
 
 Texture *PinTable::GetImage(char *szName)
 {
-   CharLowerBuff(szName, lstrlen(szName));
+    CharLowerBuff(szName, lstrlen(szName));
+
+    // during playback, we use the hashtable for lookup
+    if (!m_textureMap.empty())
+    {
+        unsigned long hash = StringHash(szName);
+        std::tr1::unordered_map<unsigned long, Texture*>::iterator it = m_textureMap.find(hash);
+        if (it != m_textureMap.end())
+            return it->second;
+        else
+            return NULL;
+    }
 
    for (int i=0;i<m_vimage.Size();i++)
    {
