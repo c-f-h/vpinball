@@ -2437,13 +2437,6 @@ void Player::Render()
 		}
 	}
 
-	// On Win95 when there are no balls, frame updates happen so fast the blitter gets stuck
-	const int cball = m_vball.Size();
-	if (cball == 0)
-	{
-		Sleep(1);
-	}
-
     if (m_sleeptime > 0)
     {
         Sleep(m_sleeptime - 1);
