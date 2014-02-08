@@ -7,6 +7,6 @@ DX9 renderer known issues:
 *) Stereo 3D disabled
 *) AA disabled
 *) renderer uses non-power-of-two textures, may cause troubles on some older cards
-*) full screen mode doesn't seem to work with VPM, reason unclear
+*) full screen mode doesn't work with VPM. Workaround: set "ddraw" to 0 in the VPM settings (though DMD doesn't seem to show)
 *) textures aren't preloaded, can lead to stutter in some cases
 *) lost devices aren't handled properly
