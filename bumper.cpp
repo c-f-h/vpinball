@@ -4,6 +4,7 @@ Bumper::Bumper()
 {
    m_pbumperhitcircle = NULL;
    vtxBuf = NULL;
+   idxBuf = NULL;
 }
 
 Bumper::~Bumper()
@@ -12,6 +13,11 @@ Bumper::~Bumper()
     {
         vtxBuf->release();
         vtxBuf = 0;
+    }
+    if (idxBuf)
+    {
+        idxBuf->release();
+        idxBuf = 0;
     }
 }
 
@@ -251,21 +257,25 @@ void Bumper::GetHitShapesDebug(Vector<HitObject> * const pvho)
 
 void Bumper::EndPlay()
 {
-   IEditable::EndPlay();
+    IEditable::EndPlay();
 
-   // ensure not locked just incase the player exits during a LS sequence
-   m_fLockedByLS = false;
+    // ensure not locked just incase the player exits during a LS sequence
+    m_fLockedByLS = false;
 
-   m_pbumperhitcircle = NULL;
+    m_pbumperhitcircle = NULL;
 
-   if (vtxBuf)
-   {
-       vtxBuf->release();
-       vtxBuf = 0;
-   }
+    if (vtxBuf)
+    {
+        vtxBuf->release();
+        vtxBuf = 0;
+    }
+    if (idxBuf)
+    {
+        idxBuf->release();
+        idxBuf = 0;
+    }
 }
 
-static const WORD rgiBumperStatic[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
 
 void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
@@ -295,7 +305,7 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         // render the top circle
         pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, vtxBuf, 0, 32);
         // render the "mushroom"
-        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32, 8*32, (LPWORD)idx, 12*32);
+        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32, 8*32, idxBuf, 6*32, 12*32);
     }
 
     if (m_d.m_fSideVisible)
@@ -313,7 +323,7 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
 
         // render the side walls
-        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32+8*32, 2*32, &sideTriIdx[0], 6*32);
+        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32+8*32, 2*32, idxBuf, 0, 6*32);
     }
 
     if (pin)
@@ -338,7 +348,7 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         // render the top circle
         pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, vtxBuf, 0, 32);
         // render the "mushroom"
-        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32, 8*32, (LPWORD)idx, 12*32);
+        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32, 8*32, idxBuf, 6*32, 12*32);
 
         // Reset all the texture coordinates
         if (state == 1)
@@ -388,8 +398,12 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
    if ( pin )
       m_ptable->GetTVTU(pin, &maxtu, &maxtv);
 
-   sideTriIdx.clear();
-   sideTriIdx.reserve(32*6);
+   Vertex3D moverVertices[5*32];
+   WORD     indices[4*32];
+   WORD     normalIndices[6*32];
+
+   std::vector<WORD> allIndices;        // collect all indices which should go into an index buffer
+   allIndices.reserve(6*32 + 12*32);
 
    for (int l=0,i=0,t=0; l<32; l++,t+=6,i+=4)
    {
@@ -405,38 +419,16 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
       indices[i+2] = 32 + (l+1) % 32;
       indices[i+3] = (l+1) % 32;
 
-      sideTriIdx.push_back(l);
-      sideTriIdx.push_back(32 + l);
-      sideTriIdx.push_back(32 + (l+1) % 32);
-      sideTriIdx.push_back(l);
-      sideTriIdx.push_back(32 + (l+1) % 32);
-      sideTriIdx.push_back((l+1) % 32);
+      allIndices.push_back(l);
+      allIndices.push_back(32 + l);
+      allIndices.push_back(32 + (l+1) % 32);
+      allIndices.push_back(l);
+      allIndices.push_back(32 + (l+1) % 32);
+      allIndices.push_back((l+1) % 32);
 
       const float angle = (float)(M_PI*2.0/32.0)*(float)l;
       const float sinangle =  sinf(angle);
       const float cosangle = -cosf(angle);
-
-      staticVertices[l].x    = sinangle*outerradius*0.5f + m_d.m_vCenter.x;
-      staticVertices[l].y    = cosangle*outerradius*0.5f + m_d.m_vCenter.y;
-      staticVertices[l].z    = height+(60.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
-
-      staticVertices[l+32].x = sinangle*outerradius*0.9f + m_d.m_vCenter.x;
-      staticVertices[l+32].y = cosangle*outerradius*0.9f + m_d.m_vCenter.y;
-      staticVertices[l+32].z = height+(50.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
-
-      staticVertices[l+64].x = sinangle*outerradius + m_d.m_vCenter.x;
-      staticVertices[l+64].y = cosangle*outerradius + m_d.m_vCenter.y;
-      staticVertices[l+64].z = height+(40.0f+m_d.m_heightoffset)*m_ptable->m_zScale;
-
-      if (pin)
-      {
-         staticVertices[l].tu    = (0.5f+sinangle*0.25f)*maxtu;
-         staticVertices[l].tv    = (0.5f+cosangle*0.25f)*maxtv;
-         staticVertices[l+32].tu = (0.5f+sinangle*(float)(0.5*0.9))*maxtu;
-         staticVertices[l+32].tv = (0.5f+cosangle*(float)(0.5*0.9))*maxtv;
-         staticVertices[l+64].tu = (0.5f+sinangle*0.5f)*maxtu;
-         staticVertices[l+64].tv = (0.5f+cosangle*0.5f)*maxtv;
-      }
 
       // top circle of base cylinder
       moverVertices[l].x = sinangle*m_d.m_radius + m_d.m_vCenter.x;
@@ -506,18 +498,23 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
       ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+96]);
       ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+128]);
    }
-   SetNormal(staticVertices, rgiBumperStatic, 32, NULL, NULL, 0);
 
    // TODO: use index buffers
-   for( int l=0,k=0;l<32*12;l+=6,k+=4 )
+   for( int l=0,k=0; l<32*12; l+=6,k+=4 )
    {
-      idx[l  ]= k;
-      idx[l+1]= k+1;
-      idx[l+2]= k+2;
-      idx[l+3]= k;
-      idx[l+4]= k+2;
-      idx[l+5]= k+3;
+      allIndices.push_back( k   );
+      allIndices.push_back( k+1 );
+      allIndices.push_back( k+2 );
+      allIndices.push_back( k   );
+      allIndices.push_back( k+2 );
+      allIndices.push_back( k+3 );
    }
+
+   RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
+
+   if (idxBuf)
+       idxBuf->release();
+   idxBuf = pd3dDevice->CreateAndFillIndexBuffer( allIndices );
 
    Vertex3D dynVerts[8*32];
    for (int l=0,t=0,k=0,ofs=0; l<32; l++,t+=6,k+=4,ofs+=8)
@@ -536,9 +533,9 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
       dynVerts[ofs+7] = moverVertices[96+indices[k+3]];
    }
 
+   static const WORD rgiBumperStatic[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
    SetNormal(&moverVertices[64], rgiBumperStatic, 32, NULL, NULL, 0);
 
-   RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
    if (!vtxBuf)
        pd3dDevice->CreateVertexBuffer(32+8*32+2*32, 0, MY_D3DFVF_VERTEX, &vtxBuf);
 
@@ -558,6 +555,8 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
    m_fDisabled = fFalse;
    if(!m_d.m_fVisible)	return;
    
+   Material staticMaterial;
+
    // All this function does is render the bumper image so the black shows through where it's missing in the animated form
    // TODO: is this still needed with the dynamic renderer? Probably not
    Texture * const pin = m_ptable->GetImage(m_d.m_szImage);	
@@ -569,32 +568,13 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
       pin->Set(ePictureTexture);
 
       pd3dDevice->SetRenderState( RenderDevice::ALPHABLENDENABLE, TRUE);
-
       pd3dDevice->SetMaterial(staticMaterial);
 
-      pd3dDevice->DrawPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX, staticVertices, 32);
+      pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, vtxBuf, 0, 32);
 
-      Vertex3D verts[8*32];
-      for (int l=0,t=0,k=0,ofs=0; l<32; l++,t+=6,k+=4,ofs+=8)
-      {
-         SetNormal(staticVertices, &normalIndices[t], 3, NULL, &indices[k], 2);
-         SetNormal(&staticVertices[32], &normalIndices[t], 3, NULL, &indices[k], 2);
-         SetNormal(staticVertices, &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-         SetNormal(&staticVertices[32], &normalIndices[t+3], 3, NULL, &indices[k+2], 2);
-         verts[ofs  ] = staticVertices[indices[k  ]];
-         verts[ofs+1] = staticVertices[indices[k+1]];
-         verts[ofs+2] = staticVertices[indices[k+2]];
-         verts[ofs+3] = staticVertices[indices[k+3]];
-         verts[ofs+4] = staticVertices[32+indices[k  ]];
-         verts[ofs+5] = staticVertices[32+indices[k+1]];
-         verts[ofs+6] = staticVertices[32+indices[k+2]];
-         verts[ofs+7] = staticVertices[32+indices[k+3]];
-      }
-
-      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, verts, 8*32, (LPWORD)idx, 12*32);
+      pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32, 8*32, idxBuf, 6*32, 12*32);
 
       pd3dDevice->SetRenderState( RenderDevice::ALPHABLENDENABLE, FALSE);
-
       ppin3d->SetTexture(NULL);
    }
 }

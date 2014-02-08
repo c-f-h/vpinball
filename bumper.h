@@ -126,15 +126,8 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Bumper)
 //<<<
 
 private:
-    Vertex3D staticVertices[3*32];
-    Vertex3D moverVertices[5*32];
-    WORD     normalIndices[6*32];
-    WORD     indices[4*32];
-    WORD     idx[12*32];
-
-    std::vector<WORD> sideTriIdx;
-
     VertexBuffer *vtxBuf;
+    IndexBuffer *idxBuf;
 
     Material topLitMaterial;
     Material topNonLitMaterial;
@@ -142,7 +135,6 @@ private:
     Material sideNonLitMaterial;
     Material litMaterial;
     Material nonLitMaterial;
-    Material staticMaterial;
 
 	bool m_fLockedByLS;
 
