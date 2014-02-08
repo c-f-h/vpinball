@@ -562,9 +562,237 @@ void Light::ClearForOverwrite()
    ClearPointsForOverwrite();
 }
 
-void Light::PostRenderStatic(const RenderDevice* pd3dDevice)
+//static const WORD rgiLightStatic0[3] = {0,1,2};
+static const WORD rgiLightStatic1[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
+
+void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    // TODO: optimize
+    RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
+
+    if (m_d.m_shape == ShapeCustom)
+    {
+        PostRenderStaticCustom(pd3dDevice);
+        return;
+    }
+
+    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
+    //ppin3d->SetTexture( &ppin3d->lightTexture[1] );
+    ppin3d->lightTexture[1].Set( ePictureTexture );
+
+    //pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    //pd3dDevice->SetTextureStageState( 0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+
+    g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+
+    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
+
+    Vertex3D rgv3D[32];
+    for (int l=0; l<32; l++)
+    {
+        const float angle = (float)(M_PI*2.0/32.0)*(float)l;
+        const float sinangle = sinf(angle);
+        const float cosangle = cosf(angle);
+        rgv3D[l].x = m_d.m_vCenter.x + sinangle*m_d.m_radius;
+        rgv3D[l].y = m_d.m_vCenter.y - cosangle*m_d.m_radius;
+        rgv3D[l].z = height + 0.1f;
+
+        rgv3D[l].tu = 0.5f + sinangle*0.5f;
+        rgv3D[l].tv = 0.5f + cosangle*0.5f;
+
+        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
+    }
+
+    if (!m_fBackglass)
+        SetNormal(rgv3D, rgiLightStatic1, 32, NULL, NULL, 0);
+    else
+        SetHUDVertices(rgv3D, 32);
+
+    if ( normalMoverVBuffer==NULL )
+    {
+        DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
+        g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 32, 0, vertexType, &normalMoverVBuffer);
+        NumVideoBytes += 32*sizeof(Vertex3D);     
+    }
+
+    const float r = (float)(m_d.m_color & 255) * (float)(1.0/255.0);
+    const float g = (float)(m_d.m_color & 65280) * (float)(1.0/65280.0);
+    const float b = (float)(m_d.m_color & 16711680) * (float)(1.0/16711680.0);
+
+    Material mtrl;
+    const int i = m_realState;
+
+    if(i == LightStateOff) 
+    {
+        if(!m_d.m_EnableOffLighting)
+            pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
+        if (!m_fBackglass)
+            ppin3d->EnableLightMap(height);
+        mtrl.setDiffuse( 1.0f, r*0.3f, g*0.3f, b*0.3f );
+        mtrl.setAmbient( 1.0f, r*0.3f, g*0.3f, b*0.3f );
+        mtrl.setEmissive( 0.0f, 0.0f, 0.0f, 0.0f );
+    } 
+    else 
+    {
+        if(!m_d.m_EnableLighting)
+            pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
+        ppin3d->DisableLightMap();
+        mtrl.setDiffuse( 1.0f, 0.0f, 0.0f, 0.0f );
+        mtrl.setAmbient( 1.0f, 0.0f, 0.0f, 0.0f );
+        mtrl.setEmissive( 0.0f, r, g, b );
+    }
+
+    if (m_fBackglass)
+        SetDiffuseFromMaterial(rgv3D, 32, &mtrl);
+
+    pd3dDevice->SetMaterial(mtrl);
+
+    Vertex3D *buf;
+    normalMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
+    memcpy( buf, rgv3D, 32*sizeof(Vertex3D));
+    normalMoverVBuffer->unlock();
+
+    if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
+    {
+        pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, normalMoverVBuffer, 0, 32);
+    }
+
+    // TODO (DX9): check decal interaction
+    //for (int iedit=0;iedit<m_ptable->m_vedit.Size();iedit++)
+    //{
+    //    IEditable * const pie = m_ptable->m_vedit.ElementAt(iedit);
+    //    if ((pie->GetItemType() == eItemDecal) && (fIntRectIntersect(((Decal *)pie)->m_rcBounds, m_pobjframe[i]->rc)))
+    //        pie->GetIHitable()->RenderStatic(pd3dDevice);
+    //}
+
+    // reset render states
+    ppin3d->SetTexture(NULL);
+    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+    pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    if (i == LightStateOff)
+        ppin3d->DisableLightMap();
 }
+
+
+void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
+{
+    // TODO: optimize
+    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+
+    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
+
+    bool useLightmap = false;
+
+    const int i = m_realState;
+    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
+
+    const float r = (float)(m_d.m_color & 255) * (float)(1.0/255.0);
+    const float g = (float)(m_d.m_color & 65280) * (float)(1.0/65280.0);
+    const float b = (float)(m_d.m_color & 16711680) * (float)(1.0/16711680.0);
+
+    Texture* pin = NULL;
+    Material mtrl;
+
+    if(i == LightStateOff) 
+    {
+        if(!m_d.m_EnableOffLighting)
+            pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
+        // Check if the light has an "off" texture.
+        if ((m_d.m_szOffImage[0] != 0) && (pin = m_ptable->GetImage(m_d.m_szOffImage)) != NULL)
+        {
+            // Set the texture to the one defined in the editor.
+            ppin3d->SetTexture(pin);
+            ppin3d->DisableLightMap();
+            mtrl.setAmbient( 1.0f, 1.0f, 1.0f, 1.0f );
+            mtrl.setDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
+            mtrl.setEmissive(0.0f, 0.0f, 0.0f, 0.0f );
+        }
+        else
+        {
+            // Set the texture to a default.
+            ppin3d->lightTexture[1].Set( ePictureTexture );
+            if (!m_fBackglass)
+                ppin3d->EnableLightMap(height);
+            mtrl.setAmbient( 1.0f, r*0.3f, g*0.3f, b*0.3f );
+            mtrl.setDiffuse( 1.0f, r*0.3f, g*0.3f, b*0.3f );
+            mtrl.setEmissive(0.0f, 0.0f, 0.0f, 0.0f );
+        }
+    } 
+    else // LightStateOn 
+    {
+        if(!m_d.m_EnableLighting)
+            pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
+        ppin3d->DisableLightMap();
+
+        // Check if the light has an "on" texture.
+        if ((m_d.m_szOnImage[0] != 0) && (pin = m_ptable->GetImage(m_d.m_szOnImage)) != NULL)
+        {
+            // Set the texture to the one defined in the editor.
+            if ( i==1 && m_d.m_OnImageIsLightMap )
+            {
+                Texture *offTexel=m_ptable->GetImage(m_d.m_szOffImage);
+                if ( offTexel )
+                {
+                    pd3dDevice->SetTextureStageState( 0, D3DTSS_TEXCOORDINDEX, 0 );
+                    pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
+                    pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE ); 
+                    pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP,   D3DTOP_MODULATE );
+                    pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_ADD );
+                    ppin3d->SetBaseTexture(0, offTexel->m_pdsBuffer);
+                    ppin3d->SetBaseTexture(1, pin->m_pdsBuffer);
+                    useLightmap=true;
+                }
+                else
+                {
+                    ppin3d->SetBaseTexture(0, pin->m_pdsBuffer);
+                }
+            }
+            else
+                ppin3d->SetTexture(pin);
+
+            mtrl.setAmbient( 1.0f, 1.0f, 1.0f, 1.0f );
+            mtrl.setDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
+            mtrl.setEmissive(0.0f, 0.0f, 0.0f, 0.0f );
+        }
+        else
+        {
+            // Set the texture to a default.
+            ppin3d->lightTexture[1].Set(ePictureTexture);
+            mtrl.setAmbient( 1.0f, 0.0f, 0.0f, 0.0f );
+            mtrl.setDiffuse( 1.0f, 0.0f, 0.0f, 0.0f );
+            mtrl.setEmissive(0.0f, r, g, b );
+        }
+    }
+    pd3dDevice->SetMaterial(mtrl);    
+
+    if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
+    {
+        pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customMoverVBuffer, (i*customMoverVertexNum), customMoverVertexNum);
+    }
+
+    if ( useLightmap )
+    {
+        pd3dDevice->SetTextureStageState( 1, D3DTSS_COLORARG2, D3DTA_CURRENT ); 
+        pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_MODULATE );
+        ppin3d->SetTexture(pin);
+        pd3dDevice->SetTexture(1,NULL);
+    }
+
+    // TODO (DX9): check decal interaction
+    //for (int iedit=0; iedit<m_ptable->m_vedit.Size(); iedit++)
+    //{
+    //    IEditable * const pie = m_ptable->m_vedit.ElementAt(iedit);
+    //    if ((pie->GetItemType() == eItemDecal) && (fIntRectIntersect(((Decal *)pie)->m_rcBounds, m_pobjframe[i]->rc)))
+    //        pie->GetIHitable()->RenderStatic(pd3dDevice);
+    //}
+
+    ppin3d->SetTexture(NULL);
+    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+    pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    ppin3d->DisableLightMap();
+}
+
 
 void Light::PrepareStaticCustom()
 {
@@ -849,9 +1077,6 @@ void Light::PrepareMoversCustom()
       delete vtri.ElementAt(i);
 }
 
-//static const WORD rgiLightStatic0[3] = {0,1,2};
-static const WORD rgiLightStatic1[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31};
-
 void Light::RenderSetup(const RenderDevice* _pd3dDevice)
 {
    if (m_d.m_shape == ShapeCustom)
@@ -904,7 +1129,8 @@ void Light::RenderStatic(const RenderDevice* _pd3dDevice)
    {
       const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y);
       Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-      ppin3d->EnableLightMap(!m_fBackglass, height);
+      if (!m_fBackglass)
+          ppin3d->EnableLightMap(height);
 
 	   Material mtrl;
       mtrl.setColor( 1.0f, m_d.m_bordercolor );
@@ -920,278 +1146,19 @@ void Light::RenderStatic(const RenderDevice* _pd3dDevice)
 					pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customVBuffer, t, 3);
 		   }
            else
-            pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLEFAN, normalVBuffer, 0, 32, (LPWORD)rgiLightStatic1, 32);
+            pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, normalVBuffer, 0, 32 );
 	   }
 
-	   ppin3d->EnableLightMap(fFalse, -1);
+	   ppin3d->DisableLightMap();
    }
 }
 
 void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
 {
-#ifndef VPINBALL_DX9
-   RenderDevice *pd3dDevice=(RenderDevice*)_pd3dDevice;
-   pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
-
-   const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
-
-   Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-   bool useLightmap=false;
-
-   Material mtrl;
-   
-   const float r = (float)(m_d.m_color & 255) * (float)(1.0/255.0);
-   const float g = (float)(m_d.m_color & 65280) * (float)(1.0/65280.0);
-   const float b = (float)(m_d.m_color & 16711680) * (float)(1.0/16711680.0);
-
-   for (int i=0; i<2; i++)
-   {
-      Texture* pin = NULL;
-      if(i == LightStateOff) 
-      {
-         if(!m_d.m_EnableOffLighting)
-            pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
-         // Check if the light has an "off" texture.
-         if ((m_d.m_szOffImage[0] != 0) && (pin = m_ptable->GetImage(m_d.m_szOffImage)) != NULL)
-         {
-            // Set the texture to the one defined in the editor.
-            ppin3d->SetTexture(pin);
-            ppin3d->EnableLightMap(fFalse, -1);
-            mtrl.setAmbient( 1.0f, 1.0f, 1.0f, 1.0f );
-            mtrl.setDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
-            mtrl.setEmissive(0.0f, 0.0f, 0.0f, 0.0f );
-         }
-         else
-         {
-            // Set the texture to a default.
-            ppin3d->lightTexture[1].Set( ePictureTexture );
-            ppin3d->EnableLightMap(!m_fBackglass, height);
-            mtrl.setAmbient( 1.0f, r*0.3f, g*0.3f, b*0.3f );
-            mtrl.setDiffuse( 1.0f, r*0.3f, g*0.3f, b*0.3f );
-            mtrl.setEmissive(0.0f, 0.0f, 0.0f, 0.0f );
-         }
-      } 
-      else //LightStateOn 
-      {
-	     if(!m_d.m_EnableLighting)
-	         pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
-		 ppin3d->EnableLightMap(fFalse, -1);
-         
-		 // Check if the light has an "on" texture.
-         if ((m_d.m_szOnImage[0] != 0) && (pin = m_ptable->GetImage(m_d.m_szOnImage)) != NULL)
-         {
-            // Set the texture to the one defined in the editor.
-            if ( i==1 && m_d.m_OnImageIsLightMap )
-            {
-               Texture *offTexel=m_ptable->GetImage(m_d.m_szOffImage);
-               if ( offTexel )
-               {
-                  pd3dDevice->SetTextureStageState( 0, D3DTSS_TEXCOORDINDEX, 0 );
-                  pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
-                  pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE ); 
-                  pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP,   D3DTOP_MODULATE );
-                  pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_ADD );
-                  pd3dDevice->SetTexture(0, offTexel->m_pdsBuffer);
-                  pd3dDevice->SetTexture(1, pin->m_pdsBuffer);
-                  useLightmap=true;
-               }
-               else
-               {
-                  pd3dDevice->SetTexture(0, pin->m_pdsBuffer);
-               }
-            }
-            else
-               ppin3d->SetTexture(pin);
-
- 
-            mtrl.setAmbient( 1.0f, 1.0f, 1.0f, 1.0f );
-            mtrl.setDiffuse( 1.0f, 1.0f, 1.0f, 1.0f );
-            mtrl.setEmissive(0.0f, 0.0f, 0.0f, 0.0f );
-         }
-         else
-         {
-            // Set the texture to a default.
-            ppin3d->lightTexture[1].Set(ePictureTexture);
-            mtrl.setAmbient( 1.0f, 0.0f, 0.0f, 0.0f );
-            mtrl.setDiffuse( 1.0f, 0.0f, 0.0f, 0.0f );
-            mtrl.setEmissive(0.0f, r, g, b );
-         }
-      }
-     pd3dDevice->SetMaterial(mtrl);    
-
-     m_pobjframe[i] = new ObjFrame();
-      
-	  for( int t=0; t<customMoverVertexNum; t+=3 ) //!! optimize into single call!
-         if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
-         {
-            pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customMoverVBuffer, (i*customMoverVertexNum)+t, 3);
-         }
-     if ( useLightmap )
-     {
-        pd3dDevice->SetTextureStageState( 1, D3DTSS_COLORARG2, D3DTA_CURRENT ); 
-        pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_MODULATE );
-        ppin3d->SetTexture(pin);
-        pd3dDevice->SetTexture(1,NULL);
-     }
-
-	  if((!m_d.m_EnableLighting))
-	      pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-
-      for (int iedit=0; iedit<m_ptable->m_vedit.Size(); iedit++)
-      {
-         IEditable * const pie = m_ptable->m_vedit.ElementAt(iedit);
-         if ((pie->GetItemType() == eItemDecal) && (fIntRectIntersect(((Decal *)pie)->m_rcBounds, m_pobjframe[i]->rc)))
-            pie->GetIHitable()->RenderStatic(pd3dDevice);
-      }
-
-      ppin3d->lightTexture[1].Set(ePictureTexture);
-      pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
-
-      ppin3d->ClipRectToVisibleArea(&m_pobjframe[i]->rc);
-      m_pobjframe[i]->pdds = g_pvp->m_pdd.CreateOffscreenPlain(m_pobjframe[i]->rc.right - m_pobjframe[i]->rc.left, m_pobjframe[i]->rc.bottom - m_pobjframe[i]->rc.top);
-
-      if (m_pobjframe[i]->pdds == NULL)
-         continue;
-
-      m_pobjframe[i]->pdds->BltFast(0, 0, ppin3d->m_pddsBackBuffer, &m_pobjframe[i]->rc, DDBLTFAST_WAIT);
-
-      // Reset color key in back buffer
-      DDBLTFX ddbltfx;
-      ddbltfx.dwSize = sizeof(DDBLTFX);
-      ddbltfx.dwFillColor = 0;
-      ppin3d->m_pddsBackBuffer->Blt(&m_pobjframe[i]->rc, NULL,
-         &m_pobjframe[i]->rc, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
-   }
-
-   ppin3d->SetTexture(NULL);
-   pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-#endif
 }
 
 void Light::RenderMovers(const RenderDevice* _pd3dDevice)
 {
-#ifndef VPINBALL_DX9
-   if (m_d.m_shape == ShapeCustom)
-   {
-      RenderCustomMovers(_pd3dDevice);
-      return;
-   }
-
-   RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
-   pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
-
-   const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
-
-   Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-   ppin3d->lightTexture[1].Set(ePictureTexture);
-
-   //pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-   //pd3dDevice->SetTextureStageState( 0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-
-   g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-
-   Vertex3D rgv3D[32];
-   for (int l=0; l<32; l++)
-   {
-      const float angle = (float)(M_PI*2.0/32.0)*(float)l;
-      const float sinangle = sinf(angle);
-      const float cosangle = cosf(angle);
-      rgv3D[l].x = m_d.m_vCenter.x + sinangle*m_d.m_radius;
-      rgv3D[l].y = m_d.m_vCenter.y - cosangle*m_d.m_radius;
-      rgv3D[l].z = height + 0.1f;
-
-      rgv3D[l].tu = 0.5f + sinangle*0.5f;
-      rgv3D[l].tv = 0.5f + cosangle*0.5f;
-
-      ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
-   }
-
-   if (!m_fBackglass)
-      SetNormal(rgv3D, rgiLightStatic1, 32, NULL, NULL, 0);
-   else
-      SetHUDVertices(rgv3D, 32);
-
-   if ( normalMoverVBuffer==NULL )
-   {
-      DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
-      g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 32, 0, vertexType, &normalMoverVBuffer);
-      NumVideoBytes += 32*sizeof(Vertex3D);     
-   }
-
-   const float r = (float)(m_d.m_color & 255) * (float)(1.0/255.0);
-   const float g = (float)(m_d.m_color & 65280) * (float)(1.0/65280.0);
-   const float b = (float)(m_d.m_color & 16711680) * (float)(1.0/16711680.0);
-
-   Material mtrl;
-   for (int i=0; i<2; i++)
-   {
-      if(i == LightStateOff) 
-      {
-         if(!m_d.m_EnableOffLighting)
-            pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
-         ppin3d->EnableLightMap(!m_fBackglass, height);
-         mtrl.setDiffuse( 1.0f, r*0.3f, g*0.3f, b*0.3f );
-         mtrl.setAmbient( 1.0f, r*0.3f, g*0.3f, b*0.3f );
-         mtrl.setEmissive( 0.0f, 0.0f, 0.0f, 0.0f );
-      } 
-      else 
-      {
-         if(!m_d.m_EnableLighting)
-            pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
-         ppin3d->EnableLightMap(fFalse, -1);
-         mtrl.setDiffuse( 1.0f, 0.0f, 0.0f, 0.0f );
-         mtrl.setAmbient( 1.0f, 0.0f, 0.0f, 0.0f );
-         mtrl.setEmissive( 0.0f, r, g, b );
-      }
-
-      if (m_fBackglass)
-         SetDiffuseFromMaterial(rgv3D, 32, &mtrl);
-
-      pd3dDevice->SetMaterial(mtrl);
-      Vertex3D *buf;
-      normalMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
-      memcpy( buf, rgv3D, 32*sizeof(Vertex3D));
-      normalMoverVBuffer->unlock();
-
-      m_pobjframe[i] = new ObjFrame();
-
-      ppin3d->ClipRectToVisibleArea(&m_pobjframe[i]->rc);
-      m_pobjframe[i]->pdds = g_pvp->m_pdd.CreateOffscreenPlain(m_pobjframe[i]->rc.right - m_pobjframe[i]->rc.left, m_pobjframe[i]->rc.bottom - m_pobjframe[i]->rc.top);
-
-      if (m_pobjframe[i]->pdds == NULL)
-         continue;
-
-      if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
-      {
-         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLEFAN, normalMoverVBuffer, 0, 32, (LPWORD)rgiLightStatic1,32);
-      }
-
-	  if((!m_d.m_EnableLighting))
-	      pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-
-	  for (int iedit=0;iedit<m_ptable->m_vedit.Size();iedit++)
-	  {
-		 IEditable * const pie = m_ptable->m_vedit.ElementAt(iedit);
-		 if ((pie->GetItemType() == eItemDecal) && (fIntRectIntersect(((Decal *)pie)->m_rcBounds, m_pobjframe[i]->rc)))
-			 pie->GetIHitable()->RenderStatic(pd3dDevice);
-	  }
-
-     ppin3d->lightTexture[1].Set(ePictureTexture);
-	  pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
-
-	  m_pobjframe[i]->pdds->BltFast(0, 0, ppin3d->m_pddsBackBuffer, &m_pobjframe[i]->rc, DDBLTFAST_WAIT);
-
-	  // Reset color key in back buffer
-	  DDBLTFX ddbltfx;
-	  ddbltfx.dwSize = sizeof(DDBLTFX);
-	  ddbltfx.dwFillColor = 0;//0xffff;
-	  ppin3d->m_pddsBackBuffer->Blt(&m_pobjframe[i]->rc, NULL,
-		 &m_pobjframe[i]->rc, DDBLT_COLORFILL | DDBLT_WAIT, &ddbltfx);
-   }
-
-   ppin3d->SetTexture(NULL);
-   pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-#endif
 }
 
 void Light::SetObjectPos()
@@ -1555,23 +1522,11 @@ STDMETHODIMP Light::put_State(LightState newVal)
 
 void Light::DrawFrame(BOOL fOn)
 {
-#ifndef VPINBALL_DX9
-   Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-
-   const int frame = fOn;
-
-   // Light might be off the screen and have no image
-
-   // Make sure we have a DDraw surface. 
-   if (m_pobjframe[frame]->pdds != NULL)
-   {
-      // NOTE: They are drawing to their own static buffer below in the BltFast... NOT the back buffer!
-      // We can use BltFast here because we are drawing to our own offscreen iamge
-      /*const HRESULT hr =*/ ppin3d->m_pddsStatic->BltFast(m_pobjframe[frame]->rc.left, m_pobjframe[frame]->rc.top, m_pobjframe[frame]->pdds, NULL, DDBLTFAST_SRCCOLORKEY | DDBLTFAST_WAIT);
-
-      g_pplayer->InvalidateRect(&m_pobjframe[frame]->rc);
-   }
-#endif
+    /*
+     * TODO (DX9): This method used to blit a sprite directly into the back buffer.
+     * We can't do that in the new renderer. Right now, this method is only called
+     * by the blinking functionality in Player, so that is currently broken.
+     */
 }
 
 void Light::FlipY(Vertex2D * const pvCenter)
@@ -1996,21 +1951,7 @@ void Light::setLightState(const LightState newVal)
             // We know we can't be on the list already because we make sure our state has changed
             g_pplayer->m_vblink.AddElement((IBlink *)this);
             m_timenextblink = g_pplayer->m_time_msec; // Start pattern right away // + m_d.m_blinkinterval;
-         }
-
-         if (m_pobjframe[0])
-         {
-            switch (m_realState)
-            {
-            case LightStateOff:
-            case LightStateOn:
-               DrawFrame(m_realState);
-               break;
-
-            case LightStateBlinking:
-               m_iblinkframe = 0; // reset pattern
-               break;
-            }
+            m_iblinkframe = 0; // reset pattern
          }
       }
    }

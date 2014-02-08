@@ -145,6 +145,7 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Light)
 	virtual void PutPointCenter(const Vertex2D * const pv);
 
 	virtual void DrawFrame(BOOL fOn);
+    void PostRenderStaticCustom(RenderDevice* pd3dDevice);
 
 	void WriteRegDefaults();
    void FreeBuffers();
