@@ -279,7 +279,6 @@ void Bumper::EndPlay()
 
 void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
-    // TODO: should use index buffers
     RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
     if(!m_d.m_fVisible)	return;
 
@@ -499,7 +498,6 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
       ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+128]);
    }
 
-   // TODO: use index buffers
    for( int l=0,k=0; l<32*12; l+=6,k+=4 )
    {
       allIndices.push_back( k   );
