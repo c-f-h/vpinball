@@ -212,7 +212,10 @@ public:
 	
     void SetTexture(Texture* pTexture);
 	void SetBaseTexture(DWORD texUnit, BaseTexture* pddsTexture);
-	void EnableLightMap(const BOOL fEnable, const float z);
+
+    void EnableLightMap(const BOOL fEnable, const float z);     // TODO: remove
+    void EnableLightMap(const float z);
+    void DisableLightMap();
 
 	void SetColorKeyEnabled(bool fColorKey);
 	void EnableAlphaTestReference(DWORD alphaRefValue) const;

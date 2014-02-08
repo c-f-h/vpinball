@@ -990,15 +990,23 @@ void Pin3D::SetBaseTexture(DWORD texUnit, BaseTexture* pddsTexture)
 
 void Pin3D::EnableLightMap(const BOOL fEnable, const float z)
 {
-	if (fEnable)
-	{
-		BaseTexture* pdds = (BaseTexture*)m_xvShadowMap.ElementAt((int)z);
-		if (!pdds)
-			pdds = CreateShadow(z);
-        SetBaseTexture(eLightProject1, pdds);
-	}
-	else
-		m_pd3dDevice->SetTexture(eLightProject1, NULL);
+    if (fEnable)
+        EnableLightMap(z);
+    else
+        DisableLightMap();
+}
+
+void Pin3D::EnableLightMap(const float z)
+{
+    BaseTexture* pdds = (BaseTexture*)m_xvShadowMap.ElementAt((int)z);
+    if (!pdds)
+        pdds = CreateShadow(z);
+    SetBaseTexture(eLightProject1, pdds);
+}
+
+void Pin3D::DisableLightMap()
+{
+    m_pd3dDevice->SetTexture(eLightProject1, NULL);
 }
 
 void Pin3D::SetColorKeyEnabled(bool fColorKey)
