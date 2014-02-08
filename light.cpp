@@ -586,7 +586,7 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
-    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
+    const float height = m_surfaceHeight;
 
     Vertex3D rgv3D[32];
     for (int l=0; l<32; l++)
@@ -685,7 +685,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
     bool useLightmap = false;
 
     const int i = m_realState;
-    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
+    const float height = m_surfaceHeight;
 
     const float r = (float)(m_d.m_color & 255) * (float)(1.0/255.0);
     const float g = (float)(m_d.m_color & 65280) * (float)(1.0/65280.0);
@@ -796,7 +796,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
 
 void Light::PrepareStaticCustom()
 {
-   const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
+   const float height = m_surfaceHeight;
 
    // prepare static custom object
    Vector<RenderVertex> vvertex;
@@ -918,7 +918,7 @@ void Light::PrepareMoversCustom()
    Vector<Triangle> vtri;
    PolygonToTriangles(vvertex, &vpoly, &vtri);
 
-   const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
+   const float height = m_surfaceHeight;
 
    if(customMoverVertex[0])
 	   delete [] customMoverVertex[0];
@@ -1079,6 +1079,8 @@ void Light::PrepareMoversCustom()
 
 void Light::RenderSetup(const RenderDevice* _pd3dDevice)
 {
+    m_surfaceHeight = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
+
    if (m_d.m_shape == ShapeCustom)
    {
       PrepareStaticCustom();
@@ -1087,7 +1089,7 @@ void Light::RenderSetup(const RenderDevice* _pd3dDevice)
    else
    {
       Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-      const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
+      const float height = m_surfaceHeight;
 
       if ( normalVBuffer==NULL )
       {
@@ -1127,7 +1129,7 @@ void Light::RenderStatic(const RenderDevice* _pd3dDevice)
 {
    if (m_d.m_borderwidth > 0)
    {
-      const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y);
+      const float height = m_surfaceHeight;
       Pin3D * const ppin3d = &g_pplayer->m_pin3d;
       if (!m_fBackglass)
           ppin3d->EnableLightMap(height);

@@ -162,6 +162,7 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Light)
 
 	// Run-time
 private:
+    float m_surfaceHeight;
 	ObjFrame *m_pobjframe[2];
 
 	LightCenter m_lightcenter;
