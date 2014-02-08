@@ -73,9 +73,6 @@ Light::Light() : m_lightcenter(this)
    m_d.m_szOffImage[0]=0;
    m_d.m_szOnImage[0]=0;
    m_d.m_OnImageIsLightMap=false;
-   staticCustomVertex = 0;
-   customMoverVertex[0] = 0;
-   customMoverVertex[1] = 0;
 }
 
 Light::~Light()
@@ -100,12 +97,6 @@ Light::~Light()
       normalMoverVBuffer->release();
       normalMoverVBuffer=0;
    }
-   if( staticCustomVertex )
-	   delete [] staticCustomVertex;
-   if(customMoverVertex[0])
-	   delete [] customMoverVertex[0];
-   if(customMoverVertex[1])
-	   delete [] customMoverVertex[1];
 }
 
 HRESULT Light::Init(PinTable *ptable, float x, float y, bool fromMouseClick)
@@ -524,21 +515,6 @@ void Light::FreeBuffers()
       normalMoverVBuffer->release();
       normalMoverVBuffer=0;
    }
-   if( staticCustomVertex )
-   {
-      delete [] staticCustomVertex;
-      staticCustomVertex=0;
-   }
-   if(customMoverVertex[0])
-   {
-      delete [] customMoverVertex[0];
-      customMoverVertex[0]=0;
-   }
-   if(customMoverVertex[1])
-   {
-      delete [] customMoverVertex[1];
-      customMoverVertex[1]=0;
-   }
 }
 
 void Light::EndPlay()
@@ -567,7 +543,6 @@ static const WORD rgiLightStatic1[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,1
 
 void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
-    // TODO: optimize
     RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
 
     if (m_d.m_shape == ShapeCustom)
@@ -587,34 +562,6 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
     const float height = m_surfaceHeight;
-
-    Vertex3D rgv3D[32];
-    for (int l=0; l<32; l++)
-    {
-        const float angle = (float)(M_PI*2.0/32.0)*(float)l;
-        const float sinangle = sinf(angle);
-        const float cosangle = cosf(angle);
-        rgv3D[l].x = m_d.m_vCenter.x + sinangle*m_d.m_radius;
-        rgv3D[l].y = m_d.m_vCenter.y - cosangle*m_d.m_radius;
-        rgv3D[l].z = height + 0.1f;
-
-        rgv3D[l].tu = 0.5f + sinangle*0.5f;
-        rgv3D[l].tv = 0.5f + cosangle*0.5f;
-
-        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
-    }
-
-    if (!m_fBackglass)
-        SetNormal(rgv3D, rgiLightStatic1, 32, NULL, NULL, 0);
-    else
-        SetHUDVertices(rgv3D, 32);
-
-    if ( normalMoverVBuffer==NULL )
-    {
-        DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
-        g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 32, 0, vertexType, &normalMoverVBuffer);
-        NumVideoBytes += 32*sizeof(Vertex3D);     
-    }
 
     const float r = (float)(m_d.m_color & 255) * (float)(1.0/255.0);
     const float g = (float)(m_d.m_color & 65280) * (float)(1.0/65280.0);
@@ -643,15 +590,7 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
         mtrl.setEmissive( 0.0f, r, g, b );
     }
 
-    if (m_fBackglass)
-        SetDiffuseFromMaterial(rgv3D, 32, &mtrl);
-
     pd3dDevice->SetMaterial(mtrl);
-
-    Vertex3D *buf;
-    normalMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
-    memcpy( buf, rgv3D, 32*sizeof(Vertex3D));
-    normalMoverVBuffer->unlock();
 
     if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
     {
@@ -677,7 +616,6 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
 void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
 {
-    // TODO: optimize
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
     pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
@@ -803,7 +741,7 @@ void Light::PrepareStaticCustom()
    GetRgVertex(&vvertex);
 
    const int cvertex = vvertex.Size();
-   RenderVertex *const rgv = new RenderVertex[cvertex];
+   std::vector<RenderVertex> rgv(cvertex);
 
    for (int i=0; i<cvertex; ++i)
    {
@@ -844,14 +782,12 @@ void Light::PrepareStaticCustom()
    Vector<Triangle> vtri;
    PolygonToTriangles(rgv, &vpoly, &vtri);
    staticCustomVertexNum = vtri.Size()*3;
-   if(staticCustomVertex)
-	   delete [] staticCustomVertex;
-   staticCustomVertex = new Vertex3D[staticCustomVertexNum];
+   std::vector<Vertex3D> staticCustomVertex(staticCustomVertexNum);
+
    if ( customVBuffer==NULL )
    {
       DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
       g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( staticCustomVertexNum, 0, vertexType, &customVBuffer);
-      NumVideoBytes += staticCustomVertexNum*sizeof(Vertex3D);     
    }
 
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
@@ -887,10 +823,8 @@ void Light::PrepareStaticCustom()
 
    Vertex3D *buf;
    customVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
-   memcpy( buf, staticCustomVertex, staticCustomVertexNum*sizeof(Vertex3D));
+   memcpy( buf, &staticCustomVertex[0], staticCustomVertexNum*sizeof(Vertex3D));
    customVBuffer->unlock();
-
-   delete[] rgv;
 }
 
 void Light::PrepareMoversCustom()
@@ -920,10 +854,8 @@ void Light::PrepareMoversCustom()
 
    const float height = m_surfaceHeight;
 
-   if(customMoverVertex[0])
-	   delete [] customMoverVertex[0];
-   if(customMoverVertex[1])
-	   delete [] customMoverVertex[1];
+   Vertex3D *customMoverVertex[2];
+
    customMoverVertexNum = vtri.Size()*3;
    customMoverVertex[0] = new Vertex3D[customMoverVertexNum];
    customMoverVertex[1] = new Vertex3D[customMoverVertexNum];
@@ -932,9 +864,7 @@ void Light::PrepareMoversCustom()
    {
       DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
       g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( customMoverVertexNum*2, 0, vertexType, &customMoverVBuffer);
-      NumVideoBytes += (customMoverVertexNum*2)*sizeof(Vertex3D);     
    }
-   const int offsetOnState = customMoverVertexNum;
 
    Material mtrl;
 
@@ -1063,12 +993,14 @@ void Light::PrepareMoversCustom()
    }//for(i=0;i<2...)
 
 
-
    Vertex3D *buf;
    customMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
    memcpy( buf, customMoverVertex[0], customMoverVertexNum*sizeof(Vertex3D));
-   memcpy( &buf[offsetOnState], customMoverVertex[1], customMoverVertexNum*sizeof(Vertex3D));
+   memcpy( &buf[customMoverVertexNum], customMoverVertex[1], customMoverVertexNum*sizeof(Vertex3D));
    customMoverVBuffer->unlock();
+
+   delete [] customMoverVertex[0];
+   delete [] customMoverVertex[1];
 
    for (int i=0;i<cvertex;i++)
       delete vvertex.ElementAt(i);
@@ -1081,82 +1013,108 @@ void Light::RenderSetup(const RenderDevice* _pd3dDevice)
 {
     m_surfaceHeight = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
 
-   if (m_d.m_shape == ShapeCustom)
-   {
-      PrepareStaticCustom();
-      PrepareMoversCustom();
-   }
-   else
-   {
-      Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-      const float height = m_surfaceHeight;
+    if (m_d.m_shape == ShapeCustom)
+    {
+        PrepareStaticCustom();
+        PrepareMoversCustom();
+    }
+    else
+    {
+        Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+        const float height = m_surfaceHeight;
 
-      if ( normalVBuffer==NULL )
-      {
-         DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
-         g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 32, 0, vertexType, &normalVBuffer);
-         NumVideoBytes += 32*sizeof(Vertex3D);     
-      }
+        if ( normalVBuffer==NULL )
+        {
+            DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
+            g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 32, 0, vertexType, &normalVBuffer);
+        }
 
-      // prepare static circle object
-      for (int l=0; l<32; l++)
-      {
-         const float angle = (float)(M_PI*2.0/32.0)*(float)l;
-         circleVertex[l].x = m_d.m_vCenter.x + sinf(angle)*(m_d.m_radius + m_d.m_borderwidth);
-         circleVertex[l].y = m_d.m_vCenter.y - cosf(angle)*(m_d.m_radius + m_d.m_borderwidth);
-         circleVertex[l].z = height + 0.05f;
+        Vertex3D circleVertex[32];
 
-         ppin3d->m_lightproject.CalcCoordinates(&circleVertex[l]);
-      }
+        // prepare static circle object
+        for (int l=0; l<32; l++)
+        {
+            const float angle = (float)(M_PI*2.0/32.0)*(float)l;
+            circleVertex[l].x = m_d.m_vCenter.x + sinf(angle)*(m_d.m_radius + m_d.m_borderwidth);
+            circleVertex[l].y = m_d.m_vCenter.y - cosf(angle)*(m_d.m_radius + m_d.m_borderwidth);
+            circleVertex[l].z = height + 0.05f;
 
-      if( !m_fBackglass )
-         SetNormal(circleVertex, rgiLightStatic1, 32, NULL, NULL, 0);
-      else
-      {
-         SetHUDVertices(circleVertex, 32);
-         SetDiffuse(circleVertex, 32, RGB_TO_BGR(m_d.m_bordercolor));
-      }
+            ppin3d->m_lightproject.CalcCoordinates(&circleVertex[l]);
+        }
 
-      Vertex3D *buf;
-      normalVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
-      memcpy( buf, circleVertex, 32*sizeof(Vertex3D));
-      normalVBuffer->unlock();
+        if( !m_fBackglass )
+            SetNormal(circleVertex, rgiLightStatic1, 32, NULL, NULL, 0);
+        else
+        {
+            SetHUDVertices(circleVertex, 32);
+            SetDiffuse(circleVertex, 32, RGB_TO_BGR(m_d.m_bordercolor));
+        }
 
-   }
+        Vertex3D *buf;
+        normalVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
+        memcpy( buf, circleVertex, 32*sizeof(Vertex3D));
+        normalVBuffer->unlock();
+
+        ///// prepare mover vertex buffer
+
+        Vertex3D rgv3D[32];
+        for (int l=0; l<32; l++)
+        {
+            const float angle = (float)(M_PI*2.0/32.0)*(float)l;
+            const float sinangle = sinf(angle);
+            const float cosangle = cosf(angle);
+            rgv3D[l].x = m_d.m_vCenter.x + sinangle*m_d.m_radius;
+            rgv3D[l].y = m_d.m_vCenter.y - cosangle*m_d.m_radius;
+            rgv3D[l].z = height + 0.1f;
+
+            rgv3D[l].tu = 0.5f + sinangle*0.5f;
+            rgv3D[l].tv = 0.5f + cosangle*0.5f;
+
+            ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
+        }
+
+        if (!m_fBackglass)
+            SetNormal(rgv3D, rgiLightStatic1, 32, NULL, NULL, 0);
+        else
+            SetHUDVertices(rgv3D, 32);
+
+        if ( normalMoverVBuffer==NULL )
+        {
+            DWORD vertexType = (!m_fBackglass) ? MY_D3DFVF_VERTEX : MY_D3DTRANSFORMED_VERTEX;
+            g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 32, 0, vertexType, &normalMoverVBuffer);
+        }
+
+        normalMoverVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
+        memcpy( buf, rgv3D, 32*sizeof(Vertex3D));
+        normalMoverVBuffer->unlock();
+    }
 }
 
 void Light::RenderStatic(const RenderDevice* _pd3dDevice)
 {
-   if (m_d.m_borderwidth > 0)
-   {
-      const float height = m_surfaceHeight;
-      Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-      if (!m_fBackglass)
-          ppin3d->EnableLightMap(height);
+    if (m_d.m_borderwidth > 0)
+    {
+        const float height = m_surfaceHeight;
+        Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+        if (!m_fBackglass)
+            ppin3d->EnableLightMap(height);
 
-	   Material mtrl;
-      mtrl.setColor( 1.0f, m_d.m_bordercolor );
+        Material mtrl;
+        mtrl.setColor( 1.0f, m_d.m_bordercolor );
 
-      RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
-      pd3dDevice->SetMaterial(mtrl);
+        RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
+        pd3dDevice->SetMaterial(mtrl);
 
-	   if((!m_fBackglass) || GetPTable()->GetDecalsEnabled()) 
-       {
-		   if(m_d.m_shape == ShapeCustom)
-           {
-			   for (int t=0; t<staticCustomVertexNum; t+=3)
-					pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customVBuffer, t, 3);
-		   }
-           else
-            pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, normalVBuffer, 0, 32 );
-	   }
+        if((!m_fBackglass) || GetPTable()->GetDecalsEnabled())
+        {
+            if(m_d.m_shape == ShapeCustom)
+                pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customVBuffer, 0, staticCustomVertexNum);
+            else
+                pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, normalVBuffer, 0, 32 );
+        }
 
-	   ppin3d->DisableLightMap();
-   }
-}
-
-void Light::RenderCustomMovers(const RenderDevice* _pd3dDevice)
-{
+        ppin3d->DisableLightMap();
+    }
 }
 
 void Light::RenderMovers(const RenderDevice* _pd3dDevice)

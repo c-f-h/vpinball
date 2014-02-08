@@ -127,8 +127,6 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Light)
 	void PrepareStaticCustom();
     void PrepareMoversCustom();
 
-	void RenderCustomMovers(const RenderDevice* pd3dDevice);
-
 	virtual void EditMenu(HMENU hmenu);
 	virtual void DoCommand(int icmd, int x, int y);
 
@@ -170,9 +168,6 @@ private:
 //>>> Added By Chris
 	bool		m_fLockedByLS;
 //<<<
-   Vertex3D circleVertex[32];
-   Vertex3D *customMoverVertex[2];
-   Vertex3D *staticCustomVertex;
    int staticCustomVertexNum;
    int customMoverVertexNum;
    VertexBuffer *customVBuffer;
