@@ -1,0 +1,12 @@
+DX9 renderer known issues:
+
+*) lights set to blinking don't work
+*) textboxes don't work
+*) EM reels don't work
+*) kickers don't respect the depth buffer correctly
+*) Stereo 3D disabled
+*) AA disabled
+*) renderer uses non-power-of-two textures, may cause troubles on some older cards
+*) full screen mode doesn't seem to work with VPM, reason unclear
+*) textures aren't preloaded, can lead to stutter in some cases
+*) lost devices aren't handled properly
