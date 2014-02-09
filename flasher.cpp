@@ -902,7 +902,6 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
          pin->CreateAlphaChannel();
          pin->Set(ePictureTexture);
 
-         ppin3d->SetColorKeyEnabled(TRUE);
 		 ppin3d->SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 		 
 		 pd3dDevice->SetMaterial(textureMaterial);
@@ -1007,7 +1006,6 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
 	  }
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 
-      ppin3d->SetColorKeyEnabled(FALSE);
       ppin3d->SetTexture(NULL);
 	  pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
       pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE); 	

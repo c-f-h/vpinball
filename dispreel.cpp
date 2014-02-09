@@ -720,7 +720,6 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
          pin->Set( ePictureTexture );
 
 			//pd3dDevice->SetRenderState(D3DRENDERSTATE_COLORKEYENABLE, TRUE);
-			pd3dDevice->SetColorKeyEnabled(fFalse);
          ppin3d->SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
 				
          pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);

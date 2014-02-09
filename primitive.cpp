@@ -955,7 +955,6 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
          pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
          g_pplayer->m_pin3d.EnableAlphaBlend(1,false);
 
-         pd3dDevice->SetColorKeyEnabled(true);
          pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 
          g_pplayer->m_pin3d.SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
@@ -999,7 +998,6 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
 
 	  if (pin)
 	  {
-         g_pplayer->m_pin3d.SetColorKeyEnabled(FALSE);
          pin->Unset(ePictureTexture);
 	  }
    }

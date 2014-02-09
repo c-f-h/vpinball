@@ -247,11 +247,6 @@ public:
    void SetTransform( TransformStateType, D3DMATRIX* );
    void GetTransform( TransformStateType, D3DMATRIX* );
 
-   void SetColorKeyEnabled(bool enable)
-   {
-       // TODO remove SetRenderState(RenderDevice::COLORKEYENABLE, enable);
-   }
-
    void setVBInVRAM( const BOOL state )
    {
       // TODO remove vbInVRAM=(state==1);

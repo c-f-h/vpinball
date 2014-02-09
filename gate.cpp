@@ -436,7 +436,6 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
 
         pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-        pd3dDevice->SetColorKeyEnabled(true);
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         ppin3d->SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
@@ -468,7 +467,6 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
 
         pd3dDevice->SetRenderState(RenderDevice::CULLMODE, (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) ? D3DCULL_CCW : D3DCULL_NONE);
-        pd3dDevice->SetColorKeyEnabled(true);
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         ppin3d->SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
@@ -492,7 +490,6 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 8, 16, (LPWORD)idx, 24);
     }
 
-    pd3dDevice->SetColorKeyEnabled(false);
     pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
     pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
 

@@ -392,7 +392,6 @@ void Pin3D::InitRenderState()
 	m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 
     m_pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_CLAMP/*WRAP*/);
-	m_pd3dDevice->SetColorKeyEnabled(true);
 
 	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
@@ -624,7 +623,6 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAARG1, D3DTA_CURRENT );
 	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAARG2, D3DTA_CURRENT );
 	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_TEXCOORDINDEX, 1 );
-	m_pd3dDevice->SetColorKeyEnabled(false);
 
 	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLOROP,   D3DTOP_DISABLE);
 
@@ -1007,11 +1005,6 @@ void Pin3D::EnableLightMap(const float z)
 void Pin3D::DisableLightMap()
 {
     m_pd3dDevice->SetTexture(eLightProject1, NULL);
-}
-
-void Pin3D::SetColorKeyEnabled(bool fColorKey)
-{
-	m_pd3dDevice->SetColorKeyEnabled(fColorKey);
 }
 
 void Pin3D::EnableAlphaTestReference(DWORD alphaRefValue) const

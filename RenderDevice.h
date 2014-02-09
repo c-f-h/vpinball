@@ -166,11 +166,6 @@ public:
    void SetTransform( TransformStateType, LPD3DMATRIX );
    void GetTransform( TransformStateType, LPD3DMATRIX );
 
-   void SetColorKeyEnabled(bool enable)
-   {
-       SetRenderState(RenderDevice::COLORKEYENABLE, enable);
-   }
-
    void setVBInVRAM( const BOOL state )
    {
       vbInVRAM=(state==1);

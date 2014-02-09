@@ -402,7 +402,6 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
         else pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
 
-        pd3dDevice->SetColorKeyEnabled(TRUE);
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
         pd3dDevice->SetMaterial(textureMaterial);
@@ -434,7 +433,6 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
         else pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
 
-        pd3dDevice->SetColorKeyEnabled(TRUE);
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
         pd3dDevice->SetMaterial(textureMaterial);
@@ -481,7 +479,6 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,verts, 16,(LPWORD)idx, 24);
     }
 
-    pd3dDevice->SetColorKeyEnabled(FALSE);
     pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
     pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
 }

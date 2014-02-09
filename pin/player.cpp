@@ -2758,7 +2758,6 @@ void Player::DrawBallShadow(Ball * const pball)
    m_pin3d.EnableAlphaTestReference( 0x0000001 );
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
-   m_pin3d.SetColorKeyEnabled(FALSE);
 
    m_pin3d.SetBaseTexture(ePictureTexture, m_pin3d.ballShadowTexture);
    m_pin3d.m_pd3dDevice->SetTextureAddressMode(0, RenderDevice::TEX_CLAMP);
@@ -2852,7 +2851,6 @@ void Player::DrawBallLogo(Ball * const pball)
    // Draw the ball logo
    m_pin3d.m_pd3dDevice->SetMaterial(pball->logoMaterial);
 
-   m_pin3d.SetColorKeyEnabled(FALSE);
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
@@ -2974,7 +2972,6 @@ void Player::DrawBalls()
 
         if (m_fBallAntialias)
         {
-            m_pin3d.SetColorKeyEnabled(FALSE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
             if ( !drawReflection )
             {
@@ -2985,7 +2982,6 @@ void Player::DrawBalls()
         }
         else
         {
-            m_pin3d.SetColorKeyEnabled(TRUE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
             // m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_NONE);   // TODO (DX9): disabled for compatibility
         }

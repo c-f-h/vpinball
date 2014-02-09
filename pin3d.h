@@ -224,7 +224,6 @@ public:
     void EnableLightMap(const float z);
     void DisableLightMap();
 
-	void SetColorKeyEnabled(bool fColorKey);
 	void EnableAlphaTestReference(DWORD alphaRefValue) const;
     void EnableAlphaBlend( DWORD alphaRefValue, BOOL additiveBlending=fFalse );
 
