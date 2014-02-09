@@ -427,6 +427,12 @@ void Decal::EndPlay()
 {
    if (m_pinimage.m_pdsBuffer)
       m_pinimage.FreeStuff();
+
+   if ( vertexBuffer )
+   {
+      vertexBuffer->release();
+      vertexBuffer=0;
+   }
 }
 
 void Decal::PostRenderStatic(const RenderDevice* pd3dDevice)
