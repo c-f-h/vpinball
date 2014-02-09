@@ -185,6 +185,7 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     Texture::SetRenderDevice(this);
 
     m_curIndexBuffer = 0;
+    m_curVertexBuffer = 0;
 }
 
 RenderDevice::~RenderDevice()
@@ -441,6 +442,7 @@ void RenderDevice::DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertic
 {
     m_pD3DDevice->SetFVF(fvf);
     CHECKD3D(m_pD3DDevice->DrawPrimitiveUP(type, ComputePrimitiveCount(type, vertexCount), vertices, fvfToSize(fvf)));
+    m_curVertexBuffer = 0;      // DrawPrimitiveUP sets the VB to NULL
 }
 
 void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount, LPWORD indices, DWORD indexCount)
@@ -448,6 +450,7 @@ void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID
     m_pD3DDevice->SetFVF(fvf);
     CHECKD3D(m_pD3DDevice->DrawIndexedPrimitiveUP(type, 0, vertexCount, ComputePrimitiveCount(type, indexCount),
                 indices, D3DFMT_INDEX16, vertices, fvfToSize(fvf)));
+    m_curVertexBuffer = 0;      // DrawIndexedPrimitiveUP sets the VB to NULL
     m_curIndexBuffer = 0;       // DrawIndexedPrimitiveUP sets the IB to NULL
 }
 
@@ -458,8 +461,14 @@ void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWOR
 
     const unsigned int vsize = fvfToSize(desc.FVF);
 
-    m_pD3DDevice->SetFVF(desc.FVF);
-    m_pD3DDevice->SetStreamSource(0, vb, 0, vsize);
+    CHECKD3D(m_pD3DDevice->SetFVF(desc.FVF));
+
+    if (m_curVertexBuffer != vb)
+    {
+        CHECKD3D(m_pD3DDevice->SetStreamSource(0, vb, 0, vsize));
+        m_curVertexBuffer = vb;
+    }
+
     CHECKD3D(m_pD3DDevice->DrawPrimitive(type, startVertex, ComputePrimitiveCount(type, vertexCount)));
 }
 
@@ -490,7 +499,13 @@ void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, VertexBuffer* 
 
     // bind the vertex and index buffers
     CHECKD3D(m_pD3DDevice->SetFVF(desc.FVF));
-    CHECKD3D(m_pD3DDevice->SetStreamSource(0, vb, 0, vsize));
+
+    if (m_curVertexBuffer != vb)
+    {
+        CHECKD3D(m_pD3DDevice->SetStreamSource(0, vb, 0, vsize));
+        m_curVertexBuffer = vb;
+    }
+
     if (m_curIndexBuffer != ib)
     {
         CHECKD3D(m_pD3DDevice->SetIndices(ib));
