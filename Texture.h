@@ -9,6 +9,18 @@
 
 #define NOTRANSCOLOR  RGB(123,123,123)
 
+static inline D3DCOLOR COLORREF_to_D3DCOLOR(COLORREF c)
+{
+    // COLORREF: 0x00BBGGRR
+    // D3DCOLOR: 0xAARRGGBB
+    const COLORREF r = (c & 0x000000ff);
+    const COLORREF g = (c & 0x0000ff00) >> 8;
+    const COLORREF b = (c & 0x00ff0000) >> 16;
+
+    return b | (g << 8) | (r << 16) | 0xff000000;
+}
+
+
 struct FIBITMAP;
 class RenderDevice;
 

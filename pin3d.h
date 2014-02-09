@@ -35,6 +35,13 @@ public:
 		}
 	result = matrixT;
 	}
+    void SetTranslation(float tx, float ty, float tz)
+    {
+        SetIdentity();
+        _41 = tx;
+        _42 = ty;
+        _43 = tz;
+    }
 	inline void RotateXMatrix(const GPINFLOAT x)
 	{
 	SetIdentity();
