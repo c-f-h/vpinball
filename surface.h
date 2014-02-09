@@ -119,7 +119,7 @@ private:
     void AddLine(Vector<HitObject> * const pvho, const RenderVertex * const pv1, const RenderVertex * const pv2, const RenderVertex * const pv3, const bool fSlingshot);
 
     void RenderSlingshots(RenderDevice* pd3dDevice);
-    void RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fMover, BOOL fDrop);
+    void RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fDrop);
     void PrepareWallsAtHeight( RenderDevice* pd3dDevice );
     void PrepareSlingshots( RenderDevice *pd3dDevice );
 
@@ -142,12 +142,11 @@ private:
 
 	bool IsWall;
    int numVertices, numPolys;
-   // two type for dropped and non-dropped walls
-   Vertex3D_NoLighting *vertsNotLit,*vertsTopNotLit[2];
-   Vertex3D *verts,*vertsTop[2];
+
+   // TODO: all these vertex buffers should be combined into one
    VertexBuffer *slingshotVBuffer;
    VertexBuffer *sideVBuffer;
-   VertexBuffer *topVBuffer[2];
+   VertexBuffer *topVBuffer;
    IndexBuffer *sideIBuffer;
    Material slingShotMaterial;
    Material sideMaterial;
