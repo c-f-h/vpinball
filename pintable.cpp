@@ -6570,6 +6570,9 @@ STDMETHODIMP PinTable::PlaySound(BSTR bstr, int loopcount, float volume, float p
 
 Texture *PinTable::GetImage(char *szName)
 {
+    if (szName == NULL || szName[0] == 0)
+        return NULL;
+
     CharLowerBuff(szName, lstrlen(szName));
 
     // during playback, we use the hashtable for lookup
