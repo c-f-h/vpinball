@@ -3,7 +3,6 @@
 Flasher::Flasher()
 {
    m_d.m_IsVisible = true;
-   m_d.m_wasVisible = false;
    dynamicVertexBuffer = 0;
    dynamicVertexBufferRegenerate = true;
    m_d.m_triggerUpdateRegion = false;
@@ -297,7 +296,6 @@ void Flasher::EndPlay()
 		dynamicVertexBufferRegenerate = true;
 	}
 
-    m_d.m_wasVisible = false;
     m_d.m_triggerSingleUpdateRegion = true;
 }
 
@@ -359,15 +357,6 @@ void Flasher::RenderStatic(const RenderDevice* _pd3dDevice)
 
 void Flasher::RenderMovers(const RenderDevice* pd3dDevice)
 {
-   if(!m_d.m_triggerSingleUpdateRegion && !m_d.m_triggerUpdateRegion)
-      return;
-
-   if(!m_d.m_IsVisible && !m_d.m_wasVisible)
-      return;
-
-   m_d.m_wasVisible = false;
-//   m_d.m_wasAlpha = false;
-   m_d.m_triggerSingleUpdateRegion = false;
 }
 
 void Flasher::SetObjectPos()
@@ -813,8 +802,6 @@ STDMETHODIMP Flasher::put_IsVisible(VARIANT_BOOL newVal)
    {
       STARTUNDO
 
-      if( m_d.m_IsVisible && !VBTOF(newVal) )
-         m_d.m_wasVisible=true;
       m_d.m_IsVisible = VBTOF(newVal);			// set visibility
       dynamicVertexBufferRegenerate=true;
       STOPUNDO

@@ -22,7 +22,6 @@ public:
 	long m_fAlpha;
 	bool m_IsVisible;
 	bool m_fAddBlend;
-    bool m_wasVisible;
     bool m_fDisplayTexture;
 	bool m_triggerUpdateRegion;
     bool m_triggerSingleUpdateRegion;

@@ -948,23 +948,13 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 				const bool fInBack = (myz > (m_vscreenupdate.ElementAt(l)->m_znear + m_vscreenupdate.ElementAt(l)->m_zfar)/*0.5f*/);
 
 				if (fInBack)
-					{
-					//m_vscreenupdate.InsertElementAt(m_vho.ElementAt(i), l);
 					break;
-					}
 				}
 
 			if (l == m_vscreenupdate.Size())
-				{
 				m_vscreenupdate.AddElement(pao);
-				}
 			else
-				{
 				m_vscreenupdate.InsertElementAt(pao, l);
-				}
-
-			//m_vscreenupdate.AddElement(m_vho.ElementAt(i));
-			pao->m_fInvalid = false;
 			}
 		}
 
@@ -2087,59 +2077,8 @@ unsigned int Player::CheckAndUpdateRegions()
         AnimObject* pao = m_vscreenupdate.ElementAt(l);
 
         // Check if the element is invalid (its frame changed).
-        pao->m_fInvalid = false;
         pao->Check3D();
-
-#ifndef VPINBALL_DX9
-        // Clamp all bounds to screen (if not completely offscreen)
-        RECT * const prc = &pao->m_rcBounds;
-        if ((prc->top < 0) && (prc->bottom >= 0))
-            prc->top = 0;
-        if ((prc->left < 0) && (prc->right >= 0))
-            prc->left = 0;
-        if ((prc->bottom > m_pin3d.m_dwRenderHeight-1) && (prc->top <= m_pin3d.m_dwRenderHeight-1))
-            prc->bottom = m_pin3d.m_dwRenderHeight-1;
-        if ((prc->right > m_pin3d.m_dwRenderWidth-1) && (prc->left <= m_pin3d.m_dwRenderWidth-1))
-            prc->right = m_pin3d.m_dwRenderWidth-1;
-
-        // Get the object's frame to draw.
-        const ObjFrame * const pobjframe = pao->Draw3D(&rect);
-
-        // Make sure we have a frame.
-        if (pobjframe != NULL)
-        {
-            // NOTE: rect is the rectangle of the region needing to be updated.
-            // NOTE: pobjframe->rc is the rectangle of the entire object that intersects the region needing to updated.
-            // I think they are trying to define a rectangle that intersects... but why subtract pobjframe->rc?   -JEP
-
-            const int bltleft = max(pobjframe->rc.left, rect.left);
-            const int blttop = max(pobjframe->rc.top, rect.top);
-
-            RECT rcUpdate;
-            rcUpdate.left = bltleft - pobjframe->rc.left;
-            rcUpdate.top = blttop - pobjframe->rc.top;
-            rcUpdate.right = min(pobjframe->rc.right, rect.right) - pobjframe->rc.left;
-            rcUpdate.bottom = min(pobjframe->rc.bottom, rect.bottom) - pobjframe->rc.top;
-
-            // Make sure our rectangle dimensions aren't wacky.
-            if ((rcUpdate.right > rcUpdate.left) && (rcUpdate.bottom > rcUpdate.top))
-            {
-                // Make sure we have a source color surface.
-                if (pobjframe->pdds != NULL)
-                {
-                    // Blit to the backbuffer with DDraw.   
-                    backBuffer->BltFast(bltleft, blttop, pobjframe->pdds, &rcUpdate, DDBLTFAST_SRCCOLORKEY);
-                }
-
-                // Make sure we have a source z surface.
-                if (pobjframe->pddsZBuffer != NULL)
-                {
-                    // Blit to the z buffer.	
-                    backBufferZ->BltFast(bltleft, blttop, pobjframe->pddsZBuffer, &rcUpdate, DDBLTFAST_NOCOLORKEY);
-                }
-            }
-        }
-#endif // DX9
+        // TODO: remove this whole loop once Check3D is unused
     }
 
     return rect.right*rect.bottom;

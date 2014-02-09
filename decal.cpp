@@ -479,7 +479,6 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
    {
       vertices[l].z = height + 0.2f;
    }
-   ppin3d->ClearExtents(&m_rcBounds, NULL, NULL);
 
    const float halfwidth = m_realwidth * 0.5f;
    const float halfheight = m_realheight * 0.5f;
@@ -531,8 +530,6 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
    vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
    memcpy( buf, vertices, 4*sizeof(Vertex3D_NoTex2));
    vertexBuffer->unlock();
-
-   ppin3d->ExpandExtents(&m_rcBounds, vertices, NULL, NULL, 4, m_fBackglass);
 }
 
 void Decal::RenderStatic(const RenderDevice* _pd3dDevice)

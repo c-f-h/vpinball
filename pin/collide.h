@@ -82,7 +82,6 @@ public:
 	//IDispatch *m_pdisp;
 	IFireEvents *m_pfedebug;
 
-	//RECT m_rcUpdate;
 	FRect3D m_rcHitRect;
 
 	BOOL  m_fEnabled;
@@ -104,10 +103,7 @@ public:
 	virtual ObjFrame *Draw3D(const RECT * const prc) {return NULL;}
 	virtual void Reset() {}
 
-	RECT m_rcBounds; // bounding box for invalidation
 	float m_znear, m_zfar; // To tell which objects are closer and should be blitted last
-
-	bool m_fInvalid;
 	};
 
 class LineSeg : public HitObject

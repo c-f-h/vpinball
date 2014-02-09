@@ -45,24 +45,20 @@ void BumperAnimObject::Check3D()
 	if ((m_iframe == 0) && (m_TimeReset != 0))
 	{
 		m_iframe = 1;
-		m_fInvalid = true;
 	}
 	else if (m_fAutoTurnedOff && (m_iframe == 1) && (m_TimeReset < g_pplayer->m_time_msec) && (m_iframe != m_iframedesired))
 	{
 		m_iframe = m_iframedesired;
-		m_fInvalid = true;
 		m_TimeReset = 0;
 		m_fAutoTurnedOff = fFalse;
 	}
 	else if (m_iframe == -1)
 	{
 		m_iframe = 0;
-		m_fInvalid = true;
 	}
 	else if (!m_fAutoTurnedOff && (m_iframe != m_iframedesired))
 	{
 		m_iframe = m_iframedesired;
-		m_fInvalid = true;
 	}
 }
 
@@ -151,12 +147,10 @@ void SlingshotAnimObject::Check3D()
 	if ((m_iframe == 0) && (m_TimeReset != 0) && m_fAnimations)
 	{
 		m_iframe = 1;
-		m_fInvalid = true;
 	}
 	else if ((m_iframe == 1) && (m_TimeReset < g_pplayer->m_time_msec))
 	{
 		m_iframe = 0;
-		m_fInvalid = true;
 		m_TimeReset = 0;
 	}
 }
@@ -777,7 +771,7 @@ void TextboxAnimObject::Reset()
 void DispReelAnimObject::Check3D()
 {
     // update the reels animation (returns saying weither to redraw the frame object or not)
-    m_fInvalid = m_pDispReel->RenderAnimation();
+    /*m_fInvalid =*/ m_pDispReel->RenderAnimation();
 }
 
 // this function is called when it is time to be drawn (Z-Ordered)
@@ -800,7 +794,7 @@ void DispReelAnimObject::Reset()
 void LightSeqAnimObject::Check3D()
 {
     // update the reels animation (returns saying weither to redraw the frame object or not)
-    m_fInvalid = m_pLightSeq->RenderAnimation();
+    /*m_fInvalid =*/ m_pLightSeq->RenderAnimation();
 }
 
 
