@@ -234,7 +234,6 @@ void Primitive::SetDefaults(bool fromMouseClick)
       m_d.m_fCollidable = iTmp == 0 ? false : true;
    else
       m_d.m_fCollidable = false;
-
    hr = GetRegInt("DefaultProps\\Primitive","IsToy", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
       m_d.m_fToy= iTmp == 0 ? false : true;
@@ -342,7 +341,6 @@ void Primitive::WriteRegDefaults()
    SetRegValue("DefaultProps\\Primitive","Scatter", REG_SZ, &strTmp,strlen(strTmp));	
    SetRegValue("DefaultProps\\Primitive","Collidable",REG_DWORD,&m_d.m_fCollidable,4);
    SetRegValue("DefaultProps\\Primitive","IsToy",REG_DWORD,&m_d.m_fToy,4);
-
 }
 
 void Primitive::GetTimers(Vector<HitTimer> * const pvht)
@@ -426,7 +424,7 @@ void Primitive::CheckJoint(Vector<HitObject> * const pvho, const Hit3DPoly * con
       ph3dc->m_pfe = 0;
    pvho->AddElement(ph3dc);
 
-   m_vhoCollidable.AddElement(ph3dc);	//remember hit components of ramp
+   m_vhoCollidable.AddElement(ph3dc);	//remember hit components of primitive
    ph3dc->m_fEnabled = m_d.m_fCollidable;
 }
 
@@ -770,7 +768,6 @@ void Primitive::CalculateBuiltinOriginal()
          builtin_indices[6 * (i + m_d.m_Sides) + 5] = m_d.m_Sides*3 + 2 + i;
       }
    }
-
 }
 
 void Primitive::CalculateBuiltin()
@@ -779,7 +776,6 @@ void Primitive::CalculateBuiltin()
    memcpy(builtin_rgv,builtin_rgvOriginal,(m_d.m_Sides*4 + 2)*sizeof(Vertex3D_NoTex2));
 
    // 2 apply matrix trafo
-
    SetNormal( builtin_rgv, builtin_indices,  m_d.m_DrawTexturesInside ? 24*m_d.m_Sides : 12*m_d.m_Sides ,NULL,NULL,0 );
 
    // could be optimized, if not everything is drawn.
@@ -798,7 +794,6 @@ void Primitive::CalculateBuiltin()
 
    // 3 depth calculation / sorting
 
-   // Since we are compiling with SSE, I'll use Floating points for comparison.
    // I need m_sides values at top
    // I need m_sides values at bottom
    // I need m_sides values at the side, since i use only one depth value for each side instead of two.
@@ -1403,13 +1398,13 @@ bool Primitive::BrowseFor3DMeshFile()
    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
    const HRESULT hr = GetRegString("RecentDir","LoadDir", szInitialDir, 1024);
+   char szFoo[MAX_PATH];
    if (hr == S_OK)
    {
       ofn.lpstrInitialDir = szInitialDir;
    }
    else
    {
-      char szFoo[MAX_PATH];
       lstrcpy(szFoo, "c:\\");
       ofn.lpstrInitialDir = szFoo;
    }
@@ -1564,13 +1559,13 @@ void Primitive::ExportMesh()
    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
    const HRESULT hr = GetRegString("RecentDir","LoadDir", szInitialDir, 1024);
+   char szFoo[MAX_PATH];
    if (hr == S_OK)
    {
       ofn.lpstrInitialDir = szInitialDir;
    }
    else
    {
-      char szFoo[MAX_PATH];
       lstrcpy(szFoo, "c:\\");
       ofn.lpstrInitialDir = szFoo;
    }
@@ -1681,7 +1676,7 @@ STDMETHODIMP Primitive::get_DrawTexturesInside(VARIANT_BOOL *pVal)
 
 STDMETHODIMP Primitive::put_DrawTexturesInside(VARIANT_BOOL newVal)
 {
-   if( m_d.m_DrawTexturesInside != VBTOF(newVal))
+   if(m_d.m_DrawTexturesInside != VBTOF(newVal))
    {
 	   STARTUNDO
 
@@ -1734,6 +1729,7 @@ STDMETHODIMP Primitive::put_X(float newVal)
 
 	   STOPUNDO
    }
+
    return S_OK;
 }
 
@@ -1960,6 +1956,7 @@ STDMETHODIMP Primitive::put_AxisScaleZ_Y(float newVal)
 STDMETHODIMP Primitive::get_RotAndTra0(float *pVal)
 {
    *pVal = m_d.m_aRotAndTra[0];
+   
    return S_OK;
 }
 
@@ -1981,6 +1978,7 @@ STDMETHODIMP Primitive::put_RotAndTra0(float newVal)
 STDMETHODIMP Primitive::get_RotX(float *pVal)
 {
    *pVal = m_d.m_aRotAndTra[0];
+
    return S_OK;
 }
 
@@ -2416,13 +2414,12 @@ STDMETHODIMP Primitive::put_HasHitEvent(VARIANT_BOOL newVal)
 {
    STARTUNDO
 
-      m_d.m_fHitEvent = VBTOF(newVal);
+   m_d.m_fHitEvent = VBTOF(newVal);
 
    STOPUNDO
 
-      return S_OK;
+   return S_OK;
 }
-
 
 STDMETHODIMP Primitive::get_Threshold(float *pVal)
 {
@@ -2435,11 +2432,11 @@ STDMETHODIMP Primitive::put_Threshold(float newVal)
 {
    STARTUNDO
 
-      m_d.m_threshold = newVal;
+   m_d.m_threshold = newVal;
 
    STOPUNDO
 
-      return S_OK;
+   return S_OK;
 }
 
 STDMETHODIMP Primitive::get_Elasticity(float *pVal)
@@ -2453,11 +2450,11 @@ STDMETHODIMP Primitive::put_Elasticity(float newVal)
 {
    STARTUNDO
 
-      m_d.m_elasticity = newVal;
+   m_d.m_elasticity = newVal;
 
    STOPUNDO
 
-      return S_OK;
+   return S_OK;
 }
 
 STDMETHODIMP Primitive::get_Friction(float *pVal)
@@ -2471,14 +2468,14 @@ STDMETHODIMP Primitive::put_Friction(float newVal)
 {
    STARTUNDO
 
-      if (newVal > 1.0f) newVal = 1.0f;
+   if (newVal > 1.0f) newVal = 1.0f;
       else if (newVal < 0.f) newVal = 0.f;
 
-      m_d.m_friction = newVal;
+   m_d.m_friction = newVal;
 
-      STOPUNDO
+   STOPUNDO
 
-         return S_OK;
+   return S_OK;
 }
 
 STDMETHODIMP Primitive::get_Scatter(float *pVal)
@@ -2492,11 +2489,11 @@ STDMETHODIMP Primitive::put_Scatter(float newVal)
 {
    STARTUNDO
 
-      m_d.m_scatter = newVal;
+   m_d.m_scatter = newVal;
 
    STOPUNDO
 
-      return S_OK;
+   return S_OK;
 }
 
 STDMETHODIMP Primitive::get_Collidable(VARIANT_BOOL *pVal)
@@ -2513,7 +2510,7 @@ STDMETHODIMP Primitive::put_Collidable(VARIANT_BOOL newVal)
    {	
       STARTUNDO
 
-         m_d.m_fCollidable = !!fNewVal;		
+      m_d.m_fCollidable = !!fNewVal;		
 
       STOPUNDO
    }
@@ -2563,6 +2560,7 @@ STDMETHODIMP Primitive::put_UpdateRegions(VARIANT_BOOL newVal)
 STDMETHODIMP Primitive::TriggerSingleUpdate() 
 {
    m_d.m_triggerSingleUpdateRegion = true;
+
    return S_OK;
 }
 

@@ -1561,13 +1561,13 @@ void VPinball::LoadFile()
    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
    const HRESULT hr = GetRegString("RecentDir","LoadDir", szInitialDir, 1024);
+   char szFoo[MAX_PATH];
    if (hr == S_OK)
    {
       ofn.lpstrInitialDir = szInitialDir;
    }
    else
    {
-      char szFoo[MAX_PATH];
       lstrcpy(szFoo, m_szMyPath);
       lstrcat(szFoo, "Tables");
       ofn.lpstrInitialDir = szFoo;
@@ -6671,13 +6671,13 @@ INT_PTR CALLBACK PhysicsOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 			   ofn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
 			   const HRESULT hr = GetRegString("RecentDir","LoadDir", szInitialDir, 1024);
+			   char szFoo[MAX_PATH];
 			   if (hr == S_OK)
 			   {
 				  ofn.lpstrInitialDir = szInitialDir;
 			   }
 			   else
 			   {
-				  char szFoo[MAX_PATH];
 				  lstrcpy(szFoo, "c:\\");
 				  ofn.lpstrInitialDir = szFoo;
 			   }
@@ -6769,13 +6769,13 @@ INT_PTR CALLBACK PhysicsOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 			   ofn.Flags = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
 			   const HRESULT hr = GetRegString("RecentDir","LoadDir", szInitialDir, 1024);
+			   char szFoo[MAX_PATH];
 			   if (hr == S_OK)
 			   {
 				  ofn.lpstrInitialDir = szInitialDir;
 			   }
 			   else
 			   {
-				  char szFoo[MAX_PATH];
 				  lstrcpy(szFoo, "c:\\");
 				  ofn.lpstrInitialDir = szFoo;
 			   }
