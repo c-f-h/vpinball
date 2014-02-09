@@ -2547,8 +2547,9 @@ void Player::Render()
         char szFoo[128];
 
         // Draw the amount of video memory used.
+        // Disabled in DX9 until we can compute this correctly.
         int len = sprintf_s(szFoo, " Used Graphics Memory: %.2f MB ", (float)NumVideoBytes/(float)(1024*1024));
-        TextOut(hdcNull, 10, 30, szFoo, len);
+        // TextOut(hdcNull, 10, 30, szFoo, len);
 
         // Draw the framerate.
         int len2 = sprintf_s(szFoo, " FPS: %d FPS(avg): %d", m_fps,m_fpsAvg/m_fpsCount);
