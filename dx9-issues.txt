@@ -3,6 +3,7 @@ DX9 renderer known issues:
 *) lights set to blinking don't work
 *) textboxes don't work
 *) EM reels don't work
+*) text decals don't work
 *) kickers don't respect the depth buffer correctly
 *) Stereo 3D disabled
 *) AA disabled
