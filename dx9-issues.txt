@@ -10,3 +10,4 @@ DX9 renderer known issues:
 *) full screen mode doesn't work with VPM. Workaround: set "ddraw" to 0 in the VPM settings (though DMD doesn't seem to show)
 *) textures aren't preloaded, can lead to stutter in some cases
 *) lost devices aren't handled properly
+*) screen shake doesn't work
