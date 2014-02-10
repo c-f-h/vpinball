@@ -919,6 +919,9 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	// static walls, rails, backdrops, etc.
 	InitStatic(hwndProgress);
 
+	// Direct all renders to the back buffer.
+    m_pin3d.SetRenderTarget(m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsZBuffer);
+
 	SendMessage(hwndProgress, PBM_SETPOS, 80, 0);
 	SetWindowText(hwndProgressName, "Rendering Animations...");
 
@@ -1186,26 +1189,12 @@ void Player::InitStatic(HWND hwndProgress)
 
 void Player::InitAnimations(HWND hwndProgress)
 {
-	// Direct all renders to the back buffer.
-    m_pin3d.SetRenderTarget(m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsZBuffer);
-
-	// Set up z-buffer to the static one, so movers can clip to it
-    m_pin3d.m_pd3dDevice->CopySurface(m_pin3d.m_pddsZBuffer, m_pin3d.m_pddsStaticZ);
-	m_pin3d.m_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET, 0x00000000, 1.0f, 0L );
-
-	m_pin3d.m_pd3dDevice->BeginScene();
-
 	// Draw stuff
 	for (int i=0;i<m_ptable->m_vedit.Size();i++)
-		{
-		Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
-		if (ph)
-		{
-			ph->RenderMovers(m_pin3d.m_pd3dDevice);
-
-			if (hwndProgress)
-				SendMessage(hwndProgress, PBM_SETPOS, 85 + ((15*i)/m_ptable->m_vedit.Size()), 0);
-		}
+    {
+        // TODO: does nothing, rescale the progress bar
+        if (hwndProgress)
+            SendMessage(hwndProgress, PBM_SETPOS, 85 + ((15*i)/m_ptable->m_vedit.Size()), 0);
 	}
 
 	// Init lights to initial state
@@ -1222,14 +1211,6 @@ void Player::InitAnimations(HWND hwndProgress)
 			pbumper->DrawFrame(pbumper->m_d.m_state == LightStateBlinking ? (pbumper->m_rgblinkpattern[0] == '1') : (pbumper->m_d.m_state != LightStateOff));
 		}
 	}
-
-	m_pin3d.EnableLightMap(fFalse, -1);
-
-	m_pin3d.m_pd3dDevice->EndScene();
-
-	// Copy the "static" buffer to the back buffer.
-	m_pin3d.m_pd3dDevice->CopySurface( m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsStatic );
-	m_pin3d.m_pd3dDevice->CopySurface( m_pin3d.m_pddsZBuffer,    m_pin3d.m_pddsStaticZ);
 }
 
 Ball *Player::CreateBall(const float x, const float y, const float z, const float vx, const float vy, const float vz, const float radius)

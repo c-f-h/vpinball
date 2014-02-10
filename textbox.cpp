@@ -284,9 +284,9 @@ void Textbox::RenderStatic(const RenderDevice* pd3dDevice)
 	{
 	}
 	
+#ifndef VPINBALL_DX9
 void Textbox::RenderMovers(const RenderDevice* pd3dDevice)
 	{
-#ifndef VPINBALL_DX9
 	Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
 	m_pobjframe = new ObjFrame();
@@ -316,8 +316,8 @@ void Textbox::RenderMovers(const RenderDevice* pd3dDevice)
 	// and this way I don't have to change my tables
 	size.int64 = size.int64 / 912 * ppin3d->m_dwRenderWidth;
 	m_pIFontPlay->put_Size(size);
-#endif
 	}
+#endif
 
 void Textbox::RenderText()
 	{

@@ -542,10 +542,6 @@ void Plunger::RenderStatic(const RenderDevice* pd3dDevice)
 	{
 	}
 
-void Plunger::RenderMovers(const RenderDevice* _pd3dDevice)
-{
-}
-
 STDMETHODIMP Plunger::InterfaceSupportsErrorInfo(REFIID riid)
 {
    static const IID* arr[] =

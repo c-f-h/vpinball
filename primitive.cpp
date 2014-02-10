@@ -1048,10 +1048,6 @@ void Primitive::RenderStatic(const RenderDevice* _pd3dDevice)
    }
 }
 
-void Primitive::RenderMovers(const RenderDevice* pd3dDevice)
-{
-}
-
 //////////////////////////////
 // Positioning
 //////////////////////////////

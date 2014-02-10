@@ -716,10 +716,6 @@ void Spinner::RenderStatic(const RenderDevice* _pd3dDevice)
    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX, rgv3D, 8, (LPWORD)rgiSpinner1, 8);
 }
 
-void Spinner::RenderMovers(const RenderDevice* _pd3dDevice)
-{
-}
-
 void Spinner::SetObjectPos()
 {
    g_pvp->SetObjectPosCur(m_d.m_vCenter.x, m_d.m_vCenter.y);

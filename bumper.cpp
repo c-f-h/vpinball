@@ -577,10 +577,6 @@ void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
    }
 }
 
-void Bumper::RenderMovers(const RenderDevice* _pd3dDevice)
-{
-}
-
 void Bumper::SetObjectPos()
 {
    g_pvp->SetObjectPosCur(m_d.m_vCenter.x, m_d.m_vCenter.y);

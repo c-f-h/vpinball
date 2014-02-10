@@ -598,10 +598,6 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
    pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
 }
 
-void Decal::RenderMovers(const RenderDevice* pd3dDevice)
-{
-}
-
 void Decal::SetObjectPos()
 {
    g_pvp->SetObjectPosCur(m_d.m_vCenter.x, m_d.m_vCenter.y);

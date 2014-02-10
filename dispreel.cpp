@@ -24,7 +24,6 @@
 **	GetHitShapes()
 **	EndPlay()
 **	RenderStatic()
-**	RenderMovers()
 **	RenderAnimation()
 **	RenderText()
 **
@@ -572,11 +571,9 @@ void DispReel::RenderStatic(const RenderDevice* pd3dDevice)
 // to use in the process
 //
 
+#ifndef VPINBALL_DX9
 void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 {
-#ifdef VPINBALL_DX9
-    m_pobjframe = NULL;
-#else
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
     // set any defaults for the game rendering
     m_timenextupdate = g_pplayer->m_time_msec + m_d.m_updateinterval;
@@ -973,8 +970,8 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 	
 	// allocate the memory for this object (returns with a BaseTexture*)
 	m_pobjframe->pdds = g_pvp->m_pdd.CreateOffscreenWithCustomTransparency(m_pobjframe->rc.right - m_pobjframe->rc.left, m_pobjframe->rc.bottom - m_pobjframe->rc.top, m_rgbImageTransparent);
-#endif
 }
+#endif
 
 // This function is called during Check3D.  It basically check to see if the update
 // interval has expired and if so handles the rolling of the reels according to the

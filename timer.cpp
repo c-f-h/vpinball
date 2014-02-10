@@ -148,10 +148,6 @@ void Timer::RenderStatic(const RenderDevice* pd3dDevice)
 	{
 	}
 	
-void Timer::RenderMovers(const RenderDevice* pd3dDevice)
-	{
-	}
-
 STDMETHODIMP Timer::InterfaceSupportsErrorInfo(REFIID riid)
 {
 	static const IID* arr[] =

@@ -1349,10 +1349,6 @@ void Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fDrop)
     }
 }
 
-void Surface::RenderMovers(const RenderDevice* pd3dDevice)
-{
-}
-
 void Surface::DoCommand(int icmd, int x, int y)
 {
    ISelect::DoCommand(icmd, x, y);

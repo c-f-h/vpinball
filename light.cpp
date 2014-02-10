@@ -1128,10 +1128,6 @@ void Light::RenderStatic(const RenderDevice* _pd3dDevice)
     }
 }
 
-void Light::RenderMovers(const RenderDevice* _pd3dDevice)
-{
-}
-
 void Light::SetObjectPos()
 {
    g_pvp->SetObjectPosCur(m_d.m_vCenter.x, m_d.m_vCenter.y);

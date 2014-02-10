@@ -355,10 +355,6 @@ void Flasher::RenderStatic(const RenderDevice* _pd3dDevice)
 {	
 }
 
-void Flasher::RenderMovers(const RenderDevice* pd3dDevice)
-{
-}
-
 void Flasher::SetObjectPos()
 {
    g_pvp->SetObjectPosCur(0, 0);

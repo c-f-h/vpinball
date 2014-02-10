@@ -2,7 +2,7 @@
 
 BumperHitCircle::BumperHitCircle()
 {
-	m_bumperanim.m_iframe = -1;
+	m_bumperanim.m_iframe = 0;
 	m_bumperanim.m_TimeReset = 0;
 	m_bumperanim.m_iframedesired = 0;
 	m_bumperanim.m_fAutoTurnedOff = fFalse;
@@ -52,10 +52,6 @@ void BumperAnimObject::Check3D()
 		m_TimeReset = 0;
 		m_fAutoTurnedOff = fFalse;
 	}
-	else if (m_iframe == -1)
-	{
-		m_iframe = 0;
-	}
 	else if (!m_fAutoTurnedOff && (m_iframe != m_iframedesired))
 	{
 		m_iframe = m_iframedesired;
@@ -64,7 +60,7 @@ void BumperAnimObject::Check3D()
 
 void BumperAnimObject::Reset()
 {
-	m_iframe = -2;
+	m_iframe = 0;
 }
 
 LineSegSlingshot::LineSegSlingshot()

@@ -965,10 +965,6 @@ void PinComControl::RenderStatic(const RenderDevice* pd3dDevice)
 {
 }
 
-void PinComControl::RenderMovers(const RenderDevice* pd3dDevice)
-{
-}
-
 HRESULT PinComControl::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryptkey)
 	{
 	BiffWriter bw(pstm, hcrypthash, hcryptkey);

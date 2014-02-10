@@ -250,15 +250,8 @@ void LightSeq::EndPlay()
 void LightSeq::PostRenderStatic(const RenderDevice* pd3dDevice)
 {
 }
+
 void LightSeq::RenderSetup(const RenderDevice* _pd3dDevice)
-{
-
-}
-void LightSeq::RenderStatic(const RenderDevice* pd3dDevice)
-{
-}
-
-void LightSeq::RenderMovers(const RenderDevice* _pd3dDevice)
 {
 	// zero pointers as a safe guard
 	m_pcollection = NULL;
@@ -371,6 +364,10 @@ void LightSeq::RenderMovers(const RenderDevice* _pd3dDevice)
 			}
 		}
 	}
+}
+
+void LightSeq::RenderStatic(const RenderDevice* pd3dDevice)
+{
 }
 
 // This function is called during Check3D.  It basically check to see if the update

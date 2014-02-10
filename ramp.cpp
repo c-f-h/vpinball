@@ -1693,10 +1693,6 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
    }
 }
 
-void Ramp::RenderMovers(const RenderDevice* pd3dDevice)
-{
-}
-
 void Ramp::SetObjectPos()
 {
    g_pvp->SetObjectPosCur(0, 0);

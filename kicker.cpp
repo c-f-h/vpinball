@@ -426,10 +426,6 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
    ppin3d->EnableLightMap(fFalse, height);
 }
 
-void Kicker::RenderMovers(const RenderDevice* pd3dDevice)
-{
-}
-
 void Kicker::SetObjectPos()
 {
    g_pvp->SetObjectPosCur(m_d.m_vCenter.x, m_d.m_vCenter.y);

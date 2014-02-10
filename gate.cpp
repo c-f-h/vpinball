@@ -692,10 +692,6 @@ void Gate::RenderStatic(const RenderDevice* _pd3dDevice) // only the support str
    pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_VERTEX, rgv3D, 8, (LPWORD)rgiGate1, 8);
 }
 
-void Gate::RenderMovers(const RenderDevice* _pd3dDevice)
-{
-}
-
 void Gate::SetObjectPos()
 {
    g_pvp->SetObjectPosCur(m_d.m_vCenter.x, m_d.m_vCenter.y);

@@ -511,10 +511,6 @@ void Trigger::RenderStatic(const RenderDevice* _pd3dDevice)
    ppin3d->EnableLightMap(fFalse, -1);
 }
 
-void Trigger::RenderMovers(const RenderDevice* pd3dDevice)
-{
-}
-
 void Trigger::SetObjectPos()
 {
    g_pvp->SetObjectPosCur(m_d.m_vCenter.x, m_d.m_vCenter.y);

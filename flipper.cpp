@@ -887,10 +887,6 @@ void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float he
     vb->unlock();
 }
 
-void Flipper::RenderMovers(const RenderDevice* _pd3dDevice)
-{
-}
-
 
 HRESULT Flipper::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryptkey)
 {
