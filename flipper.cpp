@@ -607,6 +607,14 @@ STDMETHODIMP Flipper::RotateToStart() // return to park
 
 void Flipper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    /* HACK / VP9COMPAT:
+     * Some tables, say Scared Stiff by JPSalas/Highrise, use pure black flippers which
+     * are supposed to be invisible, and then draw the flippers using sprites on walls.
+     * We emulate this here by making a pure black flipper invisible.
+     */
+    if (m_d.m_color == 0 && m_d.m_rubbercolor == 0)
+        return;
+
     //if( m_d.m_fCompatibility )
     //    return;
     if (m_phitflipper && !m_phitflipper->m_flipperanim.m_fVisible)
