@@ -239,7 +239,6 @@ public:
 private:
     void DrawBackground();
     void InitRenderState();
-    void InitPlayfieldGraphics();
     void RenderPlayfieldGraphics();
     void InitLights();
 
@@ -275,10 +274,6 @@ public:
 	Texture m_pddsLightWhite;
 
    VertexBuffer *backgroundVBuffer;
-   VertexBuffer *tableVBuffer;
-   WORD *playfieldPolyIndices;
-   DWORD numPolys;
-   DWORD numVerts;
 	ExVector<void> m_xvShadowMap;
 
 	Matrix3D m_matrixTotal;

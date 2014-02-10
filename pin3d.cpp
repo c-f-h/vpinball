@@ -18,8 +18,6 @@ Pin3D::Pin3D()
 	m_pddsStaticZ = NULL;
     ballShadowTexture = NULL;
 	backgroundVBuffer = NULL;
-	tableVBuffer = NULL;
-   playfieldPolyIndices = NULL;
    spriteVertexBuffer=NULL;
 }
 
@@ -60,10 +58,6 @@ Pin3D::~Pin3D()
 
 	if(backgroundVBuffer)
 		backgroundVBuffer->release();
-	if(tableVBuffer)
-		tableVBuffer->release();
-	if(playfieldPolyIndices)
-		delete [] playfieldPolyIndices;
 
 	delete m_pd3dDevice;
 }
@@ -683,11 +677,10 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	//EnableLightMap(fFalse, -1);
 	InitLights();
 
-	InitPlayfieldGraphics();
 	RenderPlayfieldGraphics();
 }
 
-void Pin3D::InitPlayfieldGraphics()
+void Pin3D::RenderPlayfieldGraphics()
 {
 #define TRIANGULATE_BACK 100
 
@@ -703,12 +696,11 @@ void Pin3D::InitPlayfieldGraphics()
 	rgv[6].x=g_pplayer->m_ptable->m_right;    rgv[6].y=g_pplayer->m_ptable->m_bottom;   rgv[6].z=50.0f;
 	//rgv[7].x=g_pplayer->m_ptable->m_right;    rgv[7].y=g_pplayer->m_ptable->m_top;      rgv[7].z=50.0f;
 
-	numVerts = (TRIANGULATE_BACK+1)*(TRIANGULATE_BACK+1);
-	if( !tableVBuffer )
-	{
-		m_pd3dDevice->CreateVertexBuffer( numVerts+7, 0, MY_D3DFVF_VERTEX, &tableVBuffer); //+7 verts for second rendering step
-		NumVideoBytes += (numVerts+7)*sizeof(Vertex3D); 
-	}
+	const DWORD numVerts = (TRIANGULATE_BACK+1)*(TRIANGULATE_BACK+1);
+	const DWORD numIndices = TRIANGULATE_BACK*TRIANGULATE_BACK*6;
+
+    VertexBuffer *tableVBuffer;
+    m_pd3dDevice->CreateVertexBuffer( numVerts+7, 0, MY_D3DFVF_VERTEX, &tableVBuffer); //+7 verts for second rendering step
 
 	Texture * const pin = g_pplayer->m_ptable->GetImage((char *)g_pplayer->m_ptable->m_szImage);
 	float maxtu,maxtv;
@@ -738,7 +730,7 @@ void Pin3D::InitPlayfieldGraphics()
 	}
 	// triangulate for better vertex based lighting //!! disable/set to 0 as soon as pixel shaders do the lighting
 
-	Vertex3D *buffer = new Vertex3D[numVerts];
+    std::vector<Vertex3D> buffer(numVerts);
 
 	const float inv_tb = (float)(1.0/TRIANGULATE_BACK);
 	unsigned int offs = 0;
@@ -761,17 +753,15 @@ void Pin3D::InitPlayfieldGraphics()
 		}
 	}
 
-	if(playfieldPolyIndices)
-		delete [] playfieldPolyIndices;
-	playfieldPolyIndices = new WORD[TRIANGULATE_BACK*TRIANGULATE_BACK*6];
-	numPolys = TRIANGULATE_BACK*TRIANGULATE_BACK*6;
+    std::vector<WORD> playfieldPolyIndices(TRIANGULATE_BACK*TRIANGULATE_BACK*6);
+
 	offs = 0;
 	unsigned int offs2 = 0;
 	for(int y = 0; y < TRIANGULATE_BACK; ++y)
 	{
 		for(int x = 0; x < TRIANGULATE_BACK; ++x,offs+=6,++offs2)
 		{
-			WORD *tmp = playfieldPolyIndices + offs;
+			WORD *tmp = &playfieldPolyIndices[offs];
 			tmp[3] = tmp[0] = offs2;
 			tmp[1] = offs2+1;
 			tmp[4] = tmp[2] = offs2+1+TRIANGULATE_BACK;
@@ -781,24 +771,17 @@ void Pin3D::InitPlayfieldGraphics()
 
 	Vertex3D *buf;
 	tableVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
-	memcpy( buf, buffer, sizeof(Vertex3D)*numVerts);
+	memcpy( buf, &buffer[0], sizeof(Vertex3D)*numVerts);
 	SetNormal(rgv, rgiPin3D1, 4, NULL, NULL, 0);
 	memcpy( &buf[numVerts], rgv, 7*sizeof(Vertex3D));
 	tableVBuffer->unlock();
 
-	delete[] buffer;
-}
-
-void Pin3D::RenderPlayfieldGraphics()
-{
 	// Direct all renders to the "static" buffer.
 	SetRenderTarget(m_pddsStatic, m_pddsStaticZ);
 
 	EnableLightMap(fTrue, 0);
 
 	Material mtrl;
-
-	Texture * const pin = g_pplayer->m_ptable->GetImage((char *)g_pplayer->m_ptable->m_szImage);
 
 	if (pin)
 	{
@@ -811,9 +794,11 @@ void Pin3D::RenderPlayfieldGraphics()
 	}
 	m_pd3dDevice->SetMaterial(mtrl);
 
-	m_pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, tableVBuffer, 0, numVerts, playfieldPolyIndices, numPolys);
-	EnableLightMap(fFalse, -1);
+    IndexBuffer *idxBuf = m_pd3dDevice->CreateAndFillIndexBuffer(playfieldPolyIndices);
+	m_pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, tableVBuffer, 0, numVerts, idxBuf, 0, numIndices);
+    idxBuf->release();
 
+	EnableLightMap(fFalse, -1);
 	SetTexture(NULL);
     if (pin)
     {
@@ -821,6 +806,8 @@ void Pin3D::RenderPlayfieldGraphics()
         m_pd3dDevice->m_texMan.UnloadTexture(pin->m_pdsBuffer);
     }
 	m_pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, tableVBuffer, numVerts, 7, (LPWORD)rgiPin3D1, 4);
+
+    tableVBuffer->release();
 }
 
 const int rgfilterwindow[7][7] =
