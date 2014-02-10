@@ -529,7 +529,7 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
       if ( m_fBackglass && GetPTable()->GetDecalsEnabled() )
          vertexType = MY_D3DTRANSFORMED_NOTEX2_VERTEX;
 
-	  g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 4, 0, vertexType, &vertexBuffer );
+	  pd3dDevice->CreateVertexBuffer( 4, 0, vertexType, &vertexBuffer );
       NumVideoBytes += 4*sizeof(Vertex3D_NoTex2);
    }
    Vertex3D_NoTex2 *buf;
@@ -564,7 +564,7 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
       pin->CreateAlphaChannel();
       pin->Set( ePictureTexture );
 
-      g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+      ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
       pd3dDevice->SetRenderState( RenderDevice::ALPHABLENDENABLE, TRUE);
 
@@ -575,17 +575,14 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
       pd3dDevice->SetTexture(ePictureTexture, NULL);
    }
 
-   // Check if we are in hardware.
-   if (g_pvp->m_pdd.m_fHardwareAccel)
-   {
-      // Render all alpha pixels.
-      g_pplayer->m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, (DWORD)0x00000001);
-      g_pplayer->m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATEREQUAL);
-      g_pplayer->m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE); 
+   // Render all alpha pixels.
+   pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, (DWORD)0x00000001);
+   pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATEREQUAL);
+   pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
 
-      // Turn on anisotopic filtering. 
-      g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_ANISOTROPIC );
-   }
+   // Turn on anisotopic filtering.
+   ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_ANISOTROPIC );
+
    if( !m_fBackglass || GetPTable()->GetDecalsEnabled())
    {
       pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4 );
@@ -593,7 +590,7 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
 
    // Set the texture state.
    pd3dDevice->SetTexture(ePictureTexture, NULL);
-   g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
+   ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
    // Set the render state.
    pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);

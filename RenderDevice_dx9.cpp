@@ -197,14 +197,14 @@ RenderDevice::~RenderDevice()
 
 void RenderDevice::BeginScene()
 {
-   m_pD3DDevice->BeginScene();
+   CHECKD3D(m_pD3DDevice->BeginScene());
 }
 
 void RenderDevice::EndScene()
 {
-   memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
-   memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
-   m_pD3DDevice->EndScene();
+   //memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
+   //memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
+   CHECKD3D(m_pD3DDevice->EndScene());
 }
 
 void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
@@ -279,46 +279,46 @@ D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth, int *p
 
 void RenderDevice::SetTexture(DWORD p1, D3DTexture* p2 )
 {
-    m_pD3DDevice->SetTexture(p1, p2);
+    CHECKD3D(m_pD3DDevice->SetTexture(p1, p2));
 }
 
 void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 {
 	switch ( mode )
 	{
-	case TEXTURE_MODE_POINT: 
+	case TEXTURE_MODE_POINT:
 		// Don't filter textures.  Don't filter between mip levels.
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT);		
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_POINT));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_POINT));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT));
 		break;
 
 	case TEXTURE_MODE_BILINEAR:
 		// Filter textures when magnified or reduced (average of 2x2 texels).  Don't filter between mip levels.
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT);
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT));
 		break;
 
 	case TEXTURE_MODE_TRILINEAR:
 		// Filter textures when magnified or reduced (average of 2x2 texels).  And filter between the 2 mip levels.
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR));
 		break;
 
 	case TEXTURE_MODE_ANISOTROPIC:
 		// Filter textures when magnified or reduced (filter to account for perspective distortion).  And filter between the 2 mip levels.
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));        // anisotropic mag filter generally not supported
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR));
 		break;
 
 	default:
 		// Don't filter textures.  Don't filter between mip levels.
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_POINT);
-		m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_POINT));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_POINT));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_NONE));
 		break;
 	}
 }
@@ -334,7 +334,7 @@ void RenderDevice::SetTextureStageState( DWORD p1, D3DTEXTURESTAGESTATETYPE p2, 
         }
         textureStateCache[p1][p2] = p3;
     }
-    m_pD3DDevice->SetTextureStageState(p1, p2, p3);
+    CHECKD3D(m_pD3DDevice->SetTextureStageState(p1, p2, p3));
 }
 
 void RenderDevice::SetMaterial( const BaseMaterial * const _material )
@@ -380,7 +380,7 @@ void RenderDevice::SetRenderState( const RenderStates p1, const DWORD p2 )
       }
       renderStateCache[p1]=p2;
    }
-   m_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)p1,p2);
+   CHECKD3D(m_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)p1, p2));
 }
 
 void RenderDevice::SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode)
