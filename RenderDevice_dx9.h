@@ -264,8 +264,8 @@ public:
    }
 
 private:
-   CComPtr<IDirect3D9> m_pD3D;
-   CComPtr<IDirect3DDevice9> m_pD3DDevice;
+   IDirect3D9* m_pD3D;
+   IDirect3DDevice9* m_pD3DDevice;
 
    IDirect3DSurface9* m_pBackBuffer;
    CComPtr<IndexBuffer> m_dynIndexBuffer;      // workaround for DrawIndexedPrimitiveVB

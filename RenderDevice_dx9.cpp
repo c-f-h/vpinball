@@ -230,8 +230,8 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
 RenderDevice::~RenderDevice()
 {
     SAFE_RELEASE(m_pBackBuffer);
-    // m_pD3DDevice.Release();  // automatic
-    // m_pD3D.Release();        // automatic
+    m_pD3DDevice->Release();
+    m_pD3D->Release();
 }
 
 void RenderDevice::BeginScene()
