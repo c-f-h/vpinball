@@ -87,7 +87,7 @@ public:
    void CreateMipMap();
    BOOL SetAlpha(const COLORREF rgbTransparent);
 
-   static void CreateNextMipMapLevel(BaseTexture* pdds);
+   static void CreateNextMipMapLevel(BaseTexture* pdds) {}        // TODO: remove
    static void SetOpaque(BaseTexture* pdds);
    static void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop);
    static BOOL SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent);

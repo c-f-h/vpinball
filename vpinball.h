@@ -5,6 +5,8 @@
 #if !defined(AFX_VPINBALL_H__4D32616D_55B5_4FE0_87D9_3D4CB0BE3C76__INCLUDED_)
 #define AFX_VPINBALL_H__4D32616D_55B5_4FE0_87D9_3D4CB0BE3C76__INCLUDED_
 
+#include "RenderDevice.h"
+
 #define CURRENT_FILE_FORMAT_VERSION 601
 #define BEYOND_FILE_FORMAT_VERSION 701
 
@@ -160,12 +162,8 @@ public:
 
 	int m_securitylevel;
 
-	// Global functions
-
 	char m_szMyPath[MAX_PATH];
 	WCHAR m_wzMyPath[MAX_PATH];
-
-	char m_szRecentTableList[LAST_OPENED_TABLE_COUNT+1][MAX_PATH];
 
 	STDMETHOD(PlaySound)(BSTR bstr);
 
@@ -174,15 +172,18 @@ public:
 	STDMETHOD(StartShake)();
 	STDMETHOD(StopShake)();
 
+	int m_autosaveTime;
+	static bool m_open_minimized;
+
+private:
+	char m_szRecentTableList[LAST_OPENED_TABLE_COUNT+1][MAX_PATH];
+
 	HANDLE m_workerthread;
 	DWORD m_workerthreadid;
 
     HMODULE m_scintillaDll;
 
-	int m_autosaveTime;
-
 	bool m_fDebugging; // Whether VBA is currently in debugging mode
-	static bool m_open_minimized;
 };
 
 #endif // !defined(AFX_VPINBALL_H__4D32616D_55B5_4FE0_87D9_3D4CB0BE3C76__INCLUDED_)

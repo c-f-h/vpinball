@@ -10,10 +10,6 @@ public:
 	PinDirectDraw();
 	~PinDirectDraw();
 
-	HRESULT InitDD();
-
-	LPDIRECTDRAW7 m_pDD;
-
     BaseTexture* CreateOffscreenWithCustomTransparency(const int width, const int height, const int color);
 
 	BOOL m_fHardwareAccel;

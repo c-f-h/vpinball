@@ -14,6 +14,17 @@ typedef IDirect3DTexture9 D3DTexture;
 typedef D3DVIEWPORT9 ViewPort;
 typedef IDirect3DSurface9 RenderTarget;
 
+struct VideoMode
+{
+   int width;
+   int height;
+   int depth;
+   int refreshrate;
+};
+
+void EnumerateDisplayModes(int adapter, std::vector<VideoMode>& modes);
+
+
 enum TransformStateType {
     TRANSFORMSTATE_WORLD      = D3DTS_WORLD,
     TRANSFORMSTATE_VIEW       = D3DTS_VIEW,

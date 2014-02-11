@@ -4,8 +4,6 @@
 
 PinDirectDraw::PinDirectDraw()
 {
-   m_pDD = NULL;
-
    int tmp = 1;
    HRESULT hr = GetRegInt("Player", "HardwareRender", &tmp);
    m_fHardwareAccel = (tmp != 0);
@@ -13,40 +11,9 @@ PinDirectDraw::PinDirectDraw()
 
 PinDirectDraw::~PinDirectDraw()
 {
-   SAFE_RELEASE(m_pDD);
 }
 
 typedef int(CALLBACK *DDCreateFunction)(GUID FAR *lpGUID, LPVOID *lplpDD, REFIID iid, IUnknown FAR *pUnkOuter);
-
-HRESULT PinDirectDraw::InitDD()
-{
-   HINSTANCE m_DDraw = LoadLibrary("ddraw.dll");
-   if ( m_DDraw==NULL )
-   {
-      return E_FAIL;
-   }
-   DDCreateFunction DDCreate = (DDCreateFunction)GetProcAddress(m_DDraw,"DirectDrawCreateEx");
-
-   if (DDCreate == NULL)
-   {
-      FreeLibrary(m_DDraw);
-
-      LocalString ls(IDS_NEED_DD9);
-      MessageBox(g_pvp->m_hwnd, ls.m_szbuffer, "Visual Pinball", MB_ICONWARNING);
-
-      return E_FAIL;
-   }
-
-   HRESULT hr = (*DDCreate)(NULL, (VOID **)&m_pDD, IID_IDirectDraw7, NULL);
-   if (hr != S_OK)
-      ShowError("Could not create Direct Draw.");
-
-   hr = m_pDD->SetCooperativeLevel(NULL, DDSCL_NORMAL | DDSCL_FPUSETUP); // was DDSCL_FPUPRESERVE, which in theory adds lots of overhead, but who knows if this is even supported nowadays by the drivers
-   if (hr != S_OK)
-      ShowError("Could not set Direct Draw cooperative level.");
-
-   return S_OK;
-}
 
 
 BaseTexture* PinDirectDraw::CreateOffscreenWithCustomTransparency(const int width, const int height, const int color)

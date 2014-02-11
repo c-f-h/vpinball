@@ -99,6 +99,45 @@ static UINT ComputePrimitiveCount(D3DPRIMITIVETYPE type, int vertexCount)
 
 ////////////////////////////////////////////////////////////////////
 
+void EnumerateDisplayModes(int adapter, std::vector<VideoMode>& modes)
+{
+    IDirect3D9 *d3d;
+    d3d = Direct3DCreate9(D3D_SDK_VERSION);
+    if (d3d == NULL)
+    {
+        ShowError("Could not create D3D9 object.");
+        throw 0;
+    }
+
+    modes.clear();
+
+    for (int j = 0; j < 2; ++j)
+    {
+        const D3DFORMAT fmt = (j == 0) ? D3DFMT_X8R8G8B8 : D3DFMT_R5G6B5;
+        const unsigned numModes = d3d->GetAdapterModeCount(adapter, fmt);
+
+        for (unsigned i = 0; i < numModes; ++i)
+        {
+            D3DDISPLAYMODE d3dmode;
+            d3d->EnumAdapterModes(adapter, fmt, i, &d3dmode);
+
+            if (d3dmode.Width >= 640)
+            {
+                VideoMode mode;
+                mode.width = d3dmode.Width;
+                mode.height = d3dmode.Height;
+                mode.depth = (fmt == D3DFMT_R5G6B5) ? 16 : 32;
+                mode.refreshrate = d3dmode.RefreshRate;
+                modes.push_back(mode);
+            }
+        }
+    }
+
+    d3d->Release();
+}
+
+////////////////////////////////////////////////////////////////////
+
 //#define MY_IDX_BUF_SIZE 8192
 #define MY_IDX_BUF_SIZE 65536
 

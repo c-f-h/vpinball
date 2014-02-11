@@ -334,11 +334,6 @@ void VPinball::Init()
    InitVBA();										// Create APC VBA host
 
    m_pds.InitDirectSound(m_hwnd);					// init Direct Sound (in pinsound.cpp)
-   HRESULT hr = m_pdd.InitDD();						// init direct draw (in pinimage.cpp)
-
-   // check if Direct draw could be initalized
-   if (hr != S_OK)
-      SendMessage(m_hwnd, WM_CLOSE, 0, 0);
 
    m_fBackglassView = fFalse;						// we are viewing Pinfield and not the backglass at first
 
@@ -3511,50 +3506,32 @@ INT_PTR CALLBACK AboutProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
    return FALSE;
 }
 
-struct VideoMode
+
+void FillVideoModesList(HWND hwnd, const std::vector<VideoMode>& modes, const VideoMode* curSelMode=0)
 {
-   int width;
-   int height;
-   int depth;
-   int refreshrate;
-};
+    SendMessage(hwnd, LB_RESETCONTENT, 0, 0);
 
-struct EnumVideoModeStruct
-{
-   int widthcur;
-   int heightcur;
-   int depthcur;
-   HWND hwndList;
-};
+    for (unsigned i = 0; i < modes.size(); ++i)
+    {
+        char szT[128];
+        if (modes[i].depth)
+            sprintf_s(szT, "%u x %u x %u", modes[i].width, modes[i].height, modes[i].depth);
+        else
+            sprintf_s(szT, "%u x %u", modes[i].width, modes[i].height);
+        SendMessage(hwnd, LB_ADDSTRING, 0, (LPARAM)szT);
 
-HRESULT WINAPI EnumModesCallback2(LPDDSURFACEDESC2 lpDDSurfaceDesc, LPVOID lpContext)
-{
-   // Throw away displays we won't do (ModeX and 8-bit)
-   if (lpDDSurfaceDesc->dwWidth >= 640 && lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount >= 16) // UltraPin is 32bit only
-   {
-      char szT[128];
-      EnumVideoModeStruct *pevms = (EnumVideoModeStruct *)lpContext;
-      HWND hwndList = pevms->hwndList;
-      const int widthcur = pevms->widthcur;
-      const int heightcur = pevms->heightcur;
-      const int depthcur = pevms->depthcur;
-      sprintf_s(szT, "%u x %u x %u", lpDDSurfaceDesc->dwWidth, lpDDSurfaceDesc->dwHeight, lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount);
-      const int index = SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM)szT);
-
-      VideoMode * const pvm = new VideoMode();
-      pvm->width = lpDDSurfaceDesc->dwWidth;
-      pvm->height = lpDDSurfaceDesc->dwHeight;
-      pvm->depth = lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount;
-      pvm->refreshrate = 0;
-      SendMessage(hwndList, LB_SETITEMDATA, index, (LPARAM)pvm);
-
-      if (pvm->width == widthcur && pvm->height == heightcur && pvm->depth == depthcur)
-         SendMessage(hwndList, LB_SETCURSEL, index, 0);
-   }
-   return DDENUMRET_OK;
+        if (curSelMode &&
+              modes[i].width == curSelMode->width &&
+              modes[i].height == curSelMode->height &&
+              modes[i].depth == curSelMode->depth)
+            SendMessage(hwnd, LB_SETCURSEL, i, 0);
+    }
 }
 
+
 const int rgwindowsize[] = {640, 720, 800, 912, 1024, 1152, 1280, 1600};  // windowed resolutions for selection list
+
+std::vector<VideoMode> allVideoModes;
 
 INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3795,7 +3772,7 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
                   HWND hwndList = GetDlgItem(hwndDlg, IDC_SIZELIST);
                   int index = SendMessage(hwndList, LB_GETCURSEL, 0, 0);
-                  VideoMode* pvm = (VideoMode*)SendMessage(hwndList, LB_GETITEMDATA, index, 0);
+                  VideoMode* pvm = &allVideoModes[index];
                   SetRegValue("Player", "Width", REG_DWORD, &pvm->width, 4);
                   SetRegValue("Player", "Height", REG_DWORD, &pvm->height, 4);
                   if (fullscreen)
@@ -3935,37 +3912,43 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
          const int csize = sizeof(rgwindowsize)/sizeof(int);
          const int screenwidth = GetSystemMetrics(SM_CXSCREEN);
-         char szT[128];
-         for (int i=0;i<csize;i++)
+
+         allVideoModes.clear();
+
+         for (int i=0; i<csize; ++i)
          {
             const int xsize = rgwindowsize[i];
             if (xsize <= screenwidth)
             {
                if (xsize == widthcur)
                   indexcur = i;
-               sprintf_s(szT, "%d x %d", xsize, xsize*3/4);
-               const int index = SendMessage(hwndList, LB_ADDSTRING, 0, (long)szT);
-               VideoMode * const pvm = new VideoMode();
-               pvm->width = xsize;
-               pvm->height = xsize*3/4;
-               SendMessage(hwndList, LB_SETITEMDATA, index, (LPARAM)pvm);
+
+               VideoMode mode;
+               mode.width = xsize;
+               mode.height = xsize*3/4;
+               mode.depth = 0;
+               mode.refreshrate = 0;
+
+               allVideoModes.push_back(mode);
             }
          }
 
+         FillVideoModesList(hwndList, allVideoModes);
          SendMessage(hwndList, LB_SETCURSEL, (indexcur != -1) ? indexcur : 0, 0);
       }
       break;
 
    case GET_FULLSCREENMODES:
       {
-         SendMessage(hwndDlg, RESET_SIZELIST_CONTENT, 0, 0);
          HWND hwndList = GetDlgItem(hwndDlg, IDC_SIZELIST);
-         EnumVideoModeStruct evms;
-         evms.widthcur = wParam;
-         evms.heightcur = lParam>>16;
-         evms.depthcur = lParam & 0xffff;
-         evms.hwndList = hwndList;
-         g_pvp->m_pdd.m_pDD->EnumDisplayModes(0, NULL, &evms, EnumModesCallback2);
+         EnumerateDisplayModes(0, allVideoModes);
+
+         VideoMode curSelMode;
+         curSelMode.width = wParam;
+         curSelMode.height = lParam>>16;
+         curSelMode.depth = lParam & 0xffff;
+
+         FillVideoModesList(hwndList, allVideoModes, &curSelMode);
 
          if (SendMessage(hwndList, LB_GETCURSEL, 0, 0) == -1)
             SendMessage(hwndList, LB_SETCURSEL, 0, 0);
@@ -3975,12 +3958,6 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
    case RESET_SIZELIST_CONTENT:
       {
          HWND hwndList = GetDlgItem(hwndDlg, IDC_SIZELIST);
-         const int size = SendMessage(hwndList, LB_GETCOUNT, 0, 0);
-         for (int i=0;i<size;i++)
-         {
-            VideoMode * const pvm = (VideoMode *)SendMessage(hwndList, LB_GETITEMDATA, i, 0);
-            delete pvm;
-         }
          SendMessage(hwndList, LB_RESETCONTENT, 0, 0);
       }
       break;
