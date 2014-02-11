@@ -69,6 +69,10 @@ void PinDirectSound::InitDirectSound(HWND hwnd)
         return;// hr;
 		}
 
+    // free audio devices list
+    for (size_t i=0; i<DSads.size(); i++)
+        delete DSads[i];
+
     // Set coop level to DSSCL_PRIORITY
     if( FAILED( hr = m_pDS->SetCooperativeLevel( hwnd, DSSCL_PRIORITY ) ) )
 		{

@@ -6286,8 +6286,8 @@ INT_PTR CALLBACK AudioOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 
                   HWND hwndSoundList = GetDlgItem(hwndDlg, IDC_SoundList);
                   int soundindex = SendMessage(hwndSoundList, LB_GETCURSEL, 0, 0);
-                  int* sd = (int*)SendMessage(hwndSoundList, LB_GETITEMDATA, soundindex, 0);
-                  SetRegValue("Player", "SoundDevice", REG_DWORD, sd, 4);
+                  int sd = (int)SendMessage(hwndSoundList, LB_GETITEMDATA, soundindex, 0);
+                  SetRegValue("Player", "SoundDevice", REG_DWORD, &sd, 4);
 
                   EndDialog(hwndDlg, TRUE);
                }
@@ -6334,9 +6334,8 @@ INT_PTR CALLBACK AudioOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             for (size_t i=0;i<DSads.size();i++)
             {
                const int index = SendMessage(hwndList, LB_ADDSTRING, 0, (long)DSads[i]->description.c_str());
-               int * const sd = new int;
-               *sd = i;
-               SendMessage(hwndList, LB_SETITEMDATA, index, (LPARAM)sd);
+               SendMessage(hwndList, LB_SETITEMDATA, index, (LPARAM)i);
+               delete DSads[i];
             }
          }
 
@@ -6347,12 +6346,6 @@ INT_PTR CALLBACK AudioOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
    case RESET_SoundList_CONTENT:
       {
          HWND hwndList = GetDlgItem(hwndDlg, IDC_SoundList);
-         const int size = SendMessage(hwndList, LB_GETCOUNT, 0, 0);
-         for (int i=0;i<size;i++)
-         {
-            int* sd = (int *)SendMessage(hwndList, LB_GETITEMDATA, i, 0);
-            delete sd;
-         }
          SendMessage(hwndList, LB_RESETCONTENT, 0, 0);
       }
       break;
