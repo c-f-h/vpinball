@@ -770,17 +770,6 @@ void DispReelAnimObject::Check3D()
     /*m_fInvalid =*/ m_pDispReel->RenderAnimation();
 }
 
-// this function is called when it is time to be drawn (Z-Ordered)
-// and only if Check3D() tells it to. (m_fInvalid == true)
-//
-ObjFrame *DispReelAnimObject::Draw3D(const RECT * const prc)
-{
-	if(!m_pDispReel)  //rlc-problem6 end bad pointers, fix needed
-		return NULL;
-
-	return m_pDispReel->m_pobjframe;
-}
-
 void DispReelAnimObject::Reset()
 {
 }

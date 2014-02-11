@@ -103,9 +103,9 @@ const char REEL_NUMBER_TEXT[] = "01234567890";
 //
 DispReel::DispReel()
 {
-	m_pIFont = NULL;
-	m_ptu = NULL;
-   vertexBuffer = NULL;
+    m_pIFont = NULL;
+    m_ptu = NULL;
+    vertexBuffer = NULL;
 }
 
 
@@ -113,12 +113,12 @@ DispReel::DispReel()
 //
 DispReel::~DispReel()
 {
-	m_pIFont->Release();
-   if( vertexBuffer )
-   {
-      vertexBuffer->release();
-      vertexBuffer=0;
-   }
+    m_pIFont->Release();
+    if( vertexBuffer )
+    {
+        vertexBuffer->release();
+        vertexBuffer=0;
+    }
 }
 
 
@@ -136,7 +136,6 @@ HRESULT DispReel::Init(PinTable *ptable, float x, float y, bool fromMouseClick)
 	m_d.m_v2.x = x+getBoxWidth();
 	m_d.m_v2.y = y+getBoxHeight();
 
-	m_pobjframe = NULL;
     //m_preelframe = NULL;
 
 	HRESULT hr;
@@ -512,13 +511,6 @@ void DispReel::GetHitShapesDebug(Vector<HitObject> * const pvho)
 //
 void DispReel::EndPlay()
 {
-    // free up object frame (buffer)
-    if (m_pobjframe != NULL)    // Failed Player case
-	{
-		delete m_pobjframe;
-		m_pobjframe = NULL;
-	}
-
     // free up reel buffer
     // Failed Player case
 	for (int i=0; i<m_vreelframe.Size(); i++)
@@ -531,23 +523,200 @@ void DispReel::EndPlay()
 		m_ptu = NULL;
 	}
 
+   if( vertexBuffer )
+   {
+      vertexBuffer->release();
+      vertexBuffer=0;
+   }
+
 	IEditable::EndPlay();
 }
 
-void DispReel::PostRenderStatic(const RenderDevice* pd3dDevice)
+void DispReel::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    if (!GetPTable()->GetEMReelsEnabled())
+        return;
+
+    RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
+    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
+
+    // set any defaults for the game rendering
+    m_timenextupdate = g_pplayer->m_time_msec + m_d.m_updateinterval;
+    m_fforceupdate = false;
+
+    // Set up the reel strip (either using bitmaps or fonts)
+    if (m_d.m_reeltype == ReelImage)
+    {
+        // get a pointer to the image specified in the object
+        Texture * const pin = m_ptable->GetImage(m_d.m_szImage); // pointer to image information from the image manager
+
+        if (!pin)
+            return;
+
+        Material mat;
+        mat.setColor( 1.0f, 1.0f, 1.0f, 1.0f );
+        pd3dDevice->SetMaterial(mat);
+
+        pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
+
+        // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
+        pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_MIRROR);
+
+        pin->CreateAlphaChannel();
+        pin->Set( ePictureTexture );
+
+        ppin3d->SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
+
+        pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
+        pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0xe0);
+        pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
+
+        ppin3d->DisableLightMap();
+
+        Vertex3D_NoTex2 rgv3D[4];
+
+        for (int i = 0; i < m_d.m_reelcount; ++i)
+        {
+            SetVerticesForReel(i, ReelInfo[i].currentValue, rgv3D);
+            pd3dDevice->DrawPrimitive( D3DPT_TRIANGLEFAN, MY_D3DTRANSFORMED_NOTEX2_VERTEX, rgv3D, 4);
+        }
+
+        // reset render state
+
+        pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
+
+        pd3dDevice->SetTexture(ePictureTexture, NULL);
+        ppin3d->SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
+        pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+        pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+        pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
+    }
+    else
+    {
+        // TODO: ReelText not supported yet
+    }
 }
 
 void DispReel::RenderSetup(const RenderDevice* _pd3dDevice)
 {
-   RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
+    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
+    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
-   if ( vertexBuffer==NULL )
-   {
-      pd3dDevice->CreateVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &vertexBuffer );
-      NumVideoBytes += 4*sizeof(Vertex3D_NoTex2);
-   }
+    //if ( vertexBuffer==NULL )
+    //    pd3dDevice->CreateVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &vertexBuffer );
+
+    // get the render sizes of the objects (reels and frame)
+    m_renderwidth  = max(0, (int)((m_d.m_width * (float)(1.0/1000.0)) * ppin3d->m_dwRenderWidth));
+    m_renderheight = max(0, (int)((m_d.m_height * (float)(1.0/750.0)) * ppin3d->m_dwRenderHeight));
+    const int m_renderspacingx = max(0, (int)((m_d.m_reelspacing * (float)(1.0/1000.0)) * ppin3d->m_dwRenderWidth));
+    const int m_renderspacingy = max(0, (int)((m_d.m_reelspacing * (float)(1.0/750.0))  * ppin3d->m_dwRenderHeight));
+
+    // set up all the reel positions within the object frame
+    const int x0 = (int)((m_d.m_v1.x * (float)(1.0/1000.0)) * ppin3d->m_dwRenderWidth);
+    const int y0 = (int)((m_d.m_v1.y * (float)(1.0/750.0)) * ppin3d->m_dwRenderHeight);
+    int x1 = x0 + m_renderspacingx;
+
+    for (int i=0; i<m_d.m_reelcount; ++i)
+    {
+        ReelInfo[i].position.left	= x1;
+        ReelInfo[i].position.right	= x1 + m_renderwidth;
+        ReelInfo[i].position.top	= y0 + m_renderspacingy;
+        ReelInfo[i].position.bottom	= y0 + m_renderspacingy + m_renderheight;
+
+        ReelInfo[i].currentValue	= 0;
+        ReelInfo[i].motorPulses		= 0;
+        ReelInfo[i].motorStepCount	= 0;
+        ReelInfo[i].motorCalcStep	= 0;
+        ReelInfo[i].motorOffset		= 0;
+
+        // move to the next reel
+        x1 += m_renderspacingx + m_renderwidth;
+    }
+
+    // Set up the reel strip (either using bitmaps or fonts)
+    if (m_d.m_reeltype == ReelImage)
+    {
+        // get a pointer to the image specified in the object
+        Texture * const pin = m_ptable->GetImage(m_d.m_szImage); // pointer to image information from the image manager
+
+        if (!pin)
+            return;
+
+        int	GridCols, GridRows;
+
+        // get the number of images per row of the image
+        if (m_d.m_fUseImageGrid)
+        {
+            GridCols = m_d.m_imagesPerGridRow;
+            if (GridCols != 0) // best to be safe
+            {
+                GridRows = (m_d.m_digitrange+1) / GridCols;
+                if ( (GridRows * GridCols) < (m_d.m_digitrange+1) )
+                    ++GridRows;
+            }
+            else
+            {
+                GridRows = 1;
+            }
+        }
+        else
+        {
+            GridCols = m_d.m_digitrange+1;
+            GridRows = 1;
+        }
+
+        // save the color to use in any transparent blitting
+        m_rgbImageTransparent = pin->m_rgbTransparent;
+        if ( GridCols!=0 && GridRows!=0 )
+        {
+            // get the size of the individual reel digits (if m_digitrange is wrong we can forget the rest)
+            m_reeldigitwidth  = (float)pin->m_width / (float)GridCols;
+            m_reeldigitheight = (float)pin->m_height / (float)GridRows;
+        }
+        else
+        {
+            ShowError("DispReel: GridCols/GridRows are zero!");
+        }
+
+        pin->EnsureMaxTextureCoordinates();
+        pin->CreateAlphaChannel();
+
+        const float ratiox = (float)m_reeldigitwidth  * pin->m_maxtu / (float)pin->m_width;
+        const float ratioy = (float)m_reeldigitheight * pin->m_maxtv / (float)pin->m_height;
+
+        int gr = 0;
+        int gc = 0;
+
+        m_digitTexCoords.resize(m_d.m_digitrange + 1);
+
+        for (int i=0; i<=m_d.m_digitrange; ++i)
+        {
+            m_digitTexCoords[i].u_min = (float)gc * ratiox;
+            m_digitTexCoords[i].v_min = (float)gr * ratioy;
+            m_digitTexCoords[i].u_max = m_digitTexCoords[i].u_min + ratiox;
+            m_digitTexCoords[i].v_max = m_digitTexCoords[i].v_min + ratioy;
+
+            ++gc;
+            if (gc >= GridCols)
+            {
+                gc = 0;
+                ++gr;
+            }
+
+            if (i == m_d.m_digitrange)
+            {
+                // Go back and draw the first picture at the end of the strip
+                gc = 0;
+                gr = 0;
+            }
+        }
+    }
+    else
+    {
+        // TODO: ReelText not supported yet
+    }
 }
+
 void DispReel::RenderStatic(const RenderDevice* pd3dDevice)
 {
 }
@@ -600,18 +769,15 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 	m_pobjframe->rc.right = m_pobjframe->rc.left + m_d.m_reelcount * (m_renderwidth+m_renderspacingx) + m_renderspacingx;
 	m_pobjframe->rc.bottom = m_pobjframe->rc.top + m_renderheight + (2 * m_renderspacingy);
 
-    // set the boundarys of the object frame (used for clipping I assume)
-	m_ptu->m_dispreelanim.m_rcBounds = m_pobjframe->rc;
-
     // set up all the reel positions within the object frame
     int x1 = m_renderspacingx;
     
 	for (int i=0; i<m_d.m_reelcount; ++i)
     {
-        ReelInfo[i].position.left	= x1/* + m_pobjframe->rc.left*/;
-        ReelInfo[i].position.right	= x1 + m_renderwidth/* + m_pobjframe->rc.left*/;
-        ReelInfo[i].position.top	= m_renderspacingy/* + m_pobjframe->rc.top*/;
-        ReelInfo[i].position.bottom	= m_renderspacingy + m_renderheight/* + m_pobjframe->rc.top*/;
+        ReelInfo[i].position.left	= x1;
+        ReelInfo[i].position.right	= x1 + m_renderwidth;
+        ReelInfo[i].position.top	= m_renderspacingy;
+        ReelInfo[i].position.bottom	= m_renderspacingy + m_renderheight;
 
         ReelInfo[i].currentValue	= 0;
         ReelInfo[i].motorPulses		= 0;
@@ -626,250 +792,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
     // Set up the reel strip (either using bitmaps or fonts)
     if (m_d.m_reeltype == ReelImage)
     {
-		// get a pointer to the image specified in the object
-		Texture * const pin = m_ptable->GetImage(m_d.m_szImage); // pointer to image information from the image manager
-
-        // was there a valid image (if not then m_preelframe->pdds remains NULL and void)
-        if (pin)
-        {
-            //HDC hdcImage;
-			//HDC hdcReelFrame;
-			int	GridCols, GridRows;
-
-			// get the number of images per row of the image
-			if (m_d.m_fUseImageGrid)
-			{
-				GridCols = m_d.m_imagesPerGridRow;
-				if (GridCols != 0) // best to be safe
-				{
-					GridRows = (m_d.m_digitrange+1) / GridCols;
-					if ( (GridRows * GridCols) < (m_d.m_digitrange+1) )
-					{
-						++GridRows;
-					}
-				}
-				else
-				{
-					GridRows = 1;
-				}
-			}
-			else
-			{
-				GridCols = m_d.m_digitrange+1;
-				GridRows = 1;
-			}
-
-			// save the color to use in any transparent blitting
-			m_rgbImageTransparent = pin->m_rgbTransparent;
-         if ( GridCols!=0 && GridRows!=0 )
-         {
-            // get the size of the individual reel digits (if m_digitrange is wrong we can forget the rest)
-            m_reeldigitwidth  = (float)pin->m_width / (float)GridCols;
-            m_reeldigitheight = (float)pin->m_height / (float)GridRows;
-         }
-         else
-         {
-            ShowError("DispReel: GridCols/GridRows are zero!");
-         }
-            // work out the size of the reel image strip (adds room for an extra digit at the end)
-            //const int width  = m_reeldigitwidth;
-            //const int height = (m_reeldigitheight * (m_d.m_digitrange+1)) + m_reeldigitheight;
-            // allocate some memory for this strip
-			for (int i=0; i<=m_d.m_digitrange; ++i)
-				{
-				ObjFrame * const pobjframe = new ObjFrame();
-				if (pobjframe == NULL)
-					{
-					return;
-					}
-				pobjframe->pdds	= NULL;
-				m_vreelframe.AddElement(pobjframe);				
-				}
-            
-            // now make the reel image strip..  It has to use the BitBlt function and not the direct draw
-			// blt function (ie. m_preelframe->pdds->Blt) to copy the bitmaps as this function coverts the
-			// destination bitmap to the same colour depth of the game (all images in the image manager
-			// are stored as 32bit).
-
-			// from this point on we can use the Direct Draw Blt function as it handles and scaling and
-			// is much faster
-
-			// get the HDC of the source image
-			//pin->m_pdsBuffer->GetDC(&hdcImage);
-			// get the HDC of the reel frame object
-			//m_preelframe->pdds->GetDC(&hdcReelFrame);
-
-			// Render images and collect them
-			
-			// New rendering stuff
-         Material mat;
-         mat.setColor( 0.5f, 1.0f, 1.0f, 1.0f );
-         pd3dDevice->SetMaterial(mat);
-				
-			pin->EnsureMaxTextureCoordinates();
-				
-         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
-
-			// Set texture to mirror, so the alpha state of the texture blends correctly to the outside
-            pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_MIRROR);
-				
-			pin->CreateAlphaChannel();
-         pin->Set( ePictureTexture );
-
-			//pd3dDevice->SetRenderState(D3DRENDERSTATE_COLORKEYENABLE, TRUE);
-         ppin3d->SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
-				
-         pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
-         pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0xe0);
-         pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
-
-			ppin3d->EnableLightMap(fFalse, -1);
-			
-			//
-
-			Vertex3D_NoTex2 rgv3D[4];
-			for (int l=0; l<4; ++l)
-				rgv3D[l].z = 1.0f;//height + 0.2f;
-
-			rgv3D[0].x = 0;//(float)rectSrc.left;
-			rgv3D[0].y = 0;//(float)rectSrc.top;
-			rgv3D[0].tu = 0;
-			rgv3D[0].tv = 0;
-
-			rgv3D[1].x = m_d.m_width;//(((double)m_renderwidth)/ppin3d->m_dwRenderWidth)*1000;// m_d.m_width;//(float)rectSrc.right;
-			rgv3D[1].y = 0;//(float)rectSrc.top;
-			rgv3D[1].tu = pin->m_maxtu;
-			rgv3D[1].tv = 0;
-
-			rgv3D[2].x = rgv3D[1].x;//m_d.m_width;//(float)rectSrc.right;
-			rgv3D[2].y = m_d.m_height;//(float)rectSrc.bottom;
-			rgv3D[2].tu = pin->m_maxtu;
-			rgv3D[2].tv = pin->m_maxtv;
-
-			rgv3D[3].x = 0;//(float)rectSrc.left;
-			rgv3D[3].y = m_d.m_height;//(float)rectSrc.bottom;
-			rgv3D[3].tu = 0;
-			rgv3D[3].tv = pin->m_maxtv;
-			
-			SetHUDVertices(rgv3D, 4);
-			
-			{
-			   BaseMaterial mtrl;
-			   pd3dDevice->GetMaterial(&mtrl);
-            Material tmp;
-            tmp.setBaseMaterial( mtrl );
-			   SetDiffuseFromMaterial(rgv3D, 4, &tmp);
-			}
-			
-			//ppin3d->ExpandExtents(&m_preelframe->rc, rgv3D, NULL, NULL, 4, m_fBackglass);
-
-			RECT rectSrc;
-			rectSrc.left = 0;
-			rectSrc.top = 0;
-			rectSrc.right = m_renderwidth;
-			rectSrc.bottom = m_renderheight;
-
-			// Reset color key in back buffer
-			// this is usually not done since the buffer
-			// should be clear from the last object,
-			// but for caching, this object will draw
-			// when others don't, so be safe.
-			DDBLTFX ddbltfx;
-			ddbltfx.dwSize = sizeof(DDBLTFX);
-			ddbltfx.dwFillColor = m_rgbImageTransparent;
-			ppin3d->m_pddsBackBuffer->Blt(&rectSrc, NULL,
-					&rectSrc, DDBLT_COLORFILL, &ddbltfx);
-
-			const float ratiox = (float)m_reeldigitwidth  * pin->m_maxtu / (float)pin->m_width;
-			const float ratioy = (float)m_reeldigitheight * pin->m_maxtv / (float)pin->m_height;
-
-			int gr = 0;
-			int gc = 0;
-
-			for (int i=0; i<=m_d.m_digitrange; ++i)
-			{
-				rgv3D[0].tu = rgv3D[3].tu = (float)gc * ratiox;
-				rgv3D[0].tv = rgv3D[1].tv = (float)gr * ratioy;
-			
-				rgv3D[1].tu = rgv3D[2].tu = rgv3D[0].tu + ratiox;
-				rgv3D[2].tv = rgv3D[3].tv = rgv3D[0].tv + ratioy;
-
-            Vertex3D_NoTex2 *buf;
-            vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
-            memcpy( buf, rgv3D, 4*sizeof(Vertex3D_NoTex2));
-            vertexBuffer->unlock();
-            pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4);
-
-				m_vreelframe.ElementAt(i)->pdds = g_pvp->m_pdd.CreateOffscreenWithCustomTransparency(/*m_reeldigitwidth*/m_renderwidth, /*m_reeldigitheight*/m_renderheight, m_rgbImageTransparent);
-				m_vreelframe.ElementAt(i)->pdds->BltFast(0, 0, ppin3d->m_pddsBackBuffer, &rectSrc, 0);
-
-				// Reset color key in back buffer
-				ppin3d->m_pddsBackBuffer->Blt(&rectSrc, NULL,
-						&rectSrc, DDBLT_COLORFILL, &ddbltfx);
-				/*BitBlt(hdcReelFrame,			// handle to destination device context
-						0,						// x-coordinate of destination rectangle's upper-left corner
-						i*m_reeldigitheight,	// y-coordinate of destination rectangle's upper-left corner
-						m_reeldigitwidth,		// width of destination rectangle
-						m_reeldigitheight,		// height of destination rectangle
-						hdcImage,				// handle to source device context
-						gc*m_reeldigitwidth,	// x-coordinate of source rectangle's upper-left corner
-						gr*m_reeldigitheight,	// y-coordinate of source rectangle's upper-left corner
-						SRCCOPY);				// raster operation code
-				*/
-				
-				/*StretchBlt(hdcReelFrame,		// handle to destination device context
-						0,						// x-coordinate of destination rectangle's upper-left corner
-						i*m_renderheight,		// y-coordinate of destination rectangle's upper-left corner
-						m_renderwidth,			// width of destination rectangle
-						m_renderheight,			// height of destination rectangle
-						hdcImage,				// handle to source device context
-						gc*m_reeldigitwidth,	// x-coordinate of source rectangle's upper-left corner
-						gr*m_reeldigitheight,	// y-coordinate of source rectangle's upper-left corner
-						m_reeldigitwidth,
-						m_reeldigitheight,
-						SRCCOPY);				// raster operation code
-				*/
-				
-				++gc;
-				if (gc >= GridCols)
-				{
-					gc = 0;
-					++gr;
-				}
-				
-				if (i == m_d.m_digitrange)
-				{
-					// Go back and draw the first picture at the end of the strip
-					gc = 0;
-					gr = 0;
-				}
-			}
-
-			// now copy the first digit graphic onto the end on the reel object frame
-			// this means the bitmap starts and ends with the same graphic
-			/*BitBlt(hdcReelFrame,
-					0,
-					m_reeldigitheight * (m_d.m_digitrange+1),	// start after the last number
-					m_reeldigitwidth,
-					m_reeldigitheight,
-					hdcImage,
-					0,
-					0,
-					SRCCOPY);*/
-
-			//m_preelframe->pdds->ReleaseDC(hdcReelFrame);
-			//pin->m_pdsBuffer->ReleaseDC(hdcImage);
-			
-         pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
-        
-        // reset device 
-        
-      pd3dDevice->SetTexture(ePictureTexture, NULL);
-      ppin3d->SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
-      pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-      pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-      pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
-        }
+        // ...removed...
     }
     else    /* generate a strip of numbers using font rendering */
 	{
@@ -967,9 +890,6 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 			m_rgbImageTransparent = 0xff0000;
 			}
 	}
-	
-	// allocate the memory for this object (returns with a BaseTexture*)
-	m_pobjframe->pdds = g_pvp->m_pdd.CreateOffscreenWithCustomTransparency(m_pobjframe->rc.right - m_pobjframe->rc.left, m_pobjframe->rc.bottom - m_pobjframe->rc.top, m_rgbImageTransparent);
 }
 #endif
 
@@ -1329,8 +1249,6 @@ BOOL DispReel::LoadToken(int id, BiffReader *pbr)
 
 HRESULT DispReel::InitPostLoad()
 {
-	m_pobjframe = NULL;
-
 	return S_OK;
 }
 
@@ -1930,3 +1848,23 @@ void DispReel::UpdateObjFrame()
     // objframe is now upto date
 #endif
 }
+
+void DispReel::SetVerticesForReel(int reelNum, int digit, Vertex3D_NoTex2 * v)
+{
+    v[0].x = v[3].x = (float)ReelInfo[reelNum].position.left;
+    v[1].x = v[2].x = (float)ReelInfo[reelNum].position.right;
+
+    v[0].y = v[1].y = (float)ReelInfo[reelNum].position.top;
+    v[2].y = v[3].y = (float)ReelInfo[reelNum].position.bottom;
+
+    v[0].z = v[1].z = v[2].z = v[3].z = 1.0f;
+
+    v[0].tu = v[3].tu = m_digitTexCoords[digit].u_min;
+    v[0].tv = v[1].tv = m_digitTexCoords[digit].v_min;
+
+    v[1].tu = v[2].tu = m_digitTexCoords[digit].u_max;
+    v[2].tv = v[3].tv = m_digitTexCoords[digit].v_max;
+
+    v[0].color = v[1].color = v[2].color = v[3].color = 0xffffffff;
+}
+

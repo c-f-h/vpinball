@@ -245,7 +245,7 @@ class DispReelAnimObject : public AnimObject
 {
 public:
     virtual void Check3D(); //{}
-	virtual ObjFrame *Draw3D(const RECT * const prc);
+	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
 	virtual void Reset();
 
 	DispReel *m_pDispReel;

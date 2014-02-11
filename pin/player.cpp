@@ -848,6 +848,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 				(pe->GetItemType() == eItemSpinner) ||
 				(pe->GetItemType() == eItemGate) ||
 				(pe->GetItemType() == eItemLight) ||
+				(pe->GetItemType() == eItemDispReel) ||
 				(pe->GetItemType() == eItemBumper) )
 				{
 				  m_vhitalpha.AddElement(ph);

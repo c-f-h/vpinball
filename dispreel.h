@@ -108,7 +108,6 @@ DECLARE_REGISTRY_RESOURCEID(IDR_DispReel)
 	void WriteRegDefaults();
 
     PinTable    *m_ptable;
-    ObjFrame    *m_pobjframe;      // overall object frame (box) which contains the boarder and reels
 
     DispReelData m_d;
 
@@ -132,6 +131,14 @@ private:
     int         m_timenextupdate;
     bool        m_fforceupdate;
     VertexBuffer *vertexBuffer;
+
+    struct TexCoordRect
+    {
+        float u_min, u_max;
+        float v_min, v_max;
+    };
+
+    std::vector<TexCoordRect> m_digitTexCoords;
 
 // IDispReel
 public:
@@ -187,6 +194,7 @@ private:
 	void    UpdateObjFrame();
     float   getBoxWidth() const;
     float   getBoxHeight() const;
+    void    SetVerticesForReel(int reelNum, int digit, Vertex3D_NoTex2 * v);
 };
 
 #endif // !defined(AFX_DISPREEL_H__1052EB33_4F53_460B_AAB8_09D3C517F225__INCLUDED_)
