@@ -56,7 +56,7 @@ public:
    bool m_fToy;
 };
 
-class ATL_NO_VTABLE Primitive :
+class Primitive :
 
 
    public CComObjectRootEx<CComSingleThreadModel>,

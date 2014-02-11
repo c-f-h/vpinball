@@ -47,7 +47,7 @@ typedef struct {
     float   motorOffset;        // frame value of motor (where to display the reel)
 } _reelInfo;
 
-class ATL_NO_VTABLE DispReel :
+class DispReel :
 	public CComObjectRootEx<CComSingleThreadModel>,
     public IDispatchImpl<IDispReel, &IID_IDispReel, &LIBID_VBATESTLib>,
 #ifdef VBA

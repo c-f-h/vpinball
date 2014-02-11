@@ -289,7 +289,7 @@ END_CONNECTION_POINT_MAP()
 	BOOL m_fStopSingleEvents;
 	};
 
-class ATL_NO_VTABLE OMCollectionEnum :
+class OMCollectionEnum :
 	public CComObjectRootEx<CComSingleThreadModel>,
 	public IEnumVARIANT
 	{

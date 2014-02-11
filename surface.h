@@ -41,7 +41,7 @@ public:
 
 /////////////////////////////////////////////////////////////////////////////
 // Surface
-class ATL_NO_VTABLE Surface :
+class Surface :
 	public CComObjectRootEx<CComSingleThreadModel>,
 	public CComCoClass<Surface, &CLSID_Wall>,
 	public IDispatchImpl<IWall, &IID_IWall, &LIBID_VBATESTLib>,
