@@ -7,6 +7,18 @@
 
 #include "resource.h"
 
+
+// Indices for RotAndTra:
+//     RotX = 0
+//     RotY = 1
+//     RotZ = 2
+//     TraX = 3
+//     TraY = 4
+//     TraZ = 5
+//    ObjRotX=6
+//    ObjRotY=7
+//    ObjRotZ=8
+
 class PrimitiveData
 {
 public:
@@ -17,7 +29,6 @@ public:
    Vertex3Ds m_vAxisScaleY;
    Vertex3Ds m_vAxisScaleZ;
    float m_aRotAndTra[9];
-   RotAndTraTypeEnum m_aRotAndTraTypes[9];
    char m_szImage[MAXTOKEN];
    char meshFileName[256];
 
@@ -301,21 +312,24 @@ public:
 
    PrimitiveData m_d;
    int numVertices;
+   Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
+
+   Vertex3D_NoTex2 *objMeshOrg, *objMesh;
+   std::vector<WORD> indexList;
+   int indexListSize;       // only used during loading
+
+private:
    VertexBuffer *vertexBuffer;
    BOOL vertexBufferRegenerate;
-   Material material;
+   IndexBuffer *indexBuffer;
 
-   Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
+   Material material;
 
    // Vertices for editor display
    Vector<Vertex3Ds> verticesTop;
    Vector<Vertex3Ds> verticesBottom;
 
    Matrix3D fullMatrix, rotMatrix;
-
-   Vertex3D_NoTex2 *objMeshOrg, *objMesh;
-   WORD *indexList;
-   int indexListSize;
 };
 
 #endif // !defined(AFX_PRIMITIVE_H__31CD2D6B-9BDD-4B1B-BC62-B9DE588A0CAA__INCLUDED_)

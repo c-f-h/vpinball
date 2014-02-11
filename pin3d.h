@@ -42,6 +42,13 @@ public:
         _42 = ty;
         _43 = tz;
     }
+    void SetScaling(float sx, float sy, float sz)
+    {
+        SetIdentity();
+        _11 = sx;
+        _22 = sy;
+        _33 = sz;
+    }
 	inline void RotateXMatrix(const GPINFLOAT x)
 	{
 	SetIdentity();

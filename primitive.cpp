@@ -8,48 +8,35 @@ Primitive::Primitive()
 {
    vertexBuffer = 0;
    vertexBufferRegenerate = true;
+   indexBuffer = 0;
    objMeshOrg=0;
    objMesh=0;
-   indexList=0;
-   indexListSize=0;
    m_d.use3DMesh=false;
    m_d.meshFileName[0]=0;
    m_d.useLighting=false;
    m_d.staticRendering=false;
    m_d.sphereMapping=false;
-   m_d.m_aRotAndTraTypes[0] = RotX;
-   m_d.m_aRotAndTraTypes[1] = RotY;
-   m_d.m_aRotAndTraTypes[2] = RotZ;
-   m_d.m_aRotAndTraTypes[3] = TraX;
-   m_d.m_aRotAndTraTypes[4] = TraY;
-   m_d.m_aRotAndTraTypes[5] = TraZ;
-   m_d.m_aRotAndTraTypes[6] = ObjRotX;
-   m_d.m_aRotAndTraTypes[7] = ObjRotY;
-   m_d.m_aRotAndTraTypes[8] = ObjRotZ;
    m_d.m_triggerUpdateRegion = true;
    m_d.m_triggerSingleUpdateRegion = true;
 } 
 
 Primitive::~Primitive() 
 {
-	if(vertexBuffer)
-	{
-		vertexBuffer->release();
-		vertexBuffer = 0;
-		//vertexBufferRegenerate = true;
-	}
-   if( objMeshOrg )
-   {
-      delete[] objMeshOrg;
-   }
-   if( objMesh )
-   {
-      delete[] objMesh;
-   }
-   if( indexList )
-   {
-      delete[] indexList;
-   }
+    if(vertexBuffer)
+    {
+        vertexBuffer->release();
+        vertexBuffer = 0;
+    }
+    if (indexBuffer)
+        indexBuffer->release();
+    if( objMeshOrg )
+    {
+        delete[] objMeshOrg;
+    }
+    if( objMesh )
+    {
+        delete[] objMesh;
+    }
 }
 
 HRESULT Primitive::Init(PinTable *ptable, float x, float y, bool fromMouseClick)
@@ -157,33 +144,6 @@ void Primitive::SetDefaults(bool fromMouseClick)
    hr = GetRegStringAsFloat("DefaultProps\\Primitive","RotAndTra8", &fTmp);
    m_d.m_aRotAndTra[8] = (hr == S_OK) && fromMouseClick ? fTmp : 0;
 
-//    hr = GetRegInt("DefaultProps\\Primitive","RotAndTraType0", &iTmp);
-//    m_d.m_aRotAndTraTypes[0] = (hr == S_OK) && fromMouseClick ? (enum RotAndTraTypeEnum)iTmp : RotX;
-//    hr = GetRegInt("DefaultProps\\Primitive","RotAndTraType1", &iTmp);
-//    m_d.m_aRotAndTraTypes[1] = (hr == S_OK) && fromMouseClick ? (enum RotAndTraTypeEnum)iTmp : RotY;
-//    hr = GetRegInt("DefaultProps\\Primitive","RotAndTraType2", &iTmp);
-//    m_d.m_aRotAndTraTypes[2] = (hr == S_OK) && fromMouseClick ? (enum RotAndTraTypeEnum)iTmp : RotZ;
-//    hr = GetRegInt("DefaultProps\\Primitive","RotAndTraType3", &iTmp);
-//    m_d.m_aRotAndTraTypes[3] = (hr == S_OK) && fromMouseClick ? (enum RotAndTraTypeEnum)iTmp : TraX;
-//    hr = GetRegInt("DefaultProps\\Primitive","RotAndTraType4", &iTmp);
-//    m_d.m_aRotAndTraTypes[4] = (hr == S_OK) && fromMouseClick ? (enum RotAndTraTypeEnum)iTmp : TraY;
-//    hr = GetRegInt("DefaultProps\\Primitive","RotAndTraType5", &iTmp);
-//    m_d.m_aRotAndTraTypes[5] = (hr == S_OK) && fromMouseClick ? (enum RotAndTraTypeEnum)iTmp : TraZ;
-//    hr = GetRegInt("DefaultProps\\Primitive","RotAndTraType6", &iTmp);
-//    m_d.m_aRotAndTraTypes[6] = (hr == S_OK) && fromMouseClick ? (enum RotAndTraTypeEnum)iTmp : ObjRotX;
-//    hr = GetRegInt("DefaultProps\\Primitive","RotAndTraType7", &iTmp);
-//    m_d.m_aRotAndTraTypes[7] = (hr == S_OK) && fromMouseClick ? (enum RotAndTraTypeEnum)iTmp : ObjRotY;
-//    hr = GetRegInt("DefaultProps\\Primitive","RotAndTraType8", &iTmp);
-//    m_d.m_aRotAndTraTypes[8] = (hr == S_OK) && fromMouseClick ? (enum RotAndTraTypeEnum)iTmp : ObjRotZ;
-   m_d.m_aRotAndTraTypes[0] = RotX;
-   m_d.m_aRotAndTraTypes[1] = RotY;
-   m_d.m_aRotAndTraTypes[2] = RotZ;
-   m_d.m_aRotAndTraTypes[3] = TraX;
-   m_d.m_aRotAndTraTypes[4] = TraY;
-   m_d.m_aRotAndTraTypes[5] = TraZ;
-   m_d.m_aRotAndTraTypes[6] = ObjRotX;
-   m_d.m_aRotAndTraTypes[7] = ObjRotY;
-   m_d.m_aRotAndTraTypes[8] = ObjRotZ;
    /*
    hr = GetRegStringAsFloat("DefaultProps\\Primitive","Rotation_X", &fTmp);
    m_d.m_vRotation.x = (hr == S_OK) ? fTmp : 0;
@@ -304,16 +264,6 @@ void Primitive::WriteRegDefaults()
    SetRegValue("DefaultProps\\Primitive","RotAndTra7", REG_SZ, &strTmp,strlen(strTmp));	
    sprintf_s(strTmp, 40, "%f", m_d.m_aRotAndTra[8]);
    SetRegValue("DefaultProps\\Primitive","RotAndTra8", REG_SZ, &strTmp,strlen(strTmp));	
-
-   SetRegValue("DefaultProps\\Primitive","RotAndTraType0",REG_DWORD,&m_d.m_aRotAndTraTypes[0],4);
-   SetRegValue("DefaultProps\\Primitive","RotAndTraType1",REG_DWORD,&m_d.m_aRotAndTraTypes[1],4);
-   SetRegValue("DefaultProps\\Primitive","RotAndTraType2",REG_DWORD,&m_d.m_aRotAndTraTypes[2],4);
-   SetRegValue("DefaultProps\\Primitive","RotAndTraType3",REG_DWORD,&m_d.m_aRotAndTraTypes[3],4);
-   SetRegValue("DefaultProps\\Primitive","RotAndTraType4",REG_DWORD,&m_d.m_aRotAndTraTypes[4],4);
-   SetRegValue("DefaultProps\\Primitive","RotAndTraType5",REG_DWORD,&m_d.m_aRotAndTraTypes[5],4);
-   SetRegValue("DefaultProps\\Primitive","RotAndTraType6",REG_DWORD,&m_d.m_aRotAndTraTypes[6],4);
-   SetRegValue("DefaultProps\\Primitive","RotAndTraType7",REG_DWORD,&m_d.m_aRotAndTraTypes[7],4);
-   SetRegValue("DefaultProps\\Primitive","RotAndTraType8",REG_DWORD,&m_d.m_aRotAndTraTypes[8],4);
    /*
    sprintf_s(strTmp, 40, "%f", m_d.m_vRotation.x);
    SetRegValue("DefaultProps\\Primitive","Rotation_X", REG_SZ, &strTmp,strlen(strTmp));	
@@ -357,7 +307,7 @@ void Primitive::GetHitShapes(Vector<HitObject> * const pvho)
    RecalculateVertices();
    Hit3DPoly *ph3dpolyOld = NULL;
 
-   for( int i=0;i<indexListSize;i+=3 )
+   for( unsigned i=0; i<indexList.size(); i+=3 )
    {
       Vertex3Ds * const rgv3D = new Vertex3Ds[3];
       rgv3D[0].x = verticesTop.ElementAt( indexList[i  ] )->x;
@@ -437,6 +387,11 @@ void Primitive::EndPlay()
 		vertexBuffer = 0;
 		vertexBufferRegenerate = true;
 	}
+    if (indexBuffer)
+    {
+        indexBuffer->release();
+        indexBuffer = 0;
+    }
 
 	if(objMesh)
 	{
@@ -455,27 +410,17 @@ void Primitive::RecalculateMatrices()
 {
    // scale matrix
    Matrix3D Smatrix;
-   Smatrix.SetIdentity();
-   Smatrix._11 = m_d.m_vSize.x;
-   Smatrix._22 = m_d.m_vSize.y;
-   Smatrix._33 = m_d.m_vSize.z;
+   Smatrix.SetScaling( m_d.m_vSize.x, m_d.m_vSize.y, m_d.m_vSize.z );
 
-   // transform matrix
+   // translation matrix
    Matrix3D Tmatrix;
-   Tmatrix.SetIdentity();
-   Tmatrix._41 = m_d.m_vPosition.x;
-   Tmatrix._42 = m_d.m_vPosition.y;
-   Tmatrix._43 = m_d.m_vPosition.z;
+   Tmatrix.SetTranslation(m_d.m_vPosition.x, m_d.m_vPosition.y, m_d.m_vPosition.z);
+
+   // translation + rotation matrix
+   Matrix3D RTmatrix;
+   RTmatrix.SetTranslation( m_d.m_aRotAndTra[3], m_d.m_aRotAndTra[4], m_d.m_aRotAndTra[5]);
 
    Matrix3D tempMatrix;
-   Matrix3D RTmatrix;
-   RTmatrix.SetIdentity();
-
-   tempMatrix.SetIdentity();
-   tempMatrix._41 = m_d.m_aRotAndTra[3];
-   tempMatrix._42 = m_d.m_aRotAndTra[4];
-   tempMatrix._43 = m_d.m_aRotAndTra[5];
-   tempMatrix.Multiply(RTmatrix, RTmatrix);
    tempMatrix.RotateZMatrix(ANGTORAD(m_d.m_aRotAndTra[2]));
    tempMatrix.Multiply(RTmatrix, RTmatrix);
    tempMatrix.RotateYMatrix(ANGTORAD(m_d.m_aRotAndTra[1]));
@@ -491,10 +436,10 @@ void Primitive::RecalculateMatrices()
    tempMatrix.Multiply(RTmatrix, RTmatrix);
 
    rotMatrix = RTmatrix;
-   fullMatrix = Smatrix;
 
+   fullMatrix = Smatrix;
    RTmatrix.Multiply(fullMatrix, fullMatrix);
-   Tmatrix.Multiply(fullMatrix, fullMatrix);
+   Tmatrix.Multiply(fullMatrix, fullMatrix);        // fullMatrix = Smatrix * RTmatrix * Tmatrix
 }
 
 void Primitive::RecalculateVertices() 
@@ -600,7 +545,7 @@ void Primitive::Render(Sur * const psur)
    else
    {
       //just draw a simple mesh layout not the entire mesh for performance reasons
-      for( int i=0;i<indexListSize;i+=3 )
+      for( unsigned i=0;i<indexList.size();i+=3 )
       {
          const Vertex3Ds * const A = verticesTop.ElementAt(indexList[i]);
          const Vertex3Ds * const B = verticesTop.ElementAt(indexList[i+1]);
@@ -610,9 +555,6 @@ void Primitive::Render(Sur * const psur)
       }
    }
 }
-
-//static const WORD rgiPrimStatic0[5] = {0,1,2,3,4};
-static const WORD rgiPrimStatic1[5] = {4,3,2,1,0};
 
 void Primitive::CalculateBuiltinOriginal()
 {
@@ -948,12 +890,10 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
 
       if (pin)
       {
-         // OK, Top is visible, and we have a image
-         //lets draw
          pin->CreateAlphaChannel();
          pin->Set( ePictureTexture );
          pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-         g_pplayer->m_pin3d.EnableAlphaBlend(1,false);
+         g_pplayer->m_pin3d.EnableAlphaBlend(1, false);
 
          pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 
@@ -986,7 +926,7 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       }
       
 	  if( m_d.use3DMesh )
-         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, indexList, indexListSize);
+         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, indexBuffer, 0, indexList.size());
       else
          pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, builtin_indices, m_d.m_DrawTexturesInside ? 24*m_d.m_Sides : 12*m_d.m_Sides);
 
@@ -1015,7 +955,7 @@ void Primitive::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
 extern bool loadWavefrontObj( char *filename, bool flipTv, bool convertToLeftHanded );
 extern Vertex3D_NoTex2 *GetVertices( int &numVertices );
-extern WORD *GetIndexList( int &indexListSize );
+extern void GetIndexList( std::vector<WORD>& list );
 extern void SaveOBJ( char *filename, Primitive *mesh );
 
 void Primitive::RenderSetup( const RenderDevice* _pd3dDevice )
@@ -1034,6 +974,9 @@ void Primitive::RenderSetup( const RenderDevice* _pd3dDevice )
       pd3dDevice->CreateVertexBuffer( numVertices, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
       NumVideoBytes += numVertices*sizeof(Vertex3D_NoTex2); //!! never cleared up again here
    }
+
+   if (m_d.use3DMesh)
+       indexBuffer = pd3dDevice->CreateAndFillIndexBuffer( indexList );
 
    if( !m_d.use3DMesh )
       CalculateBuiltinOriginal();
@@ -1104,24 +1047,6 @@ HRESULT Primitive::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcry
    bw.WriteFloat(FID(RTV6), m_d.m_aRotAndTra[6]);
    bw.WriteFloat(FID(RTV7), m_d.m_aRotAndTra[7]);
    bw.WriteFloat(FID(RTV8), m_d.m_aRotAndTra[8]);
-//    int iTmp = m_d.m_aRotAndTraTypes[0];
-//    bw.WriteInt(FID(RTT0), iTmp);
-//    iTmp = m_d.m_aRotAndTraTypes[1];
-//    bw.WriteInt(FID(RTT1), iTmp);
-//    iTmp = m_d.m_aRotAndTraTypes[2];
-//    bw.WriteInt(FID(RTT2), iTmp);
-//    iTmp = m_d.m_aRotAndTraTypes[3];
-//    bw.WriteInt(FID(RTT3), iTmp);
-//    iTmp = m_d.m_aRotAndTraTypes[4];
-//    bw.WriteInt(FID(RTT4), iTmp);
-//    iTmp = m_d.m_aRotAndTraTypes[5];
-//    bw.WriteInt(FID(RTT5), iTmp);
-//    iTmp = m_d.m_aRotAndTraTypes[6];
-//    bw.WriteInt(FID(RTT6), iTmp);
-//    iTmp = m_d.m_aRotAndTraTypes[7];
-//    bw.WriteInt(FID(RTT7), iTmp);
-//    iTmp = m_d.m_aRotAndTraTypes[8];
-//    bw.WriteInt(FID(RTT8), iTmp);
    bw.WriteString(FID(IMAG), m_d.m_szImage);
    bw.WriteInt(FID(SIDS), m_d.m_Sides);
    bw.WriteWideString(FID(NAME), (WCHAR *)m_wzName);
@@ -1146,8 +1071,8 @@ HRESULT Primitive::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcry
       bw.WriteString( FID(M3DN), m_d.meshFileName);
       bw.WriteInt( FID(M3VN), numVertices );
       bw.WriteStruct( FID(M3DX), objMeshOrg, sizeof(Vertex3D_NoTex2)*numVertices);
-      bw.WriteInt( FID(M3FN), indexListSize );
-      bw.WriteStruct( FID(M3DI), indexList, sizeof(WORD)*indexListSize );
+      bw.WriteInt( FID(M3FN), indexList.size() );
+      bw.WriteStruct( FID(M3DI), &indexList[0], sizeof(WORD)*indexList.size() );
    }
 
    ISelect::SaveData(pstm, hcrypthash, hcryptkey);
@@ -1353,12 +1278,8 @@ BOOL Primitive::LoadToken(int id, BiffReader *pbr)
    }
    else if( id == FID(M3DI) )
    {
-      if( indexList )
-      {
-         delete[] indexList;
-      }
-      indexList = new WORD[indexListSize];
-      pbr->GetStruct( indexList, sizeof(WORD)*indexListSize);
+      indexList.resize( indexListSize );
+      pbr->GetStruct( &indexList[0], sizeof(WORD)*indexListSize);
    }
    else
    {
@@ -1433,12 +1354,7 @@ bool Primitive::BrowseFor3DMeshFile()
 	  objMesh = 0;
    }
    numVertices=0;
-   if( indexList )
-   {
-      delete[] indexList;
-	  indexList = 0;
-   }
-   indexListSize=0;
+   indexList.clear();
    m_d.use3DMesh=false;
    if( vertexBuffer )
    {
@@ -1464,7 +1380,7 @@ bool Primitive::BrowseFor3DMeshFile()
    {
       m_d.use3DMesh=true;
       objMeshOrg = GetVertices( numVertices );
-      indexList = GetIndexList( indexListSize );
+      GetIndexList( indexList );
       return true;
    }
    return false;

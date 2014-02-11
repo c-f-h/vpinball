@@ -17,7 +17,7 @@ vector<MyPoly> tmpFaces;
 vector<Vertex3D> verts;
 vector<int> faces;
 
-int isInList( const int vi, const int ti, const int ni )
+static int isInList( const int vi, const int ti, const int ni )
 {
    for( unsigned int i=0;i<verts.size();i++ )
    {
@@ -41,7 +41,8 @@ int isInList( const int vi, const int ti, const int ni )
    }
    return -1;
 }
-void NormalizeNormals()
+
+static void NormalizeNormals()
 {
    for( unsigned int i=0;i<faces.size();i+=3 )
    {
@@ -289,23 +290,21 @@ Vertex3D_NoTex2 *GetVertices( int &numVertices ) // clears temporary storage on 
    return objMesh;
 }
 
-WORD *GetIndexList( int &indexListSize ) // clears temporary storage on the way
+void GetIndexList( std::vector<WORD>& list ) // clears temporary storage on the way
 {
    bool showerror = true;
-   WORD * const list = new WORD[faces.size()];
-   for( unsigned int i=0;i<faces.size();i++ )
+   list.resize( faces.size() );
+   for( unsigned int i=0; i<faces.size(); i++ )
    {
 	  if((faces[i] >= 65536) && showerror) { //!! DX7 limit, delete later-on
            ShowError("Too many vertex indices in obj file");
 		   showerror = false;
 	  }
-      list[i] = faces[i];
+      list[i] = (WORD)faces[i];
    }
-   indexListSize = faces.size();
-   if(indexListSize >= 65536) //!! DX7 limit, delete later-on
+   if(faces.size() >= 65536) //!! DX7 limit, delete later-on
 	   ShowError("Too many polygons in obj file, this can lead to driver problems");
    faces.clear();
-   return list;
 }
 
 // exporting a mesh to a Wavefront .OBJ file. The mesh is converted into right-handed coordinate system (VP uses left-handed)
