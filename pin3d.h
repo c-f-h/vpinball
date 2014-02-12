@@ -281,6 +281,8 @@ public:
 	Texture m_pddsLightWhite;
 
    VertexBuffer *backgroundVBuffer;
+    VertexBuffer *tableVBuffer;
+    IndexBuffer *tableIBuffer;
 	ExVector<void> m_xvShadowMap;
 
 	Matrix3D m_matrixTotal;
@@ -311,5 +313,4 @@ public:
    //bool fullscreen;
 	float m_maxSeparation, m_ZPD;
    ViewPort vp;
-   VertexBuffer *spriteVertexBuffer;
 };
