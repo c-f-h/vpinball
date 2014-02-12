@@ -864,8 +864,8 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
       rgnormal[i].y = dx*inv_len;
    }
 
-   Vertex3D *texelBuf[2];
-   sideVBuffer->lock( 0, 0, (void**)&texelBuf[0], VertexBuffer::WRITEONLY);
+   Vertex3D *texelBuf;
+   sideVBuffer->lock( 0, 0, (void**)&texelBuf, VertexBuffer::WRITEONLY);
 
    int offset=0;
    // Render side
@@ -937,7 +937,7 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
          verts[offset+2].ny = verts[offset+3].ny = vnormal[1].y;
          verts[offset+2].nz = verts[offset+3].nz = 0;
 
-         memcpy( &texelBuf[0][offset], &verts[offset], sizeof(Vertex3D)*4 );
+         memcpy( &texelBuf[offset], &verts[offset], sizeof(Vertex3D)*4 );
       }
    }
    sideVBuffer->unlock();
