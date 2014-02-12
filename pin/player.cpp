@@ -1365,7 +1365,7 @@ void Player::InitWindow()
 	int y = (screenheight - m_height) / 2;
 
 	// No window border, title, or control boxes.
-	int windowflags = WS_POPUP | WS_CLIPCHILDREN;
+	int windowflags = WS_POPUP;
 	int windowflagsex = 0;
 
 	const int captionheight = GetSystemMetrics(SM_CYCAPTION);

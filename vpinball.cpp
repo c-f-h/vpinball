@@ -3704,7 +3704,7 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
          }
          else
          {
-            SendMessage(hwndDlg, GET_WINDOW_MODES, widthcur, 0);
+            SendMessage(hwndDlg, GET_WINDOW_MODES, widthcur, heightcur);
             HWND hwndRadio = GetDlgItem(hwndDlg, IDC_WINDOW);
             SendMessage(hwndRadio, BM_SETCHECK, BST_CHECKED, 0);
          }
@@ -3905,7 +3905,7 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
    case GET_WINDOW_MODES:
       {
          int indexcur = -1;
-         int widthcur = wParam;
+         int widthcur = wParam, heightcur = (int)lParam;
 
          SendMessage(hwndDlg, RESET_SIZELIST_CONTENT, 0, 0);
          HWND hwndList = GetDlgItem(hwndDlg, IDC_SIZELIST);
@@ -3934,6 +3934,22 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
          }
 
          FillVideoModesList(hwndList, allVideoModes);
+
+         // set up windowed fullscreen mode
+         VideoMode mode;
+         // TODO: use multi-monitor functions
+         mode.width = GetSystemMetrics( SM_CXSCREEN );
+         mode.height = GetSystemMetrics( SM_CYSCREEN );
+         mode.depth = 0;
+         mode.refreshrate = 0;
+         allVideoModes.push_back(mode);
+
+         char szT[128];
+         sprintf_s(szT, "%u x %u (windowed fullscreen)", mode.width, mode.height);
+         SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM)szT);
+         if (mode.width == widthcur && mode.height == heightcur)
+             indexcur = SendMessage(hwndList, LB_GETCOUNT, 0, 0) - 1;
+
          SendMessage(hwndList, LB_SETCURSEL, (indexcur != -1) ? indexcur : 0, 0);
       }
       break;
@@ -7274,7 +7290,6 @@ INT_PTR CALLBACK SearchSelectProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
          case IDOK:
             {
                HWND listBox = GetDlgItem(hwndDlg, IDC_ELEMENT_LIST);
-               const int listsize = SendMessage(listBox, LB_GETCOUNT, 0, 0);
                const int count = SendMessage(listBox, LB_GETSELCOUNT, 0, 0);
                int * const rgsel = new int[count];
                SendMessage(listBox, LB_GETSELITEMS, count, (LPARAM)rgsel);
