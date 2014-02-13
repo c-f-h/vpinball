@@ -1584,6 +1584,13 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
    // dont render alpha shaded ramps into static buffer, these are done per frame later-on
    if (m_d.m_fAlpha) return;
 
+   /* TODO: This is a misnomer right now, but clamp fixes some visual glitches (single-pixel lines)
+    * with transparent textures. Probably the option should simply be renamed to ImageModeClamp,
+    * since the texture coordinates always stay within [0,1] anyway.
+    */
+   if (m_d.m_imagealignment == ImageModeWrap)
+       pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_CLAMP);
+
    if (isHabitrail())
    {
       RenderStaticHabitrail(pd3dDevice);
@@ -2633,6 +2640,10 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
       dynamicVertexBufferRegenerate=false;
       return;
    }
+
+   // see the comment in RenderStatic() above
+   if (m_d.m_imagealignment == ImageModeWrap)
+       pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_CLAMP);
 
    solidMaterial.setColor(1.0f, m_d.m_color );
 
