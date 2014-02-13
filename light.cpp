@@ -580,7 +580,7 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     const float b = (float)(m_d.m_color & 16711680) * (float)(1.0/16711680.0);
 
     Material mtrl;
-    const int i = m_realState;
+    const int i = m_realState ? 1 : 0;      // TODO: fix blinking
 
     if(i == LightStateOff) 
     {
@@ -634,7 +634,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
 
     bool useLightmap = false;
 
-    const int i = m_realState;
+    const int i = m_realState ? 1 : 0;      // TODO: fix blinking
     const float height = m_surfaceHeight;
 
     const float r = (float)(m_d.m_color & 255) * (float)(1.0/255.0);
