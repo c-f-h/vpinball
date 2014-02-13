@@ -946,6 +946,7 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
 // Always called each frame to render over everything else (along with alpha ramps)
 void Primitive::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    TRACE_FUNCTION();
    if ( m_d.staticRendering )
       return;
 

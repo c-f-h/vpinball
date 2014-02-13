@@ -874,6 +874,7 @@ STDMETHODIMP Flasher::put_AddBlend(VARIANT_BOOL newVal)
 // Also has less drawing calls by bundling seperate calls.
 void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    TRACE_FUNCTION();
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
    // Don't render if invisible.
    if(!m_d.m_IsVisible) 

@@ -279,6 +279,7 @@ void Bumper::EndPlay()
 
 void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    TRACE_FUNCTION();
     RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
     if(!m_d.m_fVisible)	return;
 

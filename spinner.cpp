@@ -355,6 +355,7 @@ int Spinner::angleToFrame(float angle) const
 
 void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    TRACE_FUNCTION();
     // TODO: needs optimization, also should probably get rid of the whole frame business and just render
     // by current angle
     if (!m_phitspinner->m_spinneranim.m_fVisible)

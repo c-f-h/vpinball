@@ -583,6 +583,7 @@ void Pin3D::InitLights()
 
 void Pin3D::InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD)
 {
+    TRACE_FUNCTION();
 	m_layback = layback;
 
 	m_maxSeparation = maxSeparation;
@@ -682,6 +683,7 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 
 void Pin3D::RenderPlayfieldGraphics()
 {
+    TRACE_FUNCTION();
 #define TRIANGULATE_BACK 100
 
 	Vertex3D rgv[7];

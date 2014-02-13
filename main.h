@@ -149,5 +149,6 @@ class PinBinary;
 #include "wintimer.h"
 
 #include "slintf.h"
+#include "trace.h"
 
 #include "extern.h"

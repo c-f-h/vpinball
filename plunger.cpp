@@ -272,6 +272,7 @@ void Plunger::PutCenter(const Vertex2D * const pv)
 
 void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    TRACE_FUNCTION();
     // TODO: get rid of frame stuff
     RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
     if (!m_d.m_fVisible)

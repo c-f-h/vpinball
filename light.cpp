@@ -543,6 +543,7 @@ static const WORD rgiLightStatic1[32] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,1
 
 void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    TRACE_FUNCTION();
     /* HACK / VP9COMPAT:
      * In VP9, people commonly used pure black "update lights" whose only function was to refresh
      * their region. Since lights were blitted using color keying, pure black objects didn't show.

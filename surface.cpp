@@ -803,6 +803,7 @@ void Surface::MoveOffset(const float dx, const float dy)
 
 void Surface::PostRenderStatic(const RenderDevice* pd3dDevice)
 {
+    TRACE_FUNCTION();
     RenderSlingshots((RenderDevice*)pd3dDevice);
 
     /* HACK / VP9COMPAT:

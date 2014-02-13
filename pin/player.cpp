@@ -674,6 +674,8 @@ void Player::InitDebugHitStructure()
 
 HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWND hwndProgressName)
 {
+    TRACE_FUNCTION();
+
 	m_ptable = ptable;
 
 	//accelerometer normal mounting is 90 degrees in left-hand coordinates (1/4 turn counterclockwise)
@@ -1131,6 +1133,7 @@ void Player::ReOrder() // Reorder playfield objects (for AMD/ATI configurations)
 
 void Player::InitStatic(HWND hwndProgress)
 {
+    TRACE_FUNCTION();
 	// Start the frame.
 	m_pin3d.m_pd3dDevice->BeginScene();
 
@@ -1963,6 +1966,8 @@ void Player::UpdatePhysics()
 
 void Player::RenderDynamics()
 {
+    TRACE_FUNCTION();
+
    // Start rendering the next frame.
    m_pin3d.m_pd3dDevice->BeginScene();
 

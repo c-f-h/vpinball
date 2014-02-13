@@ -534,6 +534,7 @@ void DispReel::EndPlay()
 
 void DispReel::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
+    TRACE_FUNCTION();
     if (!GetPTable()->GetEMReelsEnabled())
         return;
 
