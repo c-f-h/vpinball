@@ -187,41 +187,35 @@ void Kicker::RenderSetup(const RenderDevice* _pd3dDevice)
    for (int l=0;l<16;l++)
    {
       const float angle = (float)(M_PI*2.0/16.0)*(float)l;
+      // 0-15 : lower ring
       vertices[l].x = m_d.m_vCenter.x + sinf(angle)*m_d.m_radius;
       vertices[l].y = m_d.m_vCenter.y - cosf(angle)*m_d.m_radius;
-      vertices[l].z = height + (0.1f - 30.0f);
+      vertices[l].z = height - 30.0f;
 
+      // 16-31 : top ring
       vertices[l+16].x = vertices[l].x;
       vertices[l+16].y = vertices[l].y;
       vertices[l+16].z = height + 0.1f*m_ptable->m_zScale;
 
-      borderVerices[l].x = m_d.m_vCenter.x + sinf(angle)*(m_d.m_radius+6.0f);
-      borderVerices[l].y = m_d.m_vCenter.y - cosf(angle)*(m_d.m_radius+6.0f);
-      borderVerices[l].z = height + 0.05f*m_ptable->m_zScale;
+      // 32-47 : top outer ring
+      vertices[l+32].x = m_d.m_vCenter.x + sinf(angle)*(m_d.m_radius+6.0f);
+      vertices[l+32].y = m_d.m_vCenter.y - cosf(angle)*(m_d.m_radius+6.0f);
+      vertices[l+32].z = height + 0.05f*m_ptable->m_zScale;
 
       ppin3d->m_lightproject.CalcCoordinates(&vertices[l]);
       ppin3d->m_lightproject.CalcCoordinates(&vertices[l+16]);
-      ppin3d->m_lightproject.CalcCoordinates(&borderVerices[l]);
+      ppin3d->m_lightproject.CalcCoordinates(&vertices[l+32]);
    }
 
    vertices[48].x = m_d.m_vCenter.x;
    vertices[48].y = m_d.m_vCenter.y;
    vertices[48].z = height + (0.1f - 30.0f)*m_ptable->m_zScale;
    ppin3d->m_lightproject.CalcCoordinates(&vertices[48]);
-
-   ppin3d->EnableLightMap(fTrue, height);
 }
 
 
-void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
+void Kicker::PreRenderStatic( RenderDevice* pd3dDevice)
 {
-    /* TODO: (DX9 port) The old render method for kickers relied on first clearing
-     * the Z buffer and then rendering the kicker. I'm not sure this works in DX9
-     * (we should investigate). Another idea: render the kicker before the table
-     * and put an invisible "lid" on top of it which only serves to block the
-     * Z buffer?
-     */
-   RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
    // Don't process "invisible" kickers.
    if ((m_d.m_kickertype == KickerInvisible) || (m_d.m_kickertype == KickerHidden))
       return;
@@ -238,161 +232,77 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
    const float inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
    const float inv_height = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
 
+   Material colorMaterial, blackMaterial;
    colorMaterial.setColor( 0.0f, m_d.m_color );
    blackMaterial.setColor( 0.0f, 0.0f, 0.0f, 0.0f );
-   pd3dDevice->SetMaterial(colorMaterial);
 
-   ppin3d->EnableLightMap(fTrue, height);
-
-   if (m_d.m_kickertype == KickerCup)
-   {
-      // Draw outer ring
-      WORD rgi[3*14];
-      for (int l=0;l<14;l++)
-      {
-         rgi[l*3  ] = 0;
-         rgi[l*3+1] = l+1;
-         rgi[l*3+2] = l+2;
-
-         SetNormal(borderVerices, rgi+l*3, 3, NULL, NULL, 0);
-      }
-      pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,borderVerices,16,rgi, 3*14);
-   }
-
-   //BaseTexture* pddsBufferBack = g_pvp->m_pdd.CreateOffscreenPlain(recBounds.right - recBounds.left, recBounds.bottom - recBounds.top);
-
-   //HRESULT hr = pddsBufferBack->BltFast(0, 0, ppin3d->m_pddsStatic, &recBounds, DDBLTFAST_WAIT);
-   //pd3dDevice->Clear( 1, (D3DRECT *)&recBounds, D3DCLEAR_TARGET, 0x00ffffff, 1.0f, 0L );
-
-   //pd3dDevice->SetMaterial(blackMaterial);
-/*   mtrl.diffuse.r = mtrl.ambient.r = 
-   mtrl.diffuse.g = mtrl.ambient.g = 
-   mtrl.diffuse.b = mtrl.ambient.b = 0.0f;
-   pd3dDevice->SetMaterial(&mtrl);
-*/
-   //ppin3d->EnableLightMap(fFalse, height);
-
-   //// Draw mask
-   //{
-   //   WORD rgi[3*14];
-   //   for (int l=0;l<14;l++)
-   //   {
-   //      rgi[l*3  ] = 0;
-   //      rgi[l*3+1] = l+1;
-   //      rgi[l*3+2] = l+2;
-
-   //      SetNormal(vertices+16, rgi+l*3, 3, NULL, NULL, 0);
-   //   }
-   //   pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices+16, 16,rgi, 3*14);
-   //}
-
-   //DDSURFACEDESC2 ddsd;
-   //ddsd.dwSize = sizeof(ddsd);
-   //DDSURFACEDESC2 ddsdMask;
-   //ddsdMask.dwSize = sizeof(ddsdMask);
-
-   //// Use mask to reset z-values underneath kicker
-   //hr = ppin3d->m_pddsStatic->Lock(&recBounds, &ddsdMask, DDLOCK_READONLY | DDLOCK_SURFACEMEMORYPTR 
-   //   | DDLOCK_WAIT, NULL);
-   //if (hr == S_OK)
-   //{
-   //   hr = ppin3d->m_pddsStaticZ->Lock(&recBounds, &ddsd, DDLOCK_WRITEONLY | DDLOCK_SURFACEMEMORYPTR 
-   //      | DDLOCK_WAIT, NULL);
-   //   if (hr == S_OK)
-   //   {
-   //      const int colorbytes = ddsdMask.ddpfPixelFormat.dwRGBBitCount/8;
-   //      const int zbytes = ddsd.ddpfPixelFormat.dwZBufferBitDepth/8;
-   //      const int lenx = recBounds.right - recBounds.left;
-   //      const int leny = recBounds.bottom - recBounds.top;
-   //      const int pitch = ddsd.lPitch;
-   //      BYTE *pch = (BYTE *)ddsd.lpSurface;
-
-   //      const int pitchMask = ddsdMask.lPitch;
-   //      const BYTE *pchMask = (BYTE *)ddsdMask.lpSurface;
-
-   //      for (int y=0;y<leny;++y)
-   //      {
-   //         for (int x=0;x<lenx;++x)
-   //         {
-   //            if (*pchMask == 0)
-   //               for (int l=0;l<zbytes;++l)
-   //                  pch[l] = 0xff;
-   //            pch+=zbytes;
-   //            pchMask+=colorbytes;
-   //         }
-   //         pch += pitch - lenx*zbytes;
-   //         pchMask += pitchMask - lenx*colorbytes;
-   //      }
-
-   //      ppin3d->m_pddsStaticZ->Unlock(&recBounds);
-   //   }
-   //   ppin3d->m_pddsStatic->Unlock(&recBounds);
-   //}
-
-   //// Reset graphics around kicker
-   //hr = ppin3d->m_pddsStatic->Blt(&recBounds, pddsBufferBack, NULL, DDBLT_WAIT, NULL);
-
-   //pddsBufferBack->Release();
-
-	//m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-
-   pd3dDevice->SetRenderState(RenderDevice::ZENABLE, FALSE);
+   ppin3d->EnableLightMap(height);
 
    // Draw the inside of the kicker based on its type.
    switch (m_d.m_kickertype)
    {
       case KickerHole: 
       {
-         // Draw the kicker itself
-         pd3dDevice->SetMaterial(blackMaterial);
-         {
-            WORD rgi[3*14];
-            for (int l=0;l<14;++l)
-            {
-               rgi[l*3  ] = 0;
-               rgi[l*3+1] = l+1;
-               rgi[l*3+2] = l+2;
-
-               SetNormal(vertices, rgi+l*3, 3, NULL, NULL, 0);
-            }
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices, 16,rgi, 3*14);
-         }
-
          pd3dDevice->SetMaterial(colorMaterial);
-         ppin3d->EnableLightMap(fTrue, height);
-
          for (int l=0;l<16;++l)
          {
-            const WORD rgiNormal[6] = {
+            WORD rgiNormal[6] = {
                (l-1+16) % 16,
                (l-1+16) % 16 + 16,
                (l-1+16) % 16 + 2,
                l,
                l+16,
-               (l+2) % 16};
+               (l+2) % 16 };
 
-            const WORD rgi[4] = {
+            WORD rgi[4] = {
                l,
                l+16,
                (l+1) % 16 + 16,
-               (l+1) % 16};
+               (l+1) % 16 };
 
             SetNormal(vertices, rgiNormal, 3, NULL, rgi, 2);
             SetNormal(vertices, &rgiNormal[3], 3, NULL, &rgi[2], 2);
-            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,vertices, 32,(LPWORD)rgi, 4);
+            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,vertices, 32, rgi, 4);
          }
+
+         pd3dDevice->SetMaterial(blackMaterial);
+
+         // Draw the bottom of the kicker hole
+         WORD rgi[3*14];
+         for (int l=0;l<14;++l)
+         {
+            rgi[l*3  ] = 0;
+            rgi[l*3+1] = l+1;
+            rgi[l*3+2] = l+2;
+
+            SetNormal(vertices, rgi+l*3, 3, NULL, NULL, 0);
+         }
+         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices, 16, rgi, 3*14);
+
+         // Draw the top "lid" of the kicker hole invisibly (for the depth buffer)
+         for (int l=0;l<14;++l)
+         {
+            SetNormal(vertices+16, rgi+l*3, 3, NULL, NULL, 0);
+         }
+         float depthbias = -1e-4f; // range: [0..1], covering the whole depth buffer
+         pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
+         pd3dDevice->SetRenderState(RenderDevice::COLORWRITEENABLE, 0);         // write only to depth buffer
+         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, vertices+16, 16, rgi, 3*14);
+         pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, 0);
+         pd3dDevice->SetRenderState(RenderDevice::COLORWRITEENABLE, 0x0f);      // re-enable color writes
          break;
       }
 
       case KickerCup: 
       {
          pd3dDevice->SetMaterial(colorMaterial);
-         ppin3d->EnableLightMap(fTrue, height);
 
-         WORD rgi[3*16];
+         WORD rgi[2*3*16];
+
+         // Draw cup
          for (int l=0;l<16;++l)
          {
-            rgi[l*3  ] = 32;
+            rgi[l*3 ] = 32;
             rgi[l*3+1] = l;
             rgi[l*3+2] = (l + 1)%16;
 
@@ -402,17 +312,47 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
             vertices[48].ny = 0;
             vertices[48].nz = -1.0f;
          }
-         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices+16, 49-16,rgi, 3*16);
+         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, vertices+16, 49-16, rgi, 3*16);
+
+         // Draw outer ring
+         for (int l=0; l<16; ++l)
+         {
+            rgi[l*6  ] = l;
+            rgi[l*6+1] = 16 + l;
+            rgi[l*6+2] = 16 + (l + 1)%16;
+
+            rgi[l*6+3] = l;
+            rgi[l*6+4] = 16 + (l + 1)%16;
+            rgi[l*6+5] = (l + 1)%16;
+
+            SetNormal(vertices+16, rgi+l*6, 6, NULL, NULL, 0);
+         }
+         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, vertices+16, 32, rgi, 2*3*16);
+
+         // Draw the top "lid" of the kicker hole invisibly (for the depth buffer)
+         for (int l=0; l<14; ++l)
+         {
+            rgi[l*3  ] = 0;
+            rgi[l*3+1] = l+1;
+            rgi[l*3+2] = l+2;
+
+            SetNormal(vertices+32, rgi+l*3, 3, NULL, NULL, 0);
+         }
+         float depthbias = -3e-7f; // range: [0..1], covering the whole depth buffer
+         pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
+         pd3dDevice->SetRenderState(RenderDevice::COLORWRITEENABLE, 0);         // write only to depth buffer
+         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, vertices+32, 16, rgi, 3*14);
+         pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, 0);
+         pd3dDevice->SetRenderState(RenderDevice::COLORWRITEENABLE, 0x0f);      // re-enable color writes
          break;
       }
-
-      case KickerHidden:
-      case KickerInvisible:
-         break;
    }
 
-	pd3dDevice->SetRenderState(RenderDevice::ZENABLE, TRUE);
-   ppin3d->EnableLightMap(fFalse, height);
+   ppin3d->DisableLightMap();
+}
+
+void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
+{
 }
 
 void Kicker::SetObjectPos()

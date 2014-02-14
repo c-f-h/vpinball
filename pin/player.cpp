@@ -1132,18 +1132,28 @@ void Player::InitStatic(HWND hwndProgress)
 	m_pin3d.SetRenderTarget(m_pin3d.m_pddsStatic, m_pin3d.m_pddsStaticZ);
 
     m_pin3d.DrawBackground();
+
+    // perform render setup and give elements a chance to render before the playfield
+	for (int i=0; i < m_ptable->m_vedit.Size(); i++)
+    {
+        Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
+        if (ph)
+        {
+            ph->RenderSetup(m_pin3d.m_pd3dDevice);
+            ph->PreRenderStatic(m_pin3d.m_pd3dDevice);
+        }
+    }
+
     m_pin3d.RenderPlayfieldGraphics();
 
 	// Draw stuff
 	for (int i=0;i<m_ptable->m_vedit.Size();i++)
 		{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() != eItemDecal && 
-			m_ptable->m_vedit.ElementAt(i)->GetItemType() != eItemKicker)
+		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() != eItemDecal)
 			{
 			Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
 			if (ph)
 				{
-                ph->RenderSetup(m_pin3d.m_pd3dDevice);
 				ph->RenderStatic(m_pin3d.m_pd3dDevice);
 				if (hwndProgress)
 					SendMessage(hwndProgress, PBM_SETPOS, 60 + ((15*i)/m_ptable->m_vedit.Size()), 0);
@@ -1159,7 +1169,6 @@ void Player::InitStatic(HWND hwndProgress)
 			Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
 			if (ph)
 				{
-            ph->RenderSetup(m_pin3d.m_pd3dDevice);
 				ph->RenderStatic(m_pin3d.m_pd3dDevice);
 				if (hwndProgress)
 					SendMessage(hwndProgress, PBM_SETPOS, 75 + ((5*i)/m_ptable->m_vedit.Size()), 0);
@@ -1167,21 +1176,6 @@ void Player::InitStatic(HWND hwndProgress)
 			}
 		}
 
-	// Draw kickers (they change z-buffer, so they have to be drawn after the wall they are on)
-	for (int i=0;i<m_ptable->m_vedit.Size();i++)
-		{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemKicker)
-			{
-			Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
-			if (ph)
-				{
-            ph->RenderSetup(m_pin3d.m_pd3dDevice);
-				ph->RenderStatic(m_pin3d.m_pd3dDevice);
-				if (hwndProgress)
-					SendMessage(hwndProgress, PBM_SETPOS, 80 + ((5*i)/m_ptable->m_vedit.Size()), 0);
-				}
-			}
-		}
 	// Finish the frame.
 	m_pin3d.m_pd3dDevice->EndScene();
 }
