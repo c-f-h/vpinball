@@ -1513,12 +1513,7 @@ void PinTable::Render3DProjection(Sur * const psur)
    const float skewX = -sinf(rotation)*skew;
    const float skewY =  cosf(rotation)*skew;
    Matrix3D matTrans;
-   // create a normal matrix.
-   matTrans._11 = matTrans._22 = matTrans._33 = matTrans._44 = 1.0f;
-   matTrans._12 = matTrans._13 = matTrans._14 = 
-   matTrans._21 = matTrans._23 = matTrans._24 = 
-   matTrans._34 = 
-   matTrans._43 = 0.0f;
+   matTrans.SetIdentity();
    // Skew for FOV of 0 Deg. is not supported. so change it a little bit.
    const float skewFOV = (realFOV < 0.01f) ? 0.01f : realFOV;
    // create skew the z axis to x and y direction.

@@ -848,8 +848,7 @@ void Primitive::UpdateMesh()
    memcpy(objMesh,objMeshOrg,numVertices*sizeof(Vertex3D_NoTex2));
    if ( m_d.sphereMapping )
    {
-      Matrix3D matWorld;
-      g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD, &matWorld );
+      Matrix3D matWorld = g_pplayer->m_pin3d.m_proj.m_matWorld;
       matWorld.Multiply(rotMatrix, rotMatrix);
    }
    // could be optimized, if not everything is drawn.

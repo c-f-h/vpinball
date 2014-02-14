@@ -207,8 +207,6 @@ public:
 
 	void InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD);
 
-	void CacheTransform();      // compute m_matrixTotal = mWorld * mView * mProj
-
 	void TransformVertices(const Vertex3D * rgv,            const WORD * rgi, int count, Vertex3D * rgvout) const;
 	void TransformVertices(const Vertex3D_NoTex2 * rgv,     const WORD * rgi, int count, Vertex3D_NoTex2 * rgvout) const;
 	void TransformVertices(const Vertex3D_NoLighting * rgv, const WORD * rgi, int count, Vertex3D_NoLighting * rgvout) const;
@@ -218,7 +216,6 @@ public:
    Vertex3Ds Unproject( Vertex3Ds *point );
    Vertex3Ds Get3DPointFrom2D( POINT *p );
 
-	void SetUpdatePos(const int left, const int top);
     void Flip(const int offsetx, const int offsety, bool vsync);
 
 	void SetRenderTarget(RenderTarget* pddsSurface, RenderTarget* pddsZ) const;
@@ -243,18 +240,14 @@ public:
 
 	void ClipRectToVisibleArea(RECT * const prc) const;
 
-private:
     void DrawBackground();
-    void InitRenderState();
     void RenderPlayfieldGraphics();
+
+private:
+    void InitRenderState();
     void InitLights();
 
-	void SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar);
 	void Identity();
-	void Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z);
-	void Scale(const float x, const float y, const float z);
-	void Translate(const float x, const float y, const float z);
-	void FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, const int cvert, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const GPINFLOAT skew, const float xlatez);
    
 	BaseTexture* CreateShadow(const float height);
 	void CreateBallShadow();
@@ -285,13 +278,11 @@ public:
     IndexBuffer *tableIBuffer;
 	ExVector<void> m_xvShadowMap;
 
-	Matrix3D m_matrixTotal;
+    PinProjection m_proj;
 
 	RECT m_rcScreen;
 	int m_dwRenderWidth;
 	int m_dwRenderHeight;
-
-	RECT m_rcUpdate;
 
 	float skewX;
 	float skewY;
@@ -305,9 +296,6 @@ public:
 	float m_rotation, m_inclination, m_layback;
 	float m_scalex, m_scaley;
 	float m_xlatex, m_xlatey;
-
-	GPINFLOAT m_rznear, m_rzfar;
-	Vertex3Ds m_vertexcamera;
 
 	LightProjected m_lightproject;
    //bool fullscreen;

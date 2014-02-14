@@ -727,8 +727,6 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 		return hr;
 	}
 
-   m_pin3d.m_pd3dDevice->setVBInVRAM( m_fVertexBuffersInVRAM );
-
 	if (m_fFullScreen)
 		{
 		SetWindowPos(m_hwnd, NULL, 0, 0, m_screenwidth, m_screenheight, SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE);
@@ -775,11 +773,6 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_LightHackWidth[LIGHTHACK_FIREPOWER_P4] = 86;
 	m_LightHackHeight[LIGHTHACK_FIREPOWER_P4] = 512;
 #endif
-	// Initialize render and texture states for D3D blit support.
-	//Display_InitializeRenderStates();
-	//Display_InitializeTextureStates();
-
-	m_pin3d.m_pd3dDevice->BeginScene();
 
 	const float realFOV = (ptable->m_FOV < 0.01f) ? 0.01f : ptable->m_FOV; // Can't have a real zero FOV, but this will look the same
 
@@ -902,8 +895,6 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_shadowoctree.m_vcenter.z = (m_hitoctree.m_rectbounds.zlow + m_hitoctree.m_rectbounds.zhigh)*0.5f;
 
 	m_shadowoctree.CreateNextLevel();
-
-	m_pin3d.m_pd3dDevice->EndScene();
 
 	SendMessage(hwndProgress, PBM_SETPOS, 60, 0);
 	SetWindowText(hwndProgressName, "Rendering Table...");
@@ -1028,7 +1019,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 		SetFocus(m_hwnd);
 	}
 
-	// Call Init
+	// Call Init -- TODO: what's the relation to ptable->FireVoidEvent() above?
 	for (int i=0;i<m_ptable->m_vedit.Size();i++)
 		{
 		Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
@@ -1139,6 +1130,10 @@ void Player::InitStatic(HWND hwndProgress)
 
 	// Direct all renders to the "static" buffer.
 	m_pin3d.SetRenderTarget(m_pin3d.m_pddsStatic, m_pin3d.m_pddsStaticZ);
+
+    m_pin3d.DrawBackground();
+    m_pin3d.RenderPlayfieldGraphics();
+
 	// Draw stuff
 	for (int i=0;i<m_ptable->m_vedit.Size();i++)
 		{
@@ -1201,7 +1196,7 @@ void Player::InitAnimations(HWND hwndProgress)
             SendMessage(hwndProgress, PBM_SETPOS, 85 + ((15*i)/m_ptable->m_vedit.Size()), 0);
 	}
 
-	// Init lights to initial state
+	// Init lights to initial state -- TODO: remove
 	for (int i=0;i<m_ptable->m_vedit.Size();i++)
 	{
 		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemLight)
@@ -2010,7 +2005,7 @@ void Player::RenderDynamics()
 }
 
 
-unsigned int Player::CheckAndUpdateRegions()
+void Player::CheckAndUpdateRegions()
 {
     //rlc BUG -- moved this code before copy of static buffers being copied to back and z buffers
     //rlc  JEP placed code for copy of static buffers too soon 
@@ -2049,12 +2044,6 @@ unsigned int Player::CheckAndUpdateRegions()
     RenderTarget* const backBufferZ = m_pin3d.m_pddsZBuffer;
 
     // blit static background
-    RECT rect;
-    rect.left = 0;
-    rect.right = min(GetSystemMetrics(SM_CXSCREEN), m_pin3d.m_dwRenderWidth);
-    rect.top = 0;
-    rect.bottom = min(GetSystemMetrics(SM_CYSCREEN), m_pin3d.m_dwRenderHeight);
-
     m_pin3d.m_pd3dDevice->CopySurface(backBuffer,  m_pin3d.m_pddsStatic );
     m_pin3d.m_pd3dDevice->CopySurface(backBufferZ, m_pin3d.m_pddsStaticZ);
 
@@ -2062,17 +2051,13 @@ unsigned int Player::CheckAndUpdateRegions()
     for (int l=0; l < m_vscreenupdate.Size(); ++l)
     {
         AnimObject* pao = m_vscreenupdate.ElementAt(l);
-
-        // Check if the element is invalid (its frame changed).
         pao->Check3D();
         // TODO: remove this whole loop once Check3D is unused
     }
-
-    return rect.right*rect.bottom;
 }
 
 
-void Player::FlipVideoBuffersNormal(unsigned int overall_area, bool vsync )
+void Player::FlipVideoBuffersNormal( bool vsync )
 {
 	if ( m_nudgetime &&			// Table is being nudged.
 		 m_ptable->m_Shake )	// The "EarthShaker" effect is active.
@@ -2085,7 +2070,7 @@ void Player::FlipVideoBuffersNormal(unsigned int overall_area, bool vsync )
 }
 
 
-void Player::FlipVideoBuffers3D( unsigned int overall_area )
+void Player::FlipVideoBuffers3D()
 {
 #if 0   // TODO: disabled during DX9 port, reenable later
    //!! num_threads(max_threads-1 or -2) ? on my AMD omp is not really faster for the update path, a bit faster for full path
@@ -2381,7 +2366,7 @@ void Player::Render()
 
     m_LastKnownGoodCounter++;
 
-    unsigned int overall_area = CheckAndUpdateRegions();
+    CheckAndUpdateRegions();
     RenderDynamics();
 
     //if ( m_useAA )
@@ -2408,11 +2393,11 @@ void Player::Render()
 
     if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (m_fFXAA == 0)) || (m_pin3d.m_maxSeparation <= 0.0f) || (m_pin3d.m_maxSeparation >= 1.0f) || (m_pin3d.m_ZPD <= 0.0f) || (m_pin3d.m_ZPD >= 1.0f) || !m_pin3d.m_pdds3Dbuffercopy || !m_pin3d.m_pdds3DBackBuffer)
     {
-        FlipVideoBuffersNormal( overall_area, vsync );
+        FlipVideoBuffersNormal( vsync );
     }
     else
     {
-        FlipVideoBuffers3D(overall_area);
+        FlipVideoBuffers3D();
     }
 
 #ifndef ACCURATETIMERS
@@ -3201,7 +3186,7 @@ void Player::DoDebugObjectMenu(int x, int y)
 		InitDebugHitStructure();
 		}
 
-	Matrix3D mat3D = m_pin3d.m_matrixTotal;
+	Matrix3D mat3D = m_pin3d.m_proj.m_matrixTotal;
 	mat3D.Invert();
 
 	ViewPort vp;
@@ -3211,10 +3196,6 @@ void Player::DoDebugObjectMenu(int x, int y)
 
 	const float xcoord = ((float)x-rClipWidth)/rClipWidth;
 	const float ycoord = (-((float)y-rClipHeight))/rClipHeight;
-
-	Vertex3D vT, vT2;
-	m_pin3d.m_matrixTotal.MultiplyVector(798,1465,89,&vT);
-	mat3D.MultiplyVector(vT.x,vT.y,vT.z,&vT2);
 
 	// Use the inverse of our 3D transform to determine where in 3D space the
 	// screen pixel the user clicked on is at.  Get the point at the near
@@ -3485,10 +3466,6 @@ LRESULT CALLBACK PlayerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				g_pplayer->m_lastcursorx = LOWORD(lParam);
 				g_pplayer->m_lastcursory = HIWORD(lParam);
 				}
-			break;
-
-		case WM_MOVE:
-			g_pplayer->m_pin3d.SetUpdatePos(LOWORD(lParam), HIWORD(lParam));
 			break;
 
 #ifdef STEPPING

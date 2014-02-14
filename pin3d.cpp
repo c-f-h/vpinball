@@ -90,9 +90,9 @@ void Pin3D::TransformVertices(const Vertex3D * rgv, const WORD * rgi, int count,
 		const float z = rgv[l].z;
 
 		// Transform it through the current matrix set
-		const float xp = m_matrixTotal._11*x + m_matrixTotal._21*y + m_matrixTotal._31*z + m_matrixTotal._41;
-		const float yp = m_matrixTotal._12*x + m_matrixTotal._22*y + m_matrixTotal._32*z + m_matrixTotal._42;
-		const float wp = m_matrixTotal._14*x + m_matrixTotal._24*y + m_matrixTotal._34*z + m_matrixTotal._44;
+		const float xp = m_proj.m_matrixTotal._11*x + m_proj.m_matrixTotal._21*y + m_proj.m_matrixTotal._31*z + m_proj.m_matrixTotal._41;
+		const float yp = m_proj.m_matrixTotal._12*x + m_proj.m_matrixTotal._22*y + m_proj.m_matrixTotal._32*z + m_proj.m_matrixTotal._42;
+		const float wp = m_proj.m_matrixTotal._14*x + m_proj.m_matrixTotal._24*y + m_proj.m_matrixTotal._34*z + m_proj.m_matrixTotal._44;
 
 		// Finally, scale the vertices to screen coords. This step first
 		// "flattens" the coordinates from 3D space to 2D device coordinates,
@@ -103,7 +103,7 @@ void Pin3D::TransformVertices(const Vertex3D * rgv, const WORD * rgi, int count,
 		const float vTx  = ( 1.0f + xp*inv_wp ) * rClipWidth  + xoffset;
 		const float vTy  = ( 1.0f - yp*inv_wp ) * rClipHeight + yoffset;
 
-		const float zp = m_matrixTotal._13*x + m_matrixTotal._23*y + m_matrixTotal._33*z + m_matrixTotal._43;
+		const float zp = m_proj.m_matrixTotal._13*x + m_proj.m_matrixTotal._23*y + m_proj.m_matrixTotal._33*z + m_proj.m_matrixTotal._43;
 		rgvout[l].x = vTx;
 		rgvout[l].y	= vTy;
 		rgvout[l].z = zp * inv_wp;
@@ -132,9 +132,9 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * rgv, const WORD * rgi, int
 		const float z = rgv[l].z;
 
 		// Transform it through the current matrix set
-		const float xp = m_matrixTotal._11*x + m_matrixTotal._21*y + m_matrixTotal._31*z + m_matrixTotal._41;
-		const float yp = m_matrixTotal._12*x + m_matrixTotal._22*y + m_matrixTotal._32*z + m_matrixTotal._42;
-		const float wp = m_matrixTotal._14*x + m_matrixTotal._24*y + m_matrixTotal._34*z + m_matrixTotal._44;
+		const float xp = m_proj.m_matrixTotal._11*x + m_proj.m_matrixTotal._21*y + m_proj.m_matrixTotal._31*z + m_proj.m_matrixTotal._41;
+		const float yp = m_proj.m_matrixTotal._12*x + m_proj.m_matrixTotal._22*y + m_proj.m_matrixTotal._32*z + m_proj.m_matrixTotal._42;
+		const float wp = m_proj.m_matrixTotal._14*x + m_proj.m_matrixTotal._24*y + m_proj.m_matrixTotal._34*z + m_proj.m_matrixTotal._44;
 
 		// Finally, scale the vertices to screen coords. This step first
 		// "flattens" the coordinates from 3D space to 2D device coordinates,
@@ -145,7 +145,7 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * rgv, const WORD * rgi, int
 		const float vTx  = ( 1.0f + xp*inv_wp ) * rClipWidth  + xoffset;
 		const float vTy  = ( 1.0f - yp*inv_wp ) * rClipHeight + yoffset;
 
-		const float zp = m_matrixTotal._13*x + m_matrixTotal._23*y + m_matrixTotal._33*z + m_matrixTotal._43;
+		const float zp = m_proj.m_matrixTotal._13*x + m_proj.m_matrixTotal._23*y + m_proj.m_matrixTotal._33*z + m_proj.m_matrixTotal._43;
 		rgvout[l].x = vTx;
 		rgvout[l].y	= vTy;
 		rgvout[l].z = zp * inv_wp;
@@ -174,9 +174,9 @@ void Pin3D::TransformVertices(const Vertex3D_NoLighting * rgv, const WORD * rgi,
 		const float z = rgv[l].z;
 
 		// Transform it through the current matrix set
-		const float xp = m_matrixTotal._11*x + m_matrixTotal._21*y + m_matrixTotal._31*z + m_matrixTotal._41;
-		const float yp = m_matrixTotal._12*x + m_matrixTotal._22*y + m_matrixTotal._32*z + m_matrixTotal._42;
-		const float wp = m_matrixTotal._14*x + m_matrixTotal._24*y + m_matrixTotal._34*z + m_matrixTotal._44;
+		const float xp = m_proj.m_matrixTotal._11*x + m_proj.m_matrixTotal._21*y + m_proj.m_matrixTotal._31*z + m_proj.m_matrixTotal._41;
+		const float yp = m_proj.m_matrixTotal._12*x + m_proj.m_matrixTotal._22*y + m_proj.m_matrixTotal._32*z + m_proj.m_matrixTotal._42;
+		const float wp = m_proj.m_matrixTotal._14*x + m_proj.m_matrixTotal._24*y + m_proj.m_matrixTotal._34*z + m_proj.m_matrixTotal._44;
 
 		// Finally, scale the vertices to screen coords. This step first
 		// "flattens" the coordinates from 3D space to 2D device coordinates,
@@ -187,7 +187,7 @@ void Pin3D::TransformVertices(const Vertex3D_NoLighting * rgv, const WORD * rgi,
 		const float vTx  = ( 1.0f + xp*inv_wp ) * rClipWidth  + xoffset;
 		const float vTy  = ( 1.0f - yp*inv_wp ) * rClipHeight + yoffset;
 
-		const float zp = m_matrixTotal._13*x + m_matrixTotal._23*y + m_matrixTotal._33*z + m_matrixTotal._43;
+		const float zp = m_proj.m_matrixTotal._13*x + m_proj.m_matrixTotal._23*y + m_proj.m_matrixTotal._33*z + m_proj.m_matrixTotal._43;
 		rgvout[l].x = vTx;
 		rgvout[l].y	= vTy;
 		rgvout[l].z = zp * inv_wp;
@@ -215,9 +215,9 @@ void Pin3D::TransformVertices(const Vertex3D * rgv, const WORD * rgi, int count,
 		const float z = rgv[l].z;
 
 		// Transform it through the current matrix set
-		const float xp = m_matrixTotal._11*x + m_matrixTotal._21*y + m_matrixTotal._31*z + m_matrixTotal._41;
-		const float yp = m_matrixTotal._12*x + m_matrixTotal._22*y + m_matrixTotal._32*z + m_matrixTotal._42;
-		const float wp = m_matrixTotal._14*x + m_matrixTotal._24*y + m_matrixTotal._34*z + m_matrixTotal._44;
+		const float xp = m_proj.m_matrixTotal._11*x + m_proj.m_matrixTotal._21*y + m_proj.m_matrixTotal._31*z + m_proj.m_matrixTotal._41;
+		const float yp = m_proj.m_matrixTotal._12*x + m_proj.m_matrixTotal._22*y + m_proj.m_matrixTotal._32*z + m_proj.m_matrixTotal._42;
+		const float wp = m_proj.m_matrixTotal._14*x + m_proj.m_matrixTotal._24*y + m_proj.m_matrixTotal._34*z + m_proj.m_matrixTotal._44;
 
 		// Finally, scale the vertices to screen coords. This step first
 		// "flattens" the coordinates from 3D space to 2D device coordinates,
@@ -254,9 +254,9 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * rgv, const WORD * rgi, int
 		const float z = rgv[l].z;
 
 		// Transform it through the current matrix set
-		const float xp = m_matrixTotal._11*x + m_matrixTotal._21*y + m_matrixTotal._31*z + m_matrixTotal._41;
-		const float yp = m_matrixTotal._12*x + m_matrixTotal._22*y + m_matrixTotal._32*z + m_matrixTotal._42;
-		const float wp = m_matrixTotal._14*x + m_matrixTotal._24*y + m_matrixTotal._34*z + m_matrixTotal._44;
+		const float xp = m_proj.m_matrixTotal._11*x + m_proj.m_matrixTotal._21*y + m_proj.m_matrixTotal._31*z + m_proj.m_matrixTotal._41;
+		const float yp = m_proj.m_matrixTotal._12*x + m_proj.m_matrixTotal._22*y + m_proj.m_matrixTotal._32*z + m_proj.m_matrixTotal._42;
+		const float wp = m_proj.m_matrixTotal._14*x + m_proj.m_matrixTotal._24*y + m_proj.m_matrixTotal._34*z + m_proj.m_matrixTotal._44;
 
 		// Finally, scale the vertices to screen coords. This step first
 		// "flattens" the coordinates from 3D space to 2D device coordinates,
@@ -290,7 +290,6 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     } catch (...) {
         return E_FAIL;
     }
-    SetUpdatePos(m_rcScreen.left, m_rcScreen.top);
 
     // set the viewport for the newly created device
     vp.X=0;
@@ -356,6 +355,8 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     //	}
     }
 
+	InitRenderState();
+
     // Direct all renders to the "static" buffer.
     SetRenderTarget(m_pddsStatic, m_pddsStaticZ);
 
@@ -377,36 +378,48 @@ void Pin3D::SetRenderTarget(RenderTarget* pddsSurface, RenderTarget* pddsZ) cons
 
 void Pin3D::InitRenderState() 
 {
-	//hr = m_pd3dDevice->SetRenderState(D3DRENDERSTATE_ALPHABLENDENABLE, FALSE);
 	m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
+	m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA );
+	m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA );
+
 	m_pd3dDevice->SetRenderState(RenderDevice::SPECULARENABLE, FALSE);
 	m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE);
 
 	m_pd3dDevice->SetRenderState(RenderDevice::ZENABLE, TRUE);
 	m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 
-    m_pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_CLAMP/*WRAP*/);
-
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-	SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR );
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_TEXCOORDINDEX, 0);
-
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLOROP, D3DTOP_MODULATE);
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-
 	m_pd3dDevice->SetRenderState( RenderDevice::CLIPPING, FALSE );
 	m_pd3dDevice->SetRenderState( RenderDevice::CLIPPLANEENABLE, 0 );
 
 	m_pd3dDevice->SetRenderState( RenderDevice::NORMALIZENORMALS, TRUE );
 
-	//init background
-	if( !backgroundVBuffer )
-	{
-		m_pd3dDevice->CreateVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &backgroundVBuffer);
-		NumVideoBytes += 4*sizeof(Vertex3D_NoTex2); //!! never cleared up again here
-	}
+    // initialize first texture stage
+    m_pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_CLAMP/*WRAP*/);
+	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+	SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR );
+	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_TEXCOORDINDEX, 0);
+	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLOROP, D3DTOP_MODULATE);
+	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+	m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+	m_pd3dDevice->SetTexture(ePictureTexture, NULL);
+
+    // initialize second texture stage (light map)
+	SetTextureFilter( eLightProject1, TEXTURE_MODE_BILINEAR );
+	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLORARG1, D3DTA_TEXTURE );
+	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLORARG2, D3DTA_CURRENT );
+	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLOROP,   D3DTOP_MODULATE );
+	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAARG1, D3DTA_CURRENT );
+	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAARG2, D3DTA_CURRENT );
+	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_TEXCOORDINDEX, 1 );
+	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLOROP,   D3DTOP_DISABLE);
+}
+
+static const WORD rgiPin3D1[4] = {2,3,5,6};
+
+void Pin3D::DrawBackground()
+{
 	PinTable * const ptable = g_pplayer->m_ptable;
 	Texture * const pin = ptable->GetDecalsEnabled() ? ptable->GetImage((char *)g_pplayer->m_ptable->m_szImageBackdrop) : NULL;
 	if (pin)
@@ -439,42 +452,29 @@ void Pin3D::InitRenderState()
 		SetHUDVertices(rgv3D, 4);
 		SetDiffuse(rgv3D, 4, 0xFFFFFF);
 		Vertex3D_NoTex2 *buf;
+
+		//init background
+		if( !backgroundVBuffer )
+			m_pd3dDevice->CreateVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &backgroundVBuffer);
 		backgroundVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
 		memcpy( buf, rgv3D, sizeof(Vertex3D_NoTex2)*4);
 		backgroundVBuffer->unlock();
-	}
-}
 
-static const WORD rgiPin3D1[4] = {2,3,5,6};
-
-void Pin3D::DrawBackground()
-{
-	PinTable * const ptable = g_pplayer->m_ptable;
-	Texture * const pin = ptable->GetDecalsEnabled() ? ptable->GetImage((char *)g_pplayer->m_ptable->m_szImageBackdrop) : NULL;
-
-	// Direct all renders to the "static" buffer.
-	SetRenderTarget(m_pddsStatic, m_pddsStaticZ);
-
-	if (pin)
-	{
 		m_pd3dDevice->Clear( 0, NULL, D3DCLEAR_ZBUFFER, 0, 1.0f, 0L );
 
 		m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
+        m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
 
 		SetTexture(pin);
-
 		m_pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, backgroundVBuffer, 0, 4);
+
 		m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+        m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
 	}
 	else
 	{
-		const int r = (g_pplayer->m_ptable->m_colorbackdrop & 0xff0000) >> 16;
-		const int g = (g_pplayer->m_ptable->m_colorbackdrop & 0xff00) >> 8;
-		const int b = (g_pplayer->m_ptable->m_colorbackdrop & 0xff);
-		const int d3dcolor = b<<16 | g<<8 | r;
-
-		m_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER,
-			d3dcolor, 1.0f, 0L );
+        const D3DCOLOR d3dcolor = COLORREF_to_D3DCOLOR(ptable->m_colorbackdrop);
+		m_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, d3dcolor, 1.0f, 0L );
 	}
 }
 
@@ -484,9 +484,6 @@ void Pin3D::InitLights()
 {
 	const float sn = sinf(m_inclination + (float)(M_PI - (M_PI*3.0/16.0)));
 	const float cs = cosf(m_inclination + (float)(M_PI - (M_PI*3.0/16.0)));
-
-	Matrix3D matWorld;
-	m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD, &matWorld );
 
 	for(unsigned int i = 0; i < MAX_LIGHT_SOURCES; ++i)
     {
@@ -543,11 +540,11 @@ void Pin3D::InitLights()
             }
             else 
             {
-                const Vertex3Ds tmp = matWorld.MultiplyVectorNoTranslate(g_pplayer->m_ptable->m_Light[i].dir);
+                const Vertex3Ds tmp = m_proj.m_matWorld.MultiplyVectorNoTranslate(g_pplayer->m_ptable->m_Light[i].dir);
                 light.setDirection(tmp.x, tmp.y, tmp.z);
             }
 
-            const Vertex3Ds tmp = matWorld.MultiplyVector(g_pplayer->m_ptable->m_Light[i].pos);
+            const Vertex3Ds tmp = m_proj.m_matWorld.MultiplyVector(g_pplayer->m_ptable->m_Light[i].pos);
             light.setPosition(tmp.x, tmp.y, tmp.z);
 
             m_pd3dDevice->SetLight(i, &light);
@@ -598,29 +595,6 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	m_rotation = ANGTORAD(rotation);
 	m_inclination = ANGTORAD(inclination);
 
-	m_pd3dDevice->SetTexture(ePictureTexture, NULL);
-
-	InitRenderState();
-
-	DrawBackground();
-
-	EnableLightMap(g_pplayer->m_ptable->m_fRenderShadows, 0);
-
-	//m_pd3dDevice->SetTexture(eLightProject1, m_pddsLightProjectTexture);
-	m_pd3dDevice->SetRenderState( RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA );
-	m_pd3dDevice->SetRenderState( RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA );
-
-	SetTextureFilter( eLightProject1, TEXTURE_MODE_BILINEAR );
-	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLORARG1, D3DTA_TEXTURE );
-	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLORARG2, D3DTA_CURRENT );
-	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLOROP,   D3DTOP_MODULATE );
-	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
-	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAARG1, D3DTA_CURRENT );
-	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_ALPHAARG2, D3DTA_CURRENT );
-	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_TEXCOORDINDEX, 1 );
-
-	//m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLOROP,   D3DTOP_DISABLE);
-
 	m_lightproject.m_v.x = g_pplayer->m_ptable->m_right *0.5f;
 	m_lightproject.m_v.y = g_pplayer->m_ptable->m_bottom *0.5f;
     m_lightproject.inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
@@ -630,55 +604,42 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	for (int i=0; i<g_pplayer->m_ptable->m_vedit.Size(); ++i)
 		g_pplayer->m_ptable->m_vedit.ElementAt(i)->GetBoundingVertices(&vvertex3D);
 
-	// Clear the world matrix.
-	Identity();
-
 	const GPINFLOAT aspect = 4.0/3.0;//((GPINFLOAT)m_dwRenderWidth)/m_dwRenderHeight;
+	m_proj.FitCameraToVertices(&vvertex3D/*rgv*/, vvertex3D.Size(), aspect, m_rotation, m_inclination, FOV, xlatez);
+
+    m_proj.SetFieldOfView(FOV, aspect, m_proj.m_rznear, m_proj.m_rzfar);
+
 	const float skew = -tanf(m_layback*(float)(M_PI/360));
-	FitCameraToVertices(&vvertex3D/*rgv*/, vvertex3D.Size(), aspect, m_rotation, m_inclination, FOV, skew, xlatez);
-
-	SetFieldOfView(FOV, aspect, m_rznear, m_rzfar);
-//    Matrix3D viewMat;
-//    LookAt(viewMat, D3DVECTOR(0.0f, 0.0f, 0.0f), D3DVECTOR(0.0f, 0.0f, 1.0f), D3DVECTOR(0.0f, -1.0f, 0.0f));
-//    m_pd3dDevice->SetTransform(TRANSFORMSTATE_VIEW, &viewMat);
-
 	// skew the coordinate system from kartesian to non kartesian.
 	skewX = -sinf(m_rotation)*skew;
 	skewY =  cosf(m_rotation)*skew;
 	Matrix3D matTrans;
-	// create a normal matrix.
-	matTrans._11 = matTrans._22 = matTrans._33 = matTrans._44 = 1.0f;
-	matTrans._12 = matTrans._13 = matTrans._14 = 
-	matTrans._21 = matTrans._23 = matTrans._24 = 
-	matTrans._34 = 
-	matTrans._43 = 0.0f;
+    matTrans.SetIdentity();
 	// Skew for FOV of 0 Deg. is not supported. so change it a little bit.
 	const float skewFOV = (FOV < 0.01f) ? 0.01f : FOV;
 	// create skew the z axis to x and y direction.
-	const float skewtan = tanf((180.0f-skewFOV)*(float)(M_PI/360.0))*m_vertexcamera.y;
+	const float skewtan = tanf(ANGTORAD((180.0f-skewFOV)*0.5f))*m_proj.m_vertexcamera.y;
 	matTrans._42 = skewtan*skewY;
 	matTrans._32 = skewY;
 	matTrans._41 = skewtan*skewX;
 	matTrans._31 = skewX;
-	Matrix3D matTemp;
-	m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
-	matTemp.Multiply(matTrans, matTemp);
-	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTemp);
+	m_proj.Multiply(matTrans);
 
-	Scale( m_scalex != 0.0f ? m_scalex : 1.0f, m_scaley != 0.0f ? m_scaley : 1.0f, 1.0f );
-	Rotate( 0, 0, m_rotation );
-	Translate(m_xlatex-m_vertexcamera.x,m_xlatey-m_vertexcamera.y,-m_vertexcamera.z);
-	Rotate( m_inclination, 0, 0 );
+    m_proj.Scale( m_scalex != 0.0f ? m_scalex : 1.0f, m_scaley != 0.0f ? m_scaley : 1.0f, 1.0f );
+	m_proj.Rotate( 0, 0, m_rotation );
+	m_proj.Translate(m_xlatex-m_proj.m_vertexcamera.x,m_xlatey-m_proj.m_vertexcamera.y,-m_proj.m_vertexcamera.z);
+	m_proj.Rotate( m_inclination, 0, 0 );
 
-	CacheTransform();
+	m_pd3dDevice->SetTransform(TRANSFORMSTATE_PROJECTION, &m_proj.m_matProj);
+	m_pd3dDevice->SetTransform(TRANSFORMSTATE_VIEW, &m_proj.m_matView);
+    m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &m_proj.m_matWorld);
+
+	m_proj.CacheTransform();
 
 	for (int i=0; i<vvertex3D.Size(); ++i)
 		delete vvertex3D.ElementAt(i);
 
-	//EnableLightMap(fFalse, -1);
 	InitLights();
-
-	RenderPlayfieldGraphics();
 }
 
 void Pin3D::RenderPlayfieldGraphics()
@@ -711,7 +672,7 @@ void Pin3D::RenderPlayfieldGraphics()
 		maxtv = maxtu = 1.0f;
 	}
 
-	EnableLightMap(fTrue, 0);
+	EnableLightMap(0);
 
 	for (int i=0; i<4; ++i)
 	{
@@ -778,10 +739,7 @@ void Pin3D::RenderPlayfieldGraphics()
 	memcpy( &buf[numVerts], rgv, 7*sizeof(Vertex3D));
 	tableVBuffer->unlock();
 
-	// Direct all renders to the "static" buffer.
-	SetRenderTarget(m_pddsStatic, m_pddsStaticZ);
-
-	EnableLightMap(fTrue, 0);
+	EnableLightMap(0);
 
 	Material mtrl;
 
@@ -1016,184 +974,16 @@ void Pin3D::EnableAlphaBlend( DWORD alphaRefValue, BOOL additiveBlending )
 		m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1
 }
 
-void Pin3D::SetUpdatePos(const int left, const int top)
-{
-	m_rcUpdate.left = left;
-	m_rcUpdate.top = top;
-	m_rcUpdate.right = left + m_dwRenderWidth;
-	m_rcUpdate.bottom = top + m_dwRenderHeight;
-}
-
 void Pin3D::Flip(const int offsetx, const int offsety, bool vsync)
 {
     m_pd3dDevice->Flip(offsetx, offsety, vsync);
 }
 
-void Pin3D::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D/*Vertex3D *rgv*/, const int cvert, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const GPINFLOAT skew, const float xlatez)
-{
-	// Determine camera distance
-
-	const GPINFLOAT rrotsin = sin(-rotation);
-	const GPINFLOAT rrotcos = cos(-rotation);
-	const GPINFLOAT rincsin = sin(-inclination);
-	const GPINFLOAT rinccos = cos(-inclination);
-
-	const GPINFLOAT slopey = tan(FOV*(2.0*0.5*M_PI/360.0)); // *0.5 because slope is half of FOV - FOV includes top and bottom
-
-	// Field of view along the axis = atan(tan(yFOV)*width/height)
-	// So the slope of x simply equals slopey*width/height
-
-	const GPINFLOAT slopex = slopey*aspect;// slopey*m_rcHard.width/m_rcHard.height;
-
-	GPINFLOAT maxyintercept = -DBL_MAX;
-	GPINFLOAT minyintercept = DBL_MAX;
-	GPINFLOAT maxxintercept = -DBL_MAX;
-	GPINFLOAT minxintercept = DBL_MAX;
-
-	m_rznear = 0;
-	m_rzfar = 0;
-
-	for (int i=0; i<cvert; ++i)
-	{
-		//vertexT = rgv[i];
-
-		GPINFLOAT vertexTy = (*pvvertex3D->ElementAt(i)).y; //+ ((*pvvertex3D->ElementAt(i)).z*skew*-1.0f);
-		// calculation of skew does not work, since boundary boxes are too big. Boundary boxes for
-		// Walls are always the full table dimension. The users have to test good values out.
-		slintf ("skewchange: %f to %f\n",(*pvvertex3D->ElementAt(i)).z*skew*-1.0f,vertexTy);
-
-		// Rotate vertex about y axis according to incoming rotation
-		const GPINFLOAT temp = (*pvvertex3D->ElementAt(i)).x;
-		const GPINFLOAT vertexTx = rrotcos*temp + rrotsin*(*pvvertex3D->ElementAt(i)).z;
-		GPINFLOAT vertexTz = rrotcos*(*pvvertex3D->ElementAt(i)).z - rrotsin*temp;
-
-		// Rotate vertex about x axis according to incoming inclination
-		const GPINFLOAT temp2 = vertexTy;
-		vertexTy = rinccos*temp2 + rincsin*vertexTz;
-		vertexTz = rinccos*vertexTz - rincsin*temp2;
-
-		// Extend z-range if necessary
-		m_rznear = min(m_rznear, -vertexTz);
-		m_rzfar =  max(m_rzfar,  -vertexTz);
-
-		// Extend slope lines from point to find camera intersection
-		maxyintercept = max(maxyintercept, vertexTy + slopey*vertexTz);
-
-		minyintercept = min(minyintercept, vertexTy - slopey*vertexTz);
-
-		maxxintercept = max(maxxintercept, vertexTx + slopex*vertexTz);
-
-		minxintercept = min(minxintercept, vertexTx - slopex*vertexTz);
-	}
-
-	slintf ("maxy: %f\n",maxyintercept);
-	slintf ("miny: %f\n",minyintercept);
-	slintf ("maxx: %f\n",maxxintercept);
-	slintf ("minx: %f\n",minxintercept);
-	slintf ("m_rznear: %f\n",m_rznear);
-	slintf ("m_rzfar : %f\n",m_rzfar);
-
-	// Find camera center in xy plane
-	//delta = maxyintercept - minyintercept;// Allow for roundoff error
-	//delta = maxxintercept - minxintercept;// Allow for roundoff error
-
-	const GPINFLOAT ydist = (maxyintercept - minyintercept) / (slopey*2.0);
-	const GPINFLOAT xdist = (maxxintercept - minxintercept) / (slopex*2.0);
-	m_vertexcamera.z = (float)(max(ydist,xdist));
-   m_vertexcamera.z += xlatez;
-	// changed this since it's the same and better understandable.
-	// m_vertexcamera.y = (float)(slopey*ydist + minyintercept);
-	m_vertexcamera.y = (float)((maxyintercept - minyintercept)*0.5 + minyintercept);
-	//m_vertexcamera.x = (float)(slopex*xdist + minxintercept);
-	m_vertexcamera.x = (float)((maxxintercept - minxintercept)*0.5 + minxintercept);
-
-	m_rznear += m_vertexcamera.z;
-	m_rzfar += m_vertexcamera.z;
-
-	const GPINFLOAT delta = m_rzfar - m_rznear;
-
-#if 1 
-	m_rznear -= delta*0.15; // Allow for roundoff error (and tweak the setting too).
-	m_rzfar += delta*0.01;
-#else
-	m_rznear -= delta*0.01; // Allow for roundoff error
-	m_rzfar += delta*0.01;
-#endif
-}
-
-void Pin3D::Identity()
-{
-	Matrix3D matTrans;
-	matTrans._11 = matTrans._22 = matTrans._33 = matTrans._44 = 1.0f;
-	matTrans._12 = matTrans._13 = matTrans._14 = 0.0f;
-	matTrans._21 = matTrans._23 = matTrans._24 = 0.0f;
-	matTrans._31 = matTrans._32 = matTrans._34 = 0.0f;
-	matTrans._41 = matTrans._42 = matTrans._43 = 0.0f;
-
-	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTrans);
-}
-
-void Pin3D::Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z)
-{
-	Matrix3D matTemp, matRotateX, matRotateY, matRotateZ;
-
-	m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
-
-	matRotateX.RotateXMatrix(x);
-	matTemp.Multiply(matRotateX, matTemp);
-	matRotateY.RotateYMatrix(y);
-	matTemp.Multiply(matRotateY, matTemp);
-	matRotateZ.RotateZMatrix(z);
-	matTemp.Multiply(matRotateZ, matTemp);        // matTemp = rotZ * rotY * rotX * matWorld
-
-	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTemp);
-}
-
-void Pin3D::Scale(const float x, const float y, const float z)
-{
-	Matrix3D matTemp;
-	m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
-	matTemp.Scale( x, y, z );
-	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTemp);
-}
-
-void Pin3D::Translate(const float x, const float y, const float z)
-{
-	Matrix3D matTemp, matTrans;
-	matTrans._11 = matTrans._22 = matTrans._33 = matTrans._44 = 1.0f;
-	matTrans._12 = matTrans._13 = matTrans._14 = 0.0f;
-	matTrans._21 = matTrans._23 = matTrans._24 = 0.0f;
-	matTrans._31 = matTrans._32 = matTrans._34 = 0.0f;
-	matTrans._41 = x;
-	matTrans._42 = y;
-	matTrans._43 = z;
-	m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
-	matTemp.Multiply(matTrans, matTemp);
-	m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matTemp);
-}
-
 Vertex3Ds Pin3D::Unproject( Vertex3Ds *point)
 {
-//    D3DXMATRIX m1, m2, m3;
-//    D3DXVECTOR3 vec;
-//    
-//    D3DXMatrixMultiply(&m1, pworld, pview);
-//    D3DXMatrixMultiply(&m2, &m1, pprojection);
-//    D3DXMatrixInverse(&m3, NULL, &m2);
-//    vec.x = 2.0f * ( pv->x - pviewport->X ) / pviewport->Width - 1.0f;
-//    vec.y = 1.0f - 2.0f * ( pv->y - pviewport->Y ) / pviewport->Height;
-//    vec.z = ( pv->z - pviewport->MinZ) / ( pviewport->MaxZ - pviewport->MinZ );
-//    D3DXVec3TransformCoord(pout, &vec, &m3);
-//    return pout;
-   Matrix3D matProj, matView, matWorld,m1,m2;
-   g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( TRANSFORMSTATE_PROJECTION, &matProj );
-   g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( TRANSFORMSTATE_VIEW, &matView );
-   g_pplayer->m_pin3d.m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD, &matWorld );
-//    matWorld.Multiply( matView, m1);
-//    m1.Multiply(matProj,m2);
-   matProj.Multiply(matView,m1);    // m1 = matView * matProj
-   m1.Multiply( matWorld,m2 );      // m2 = matWorld * matView * matProj
-   
+   m_proj.CacheTransform(); // compute m_matrixTotal
+
+   Matrix3D m2 = m_proj.m_matrixTotal; // = world * view * proj
    m2.Invert();
    Vertex3Ds p,p3;
 
@@ -1216,45 +1006,6 @@ Vertex3Ds Pin3D::Get3DPointFrom2D( POINT *p )
    float wy = ((wz-p1.z)*(p2.y-p1.y))/(p2.z-p1.z) + p1.y;
    Vertex3Ds vertex(wx,wy,wz);
    return vertex;
-}
-
-void Pin3D::SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar)
-{
-	// From the Field Of View and far z clipping plane, determine the front clipping plane size
-	const GPINFLOAT yrange = rznear * tan(rFOV * (M_PI/360.0));
-	const GPINFLOAT xrange = yrange * raspect; //width/height
-
-	D3DMATRIX mat;
-	ZeroMemory(&mat, sizeof(D3DMATRIX));
-
-	const GPINFLOAT Q = rzfar / ( rzfar - rznear );
-
-	mat._11 = (float)(rznear / xrange);
-	mat._22 = -(float)(rznear / yrange);
-	mat._33 = (float)Q;
-	mat._34 = 1.0f;
-	mat._43 = -(float)(Q*rznear);
-
-	//mat._41 = 200;
-
-	m_pd3dDevice->SetTransform(TRANSFORMSTATE_PROJECTION, &mat);
-
-	mat._11 = mat._22 = mat._44 = 1.0f;
-	mat._12 = mat._13 = mat._14 = mat._41 = 0.0f;
-	mat._21 = mat._23 = mat._24 = mat._42 = 0.0f;
-	mat._31 = mat._32 = mat._34 = mat._43 = 0.0f;
-	mat._33 = -1.0f;
-	m_pd3dDevice->SetTransform(TRANSFORMSTATE_VIEW, &mat);
-}
-
-void Pin3D::CacheTransform()
-{
-	Matrix3D matWorld, matView, matProj;
-	m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD,      &matWorld );
-	m_pd3dDevice->GetTransform( TRANSFORMSTATE_VIEW,       &matView );
-	m_pd3dDevice->GetTransform( TRANSFORMSTATE_PROJECTION, &matProj );
-	matProj.Multiply(matView, matView);             // matView = matView * matProj
-	matView.Multiply(matWorld, m_matrixTotal);      // total = matWorld * matView
 }
 
 #define MAX_INT 0x0fffffff //!!?
@@ -1379,9 +1130,7 @@ void Pin3D::ExpandExtents(RECT * const prc, Vertex3D_NoLighting* const rgv, floa
 
 void PinProjection::Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z)
 {
-	Matrix3D /*matTemp,*/ matRotateX, matRotateY, matRotateZ;
-
-	//m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
+	Matrix3D matRotateX, matRotateY, matRotateZ;
 
 	matRotateX.RotateXMatrix(x);
 	m_matWorld.Multiply(matRotateX, m_matWorld);
@@ -1389,15 +1138,11 @@ void PinProjection::Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT
 	m_matWorld.Multiply(matRotateY, m_matWorld);
 	matRotateZ.RotateZMatrix(z);
 	m_matWorld.Multiply(matRotateZ, m_matWorld);        // matWorld = rotZ * rotY * rotX * origMatWorld
-
-	//m_pd3dDevice->SetTransform( TRANSFORMSTATE_WORLD, &matTemp);
 }
 
 void PinProjection::Translate(const float x, const float y, const float z)
 {
 	Matrix3D matTrans;
-
-	//m_pd3dDevice->GetTransform(TRANSFORMSTATE_WORLD, &matTemp);
 
 	matTrans._11 = matTrans._22 = matTrans._33 = matTrans._44 = 1.0f;
 	matTrans._12 = matTrans._13 = matTrans._14 = 0.0f;
@@ -1408,8 +1153,6 @@ void PinProjection::Translate(const float x, const float y, const float z)
 	matTrans._42 = y;
 	matTrans._43 = z;
 	m_matWorld.Multiply(matTrans, m_matWorld);
-
-	//m_pd3dDevice->SetTransform( TRANSFORMSTATE_WORLD, &matTemp);
 }
 
 void PinProjection::Scale(const float x, const float y, const float z)
@@ -1447,15 +1190,16 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 
 	for (int i=0; i<cvert; ++i)
 	{
-		//vertexT = rgv[i];
+		GPINFLOAT vertexTy = (*pvvertex3D->ElementAt(i)).y;
 
-		// Rotate vertex
+		// Rotate vertex about y axis according to incoming rotation
 		const GPINFLOAT temp = (*pvvertex3D->ElementAt(i)).x;
 		const GPINFLOAT vertexTx = rrotcos*temp + rrotsin*(*pvvertex3D->ElementAt(i)).z;
 		GPINFLOAT vertexTz = rrotcos*(*pvvertex3D->ElementAt(i)).z - rrotsin*temp;
 
-		const GPINFLOAT temp2 = (*pvvertex3D->ElementAt(i)).y;
-		const GPINFLOAT vertexTy = rinccos*temp2 + rincsin*vertexTz;
+		// Rotate vertex about x axis according to incoming inclination
+		const GPINFLOAT temp2 = vertexTy;
+		vertexTy = rinccos*temp2 + rincsin*vertexTz;
 		vertexTz = rinccos*vertexTz - rincsin*temp2;
 
 		// Extend z-range if necessary
@@ -1464,19 +1208,19 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 
 		// Extend slope lines from point to find camera intersection
 		maxyintercept = max(maxyintercept, vertexTy + slopey*vertexTz);
-
 		minyintercept = min(minyintercept, vertexTy - slopey*vertexTz);
-
 		maxxintercept = max(maxxintercept, vertexTx + slopex*vertexTz);
-
 		minxintercept = min(minxintercept, vertexTx - slopex*vertexTz);
 	}
 
-	//GPINFLOAT delta;
+	slintf ("maxy: %f\n",maxyintercept);
+	slintf ("miny: %f\n",minyintercept);
+	slintf ("maxx: %f\n",maxxintercept);
+	slintf ("minx: %f\n",minxintercept);
+	slintf ("m_rznear: %f\n",m_rznear);
+	slintf ("m_rzfar : %f\n",m_rzfar);
 
 	// Find camera center in xy plane
-	//delta = maxyintercept - minyintercept;// Allow for roundoff error
-	//delta = maxxintercept - minxintercept;// Allow for roundoff error
 
 	const GPINFLOAT ydist = (maxyintercept - minyintercept) / (slopey*2.0);
 	const GPINFLOAT xdist = (maxxintercept - minxintercept) / (slopex*2.0);
@@ -1508,9 +1252,7 @@ void PinProjection::SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect
 	const GPINFLOAT yrange = rznear * tan(ANGTORAD(rFOV*0.5));
 	const GPINFLOAT xrange = yrange * raspect; //width/height
 
-	//D3DMATRIX mat;
-
-	ZeroMemory(&m_matProj, sizeof(D3DMATRIX));
+	ZeroMemory(&m_matProj, sizeof(Matrix3D));
 
 	const float Q = (float)(rzfar / ( rzfar - rznear ));
 
@@ -1520,27 +1262,20 @@ void PinProjection::SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect
 	m_matProj._34 = 1.0f;
 	m_matProj._43 = -Q*(float)rznear;
 
-	//m_pd3dDevice->SetTransform(TRANSFORMSTATE_PROJECTION, &mat);
-
 	m_matView._11 = m_matView._22 = m_matView._44 = 1.0f;
 	m_matView._12 = m_matView._13 = m_matView._14 = m_matView._41 = 0.0f;
 	m_matView._21 = m_matView._23 = m_matView._24 = m_matView._42 = 0.0f;
 	m_matView._31 = m_matView._32 = m_matView._34 = m_matView._43 = 0.0f;
 	m_matView._33 = -1.0f;
-	//m_pd3dDevice->SetTransform(TRANSFORMSTATE_VIEW, &mat);
 
 	m_matWorld.SetIdentity();
 }
 
 void PinProjection::CacheTransform()
 {
-	//Matrix3D matWorld, matView, matProj;
 	Matrix3D matT;
-	//m_pd3dDevice->GetTransform( TRANSFORMSTATE_WORLD,      &matWorld );
-	//m_pd3dDevice->GetTransform( TRANSFORMSTATE_VIEW,       &matView );
-	//m_pd3dDevice->GetTransform( TRANSFORMSTATE_PROJECTION, &matProj );
 	m_matProj.Multiply(m_matView, matT);        // matT = matView * matProj
-	matT.Multiply(m_matWorld, m_matrixTotal);   // total = matWorld * matT
+	matT.Multiply(m_matWorld, m_matrixTotal);   // total = matWorld * matView * matProj
 }
 
 void PinProjection::TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex3D * const rgvout) const

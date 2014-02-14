@@ -257,11 +257,6 @@ public:
    void SetTransform( TransformStateType, D3DMATRIX* );
    void GetTransform( TransformStateType, D3DMATRIX* );
 
-   void setVBInVRAM( const BOOL state )
-   {
-      // TODO remove vbInVRAM=(state==1);
-   }
-
 private:
    IDirect3D9* m_pD3D;
    IDirect3DDevice9* m_pD3DDevice;

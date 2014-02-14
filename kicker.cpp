@@ -345,12 +345,6 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
       {
          // Draw the kicker itself
          pd3dDevice->SetMaterial(blackMaterial);
-/*         
-         mtrl.diffuse.r = mtrl.ambient.r =
-         mtrl.diffuse.g = mtrl.ambient.g =
-         mtrl.diffuse.b = mtrl.ambient.b = 0.0f;
-         pd3dDevice->SetMaterial(&mtrl);
-*/
          {
             WORD rgi[3*14];
             for (int l=0;l<14;++l)
@@ -363,12 +357,7 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
             }
             pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,vertices, 16,rgi, 3*14);
          }
-/*
-         mtrl.diffuse.r = mtrl.ambient.r = r;//0.7f;
-         mtrl.diffuse.g = mtrl.ambient.g = g;//0.7f;
-         mtrl.diffuse.b = mtrl.ambient.b = b;//0.7f;
-         pd3dDevice->SetMaterial(&mtrl);
-*/
+
          pd3dDevice->SetMaterial(colorMaterial);
          ppin3d->EnableLightMap(fTrue, height);
 
@@ -382,15 +371,15 @@ void Kicker::RenderStatic(const RenderDevice* _pd3dDevice)
                l+16,
                (l+2) % 16};
 
-               const WORD rgi[4] = {
-                  l,
-                  l+16,
-                  (l+1) % 16 + 16,
-                  (l+1) % 16};
+            const WORD rgi[4] = {
+               l,
+               l+16,
+               (l+1) % 16 + 16,
+               (l+1) % 16};
 
-                  SetNormal(vertices, rgiNormal, 3, NULL, rgi, 2);
-                  SetNormal(vertices, &rgiNormal[3], 3, NULL, &rgi[2], 2);
-                  pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,vertices, 32,(LPWORD)rgi, 4);
+            SetNormal(vertices, rgiNormal, 3, NULL, rgi, 2);
+            SetNormal(vertices, &rgiNormal[3], 3, NULL, &rgi[2], 2);
+            pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLEFAN, MY_D3DFVF_VERTEX,vertices, 32,(LPWORD)rgi, 4);
          }
          break;
       }

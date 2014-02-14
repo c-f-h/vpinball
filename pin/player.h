@@ -56,9 +56,9 @@ public:
     void DrawBalls();
     void DrawBallLogo(Ball * const pball );
     void CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer);
-    unsigned int CheckAndUpdateRegions();
-    void FlipVideoBuffersNormal( unsigned int overall_area, bool vsync );
-    void FlipVideoBuffers3D( unsigned int overall_area);
+    void CheckAndUpdateRegions();
+    void FlipVideoBuffersNormal(  bool vsync );
+    void FlipVideoBuffers3D();
 
 	void DrawAlphas();
 
@@ -173,9 +173,9 @@ public:
 	BOOL m_DebugBalls;			 // Draw balls in the foreground.
 	BOOL m_ToggleDebugBalls;
 
-	BOOL m_fEnableRegionUpdates; // Use the CleanBlt flag below or not, nowadays some setups are slower when using it (especially NVIDIA Optimus setups)
-	BOOL m_fEnableRegionUpdateOptimization; // Check if area of updated regions is larger than screen and/or if everything should be redrawn (helps mainly NVIDIA FXAA, but also can be more speedy)
-    BOOL m_fVertexBuffersInVRAM;  //VertexBuffers are created inside the VRAM not in system memory if fTRUE
+	BOOL m_fEnableRegionUpdates; // Use the CleanBlt flag below or not, nowadays some setups are slower when using it (especially NVIDIA Optimus setups) - OBSOLETE, TODO: remove
+	BOOL m_fEnableRegionUpdateOptimization; // Check if area of updated regions is larger than screen and/or if everything should be redrawn (helps mainly NVIDIA FXAA, but also can be more speedy) - OBSOLETE, TODO: remove
+    BOOL m_fVertexBuffersInVRAM;  //VertexBuffers are created inside the VRAM not in system memory if fTRUE - OBSOLETE, TODO: remove
 
 	BOOL m_fPlayMusic;
 	BOOL m_fPlaySound;
