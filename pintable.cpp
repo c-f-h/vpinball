@@ -7281,6 +7281,9 @@ STDMETHODIMP PinTable::GetPredefinedValue(DISPID dispID, DWORD dwCookie, VARIANT
 
 float PinTable::GetSurfaceHeight(char *szName, float x, float y)
 {
+   if (szName == NULL || szName[0] == 0)
+       return 0.0f;
+
    for (int i=0;i<m_vedit.Size();i++)
    {
       IEditable *item=m_vedit.ElementAt(i);
