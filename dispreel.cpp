@@ -542,6 +542,8 @@ void DispReel::PostRenderStatic(const RenderDevice* _pd3dDevice)
     m_timenextupdate = g_pplayer->m_time_msec + m_d.m_updateinterval;
     m_fforceupdate = false;
 
+    pd3dDevice->SetRenderState(RenderDevice::ZENABLE, FALSE);
+
     // Set up the reel strip (either using bitmaps or fonts)
     if (m_d.m_reeltype == ReelImage)
     {
@@ -593,6 +595,8 @@ void DispReel::PostRenderStatic(const RenderDevice* _pd3dDevice)
     {
         // TODO: ReelText not supported yet
     }
+
+    pd3dDevice->SetRenderState(RenderDevice::ZENABLE, TRUE);
 }
 
 void DispReel::RenderSetup(const RenderDevice* _pd3dDevice)

@@ -840,7 +840,11 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
             // add to appropriate vectors
             m_vhitables.push_back(ph);
-            if (ph->IsTransparent())
+
+            // sort into proper categories
+            if (pe->m_fBackglass)
+                m_vHitBackglass.push_back(ph);      // VP9COMPAT: fixes Homer head on TSPP, remove in VP10
+            else if (ph->IsTransparent())
                 m_vHitTrans.push_back(ph);
             else
                 m_vHitNonTrans.push_back(ph);
@@ -1936,6 +1940,10 @@ void Player::RenderDynamics()
        m_vHitNonTrans[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
 
    DrawBalls();
+
+   // Draw backglass objects (VP9COMPAT)
+   for (unsigned i=0; i < m_vHitBackglass.size(); ++i)
+       m_vHitBackglass[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
 
    // Draw transparent objects.
    for (unsigned i=0; i < m_vHitTrans.size(); ++i)

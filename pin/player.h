@@ -231,6 +231,7 @@ private:
     std::vector< Hitable* > m_vhitables;
     std::vector< Hitable* > m_vHitNonTrans; // non-transparent hitables
     std::vector< Hitable* > m_vHitTrans;    // transparent hitables
+    std::vector< Hitable* > m_vHitBackglass; // backglass objects (VP9COMPAT)
 
 	int m_curAccel_x[PININ_JOYMXCNT];
 	int m_curAccel_y[PININ_JOYMXCNT];
