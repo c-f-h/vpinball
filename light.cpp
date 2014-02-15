@@ -1903,6 +1903,9 @@ void Light::setLightState(const LightState newVal)
 
       if (g_pplayer)
       {
+         // notify the player that we changed our state (for draw order determination)
+         g_pplayer->m_triggeredLights.push_back(this);
+
          if (lastState == LightStateBlinking)
          {
             // must not be blinking anymore

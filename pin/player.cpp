@@ -846,6 +846,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
                 m_vHitBackglass.push_back(ph);      // VP9COMPAT: fixes Homer head on TSPP, remove in VP10
             else if (ph->IsTransparent())
                 m_vHitTrans.push_back(ph);
+            else if (pe->GetItemType() == eItemLight)
+                m_vLights.push_back(ph);            // VP9COMPAT: special treatment for lights
             else
                 m_vHitNonTrans.push_back(ph);
 		}
@@ -1905,6 +1907,17 @@ void Player::UpdatePhysics()
 #endif
 }
 
+template <typename T>
+struct NotMemberOf
+{
+    NotMemberOf(const std::vector<T>& _v) : v(_v) { }
+
+    bool operator()(const T& val) const
+    { return !std::binary_search(v.begin(), v.end(), val); }
+
+    const std::vector<T>& v;
+};
+
 void Player::RenderDynamics()
 {
     TRACE_FUNCTION();
@@ -1935,9 +1948,26 @@ void Player::RenderDynamics()
       m_ToggleDebugBalls = fFalse;
    }
 
+   /* VP9COMPAT:
+    * Most VP9 tables use several lights layered over each other in order to simulate
+    * fading lights and GI. They rely on the fact that when a light in VP9 changes
+    * state, it is blitted to the backbuffer. We emulate this by putting lights which
+    * change state to the end of the draw order for lights.
+    */
+   // sort the list of triggered lights so that we can use binary search
+   std::sort( m_triggeredLights.begin(), m_triggeredLights.end() );
+   // put triggered lights at the end of the m_vLights vector
+   std::stable_partition( m_vLights.begin(), m_vLights.end(), NotMemberOf<Hitable*>(m_triggeredLights) );
+   // reset list of triggered lights
+   m_triggeredLights.clear();
+
    // Draw non-transparent objects.
    for (unsigned i=0; i < m_vHitNonTrans.size(); ++i)
        m_vHitNonTrans[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
+
+   // Draw non-transparent Light objects (VP9COMPAT)
+   for (unsigned i=0; i < m_vLights.size(); ++i)
+       m_vLights[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
 
    DrawBalls();
 
