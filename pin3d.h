@@ -90,6 +90,15 @@ public:
 	_33 *= z;
 	}
 
+    // extract the matrix corresponding to the 3x3 rotation part
+    void GetRotationPart(Matrix3D& rot)
+    {
+        rot._11 = _11; rot._12 = _12; rot._13 = _13; rot._14 = 0.0f;
+        rot._21 = _21; rot._22 = _22; rot._23 = _23; rot._24 = 0.0f;
+        rot._31 = _31; rot._32 = _32; rot._33 = _33; rot._34 = 0.0f;
+        rot._41 = rot._42 = rot._43 = 0.0f; rot._44 = 1.0f;
+    }
+
     template <class Vec>
 	inline void MultiplyVector(const float x, const float y, const float z, Vec * const pv3DOut) const
 	{
@@ -260,6 +269,8 @@ public:
 	float m_rotation, m_inclination, m_layback;
 	float m_scalex, m_scaley;
 	float m_xlatex, m_xlatey;
+
+    Vertex3Ds m_viewVec;        // direction the camera is facing
 
 	LightProjected m_lightproject;
    //bool fullscreen;

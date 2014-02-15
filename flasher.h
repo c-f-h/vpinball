@@ -90,6 +90,10 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Flasher)
     virtual void GetCenter(Vertex2D * const pv) const {*pv = m_d.m_vCenter;}
     virtual void PutCenter(const Vertex2D * const pv) {m_d.m_vCenter = *pv; m_ptable->SetDirtyDraw();}
 
+    virtual bool IsTransparent()    { return true; }
+    virtual float GetDepth(const Vertex3Ds& viewDir)
+      { return viewDir.x * m_d.m_vCenter.x + viewDir.y * m_d.m_vCenter.y + viewDir.z * m_d.m_height; }
+
 	void WriteRegDefaults();
 
 	PinTable *m_ptable;

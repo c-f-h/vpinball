@@ -241,9 +241,6 @@ void Textbox::GetHitShapes(Vector<HitObject> * const pvho)
 	{
 	m_ptu = new TextboxUpdater(this);
 
-	m_ptu->m_textboxanim.m_znear = 0;
-	m_ptu->m_textboxanim.m_zfar = 0;
-
 	// HACK - adding object directly to screen update list.  Someday make hit objects and screenupdaters seperate objects
 	g_pplayer->m_vscreenupdate.AddElement(&m_ptu->m_textboxanim);
 	}
@@ -273,16 +270,17 @@ void Textbox::EndPlay()
 	}
 
 void Textbox::PostRenderStatic(const RenderDevice* pd3dDevice)
-	{
-	}
+{
+}
+
 void Textbox::RenderSetup(const RenderDevice* _pd3dDevice)
 {
-
+    RenderText();
 }
 
 void Textbox::RenderStatic(const RenderDevice* pd3dDevice)
-	{
-	}
+{
+}
 	
 #ifndef VPINBALL_DX9
 void Textbox::RenderMovers(const RenderDevice* pd3dDevice)

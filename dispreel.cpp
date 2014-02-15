@@ -495,9 +495,6 @@ void DispReel::GetHitShapes(Vector<HitObject> * const pvho)
 {
     m_ptu = new DispReelUpdater(this);
 
-	m_ptu->m_dispreelanim.m_znear = 0;
-	m_ptu->m_dispreelanim.m_zfar = 0;
-
 	// HACK - adding object directly to screen update list.  Someday make hit objects and screenupdaters seperate objects
 	g_pplayer->m_vscreenupdate.AddElement(&m_ptu->m_dispreelanim);
 }
@@ -716,6 +713,8 @@ void DispReel::RenderSetup(const RenderDevice* _pd3dDevice)
     {
         // TODO: ReelText not supported yet
     }
+
+    RenderText();
 }
 
 void DispReel::RenderStatic(const RenderDevice* pd3dDevice)

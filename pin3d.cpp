@@ -607,6 +607,9 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	const GPINFLOAT aspect = 4.0/3.0;//((GPINFLOAT)m_dwRenderWidth)/m_dwRenderHeight;
 	m_proj.FitCameraToVertices(&vvertex3D/*rgv*/, vvertex3D.Size(), aspect, m_rotation, m_inclination, FOV, xlatez);
 
+	for (int i=0; i<vvertex3D.Size(); ++i)
+		delete vvertex3D.ElementAt(i);
+
     m_proj.SetFieldOfView(FOV, aspect, m_proj.m_rznear, m_proj.m_rzfar);
 
 	const float skew = -tanf(m_layback*(float)(M_PI/360));
@@ -636,8 +639,13 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 
 	m_proj.CacheTransform();
 
-	for (int i=0; i<vvertex3D.Size(); ++i)
-		delete vvertex3D.ElementAt(i);
+    // Compute view vector
+    Matrix3D temp, worldViewRot;
+    m_proj.m_matView.Multiply( m_proj.m_matWorld, temp );   // TODO: use only view matrix once the camera transform is put there
+    temp.Invert();
+    temp.GetRotationPart( worldViewRot );
+    worldViewRot.MultiplyVector(0, 0, 1, &m_viewVec);
+    m_viewVec.Normalize();
 
 	InitLights();
 }
@@ -1262,10 +1270,7 @@ void PinProjection::SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect
 	m_matProj._34 = 1.0f;
 	m_matProj._43 = -Q*(float)rznear;
 
-	m_matView._11 = m_matView._22 = m_matView._44 = 1.0f;
-	m_matView._12 = m_matView._13 = m_matView._14 = m_matView._41 = 0.0f;
-	m_matView._21 = m_matView._23 = m_matView._24 = m_matView._42 = 0.0f;
-	m_matView._31 = m_matView._32 = m_matView._34 = m_matView._43 = 0.0f;
+    m_matView.SetIdentity();
 	m_matView._33 = -1.0f;
 
 	m_matWorld.SetIdentity();

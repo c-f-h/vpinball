@@ -211,7 +211,7 @@ public:
 	
 private:
 	Vector<HitObject> m_vho;
-	Vector<AnimObject> m_vmover;
+	Vector<AnimObject> m_vmover;// moving objects for physics simulation
 
 	Vector<Ball> m_vballDelete;	// Balls to free at the end of the frame
 
@@ -227,8 +227,10 @@ private:
 	U64 m_curPhysicsFrameTime;	// Time when the last frame was drawn
 	U64 m_nextPhysicsFrameTime;	// time at which the next physics update should be
 
-    // caching hitable alpha ramps & primitives to speed up DrawAlphas() and set up invalid regions
-	Vector< Hitable > m_vhitalpha;
+    // all Hitables obtained from the table's list of Editables
+    std::vector< Hitable* > m_vhitables;
+    std::vector< Hitable* > m_vHitNonTrans; // non-transparent hitables
+    std::vector< Hitable* > m_vHitTrans;    // transparent hitables
 
 	int m_curAccel_x[PININ_JOYMXCNT];
 	int m_curAccel_y[PININ_JOYMXCNT];

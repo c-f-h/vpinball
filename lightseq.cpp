@@ -216,9 +216,6 @@ void LightSeq::GetHitShapes(Vector<HitObject> * const pvho)
 {
     m_ptu = new LightSeqUpdater(this);
 
-	m_ptu->m_lightseqanim.m_znear = 0;
-	m_ptu->m_lightseqanim.m_zfar = 0;
-
 	// HACK - adding object directly to screen update list.  Someday make hit objects and screenupdaters seperate objects
 	g_pplayer->m_vscreenupdate.AddElement(&m_ptu->m_lightseqanim);
 }

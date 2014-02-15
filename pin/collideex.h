@@ -87,7 +87,6 @@ public:
 
 	virtual bool FMover() const {return true;}
 
-	virtual void Check3D()                              { }
 	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
 	virtual void Reset();
 
@@ -131,7 +130,6 @@ public:
 
 	virtual bool FMover() const {return true;}
 
-	virtual void Check3D()                              { }
 	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
 	virtual void Reset();
 
@@ -216,7 +214,6 @@ public:
 class TextboxAnimObject : public AnimObject
 {
 public:
-	virtual void Check3D() {}
 	virtual ObjFrame *Draw3D(const RECT * const prc);
 	virtual void Reset();
 
@@ -244,7 +241,7 @@ public:
 class DispReelAnimObject : public AnimObject
 {
 public:
-    virtual void Check3D(); //{}
+    virtual void Check3D();
 	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
 	virtual void Reset();
 
@@ -272,7 +269,7 @@ public:
 class LightSeqAnimObject : public AnimObject
 {
 public:
-    virtual void Check3D(); //{}
+    virtual void Check3D();
 	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
 
 	LightSeq *m_pLightSeq;

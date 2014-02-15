@@ -12,4 +12,7 @@ public:
 	virtual void RenderStatic( const RenderDevice* pd3dDevice) = 0;
 	virtual void PostRenderStatic( const RenderDevice* pd3dDevice) = 0;
     virtual void RenderSetup( const RenderDevice* _pd3dDevice) = 0;
+
+    virtual bool IsTransparent()                        { return false; }
+    virtual float GetDepth(const Vertex3Ds& viewDir)    { return 0.0f; }
 	};

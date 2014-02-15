@@ -145,6 +145,10 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Light)
 	virtual void DrawFrame(BOOL fOn);
     void PostRenderStaticCustom(RenderDevice* pd3dDevice);
 
+    virtual bool IsTransparent()    { return m_d.m_OnImageIsLightMap != FALSE; }
+    virtual float GetDepth(const Vertex3Ds& viewDir)
+      { return viewDir.x * m_d.m_vCenter.x + viewDir.y * m_d.m_vCenter.y + viewDir.z * m_surfaceHeight; }
+
 	void WriteRegDefaults();
    void FreeBuffers();
 

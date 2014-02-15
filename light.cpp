@@ -649,7 +649,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
         if(!m_d.m_EnableOffLighting)
             pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
         // Check if the light has an "off" texture.
-        if ((m_d.m_szOffImage[0] != 0) && (pin = m_ptable->GetImage(m_d.m_szOffImage)) != NULL)
+        if ((pin = m_ptable->GetImage(m_d.m_szOffImage)) != NULL)
         {
             // Set the texture to the one defined in the editor.
             ppin3d->SetTexture(pin);
@@ -676,7 +676,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
         ppin3d->DisableLightMap();
 
         // Check if the light has an "on" texture.
-        if ((m_d.m_szOnImage[0] != 0) && (pin = m_ptable->GetImage(m_d.m_szOnImage)) != NULL)
+        if ((pin = m_ptable->GetImage(m_d.m_szOnImage)) != NULL)
         {
             // Set the texture to the one defined in the editor.
             if ( i==1 && m_d.m_OnImageIsLightMap )
@@ -684,10 +684,6 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
                 Texture *offTexel=m_ptable->GetImage(m_d.m_szOffImage);
                 if ( offTexel )
                 {
-                    pd3dDevice->SetTextureStageState( 0, D3DTSS_TEXCOORDINDEX, 0 );
-                    pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
-                    pd3dDevice->SetTextureStageState( 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE ); 
-                    pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP,   D3DTOP_MODULATE );
                     pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_ADD );
                     ppin3d->SetBaseTexture(0, offTexel->m_pdsBuffer);
                     ppin3d->SetBaseTexture(1, pin->m_pdsBuffer);
@@ -723,7 +719,6 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
 
     if ( useLightmap )
     {
-        pd3dDevice->SetTextureStageState( 1, D3DTSS_COLORARG2, D3DTA_CURRENT ); 
         pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_MODULATE );
         ppin3d->SetTexture(pin);
         pd3dDevice->SetTexture(1,NULL);

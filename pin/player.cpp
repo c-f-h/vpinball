@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <algorithm>
 
 // touch defines, delete as soon as we can get rid of old compilers and use new ones that have these natively
 
@@ -320,11 +321,9 @@ Player::Player()
 
 Player::~Player()
 {
-	for (int i=0;i<m_ptable->m_vedit.Size();i++)
+	for (unsigned i=0; i < m_vhitables.size(); ++i)
 	{
-		Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
-		if (ph)
-			ph->EndPlay();
+        m_vhitables[i]->EndPlay();
 	}
 
 	for (int i=0;i<m_vho.Size();i++)
@@ -636,21 +635,18 @@ void Player::InitRegValues()
 
 void Player::InitDebugHitStructure()
 {
-	for (int i=0;i<m_ptable->m_vedit.Size();i++)
-		{
-		Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
-		if (ph)
-			{
-			const int currentsize = m_vdebugho.Size();
-			ph->GetHitShapesDebug(&m_vdebugho);
-			const int newsize = m_vdebugho.Size();
-			// Save the objects the trouble of having the set the idispatch pointer themselves
-			for (int hitloop = currentsize;hitloop < newsize;hitloop++)
-				{
-				m_vdebugho.ElementAt(hitloop)->m_pfedebug = m_ptable->m_vedit.ElementAt(i)->GetIFireEvents();
-				}
-			}
-		}
+	for (unsigned i=0; i < m_vhitables.size(); ++i)
+    {
+        Hitable * const ph = m_vhitables[i];
+        const int currentsize = m_vdebugho.Size();
+        ph->GetHitShapesDebug(&m_vdebugho);
+        const int newsize = m_vdebugho.Size();
+        // Save the objects the trouble of having the set the idispatch pointer themselves
+        for (int hitloop = currentsize;hitloop < newsize;hitloop++)
+        {
+            m_vdebugho.ElementAt(hitloop)->m_pfedebug = m_ptable->m_vedit.ElementAt(i)->GetIFireEvents();
+        }
+    }
 
 	for (int i=0;i<m_vdebugho.Size();i++)
 		{
@@ -670,6 +666,14 @@ void Player::InitDebugHitStructure()
 	m_debugoctree.m_vcenter.z = (m_hitoctree.m_rectbounds.zlow + m_hitoctree.m_rectbounds.zhigh)*0.5f;
 
 	m_debugoctree.CreateNextLevel();
+}
+
+Vertex3Ds g_viewDir;
+
+static bool CompareHitableDepth(Hitable* h1, Hitable* h2)
+{
+    //  GetDepth approximates direction in view distance to camera; sort ascending
+    return h1->GetDepth(g_viewDir) >= h2->GetDepth(g_viewDir);
 }
 
 HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWND hwndProgressName)
@@ -830,45 +834,38 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 			const int newsize = m_vho.Size();
 			// Save the objects the trouble of having to set the idispatch pointer themselves
 			for (int hitloop = currentsize; hitloop < newsize; hitloop++)
-				m_vho.ElementAt(hitloop)->m_pfedebug = m_ptable->m_vedit.ElementAt(i)->GetIFireEvents();
+				m_vho.ElementAt(hitloop)->m_pfedebug = pe->GetIFireEvents();
 
 			ph->GetTimers(&m_vht);
 
-			if ((pe->GetItemType() == eItemRamp && ((Ramp*)pe)->m_d.m_fAlpha) ||
-				(pe->GetItemType() == eItemPrimitive && !((Primitive *)pe)->m_d.staticRendering) ||
-				(pe->GetItemType() == eItemFlasher) ||
-				(pe->GetItemType() == eItemFlipper) ||
-				(pe->GetItemType() == eItemPlunger) ||
-				(pe->GetItemType() == eItemSurface) ||
-				(pe->GetItemType() == eItemSpinner) ||
-				(pe->GetItemType() == eItemGate) ||
-				(pe->GetItemType() == eItemLight) ||
-				(pe->GetItemType() == eItemDispReel) ||
-				(pe->GetItemType() == eItemBumper) )
-				{
-				  m_vhitalpha.AddElement(ph);
-				}
+            // add to appropriate vectors
+            m_vhitables.push_back(ph);
+            if (ph->IsTransparent())
+                m_vHitTrans.push_back(ph);
+            else
+                m_vHitNonTrans.push_back(ph);
 		}
 	}
 
 	CreateBoundingHitShapes(&m_vho);
 
 	for (int i=0;i<m_vho.Size();i++)
-		{
+    {
 		m_vho.ElementAt(i)->CalcHitRect();
 
 		m_hitoctree.m_vho.AddElement(m_vho.ElementAt(i));
 
 		if ((m_vho.ElementAt(i)->GetType() == e3DPoly) && ((Hit3DPoly *)m_vho.ElementAt(i))->m_fVisible)
-			{
 			m_shadowoctree.m_vho.AddElement(m_vho.ElementAt(i));
-			}
 
-		if ((m_vho.ElementAt(i)->GetAnimObject() != NULL) && m_vho.ElementAt(i)->GetAnimObject()->FMover())
-			{
-			m_vmover.AddElement(m_vho.ElementAt(i)->GetAnimObject());
-			}
-		}
+        AnimObject *pao = m_vho.ElementAt(i)->GetAnimObject();
+        if (pao)
+        {
+            m_vscreenupdate.AddElement(pao);
+            if (pao->FMover())
+                m_vmover.AddElement(pao);
+        }
+    }
 
 	m_hitoctree.m_rectbounds.left = m_ptable->m_left;
 	m_hitoctree.m_rectbounds.right = m_ptable->m_right;
@@ -909,9 +906,13 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	//----------------------------------------------------------------------------------
     Ball::ballsInUse=0;
+
 	// Pre-render all non-changing elements such as 
 	// static walls, rails, backdrops, etc.
 	InitStatic(hwndProgress);
+
+    g_viewDir = m_pin3d.m_viewVec;
+    std::sort( m_vHitTrans.begin(), m_vHitTrans.end(), CompareHitableDepth );
 
 	// Direct all renders to the back buffer.
     m_pin3d.SetRenderTarget(m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsZBuffer);
@@ -922,53 +923,6 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	// Pre-render all elements which have animations.
 	// Add the pre-rendered animations to the display list. 
 	InitAnimations(hwndProgress);
-
-	///////////////// Screen Update Vector
-	///// (List of movers which can be blitted at any time)
-	/////////////////////////
-
-	for (int i=0;i<m_vho.Size();i++)
-		{
-		if (m_vho.ElementAt(i)->GetAnimObject() != NULL)
-			{
-			// Put the screenupdate vector in sorted order back to
-			// front so that invalidated objects draw over each-other
-			// correctly
-
-			AnimObject * const pao = m_vho.ElementAt(i)->GetAnimObject();
-
-			const float myz = (pao->m_znear + pao->m_zfar)/*0.5f*/; //!! other heuristic?
-
-			int l;
-			for (l=0;l<m_vscreenupdate.Size();l++)
-				{
-				const bool fInBack = (myz > (m_vscreenupdate.ElementAt(l)->m_znear + m_vscreenupdate.ElementAt(l)->m_zfar)/*0.5f*/);
-
-				if (fInBack)
-					break;
-				}
-
-			if (l == m_vscreenupdate.Size())
-				m_vscreenupdate.AddElement(pao);
-			else
-				m_vscreenupdate.InsertElementAt(pao, l);
-			}
-		}
-
-	// Render inital textbox text & dispreel(s)
-	for (int i=0;i<m_ptable->m_vedit.Size();i++)
-		{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemTextbox)
-            {
-			Textbox * const ptb = (Textbox *)m_ptable->m_vedit.ElementAt(i);
-			ptb->RenderText();
-			}
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemDispReel)
-			{
-			DispReel * const pdr = (DispReel *)m_ptable->m_vedit.ElementAt(i);
-			pdr->RenderText();
-			}
-		}
 
 	m_ptable->m_pcv->Start(); // Hook up to events and start cranking script
 
@@ -1020,15 +974,12 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	}
 
 	// Call Init -- TODO: what's the relation to ptable->FireVoidEvent() above?
-	for (int i=0;i<m_ptable->m_vedit.Size();i++)
-		{
-		Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
-		if (ph)
-			{
-			if (ph->GetEventProxyBase())
-				ph->GetEventProxyBase()->FireVoidEvent(DISPID_GameEvents_Init);
-			}
-		}
+	for (unsigned i=0; i < m_vhitables.size(); ++i)
+    {
+        Hitable * const ph = m_vhitables[i];
+        if (ph->GetEventProxyBase())
+            ph->GetEventProxyBase()->FireVoidEvent(DISPID_GameEvents_Init);
+    }
 
 	if (m_fDetectScriptHang)
 		g_pvp->PostWorkToWorkerThread(HANG_SNOOP_START, NULL);
@@ -1134,14 +1085,11 @@ void Player::InitStatic(HWND hwndProgress)
     m_pin3d.DrawBackground();
 
     // perform render setup and give elements a chance to render before the playfield
-	for (int i=0; i < m_ptable->m_vedit.Size(); i++)
+	for (unsigned i=0; i < m_vhitables.size(); ++i)
     {
-        Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
-        if (ph)
-        {
-            ph->RenderSetup(m_pin3d.m_pd3dDevice);
-            ph->PreRenderStatic(m_pin3d.m_pd3dDevice);
-        }
+        Hitable * const ph = m_vhitables[i];
+        ph->RenderSetup(m_pin3d.m_pd3dDevice);
+        ph->PreRenderStatic(m_pin3d.m_pd3dDevice);
     }
 
     m_pin3d.RenderPlayfieldGraphics();
@@ -1983,9 +1931,15 @@ void Player::RenderDynamics()
       m_ToggleDebugBalls = fFalse;
    }
 
+   // Draw non-transparent objects.
+   for (unsigned i=0; i < m_vHitNonTrans.size(); ++i)
+       m_vHitNonTrans[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
+
    DrawBalls();
-   // Draw the alpha-ramps and primitives.
-   DrawAlphas();
+
+   // Draw transparent objects.
+   for (unsigned i=0; i < m_vHitTrans.size(); ++i)
+       m_vHitTrans[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
 
    // Draw the mixer volume.
    mixer_draw();
@@ -2041,12 +1995,10 @@ void Player::CheckAndUpdateRegions()
     m_pin3d.m_pd3dDevice->CopySurface(backBuffer,  m_pin3d.m_pddsStatic );
     m_pin3d.m_pd3dDevice->CopySurface(backBufferZ, m_pin3d.m_pddsStaticZ);
 
-    // Process all AnimObjects and render their sprites
+    // Process all AnimObjects
     for (int l=0; l < m_vscreenupdate.Size(); ++l)
     {
-        AnimObject* pao = m_vscreenupdate.ElementAt(l);
-        pao->Check3D();
-        // TODO: remove this whole loop once Check3D is unused
+        m_vscreenupdate.ElementAt(l)->Check3D();
     }
 }
 
@@ -3999,49 +3951,6 @@ float Player::ParseLog(LARGE_INTEGER *pli1, LARGE_INTEGER *pli2)
 // Draws all transparent ramps and primitives.
 void Player::DrawAlphas()
 {
-	// the helper list of m_vhitalpha only contains objects which evaluated to true in the old code.
-	// it is created once on startup and never changed during play. (SnailGary)
-	for (int i=0;i<m_vhitalpha.Size();i++)
-		m_vhitalpha.ElementAt(i)->PostRenderStatic(m_pin3d.m_pd3dDevice);
-
-	// AMD profiler shows a lot of activity inside this block at runtime... so I decided to make a new list with
-	// hitable-only objects which saves a lot of dereferencing/checks at runtime (SnailGary)
-	/*
-	// Check if we are hardware accelerated.
-	if (g_pvp->m_pdd.m_fHardwareAccel)
-		{
-		// Turn off z writes for same values.  It fixes the problem of ramps rendering twice. 
-		m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZFUNC,D3DCMP_LESS);
-
-		// Draw acrylic ramps (they have transparency, so they have to be drawn last).
-		for (int i=0;i<m_ptable->m_vedit.Size();i++)
-			{
-				if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemRamp ||
-					m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemPrimitive)
-				{
-				Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
-				if (ph)
-					{
-					ph->PostRenderStatic(m_pin3d.m_pd3dDevice);
-					}
-				}
-			}
-		}
-	else
-		{
-		for (int i=0;i<m_ptable->m_vedit.Size();i++)
-			{
-				if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemPrimitive)
-				{
-				Hitable * const ph = m_ptable->m_vedit.ElementAt(i)->GetIHitable();
-				if (ph)
-					{
-					ph->PostRenderStatic(m_pin3d.m_pd3dDevice);
-					}
-				}
-			}
-		}
-	*/ 
 }
 
 #ifdef DONGLE_SUPPORT

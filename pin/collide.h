@@ -102,8 +102,6 @@ public:
     virtual void Check3D() {}
 	virtual ObjFrame *Draw3D(const RECT * const prc) {return NULL;}
 	virtual void Reset() {}
-
-	float m_znear, m_zfar; // To tell which objects are closer and should be blitted last
 	};
 
 class LineSeg : public HitObject
