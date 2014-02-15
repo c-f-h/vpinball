@@ -608,15 +608,15 @@ void DispReel::RenderSetup(const RenderDevice* _pd3dDevice)
     //    pd3dDevice->CreateVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &vertexBuffer );
 
     // get the render sizes of the objects (reels and frame)
-    m_renderwidth  = max(0, (int)((m_d.m_width * (float)(1.0/1000.0)) * ppin3d->m_dwRenderWidth));
-    m_renderheight = max(0, (int)((m_d.m_height * (float)(1.0/750.0)) * ppin3d->m_dwRenderHeight));
-    const int m_renderspacingx = max(0, (int)((m_d.m_reelspacing * (float)(1.0/1000.0)) * ppin3d->m_dwRenderWidth));
-    const int m_renderspacingy = max(0, (int)((m_d.m_reelspacing * (float)(1.0/750.0))  * ppin3d->m_dwRenderHeight));
+    m_renderwidth  = max(0.0f, (m_d.m_width / 1000.0f) * ppin3d->m_dwRenderWidth);
+    m_renderheight = max(0.0f, (m_d.m_height / 750.0f) * ppin3d->m_dwRenderHeight);
+    const float m_renderspacingx = max(0.0f, (m_d.m_reelspacing / 1000.0f) * ppin3d->m_dwRenderWidth);
+    const float m_renderspacingy = max(0.0f, (m_d.m_reelspacing / 750.0f)  * ppin3d->m_dwRenderHeight);
 
     // set up all the reel positions within the object frame
-    const int x0 = (int)((m_d.m_v1.x * (float)(1.0/1000.0)) * ppin3d->m_dwRenderWidth);
-    const int y0 = (int)((m_d.m_v1.y * (float)(1.0/750.0)) * ppin3d->m_dwRenderHeight);
-    int x1 = x0 + m_renderspacingx;
+    const float x0 = (m_d.m_v1.x / 1000.0f) * ppin3d->m_dwRenderWidth;
+    const float y0 = (m_d.m_v1.y / 750.0f) * ppin3d->m_dwRenderHeight;
+    float x1 = x0 + m_renderspacingx;
 
     for (int i=0; i<m_d.m_reelcount; ++i)
     {

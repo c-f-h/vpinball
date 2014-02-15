@@ -1969,11 +1969,11 @@ void Player::RenderDynamics()
    for (unsigned i=0; i < m_vLights.size(); ++i)
        m_vLights[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
 
-   DrawBalls();
-
    // Draw backglass objects (VP9COMPAT)
    for (unsigned i=0; i < m_vHitBackglass.size(); ++i)
        m_vHitBackglass[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
+
+   DrawBalls();
 
    // Draw transparent objects.
    for (unsigned i=0; i < m_vHitTrans.size(); ++i)

@@ -39,7 +39,7 @@ public:
 };
 
 typedef struct {
-    RECT    position;           // position within the object frame (includes rendering size)
+    FRect   position;           // screen position (includes rendering size)
     int     currentValue;       // current digit value
     int     motorPulses;        // number of motor pulses received for this reel (can be negative)
     int		motorStepCount;     // when equal to zero then at a whole letter
@@ -115,7 +115,7 @@ DECLARE_REGISTRY_RESOURCEID(IDR_DispReel)
 
     DispReelUpdater *m_ptu;
     
-    int          m_renderwidth, m_renderheight;     // size of each reel (rendered)
+    float          m_renderwidth, m_renderheight;     // size of each reel (rendered)
 
 private:
     // rendering information (after scaling to render resolution)
