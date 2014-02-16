@@ -1413,7 +1413,7 @@ void Player::InitWindow()
 				break;
 		case 2: m_BallStretchX = scalebackX*c + scalebackY*s;
 				m_BallStretchY = scalebackY*c + scalebackX*s;
-				if (m_fFullScreen)
+				if (m_fFullScreen || (m_width == screenwidth && m_height == screenheight))      // detect windowed fullscreen
 				{
 					m_BallStretchX *= scalebackMonitorX*c + scalebackMonitorY*s;
 					m_BallStretchY *= scalebackMonitorY*c + scalebackMonitorX*s;
