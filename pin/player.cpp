@@ -844,10 +844,10 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
             // sort into proper categories
             if (pe->m_fBackglass)
                 m_vHitBackglass.push_back(ph);      // VP9COMPAT: fixes Homer head on TSPP, remove in VP10
-            else if (ph->IsTransparent())
-                m_vHitTrans.push_back(ph);
             else if (pe->GetItemType() == eItemLight)
                 m_vLights.push_back(ph);            // VP9COMPAT: special treatment for lights
+            else if (ph->IsTransparent())
+                m_vHitTrans.push_back(ph);
             else
                 m_vHitNonTrans.push_back(ph);
 		}
@@ -1965,7 +1965,7 @@ void Player::RenderDynamics()
    for (unsigned i=0; i < m_vHitNonTrans.size(); ++i)
        m_vHitNonTrans[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
 
-   // Draw non-transparent Light objects (VP9COMPAT)
+   // Draw Light objects (VP9COMPAT)
    for (unsigned i=0; i < m_vLights.size(); ++i)
        m_vLights[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
 
