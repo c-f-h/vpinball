@@ -122,8 +122,7 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Ramp)
 	virtual void GetBoundingVertices(Vector<Vertex3Ds> * const pvvertex3D);
 
     virtual bool IsTransparent()    { return m_d.m_fAlpha; }
-    virtual float GetDepth(const Vertex3Ds& viewDir)
-      { return 0.5f * (m_d.m_heightbottom + m_d.m_heighttop) * viewDir.z; }     // TODO: improve
+    virtual float GetDepth(const Vertex3Ds& viewDir);
 
 	void WriteRegDefaults();
 

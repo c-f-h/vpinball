@@ -1079,6 +1079,17 @@ static const WORD rgicrosssection[] = {
    12,28,31
 };
 
+
+float Ramp::GetDepth(const Vertex3Ds& viewDir)
+{
+    // TODO: improve
+    Vertex2D center2D;
+    GetCenter(&center2D);
+    const float centerZ = 0.5f * (m_d.m_heightbottom + m_d.m_heighttop);
+    return viewDir.x * center2D.x + viewDir.y * center2D.y + viewDir.z * centerZ;
+}
+
+
 bool Ramp::isHabitrail() const
 {
     return  m_d.m_type == RampType4Wire
