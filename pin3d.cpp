@@ -387,6 +387,7 @@ void Pin3D::InitRenderState()
 
 	m_pd3dDevice->SetRenderState(RenderDevice::ZENABLE, TRUE);
 	m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
+    m_pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
 
 	m_pd3dDevice->SetRenderState( RenderDevice::CLIPPING, FALSE );
 	m_pd3dDevice->SetRenderState( RenderDevice::CLIPPLANEENABLE, 0 );

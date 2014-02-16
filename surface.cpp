@@ -1347,6 +1347,7 @@ void Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fDrop)
 
     ppin3d->SetTexture(NULL);
     ppin3d->DisableLightMap();
+    pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
 
     if(!m_d.m_fEnableLighting)
     {

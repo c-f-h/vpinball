@@ -1597,17 +1597,14 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
    }
    else
    {
-      Pin3D *const ppin3d = &g_pplayer->m_pin3d;
-
+      Pin3D * const ppin3d = &g_pplayer->m_pin3d;
       Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-      float maxtu = 0, maxtv = 0;
 
       if (pin)
       {
-         m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-
          pin->CreateAlphaChannel();
          pin->Set( ePictureTexture );
+
          if (pin->m_fTransparent)
          {				
             pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
@@ -1653,9 +1650,7 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
          ppin3d->SetTexture(NULL);
          pd3dDevice->SetMaterial(solidMaterial);
          if ( !m_d.m_enableLightingImage )
-         {
             pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
-         }
       }
 
       for (int i=0;i<(rampVertex-1);i++)
@@ -1682,9 +1677,8 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
 	  pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
 
       if ( !m_d.m_enableLightingImage && pin!=NULL )
-      {
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
-      }
+      pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
    }
 }
 
@@ -2659,8 +2653,10 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
       if (pin)
       {
          pin->CreateAlphaChannel();
-         pin->Set(ePictureTexture);
+         pin->Set( ePictureTexture );
 
+         // In RenderStatic(), we set cull mode depending on texture transparency...?
+         // Doesn't seem to make sense.
          pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
          ppin3d->EnableAlphaBlend( 1, m_d.m_fAddBlend );
 
@@ -2708,12 +2704,13 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
 	  }
 
+      ppin3d->SetTexture(NULL);
+
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
       pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
       pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE); 	
 	  pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
 
-      ppin3d->SetTexture(NULL);
       if ( !m_d.m_enableLightingImage && pin!=NULL )
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
    }

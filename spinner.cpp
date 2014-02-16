@@ -401,7 +401,8 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
         if (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) 
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-        else pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
+        else
+            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
 
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
@@ -432,7 +433,8 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
         if (m_d.m_color == rgbTransparent || m_d.m_color == NOTRANSCOLOR) 
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-        else pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
+        else
+            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
 
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
@@ -480,6 +482,7 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
         pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX,verts, 16,(LPWORD)idx, 24);
     }
 
+    pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
     pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
     pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
 }

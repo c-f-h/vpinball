@@ -891,7 +891,6 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       {
          pin->CreateAlphaChannel();
          pin->Set( ePictureTexture );
-         pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
          g_pplayer->m_pin3d.EnableAlphaBlend(1, false);
 
          pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);

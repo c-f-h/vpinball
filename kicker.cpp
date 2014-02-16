@@ -226,7 +226,6 @@ void Kicker::PreRenderStatic( RenderDevice* pd3dDevice)
 
    pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);	
    pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);	
-   pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
    pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 
    const float inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);

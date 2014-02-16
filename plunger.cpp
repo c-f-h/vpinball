@@ -288,7 +288,6 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
     Texture *pin = NULL;
 
     pd3dDevice->SetMaterial(material);
-    pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
 
     if (m_d.m_type == PlungerTypeModern)
     {
@@ -298,7 +297,6 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pin = m_ptable->GetImage(m_d.m_szImage);
             pin->CreateAlphaChannel();
             pin->Set(ePictureTexture);
-            pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
             pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE );
             ppin3d->EnableAlphaBlend( 1, false );
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );

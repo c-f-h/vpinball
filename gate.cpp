@@ -503,6 +503,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
         pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
         pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
     }
+    pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
 
     pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matOrig);
 }
