@@ -42,6 +42,10 @@ HitFlipper::HitFlipper(const float x, const float y, float baser, float endr, fl
    m_flipperanim.m_anglespeed = 0;
    m_flipperanim.m_lastAngspd = 0;
 
+   const float fa = asinf((baser-endr)/flipr); //face to centerline angle (center to center)
+
+   m_flipperanim.faceNormOffset = (float)(M_PI/2.0) - fa; //angle of normal when flipper center line at angle zero
+
    m_flipperanim.SetObjects(angle);	
 
    m_flipperanim.m_fAcc = 0;
@@ -56,10 +60,6 @@ HitFlipper::HitFlipper(const float x, const float y, float baser, float endr, fl
    m_flipperanim.m_maxvelocity = m_flipperanim.m_force * 4.5f;
 
    m_flipperanim.m_lastHitFace = false; // used to optimize hit face search order
-
-   const float fa = asinf((baser-endr)/flipr); //face to centerline angle (center to center)
-
-   m_flipperanim.faceNormOffset = (float)(M_PI/2.0) - fa; //angle of normal when flipper center line at angle zero
 
    const float len = m_flipperanim.m_flipperradius*cosf(fa); //Cosine of face angle X hypotenuse
    m_flipperanim.m_lineseg1.length = len;

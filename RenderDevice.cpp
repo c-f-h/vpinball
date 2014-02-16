@@ -225,6 +225,11 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
 
     m_curIndexBuffer = 0;
     m_curVertexBuffer = 0;
+
+    // fill state caches with dummy values
+    memset( renderStateCache, 0xCC, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
+    memset( textureStateCache, 0xCC, sizeof(DWORD)*8*TEXTURE_STATE_CACHE_SIZE);
+    memset(&materialStateCache, 0xCC, sizeof(Material));
 }
 
 RenderDevice::~RenderDevice()
@@ -241,8 +246,6 @@ void RenderDevice::BeginScene()
 
 void RenderDevice::EndScene()
 {
-   //memset( renderStateCache, 0xFFFFFFFF, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
-   //memset(&materialStateCache, 0xFFFFFFFF, sizeof(Material));
    CHECKD3D(m_pD3DDevice->EndScene());
 }
 
