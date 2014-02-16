@@ -1862,6 +1862,7 @@ void DispReel::SetVerticesForReel(int reelNum, int digit, Vertex3D_NoTex2 * v)
     v[2].y = v[3].y = (float)ReelInfo[reelNum].position.bottom;
 
     v[0].z = v[1].z = v[2].z = v[3].z = 1.0f;
+    v[0].rhw = v[1].rhw = v[2].rhw = v[3].rhw = 1.0f;
 
     v[0].tu = v[3].tu = m_digitTexCoords[digit].u_min;
     v[0].tv = v[1].tv = m_digitTexCoords[digit].v_min;
