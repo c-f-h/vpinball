@@ -41,13 +41,13 @@ endmacro(add_msvc_precompiled_header)
 #
 set(DirectX_FOUND "NO")
 if(WIN32)
-  find_path(DirectX_INCLUDE_DIR "d3d.h"
+  find_path(DirectX_INCLUDE_DIR "d3dx9.h"
     "$ENV{DXSDK_DIR}/Include"
     "C:/Program Files/Microsoft DirectX SDK (August 2007)/Include"
     "C:/Programme/Microsoft DirectX SDK (August 2007)/Include"
     "C:/Program Files/Microsoft DirectX SDK (February 2007)/Include"
     "C:/Program Files (x86)/Microsoft DirectX SDK (August 2007)/Include"
-    "C:/DirectX-SDK-2007/Include"
+    "C:/DirectX-SDK-2010/Include"
     )
 
   find_path(DirectX_LIB_DIR "dinput8.lib"
@@ -56,7 +56,7 @@ if(WIN32)
     "C:/Programme/Microsoft DirectX SDK (August 2007)/Lib/x86"
     "C:/Program Files/Microsoft DirectX SDK (February 2007)/Lib/x86"
     "C:/Program Files (x86)/Microsoft DirectX SDK (August 2007)/Lib/x86"
-    "C:/DirectX-SDK-2007/Lib/x86"
+    "C:/DirectX-SDK-2010/Lib/x86"
     )
 
   if(DirectX_INCLUDE_DIR AND DirectX_LIB_DIR)
@@ -320,13 +320,14 @@ find_library(LIB_DXGUID dxguid.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_FREEIMAGE freeimage.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 find_library(LIB_DSOUND dsound.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_DINPUT dinput8.lib PATHS ${DirectX_LIB_DIR})
+find_library(LIB_D3DX9 d3dx9.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_XAUDIO xaudio.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 find_library(LIB_HID hid.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 
 LINK_DIRECTORIES(C:/WinDDK7.1/Lib/atl/i386)
 
 add_executable(${NAME} WIN32 ${SOURCES} ${HEADERS} ${RC_RESOURCE})
-target_link_libraries(${NAME} comctl32.lib ${LIB_NVAPI} ${LIB_DXGUID} ${LIB_FREEIMAGE} ${LIB_DSOUND} winmm.lib ${LIB_DINPUT} 
+target_link_libraries(${NAME} comctl32.lib ${LIB_NVAPI} ${LIB_DXGUID} ${LIB_FREEIMAGE} ${LIB_DSOUND} winmm.lib ${LIB_DINPUT} ${LIB_D3DX9}
   ${LIB_XAUDIO} imm32.lib setupapi.lib ${LIB_HID})
 
 
