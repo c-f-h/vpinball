@@ -772,21 +772,21 @@ void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float he
     Vertex3D *buf;
     vb->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY);
 
-    SetNormal(rgv3D, rgi0123, 4, NULL, NULL, 0);
+    SetNormal(rgv3D, rgi0123, 3, NULL, NULL, 4);
     // Draw top.
     buf[offset ] = rgv3D[0];
     buf[offset + 1] = rgv3D[1];
     buf[offset + 2] = rgv3D[2];
     buf[offset + 3] = rgv3D[3];
     offset+=4;
-    SetNormal(rgv3D, rgiFlipper1, 4, NULL, NULL, 0);
+    SetNormal(rgv3D, rgiFlipper1, 3, NULL, NULL, 4);
     // Draw front side wall.
     buf[offset ] = rgv3D[0];
     buf[offset + 1] = rgv3D[4];
     buf[offset + 2] = rgv3D[5];
     buf[offset + 3] = rgv3D[1];
     offset+=4;
-    SetNormal(rgv3D, rgiFlipper2, 4, NULL, NULL, 0);
+    SetNormal(rgv3D, rgiFlipper2, 3, NULL, NULL, 4);
     // Draw back side wall.
     buf[offset ] = rgv3D[2];
     buf[offset + 1] = rgv3D[6];

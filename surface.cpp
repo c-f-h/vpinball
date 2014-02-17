@@ -849,32 +849,24 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
    }
 
    numVertices = vvertex.Size();
-   Vertex2D * const rgnormal = new Vertex2D[numVertices];
-   if ( sideVBuffer )
-   {
-      sideVBuffer->release();
-      sideVBuffer=0;
-   }
-
-   pd3dDevice->CreateVertexBuffer( numVertices*4, 0, MY_D3DFVF_VERTEX, &sideVBuffer );
-   std::vector<Vertex3D> verts(numVertices*4);
+   std::vector<Vertex2D> rgnormal(numVertices);
 
    for (int i=0;i<numVertices;i++)
    {
       const RenderVertex * const pv1 = vvertex.ElementAt(i);
       const RenderVertex * const pv2 = vvertex.ElementAt((i < numVertices-1) ? (i+1) : 0);
-      const float dx = pv1->x - pv2->x;
-      const float dy = pv1->y - pv2->y;
-
-      const float inv_len = 1.0f/sqrtf(dx*dx + dy*dy);
-
-      rgnormal[i].x = dy*inv_len;
-      rgnormal[i].y = dx*inv_len;
+      rgnormal[i].x = -(pv2->y - pv1->y);
+      rgnormal[i].y =  (pv2->x - pv1->x);
+      rgnormal[i].Normalize();
    }
 
+   if ( sideVBuffer )
+      sideVBuffer->release();
+   pd3dDevice->CreateVertexBuffer( numVertices*4, 0, MY_D3DFVF_VERTEX, &sideVBuffer );
    Vertex3D *texelBuf;
    sideVBuffer->lock( 0, 0, (void**)&texelBuf, VertexBuffer::WRITEONLY);
 
+   std::vector<Vertex3D> verts(numVertices*4);
    int offset=0;
    // Render side
    for (int i=0;i<numVertices;i++, offset+=4)
@@ -890,26 +882,24 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
       {
          vnormal[0].x = (rgnormal[a].x + rgnormal[i].x)*0.5f;
          vnormal[0].y = (rgnormal[a].y + rgnormal[i].y)*0.5f;
+         vnormal[0].Normalize();
       }
       else
       {
-         vnormal[0].x = rgnormal[i].x;
-         vnormal[0].y = rgnormal[i].y;
+         vnormal[0] = rgnormal[i];
       }
 
       if (pv2->fSmooth)
       {
          vnormal[1].x = (rgnormal[i].x + rgnormal[c].x)*0.5f;
          vnormal[1].y = (rgnormal[i].y + rgnormal[c].y)*0.5f;
+         vnormal[1].Normalize();
       }
       else
       {
-         vnormal[1].x = rgnormal[i].x;
-         vnormal[1].y = rgnormal[i].y;
+         vnormal[1] = rgnormal[i];
       }
 
-      vnormal[0].Normalize();
-      vnormal[1].Normalize();
 
       {
          verts[offset].x=pv1->x;     verts[offset].y=pv1->y;     verts[offset].z=m_d.m_heightbottom;
@@ -937,11 +927,11 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
          ppin3d->m_lightproject.CalcCoordinates(&verts[offset+2]);
          ppin3d->m_lightproject.CalcCoordinates(&verts[offset+3]);
 
-         verts[offset].nx = verts[offset+1].nx = -vnormal[0].x;
+         verts[offset].nx = verts[offset+1].nx = vnormal[0].x;
          verts[offset].ny = verts[offset+1].ny = vnormal[0].y;
          verts[offset].nz = verts[offset+1].nz = 0;
 
-         verts[offset+2].nx = verts[offset+3].nx = -vnormal[1].x;
+         verts[offset+2].nx = verts[offset+3].nx = vnormal[1].x;
          verts[offset+2].ny = verts[offset+3].ny = vnormal[1].y;
          verts[offset+2].nz = verts[offset+3].nz = 0;
 
@@ -949,10 +939,9 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
       }
    }
    sideVBuffer->unlock();
+   SAFE_VECTOR_DELETE(rgtexcoord);
 
    // draw top
-   delete[] rgnormal;
-   SAFE_VECTOR_DELETE(rgtexcoord);
    if (m_d.m_fVisible)      // BUG? Visible could still be set later if rendered dynamically?
    {
       VectorVoid vpoly;

@@ -636,32 +636,32 @@ void Gate::PrepareMovers(RenderDevice* pd3dDevice )
     std::vector<Vertex3D> vbVerts;
 
     // back
-    SetNormal(rgv3D, rgiGate2, 4, NULL, NULL, 0);
+    SetNormal(rgv3D, rgiGate2, 3, NULL, NULL, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate2[i]] );
 
     // front
-    SetNormal(rgv3D, rgiGate3, 4, NULL, NULL, 0);
+    SetNormal(rgv3D, rgiGate3, 3, NULL, NULL, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate3[i]] );
 
     // top
-    SetNormal(rgv3D, rgiGate4, 4, NULL, NULL, 0);
+    SetNormal(rgv3D, rgiGate4, 3, NULL, NULL, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate4[i]] );
 
     // bottom
-    SetNormal(rgv3D, rgiGate5, 4, NULL, NULL, 0);
+    SetNormal(rgv3D, rgiGate5, 3, NULL, NULL, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate5[i]] );
 
     // left
-    SetNormal(rgv3D, rgiGate6, 4, NULL, NULL, 0);
+    SetNormal(rgv3D, rgiGate6, 3, NULL, NULL, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate6[i]] );
 
     // right
-    SetNormal(rgv3D, rgiGate7, 4, NULL, NULL, 0);
+    SetNormal(rgv3D, rgiGate7, 3, NULL, NULL, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate7[i]] );
 
