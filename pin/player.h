@@ -57,8 +57,8 @@ public:
     void DrawBallLogo(Ball * const pball );
     void CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer);
     void CheckAndUpdateRegions();
-    void FlipVideoBuffersNormal(  bool vsync );
-    void FlipVideoBuffers3D();
+    void FlipVideoBuffersNormal( const bool vsync );
+    void FlipVideoBuffers3DFXAA( const bool vsync );
 
 	void DrawAlphas();
 
@@ -202,6 +202,8 @@ public:
     int m_screenwidth, m_screenheight, m_screendepth, m_refreshrate;
     BOOL m_fFullScreen;
 
+	int m_width, m_height;
+
 	bool m_touchregion_pressed[8]; // status for each touch region to avoid multitouch double triggers (true = finger on, false = finger off)
 
     bool m_fDrawCursor;
@@ -222,8 +224,6 @@ private:
 
 	Vector<HitObject> m_vdebugho;
 	HitOctree m_debugoctree;
-
-	int m_width, m_height;
 
 	U64 m_StartTime_usec;
 	U64 m_curPhysicsFrameTime;	// Time when the last frame was drawn

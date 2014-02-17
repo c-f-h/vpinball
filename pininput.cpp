@@ -293,8 +293,7 @@ BOOL CALLBACK DIEnumJoystickCallback(LPCDIDEVICEINSTANCE lpddi, LPVOID pvRef)
 	
 	HRESULT hr;
 	
-	hr = ppinput->m_pDI->CreateDeviceEx(lpddi->guidInstance, IID_IDirectInputDevice7,
-		                                (void **)&ppinput->m_pJoystick[ppinput->e_JoyCnt], NULL);
+	hr = ppinput->m_pDI->CreateDevice(lpddi->guidInstance, &ppinput->m_pJoystick[ppinput->e_JoyCnt], NULL);
 	if (FAILED(hr))
 		{
 		ppinput->m_pJoystick[ppinput->e_JoyCnt] = NULL; //make sure no garbage
@@ -407,7 +406,7 @@ void PinInput::GetInputDeviceData(/*const U32 curr_time_msec*/)
 	DIDEVICEOBJECTDATA didod[ INPUT_BUFFER_SIZE ];  // Receives buffered data 
 
 	// keyboard
-	const LPDIRECTINPUTDEVICE pkyb = m_pKeyboard;
+	const LPDIRECTINPUTDEVICE8 pkyb = m_pKeyboard;
 	if (pkyb)
 		{	
 		HRESULT hr = pkyb->Acquire();				// try to Acquire keyboard input
@@ -431,8 +430,8 @@ void PinInput::GetInputDeviceData(/*const U32 curr_time_msec*/)
 	  HRESULT hr = m_pMouse->Acquire();	// try to Acquire mouse input
       if (hr == S_OK || hr == S_FALSE)
       {
-         DIMOUSESTATE mouseState;
-         hr = m_pMouse->GetDeviceState( sizeof(DIMOUSESTATE), &mouseState );
+         DIMOUSESTATE2 mouseState;
+         hr = m_pMouse->GetDeviceState( sizeof(DIMOUSESTATE2), &mouseState );
 
          if ((hr == S_OK || hr == DI_BUFFEROVERFLOW) && (m_hwnd == GetForegroundWindow()))
 		 {
@@ -482,7 +481,7 @@ void PinInput::GetInputDeviceData(/*const U32 curr_time_msec*/)
     // same for joysticks 
 	for (int k = 0; k < e_JoyCnt; ++k)
 		{
-		const LPDIRECTINPUTDEVICE pjoy = m_pJoystick[k];
+		const LPDIRECTINPUTDEVICE8 pjoy = m_pJoystick[k];
 		if (pjoy)
 			{				
 			HRESULT hr = pjoy->Acquire();							// try to acquire joystick input
@@ -507,7 +506,7 @@ void PinInput::Init(const HWND hwnd)
 	m_hwnd = hwnd;
 
 	HRESULT hr;
-	hr = DirectInputCreateEx(g_hinst, DIRECTINPUT_VERSION, IID_IDirectInput7, (void **)&m_pDI, NULL);
+	hr = DirectInput8Create(g_hinst, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&m_pDI, NULL);
 
 	// Create keyboard device
 	hr = m_pDI->CreateDevice( GUID_SysKeyboard, &m_pKeyboard, NULL); //Standard Keyboard device
@@ -530,7 +529,7 @@ void PinInput::Init(const HWND hwnd)
        // Create mouse device
 	   if(!FAILED(m_pDI->CreateDevice( GUID_SysMouse, &m_pMouse, NULL)))
 	   {
-		   HRESULT hr = m_pMouse->SetDataFormat( &c_dfDIMouse );
+		   HRESULT hr = m_pMouse->SetDataFormat( &c_dfDIMouse2 );
  
 		   //hr = m_pMouse->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
 		   dipdw.diph.dwSize = sizeof(DIPROPDWORD);
@@ -560,7 +559,7 @@ void PinInput::Init(const HWND hwnd)
 	uShockDevice = -1;
 	uShockType = 0;
 
-	m_pDI->EnumDevices(DIDEVTYPE_JOYSTICK, DIEnumJoystickCallback, this, DIEDFL_ATTACHEDONLY);//enum Joysticks
+	m_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, DIEnumJoystickCallback, this, DIEDFL_ATTACHEDONLY);//enum Joysticks
 
 	//InputControlRun = 1;	//0== stalled, 1==run,  0 < shutting down, 2==terminated
 	//_beginthread( InputControlProcess, 0, NULL );
@@ -1501,7 +1500,7 @@ int PinInput::GetNextKey() // return last valid keyboard key
 		DIDEVICEOBJECTDATA didod[1];  // Receives buffered data
 		DWORD dwElements;
 		HRESULT hr;
-		LPDIRECTINPUTDEVICE pkyb = m_pKeyboard;
+		LPDIRECTINPUTDEVICE8 pkyb = m_pKeyboard;
 
 		for (int j = 0; j < 2; ++j)
 		{

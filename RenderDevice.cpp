@@ -1,4 +1,6 @@
+#include "stdafx.h"
 #include "RenderDevice.h"
+#include "nvapi.h"
 
 #pragma comment(lib, "d3d9.lib")        // TODO: put into build system
 
@@ -10,8 +12,6 @@ void ReportError(HRESULT hr, const char *file, int line)
     ShowError(msg);
     exit(-1);
 }
-
-
 
 D3DTexture* TextureManager::LoadTexture(MemTexture* memtex)
 {
@@ -50,11 +50,7 @@ void TextureManager::UnloadAll()
     m_map.clear();
 }
 
-
-
-
 #define CHECKD3D(s) { HRESULT hr = (s); if (FAILED(hr)) ReportError(hr, __FILE__, __LINE__); }
-
 
 static unsigned int fvfToSize(DWORD fvf)
 {
@@ -141,7 +137,7 @@ void EnumerateDisplayModes(int adapter, std::vector<VideoMode>& modes)
 //#define MY_IDX_BUF_SIZE 8192
 #define MY_IDX_BUF_SIZE 65536
 
-RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate)
+RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate, bool useAA, bool stereo3DFXAA)
     : m_texMan(*this)
 {
     m_adapter = D3DADAPTER_DEFAULT;     // for now, always use the default adapter
@@ -172,14 +168,14 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     params.BackBufferHeight = fullscreen ? screenHeight : height;
     params.BackBufferFormat = format;
     params.BackBufferCount = 1;
-    params.MultiSampleType = D3DMULTISAMPLE_NONE;
+    params.MultiSampleType = useAA ? D3DMULTISAMPLE_4_SAMPLES : D3DMULTISAMPLE_NONE;
     params.MultiSampleQuality = 0;
     params.SwapEffect = D3DSWAPEFFECT_DISCARD;  // FLIP ?
     params.hDeviceWindow = hwnd;
     params.Windowed = !fullscreen;
     params.EnableAutoDepthStencil = FALSE;
     params.AutoDepthStencilFormat = D3DFMT_UNKNOWN;      // ignored
-    params.Flags = 0;
+    params.Flags = /*stereo3DFXAA ?*/ 0 /*: D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL*/;
     params.FullScreen_RefreshRateInHz = fullscreen ? refreshrate : 0;
     params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // D3DPRESENT_INTERVAL_ONE for vsync
 
@@ -206,7 +202,7 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
                m_adapter,
                devtype,
                hwnd,
-               D3DCREATE_HARDWARE_VERTEXPROCESSING,
+               D3DCREATE_HARDWARE_VERTEXPROCESSING /*| D3DCREATE_PUREDEVICE*/,
                &params,
                &m_pD3DDevice));
 
@@ -271,28 +267,54 @@ void RenderDevice::CopySurface(RenderTarget* dest, RenderTarget* src)
     CHECKD3D(m_pD3DDevice->StretchRect(src, NULL, dest, NULL, D3DTEXF_NONE));
 }
 
-const bool usePowerOfTwoTextures = false;
+D3DTexture* RenderDevice::DuplicateTexture(RenderTarget* src)
+{
+    D3DSURFACE_DESC desc;
+    src->GetDesc(&desc);
+	D3DTexture* dup;
+	CHECKD3D(m_pD3DDevice->CreateTexture(desc.Width, desc.Height, 1, D3DUSAGE_RENDERTARGET, desc.Format, D3DPOOL_DEFAULT, &dup, NULL));
+	return dup;
+}
+
+D3DTexture* RenderDevice::DuplicateDepthTexture(RenderTarget* src)
+{
+    D3DSURFACE_DESC desc;
+    src->GetDesc(&desc);
+	D3DTexture* dup;
+	CHECKD3D(m_pD3DDevice->CreateTexture(desc.Width, desc.Height, 1, D3DUSAGE_DEPTHSTENCIL, (D3DFORMAT)MAKEFOURCC('I','N','T','Z'), D3DPOOL_DEFAULT, &dup, NULL));
+	return dup;
+}
+
+void RenderDevice::CopySurface(D3DTexture* dest, RenderTarget* src)
+{
+	IDirect3DSurface9 *textureSurface;
+    CHECKD3D(dest->GetSurfaceLevel(0, &textureSurface));
+    CHECKD3D(m_pD3DDevice->StretchRect(src, NULL, textureSurface, NULL, D3DTEXF_NONE));
+}
+
+static bool NVAPIinit = false; //!! meh
+#define CHECKNVAPI(s) { NvAPI_Status hr = (s); if (hr != NVAPI_OK) { NvAPI_ShortString ss; NvAPI_GetErrorMessage(hr,ss); MessageBox(NULL, ss, "NVAPI", MB_OK | MB_ICONEXCLAMATION); } }
+
+void RenderDevice::CopyDepth(D3DTexture* dest, RenderTarget* src)
+{
+	if(!NVAPIinit)
+	{
+		 CHECKNVAPI(NvAPI_Initialize()); //!! meh
+		 CHECKNVAPI(NvAPI_D3D9_RegisterResource(src)); //!! meh
+		 CHECKNVAPI(NvAPI_D3D9_RegisterResource(dest)); //!! meh
+		 NVAPIinit = true;
+	}
+
+	//CHECKNVAPI(NvAPI_D3D9_AliasSurfaceAsTexture(m_pD3DDevice,src,dest,0));
+	CHECKNVAPI(NvAPI_D3D9_StretchRectEx(m_pD3DDevice, src, NULL, dest, NULL, D3DTEXF_NONE));
+}
 
 D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth, int *pTexHeight)
 {
     IDirect3DTexture9 *sysTex, *tex;
 
-    int texwidth = 8; // Minimum size 8
-    int texheight = 8;
-
-    // determine texture size
-    if (usePowerOfTwoTextures)
-    {
-        while (texwidth < surf->width())
-            texwidth <<= 1;
-        while (texheight < surf->height())
-            texheight <<= 1;
-    }
-    else
-    {
-        texwidth = surf->width();
-        texheight = surf->height();
-    }
+    int texwidth = surf->width();
+    int texheight = surf->height();
 
     if (pTexWidth) *pTexWidth = texwidth;
     if (pTexHeight) *pTexHeight = texheight;
@@ -473,7 +495,7 @@ RenderTarget* RenderDevice::AttachZBufferTo(RenderTarget* surf)
     surf->GetDesc(&desc);
 
     IDirect3DSurface9 *pZBuf;
-    CHECKD3D(m_pD3DDevice->CreateDepthStencilSurface(desc.Width, desc.Height, D3DFMT_D16,
+    CHECKD3D(m_pD3DDevice->CreateDepthStencilSurface(desc.Width, desc.Height, D3DFMT_D16 /*D3DFMT_D24X8*/,
             desc.MultiSampleType, desc.MultiSampleQuality, FALSE, &pZBuf, NULL));
 
     return pZBuf;

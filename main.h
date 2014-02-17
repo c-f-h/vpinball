@@ -18,6 +18,8 @@
 using namespace MSAPC;
 #endif
 
+#include <assert.h>
+
 #include "math.h"
 
 #include "commctrl.h"
@@ -26,10 +28,7 @@ using namespace MSAPC;
 
 #include <atlctl.h>
 
-#define DIRECTINPUT_VERSION 0x0700
-#define D3D_OVERLOADS 1
 #include <dinput.h>
-#include <ddraw.h>
 #include <dsound.h>
 
 #ifdef VPINBALL_DX9

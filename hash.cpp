@@ -1,3 +1,4 @@
+#include "stdafx.h"
 
 // this is the djb2 string hash algorithm
 unsigned long StringHash(const unsigned char *str)

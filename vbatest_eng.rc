@@ -221,22 +221,20 @@ CAPTION "About Visual Pinball"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,173,198,50,14
-    PUSHBUTTON      "Web Site",IDC_WEBSITE,156,164,67,14
+    PUSHBUTTON      "Web Site",IDC_WEBSITE,156,174,67,14
     PUSHBUTTON      "Translator's Web Site Name",IDC_TRANSLATEWEBSITE,130,179,93,14,NOT WS_VISIBLE | WS_DISABLED
     CTEXT           "This application uses Visual Basic Scripting Edition by Microsoft",IDC_STATIC,7,198,150,17
     CONTROL         264,IDC_STATIC,"Static",SS_BITMAP,7,7,94,27
     LTEXT           "A Randy Davis Production",IDC_STATIC,13,36,94,23
-    LTEXT           "Version 9.2.1",IDC_STATIC,13,47,121,16
+    LTEXT           "Version 9.9",IDC_STATIC,13,47,121,16
+    GROUPBOX        "Credits",IDC_STATIC,7,62,216,103
     LTEXT           "Randy Davis - designer, developer",IDC_STATIC,13,77,115,9
-    LTEXT           "Mark Parris - testing",IDC_STATIC,13,101,67,9
-    GROUPBOX        "Credits",IDC_STATIC,7,62,216,93
-    LTEXT           "Jerry Rice - music",IDC_STATIC,86,101,66,9
-    CTEXT           "Copyright (C) 2000-2013 Randy Davis. All rights reserved",IDC_STATIC,7,164,118,19
-    LTEXT           "Translator's Name - Translation",IDC_TRANSNAME,108,36,115,9,NOT WS_VISIBLE | WS_DISABLED
-    LTEXT           "Translator's web site address",IDC_TRANSWEBSITE,50,184,32,8,NOT WS_VISIBLE | WS_DISABLED
-    LTEXT           "Chris Leathley - additional development",IDC_STATIC,13,89,123,9
+    LTEXT           "Noah Fentz - testing",IDC_STATIC,150,77,66,9
+    LTEXT           "Chris Leathley - additional development",IDC_STATIC,13,87,123,9
+    LTEXT           "Mark Parris - testing",IDC_STATIC,13,97,67,9
+    LTEXT           "Jerry Rice - music",IDC_STATIC,86,97,66,9
+    LTEXT           "Rolle Cruz - physics",IDC_STATIC,150,97,67,9
     LTEXT           "",IDC_TRANSNAME2,140,142,83,9,NOT WS_VISIBLE | WS_DISABLED
-    LTEXT           "Rolle Cruz - physics",IDC_STATIC,150,101,67,9
     LTEXT           "Open Source Contributors",IDC_STATIC,65,111,88,9
     LTEXT           "Brian Smith",IDC_STATIC,13,121,42,9
     LTEXT           "Shagendo",IDC_STATIC,150,121,42,9
@@ -244,10 +242,13 @@ BEGIN
     LTEXT           "Wizard's Hat",IDC_STATIC,83,131,42,9
     LTEXT           "Maddes",IDC_STATIC,13,131,42,9
     LTEXT           "Poiuyterry",IDC_STATIC,150,131,42,9
-    LTEXT           "Noah Fentz - testing",IDC_STATIC,150,77,66,9
     CTEXT           "Cupid",IDC_STATIC,82,141,42,9
     LTEXT           "Fuzzel",IDC_STATIC,13,141,21,8
     LTEXT           "Koadic",IDC_STATIC,150,141,42,9
+    CTEXT           "Mukuste",IDC_STATIC,82,151,42,9
+    CTEXT           "Copyright (C) 2000-2014 Randy Davis. All rights reserved",IDC_STATIC,7,174,118,19
+    LTEXT           "Translator's Name - Translation",IDC_TRANSNAME,108,36,115,9,NOT WS_VISIBLE | WS_DISABLED
+    LTEXT           "Translator's web site address",IDC_TRANSWEBSITE,50,184,32,8,NOT WS_VISIBLE | WS_DISABLED
 END
 
 IDD_VIDEO_OPTIONS DIALOGEX 0, 0, 351, 297
@@ -257,8 +258,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     CONTROL         "&Window",IDC_WINDOW,"Button",BS_AUTORADIOBUTTON | WS_GROUP,16,20,42,10
     CONTROL         "Full Screen",IDC_FULLSCREEN,"Button",BS_AUTORADIOBUTTON,16,31,56,10
-    CONTROL         "Enable Software FXAA",IDC_FXAA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,169,90,10
-    CONTROL         "Enable Fake AntiAliasing (beta)",IDC_AA_ALL_TABLES,
+    CONTROL         "Enable FXAA",IDC_FXAA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,169,90,10
+    CONTROL         "Enable 4xAntiAliasing",IDC_AA_ALL_TABLES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,182,126,10
     CONTROL         "Stretch Ball with Table",IDC_StretchNo,"Button",BS_AUTORADIOBUTTON | WS_GROUP,16,212,83,10
     CONTROL         "Don't stretch the Ball",IDC_StretchYes,"Button",BS_AUTORADIOBUTTON,16,222,81,10
@@ -1252,7 +1253,7 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     CONTROL         "Custom2",4,"ColorControl",WS_TABSTOP,27,7,40,14
     COMBOBOX        DISPID_Image,7,32,110,69,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Fake AntiAliasing",IDC_ENABLE_AA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,47,75,10
+    CONTROL         "AntiAliasing",IDC_ENABLE_AA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,47,75,10
     CONTROL         "FXAA",IDC_ENABLE_FXAA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,47,40,10
     CONTROL         "Render Shadows",9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,57,71,10
     EDITTEXT        IDC_REGION_UPDATES_TABLE,101,69,20,12,ES_AUTOHSCROLL
@@ -1775,8 +1776,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 9,2,1,0
- PRODUCTVERSION 9,2,1,0
+ FILEVERSION 9,9,0,0
+ PRODUCTVERSION 9,9,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1791,13 +1792,13 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "FileDescription", "Visual Pinball 9.2.1"
-            VALUE "FileVersion", "9, 2, 1, 0"
+            VALUE "FileDescription", "Visual Pinball 9.9.0"
+            VALUE "FileVersion", "9, 9, 0, 0"
             VALUE "InternalName", "Visual Pinball"
-            VALUE "LegalCopyright", "Copyright 2000-2013"
+            VALUE "LegalCopyright", "Copyright 2000-2014"
             VALUE "OriginalFilename", "VPinball.exe"
             VALUE "ProductName", "Visual Pinball"
-            VALUE "ProductVersion", "9, 2, 1, 0"
+            VALUE "ProductVersion", "9, 9, 0, 0"
         END
     END
     BLOCK "VarFileInfo"

@@ -1,3 +1,13 @@
+VP 9.9.0 Changelog
+------------------------
+- DX9 port for the graphics by new team member Mukuste
+
+- DX8 port for input handling
+
+- enable NVIDIA Optimus cards by default
+
+- texture size limit/downscale now respects aspect ratio
+
 VP 9.2.1 Changelog
 ------------------------
 - add "To Collection" to the context menu to assign a selected element to a collection

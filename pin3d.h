@@ -176,7 +176,7 @@ public:
 	Pin3D();
 	~Pin3D();
 
-	HRESULT InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool stereo3DFXAA, const bool AA);
+	HRESULT InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool useAA, const bool stereo3DFXAA);
 
 	void InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD);
 
@@ -230,10 +230,8 @@ public:
 	RenderDevice* m_pd3dDevice;
 	RenderTarget* m_pddsBackBuffer;
 
-	RenderTarget* m_pdds3DBackBuffer;
-	const unsigned int* __restrict m_pdds3Dbuffercopy;
-	const unsigned int* __restrict m_pdds3Dbufferzcopy;
-	unsigned char* __restrict m_pdds3Dbuffermask;
+	D3DTexture* m_pdds3DBackBuffer;
+	D3DTexture* m_pdds3DZBuffer;
 
 	RenderTarget* m_pddsZBuffer;
 
@@ -273,7 +271,7 @@ public:
     Vertex3Ds m_viewVec;        // direction the camera is facing
 
 	LightProjected m_lightproject;
-   //bool fullscreen;
+    //bool fullscreen;
 	float m_maxSeparation, m_ZPD;
-   ViewPort vp;
+    ViewPort vp;
 };

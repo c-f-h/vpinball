@@ -292,18 +292,9 @@ Vertex3D_NoTex2 *GetVertices( int &numVertices ) // clears temporary storage on 
 
 void GetIndexList( std::vector<WORD>& list ) // clears temporary storage on the way
 {
-   bool showerror = true;
    list.resize( faces.size() );
    for( unsigned int i=0; i<faces.size(); i++ )
-   {
-	  if((faces[i] >= 65536) && showerror) { //!! DX7 limit, delete later-on
-           ShowError("Too many vertex indices in obj file");
-		   showerror = false;
-	  }
       list[i] = (WORD)faces[i];
-   }
-   if(faces.size() >= 65536) //!! DX7 limit, delete later-on
-	   ShowError("Too many polygons in obj file, this can lead to driver problems");
    faces.clear();
 }
 

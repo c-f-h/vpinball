@@ -50,18 +50,22 @@ BaseTexture* MemTexture::CreateFromFile(const char *szfile)
       {
          maxTexDim = 0; // default: Don't resize textures
       }
-      if((maxTexDim <= 0) || (maxTexDim > MAX_TEXTURE_SIZE))
+      if(maxTexDim <= 0)
       {
-         maxTexDim = MAX_TEXTURE_SIZE;
+         maxTexDim = 65536;
       }
-      int pictureWidth = FreeImage_GetWidth(dib);
-      int pictureHeight = FreeImage_GetHeight(dib);
+      const int pictureWidth = FreeImage_GetWidth(dib);
+      const int pictureHeight = FreeImage_GetHeight(dib);
       // save original width and height, if the texture is rescaled
-      //originalWidth = pictureWidth;
-      //originalHeight = pictureHeight;
-      if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
-      {
-         dib = FreeImage_Rescale(dib, min(pictureWidth,maxTexDim), min(pictureHeight,maxTexDim), FILTER_BILINEAR);
+	  if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
+	  {
+         int newWidth = min(pictureWidth,maxTexDim);
+         int newHeight = min(pictureHeight,maxTexDim);
+         if (pictureWidth - newWidth > pictureHeight - newHeight)
+             newHeight = min(pictureHeight * newWidth / pictureWidth, maxTexDim);
+         else
+             newWidth = min(pictureWidth * newHeight / pictureHeight, maxTexDim);
+         dib = FreeImage_Rescale(dib, newWidth, newHeight, FILTER_BILINEAR);
       }
 
       MemTexture* mySurface = MemTexture::CreateFromFreeImage(dib);
@@ -214,9 +218,9 @@ bool Texture::LoadFromMemory(BYTE *data, DWORD size)
     {
         maxTexDim = 0; // default: Don't resize textures
     }
-    if((maxTexDim <= 0) || (maxTexDim > MAX_TEXTURE_SIZE))
+    if(maxTexDim <= 0)
     {
-        maxTexDim = MAX_TEXTURE_SIZE;
+        maxTexDim = 65536;
     }
     int pictureWidth = FreeImage_GetWidth(dib);
     int pictureHeight = FreeImage_GetHeight(dib);
@@ -225,9 +229,15 @@ bool Texture::LoadFromMemory(BYTE *data, DWORD size)
     m_originalHeight = pictureHeight;
     if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
     {
-        dib = FreeImage_Rescale(dib, min(pictureWidth,maxTexDim), min(pictureHeight,maxTexDim), FILTER_BILINEAR);
-        m_width = min(pictureWidth,maxTexDim);
-        m_height = min(pictureHeight,maxTexDim);
+         int newWidth = min(pictureWidth,maxTexDim);
+         int newHeight = min(pictureHeight,maxTexDim);
+         if (m_originalWidth - newWidth > m_originalHeight - newHeight)
+             newHeight = min(m_originalHeight * newWidth / m_originalWidth, maxTexDim);
+         else
+             newWidth = min(m_originalWidth * newHeight / m_originalHeight, maxTexDim);
+         dib = FreeImage_Rescale(dib, newWidth, newHeight, FILTER_BILINEAR);
+         m_width = newWidth;
+         m_height = newHeight;
     }
 
     m_pdsBuffer = MemTexture::CreateFromFreeImage(dib);

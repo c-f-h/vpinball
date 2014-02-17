@@ -9,10 +9,8 @@ Pin3D::Pin3D()
 	m_xlatex = m_xlatey = 0.0f;
 	m_pddsBackBuffer = NULL;
 	m_pdds3DBackBuffer = NULL;
-	m_pdds3Dbuffercopy = NULL;
-	m_pdds3Dbufferzcopy = NULL;
-	m_pdds3Dbuffermask = NULL;
 	m_pddsZBuffer = NULL;
+	m_pdds3DZBuffer = NULL;
 	m_pd3dDevice = NULL;
 	m_pddsStatic = NULL;
 	m_pddsStaticZ = NULL;
@@ -25,18 +23,7 @@ Pin3D::Pin3D()
 Pin3D::~Pin3D()
 {
 	SAFE_RELEASE(m_pdds3DBackBuffer);
-	if(m_pdds3Dbuffercopy) {
-		_aligned_free((void*)m_pdds3Dbuffercopy);
-		m_pdds3Dbuffercopy = NULL;
-	}
-	if(m_pdds3Dbufferzcopy) {
-		_aligned_free((void*)m_pdds3Dbufferzcopy);
-		m_pdds3Dbufferzcopy = NULL;
-	}
-	if(m_pdds3Dbuffermask) {
-		free((void*)m_pdds3Dbuffermask);
-		m_pdds3Dbuffermask = NULL;
-	}
+	SAFE_RELEASE(m_pdds3DZBuffer);
 
 	SAFE_RELEASE(m_pddsZBuffer);
 
@@ -272,7 +259,7 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * rgv, const WORD * rgi, int
 	}
 }
 
-HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool stereo3DFXAA, const bool AA)
+HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool useAA, const bool stereo3DFXAA)
 {
     m_hwnd = hwnd;
     //fullscreen = fFullScreen;
@@ -286,7 +273,7 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     m_dwRenderHeight = m_rcScreen.bottom - m_rcScreen.top;
 
     try {
-        m_pd3dDevice = new RenderDevice(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate);
+        m_pd3dDevice = new RenderDevice(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate, useAA, stereo3DFXAA);
     } catch (...) {
         return E_FAIL;
     }
@@ -330,29 +317,12 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     m_pddsLightWhite.CreateMipMap();
 
     if(stereo3DFXAA) {
-        // TODO (DX9): disabled for now
-        ShowError("Stereo 3D not supported in this version");
-    //	ZeroMemory(&ddsd,sizeof(ddsd));
-    //	ddsd.dwSize = sizeof(ddsd);
-    //	m_pddsBackBuffer->GetSurfaceDesc( &ddsd );
-
-    //	m_pdds3Dbuffercopy  = (unsigned int*)_aligned_malloc(ddsd.lPitch*ddsd.dwHeight,16);
-    //	m_pdds3Dbufferzcopy = (unsigned int*)_aligned_malloc(ddsd.lPitch*ddsd.dwHeight,16);
-    //	m_pdds3Dbuffermask  = (unsigned char*)malloc(ddsd.lPitch*ddsd.dwHeight/4);
-    //	if(m_pdds3Dbuffercopy == NULL || m_pdds3Dbufferzcopy == NULL || m_pdds3Dbuffermask == NULL)
-    //	{
-    //		ShowError("Could not allocate 3D stereo buffers.");
-    //		return E_FAIL; 
-    //	}
-
-    //	ddsd.dwFlags         = DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_CAPS; //!! ? just to be the exact same as the Backbuffer
-    //	ddsd.ddsCaps.dwCaps  = DDSCAPS_TEXTURE;
-    //	ddsd.ddsCaps.dwCaps2 = DDSCAPS2_HINTDYNAMIC;
-    //	if( FAILED( hr = m_pDD->CreateSurface( &ddsd, (LPDIRECTDRAWSURFACE7*)&m_pdds3DBackBuffer, NULL ) ) )
-    //	{
-    //		ShowError("Could not create 3D stereo buffer.");
-    //		return hr; 
-    //	}
+		m_pdds3DBackBuffer = m_pd3dDevice->DuplicateTexture(m_pddsBackBuffer);
+	    if (!m_pdds3DBackBuffer)
+		    return E_FAIL;
+		m_pdds3DZBuffer = m_pd3dDevice->DuplicateDepthTexture(m_pddsZBuffer);
+	    if (!m_pdds3DZBuffer)
+		    return E_FAIL;
     }
 
 	InitRenderState();

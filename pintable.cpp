@@ -9353,7 +9353,7 @@ STDMETHODIMP PinTable::StopShake()
 
 STDMETHODIMP PinTable::Version(int *pVal)
 {
-	*pVal = 9210;
+	*pVal = 9900;
 
 	return S_OK;
 }

@@ -50,7 +50,7 @@ if(WIN32)
     "C:/DirectX-SDK-2007/Include"
     )
 
-  find_path(DirectX_LIB_DIR "dinput.lib"
+  find_path(DirectX_LIB_DIR "dinput8.lib"
     "$ENV{DXSDK_DIR}/Lib/x86"
     "C:/Program Files/Microsoft DirectX SDK (August 2007)/Lib/x86"
     "C:/Programme/Microsoft DirectX SDK (August 2007)/Lib/x86"
@@ -315,17 +315,18 @@ set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
 set(CMAKE_EXE_LINKER_FLAGS_RELWITHSSE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
 
 
+find_library(LIB_NVAPI nvapi.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 find_library(LIB_DXGUID dxguid.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_FREEIMAGE freeimage.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 find_library(LIB_DSOUND dsound.lib PATHS ${DirectX_LIB_DIR})
-find_library(LIB_DINPUT dinput.lib PATHS ${DirectX_LIB_DIR})
+find_library(LIB_DINPUT dinput8.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_XAUDIO xaudio.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 find_library(LIB_HID hid.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 
 LINK_DIRECTORIES(C:/WinDDK7.1/Lib/atl/i386)
 
 add_executable(${NAME} WIN32 ${SOURCES} ${HEADERS} ${RC_RESOURCE})
-target_link_libraries(${NAME} comctl32.lib ${LIB_DXGUID} ${LIB_FREEIMAGE} ${LIB_DSOUND} winmm.lib ${LIB_DINPUT} 
+target_link_libraries(${NAME} comctl32.lib ${LIB_NVAPI} ${LIB_DXGUID} ${LIB_FREEIMAGE} ${LIB_DSOUND} winmm.lib ${LIB_DINPUT} 
   ${LIB_XAUDIO} imm32.lib setupapi.lib ${LIB_HID})
 
 

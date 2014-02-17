@@ -209,7 +209,7 @@ public:
        TEX_MIRROR        = D3DTADDRESS_MIRROR
    };
 
-   RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate);
+   RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate, bool useAA, bool stereo3DFXAA);
    ~RenderDevice();
 
    void BeginScene();
@@ -220,12 +220,16 @@ public:
 
    RenderTarget* GetBackBuffer() { return m_pBackBuffer; }
    RenderTarget* DuplicateRenderTarget(RenderTarget* src);
+   D3DTexture* DuplicateTexture(RenderTarget* src);
+   D3DTexture* DuplicateDepthTexture(RenderTarget* src);
 
    void SetRenderTarget( RenderTarget* );
    void SetZBuffer( RenderTarget* );
 
    RenderTarget* AttachZBufferTo(RenderTarget* surf);
    void CopySurface(RenderTarget* dest, RenderTarget* src);
+   void CopySurface(D3DTexture* dest, RenderTarget* src);
+   void CopyDepth(D3DTexture* dest, RenderTarget* src);
 
    D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth=NULL, int *pTexHeight=NULL);
    void SetRenderState( const RenderStates p1, const DWORD p2 );
@@ -259,9 +263,9 @@ public:
    void SetTransform( TransformStateType, D3DMATRIX* );
    void GetTransform( TransformStateType, D3DMATRIX* );
 
+   IDirect3DDevice9* m_pD3DDevice; //!! meh
 private:
    IDirect3D9* m_pD3D;
-   IDirect3DDevice9* m_pD3DDevice;
 
    IDirect3DSurface9* m_pBackBuffer;
    CComPtr<IndexBuffer> m_dynIndexBuffer;      // workaround for DrawIndexedPrimitiveVB

@@ -1,5 +1,7 @@
 #pragma once
 
+//#define DISABLE_FORCE_NVIDIA_OPTIMUS // do not enable NVIDIA Optimus cards (on Laptops, etc) by default
+
 //#define _CRTDBG_MAP_ALLOC
 #ifdef _CRTDBG_MAP_ALLOC
  #include <crtdbg.h>
