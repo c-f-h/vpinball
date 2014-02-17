@@ -231,7 +231,7 @@ BEGIN
     LTEXT           "Mark Parris - testing",IDC_STATIC,13,101,67,9
     GROUPBOX        "Credits",IDC_STATIC,7,62,216,93
     LTEXT           "Jerry Rice - music",IDC_STATIC,86,101,66,9
-    CTEXT           "Copyright (C) 2000-2013 Randy Davis. All rights reserved",IDC_STATIC,7,164,118,19
+    CTEXT           "Copyright (C) 2000-2014 Randy Davis. All rights reserved",IDC_STATIC,7,164,118,19
     LTEXT           "Translator's Name - Translation",IDC_TRANSNAME,108,36,115,9,NOT WS_VISIBLE | WS_DISABLED
     LTEXT           "Translator's web site address",IDC_TRANSWEBSITE,50,184,32,8,NOT WS_VISIBLE | WS_DISABLED
     LTEXT           "Chris Leathley - additional development",IDC_STATIC,13,89,123,9
@@ -567,18 +567,20 @@ BEGIN
     LTEXT           "minutes",IDC_STATIC,132,33,25,8
 END
 
-IDD_COLLECTDIALOG DIALOG  0, 0, 316, 167
+IDD_COLLECTDIALOG DIALOGEX 0, 0, 316, 167
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Collection Manager"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,259,146,50,14
     CONTROL         "List1",201,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_EDITLABELS | WS_BORDER | WS_TABSTOP,7,7,240,153
     PUSHBUTTON      "&New",IDC_NEW,259,7,50,14
     PUSHBUTTON      "&Create From Selection",IDC_CREATEFROMSELECTION,259,25,50,21,BS_VCENTER | BS_MULTILINE
-    PUSHBUTTON      "&Delete",IDC_DELETE,259,79,50,14
-    PUSHBUTTON      "&Rename",IDC_RENAME,259,97,50,14
-    PUSHBUTTON      "&Edit",IDC_EDIT,259,60,50,14
+    PUSHBUTTON      "De&lete",IDC_DELETE,259,105,50,14
+    PUSHBUTTON      "&Rename",IDC_RENAME,259,123,50,14
+    PUSHBUTTON      "&Edit",IDC_EDIT,259,86,50,14
+    PUSHBUTTON      "&Up",IDC_COL_UP_BUTTON,259,50,50,14
+    PUSHBUTTON      "&Down",IDC_COL_DOWN_BUTTON,259,66,50,14
 END
 
 IDD_COLLECTION DIALOG  0, 0, 232, 231
@@ -1254,8 +1256,10 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     CONTROL         "Custom2",4,"ColorControl",WS_TABSTOP,27,7,40,14
     COMBOBOX        DISPID_Image,7,32,110,69,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Fake AntiAliasing",IDC_ENABLE_AA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,47,75,10
-    CONTROL         "FXAA",IDC_ENABLE_FXAA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,47,40,10
+    LTEXT           "Fake AntiAliasing",IDC_STATIC,7,47,75,8
+    EDITTEXT        IDC_ENABLE_AA,65,45,12,12,ES_AUTOHSCROLL
+    LTEXT           "FXAA",IDC_STATIC,80,47,40,8
+    EDITTEXT        IDC_ENABLE_FXAA,101,45,20,12,ES_AUTOHSCROLL
     CONTROL         "Render Shadows",9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,57,71,10
     EDITTEXT        IDC_REGION_UPDATES_TABLE,101,69,20,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_REGION_OPT_TABLE,101,83,20,12,ES_AUTOHSCROLL
@@ -1360,13 +1364,15 @@ BEGIN
     LTEXT           "&Front Decal:",IDC_STATIC,7,32,74,8
     LTEXT           "Bac&k Decal:",IDC_STATIC,7,54,74,8
     GROUPBOX        "Reflection",IDC_STATIC,7,79,113,42
-    CONTROL         "Enable",IDC_BALL_REFLECTION,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,11,91,38,10
+    LTEXT           "Enable",IDC_STATIC,11,91,38,8
+    EDITTEXT        IDC_BALL_REFLECTION,41,89,20,12,ES_AUTOHSCROLL
     LTEXT           "Strength (0..255)",IDC_STATIC,12,105,54,8
-    EDITTEXT        IDC_REFLECTION_EDIT,69,102,31,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_REFLECTION_EDIT,69,103,31,12,ES_AUTOHSCROLL
     GROUPBOX        "Trail/Motion Blur",IDC_STATIC,7,124,113,42
-    CONTROL         "Enable",IDC_BALL_TRAIL,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | WS_TABSTOP,11,136,38,10
+    LTEXT           "Enable",IDC_STATIC,11,136,38,8
+	EDITTEXT        IDC_BALL_TRAIL,41,134,20,12,ES_AUTOHSCROLL
     LTEXT           "Strength (0..255)",IDC_STATIC,12,150,54,8
-    EDITTEXT        IDC_TRAIL_EDIT,69,147,31,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_TRAIL_EDIT,69,148,31,12,ES_AUTOHSCROLL
 END
 
 IDD_PROPBACKGLASS_VISUALS DIALOGEX 0, 0, 125, 188
@@ -1796,7 +1802,7 @@ BEGIN
             VALUE "FileDescription", "Visual Pinball 9.2.1"
             VALUE "FileVersion", "9, 2, 1, 0"
             VALUE "InternalName", "Visual Pinball"
-            VALUE "LegalCopyright", "Copyright 2000-2013"
+            VALUE "LegalCopyright", "Copyright 2000-2014"
             VALUE "OriginalFilename", "VPinball.exe"
             VALUE "ProductName", "Visual Pinball"
             VALUE "ProductVersion", "9, 2, 1, 0"
