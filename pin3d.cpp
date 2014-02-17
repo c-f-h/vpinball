@@ -1177,12 +1177,12 @@ void PinProjection::Multiply(const Matrix3D& mat)
 void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, const int cvert, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const float xlatez)
 {
 	// Determine camera distance
-	const GPINFLOAT rrotsin = sin(-rotation);
-	const GPINFLOAT rrotcos = cos(-rotation);
-	const GPINFLOAT rincsin = sin(-inclination);
-	const GPINFLOAT rinccos = cos(-inclination);
+	const GPINFLOAT rrotsin = sin(rotation);
+	const GPINFLOAT rrotcos = cos(rotation);
+	const GPINFLOAT rincsin = sin(inclination);
+	const GPINFLOAT rinccos = cos(inclination);
 
-	const GPINFLOAT slopey = tan(FOV*(2.0*0.5*M_PI/360.0)); // *0.5 because slope is half of FOV - FOV includes top and bottom
+	const GPINFLOAT slopey = tan(0.5*ANGTORAD(FOV)); // *0.5 because slope is half of FOV - FOV includes top and bottom
 
 	// Field of view along the axis = atan(tan(yFOV)*width/height)
 	// So the slope of x simply equals slopey*width/height
@@ -1203,13 +1203,13 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 
 		// Rotate vertex about y axis according to incoming rotation
 		const GPINFLOAT temp = (*pvvertex3D->ElementAt(i)).x;
-		const GPINFLOAT vertexTx = rrotcos*temp + rrotsin*(*pvvertex3D->ElementAt(i)).z;
-		GPINFLOAT vertexTz = rrotcos*(*pvvertex3D->ElementAt(i)).z - rrotsin*temp;
+		const GPINFLOAT vertexTx =  rrotcos*temp - rrotsin*(*pvvertex3D->ElementAt(i)).z;
+		GPINFLOAT       vertexTz =  rrotsin*temp + rrotcos*(*pvvertex3D->ElementAt(i)).z;
 
 		// Rotate vertex about x axis according to incoming inclination
 		const GPINFLOAT temp2 = vertexTy;
-		vertexTy = rinccos*temp2 + rincsin*vertexTz;
-		vertexTz = rinccos*vertexTz - rincsin*temp2;
+		vertexTy = rinccos*temp2 - rincsin*vertexTz;
+		vertexTz = rincsin*temp2 + rinccos*vertexTz;
 
 		// Extend z-range if necessary
 		m_rznear = min(m_rznear, -vertexTz);
