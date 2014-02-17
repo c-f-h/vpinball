@@ -213,9 +213,17 @@ Player::Player()
     if (hr != S_OK)
       m_fFXAA = fFalse; // The default = off
 
-    hr = GetRegInt("Player", "USEAA", &m_useAA);
+    hr = GetRegInt("Player", "BallTrail", &m_fTrailForBalls);
     if (hr != S_OK)
-      m_useAA = fFalse; // The default = off
+      m_fTrailForBalls = fTrue; // The default = on
+
+	hr = GetRegInt("Player", "BallReflection", &m_fReflectionForBalls);
+    if (hr != S_OK)
+      m_fReflectionForBalls = fFalse; // The default = on
+
+    hr = GetRegInt("Player", "USEAA", &m_fAA);
+    if (hr != S_OK)
+      m_fAA = fFalse; // The default = off
 
 	hr = GetRegInt("Player", "Stereo3D", &m_fStereo3D);
 	if (hr != S_OK)
@@ -704,14 +712,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	InitRegValues();
 
-    if( !ptable->m_useAA )
-      m_useAA = false;
-
-	if( !ptable->m_useFXAA )
-      m_fFXAA = false;
-
 	// width, height, and colordepth are only defined if fullscreen is true.
-	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, !!m_useAA, (!!m_fStereo3D) || (!!m_fFXAA));
+	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, !!m_fFXAA, (!!m_fStereo3D) || (!!m_fFXAA));
 
 	if (hr != S_OK)
 	{
@@ -2192,7 +2194,6 @@ void Player::Render()
                 vsync = true;
     }
 
-
     if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (m_fFXAA == 0)) || (m_pin3d.m_maxSeparation <= 0.0f) || (m_pin3d.m_maxSeparation >= 1.0f) || (m_pin3d.m_ZPD <= 0.0f) || (m_pin3d.m_ZPD >= 1.0f) || !m_pin3d.m_pdds3DBackBuffer || !m_pin3d.m_pdds3DZBuffer)
     {
         FlipVideoBuffersNormal( vsync );
@@ -2653,7 +2654,7 @@ void Player::DrawBallLogo(Ball * const pball)
 
 void Player::DrawBalls()
 {
-    bool drawReflection = m_ptable->m_useReflectionForBalls==fTrue;
+    bool drawReflection = ((m_fReflectionForBalls && (m_ptable->m_useReflectionForBalls == -1)) || (m_ptable->m_useReflectionForBalls == 1));
 
     // m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREPERSPECTIVE, FALSE ); // this is always on in DX9
     m_pin3d.m_pd3dDevice->SetTextureAddressMode(0, RenderDevice::TEX_CLAMP);
@@ -2673,7 +2674,7 @@ void Player::DrawBalls()
 
       float maxz = pball->defaultZ+3.0f;
       float minz = pball->defaultZ-1.0f;
-      if( m_ptable->m_useReflectionForBalls )
+      if((m_fReflectionForBalls && (m_ptable->m_useReflectionForBalls == -1)) || (m_ptable->m_useReflectionForBalls == 1))
       {
          // don't draw reflection if the ball is not on the playfield (e.g. on a ramp/kicker)
          if( (zheight > maxz) || (pball->z < minz) )

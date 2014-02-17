@@ -611,32 +611,6 @@ PinTable::PinTable()
    m_szDescription = NULL;
    m_szRules = NULL;
 
-   int reflection;
-   if ( FAILED(GetRegInt("Player", "BallReflection", &reflection)))
-      reflection = fTrue; // The default
-
-   // use ball reflection as default settings
-   m_useReflectionForBalls = reflection;
-   m_ballReflectionStrength = 50;
-
-   int trail;
-   if ( FAILED(GetRegInt("Player", "BallTrail", &trail)))
-      trail = fTrue; // The default
-
-   // use ball trail as default settings
-   m_useTrailForBalls = trail;
-   m_ballTrailStrength = 100;
-
-   int enableAA;
-   if ( FAILED(GetRegInt("Player", "USEAA", &enableAA)))
-      enableAA = fFalse; // The default
-   m_useAA=enableAA;
-
-   int enableFXAA;
-   if ( FAILED(GetRegInt("Player", "FXAA", &enableFXAA)))
-      enableFXAA = fFalse; // The default
-   m_useFXAA=enableFXAA;
-
    m_pbTempScreenshot = NULL;
 
    HRESULT hr;
@@ -3310,8 +3284,17 @@ void PinTable::SetLoadDefaults()
 
    m_NormalizeNormals = false;
 
+   m_useReflectionForBalls = -1;
+   m_ballReflectionStrength = 50;
+
+   m_useTrailForBalls = -1;
+   m_ballTrailStrength = 100;
+
    m_TableRegionUpdates = -1;
    m_TableRegionOptimization = -1;
+
+   m_useAA = -1;
+   m_useFXAA = -1;
 
    m_TableSoundVolume = 1.0f;
    m_TableMusicVolume = 1.0f;
@@ -3648,10 +3631,6 @@ BOOL PinTable::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(BREF))
    {
       pbr->GetInt(&m_useReflectionForBalls);
-	  int tmp;
-	  if(!FAILED(GetRegInt("Player", "BallReflection", &tmp)))
-		  if(tmp == 0)
-			  m_useReflectionForBalls = 0;
    }
    else if (id == FID(BRST))
    {
@@ -3660,10 +3639,6 @@ BOOL PinTable::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(BTRA))
    {
       pbr->GetInt(&m_useTrailForBalls);
-	  int tmp;
-	  if(!FAILED(GetRegInt("Player", "BallTrail", &tmp)))
-		  if(tmp == 0)
-			  m_useTrailForBalls = 0;
    }
    else if (id == FID(BTST))
    {
@@ -4074,6 +4049,26 @@ void PinTable::RemoveCollection(CComObject<Collection> *pcol)
    pcol->Release();
 }
 
+void PinTable::MoveCollectionUp(CComObject<Collection> *pcol )
+{
+    int idx = m_vcollection.IndexOf(pcol);
+    m_vcollection.RemoveElementAt(idx);
+    if ( idx-1<0 )
+        m_vcollection.AddElement(pcol);
+    else
+        m_vcollection.InsertElementAt( pcol, idx-1 );
+}
+
+void PinTable::MoveCollectionDown(CComObject<Collection> *pcol )
+{
+    int idx = m_vcollection.IndexOf(pcol);
+    m_vcollection.RemoveElementAt(idx);
+    if( idx+1>=m_vcollection.Size() )
+        m_vcollection.InsertElementAt( pcol, 0 );    
+    else
+        m_vcollection.InsertElementAt( pcol, idx+1 );
+}
+
 void PinTable::SetCollectionName(Collection *pcol, char *szName, HWND hwndList, int index)
 {
    WCHAR wzT[1024];
@@ -4393,7 +4388,11 @@ void PinTable::DoContextMenu(int x, int y, int menuid, ISelect *psel)
 
       LocalString ls16(IDS_TO_COLLECTION);
       AppendMenu(hmenu, MF_POPUP|MF_STRING, (UINT)colSubMenu, ls16.m_szbuffer);
-      for (int i=0;i<m_vcollection.Size() && i<32;i++)
+
+      int maxItems = m_vcollection.Size()-1;
+      if ( maxItems>32 ) maxItems=32;
+
+      for (int i=maxItems; i>=0;i--)
       {
           CComBSTR bstr;
           m_vcollection.ElementAt(i)->get_Name(&bstr);
@@ -4403,7 +4402,7 @@ void PinTable::DoContextMenu(int x, int y, int menuid, ISelect *psel)
           AppendMenu(colSubMenu, MF_POPUP, 0x40000+i, szT);
           CheckMenuItem(colSubMenu, 0x40000+i, MF_UNCHECKED );
       }
-      for (int i=0;i<m_vcollection.Size() && i<32;i++)
+      for (int i=maxItems; i>=0;i--)
       {
           for( int t=0;t<m_vcollection.ElementAt(i)->m_visel.Size();t++ )
           {
@@ -8588,33 +8587,33 @@ STDMETHODIMP PinTable::put_RenderShadows(VARIANT_BOOL newVal)
    return S_OK;
 }
 
-STDMETHODIMP PinTable::get_EnableAntialiasing(VARIANT_BOOL *pVal)
+STDMETHODIMP PinTable::get_EnableAntialiasing(int *pVal)
 {
-   *pVal = (VARIANT_BOOL)FTOVB(m_useAA);
+   *pVal = m_useAA;
 
    return S_OK;
 }
 
-STDMETHODIMP PinTable::put_EnableAntialiasing(VARIANT_BOOL newVal)
+STDMETHODIMP PinTable::put_EnableAntialiasing(int newVal)
 {
    STARTUNDO
-   m_useAA = VBTOF(newVal);
+   m_useAA = newVal;
    STOPUNDO
 
    return S_OK;
 }
 
-STDMETHODIMP PinTable::get_EnableFXAA(VARIANT_BOOL *pVal)
+STDMETHODIMP PinTable::get_EnableFXAA(int *pVal)
 {
-   *pVal = (VARIANT_BOOL)FTOVB(m_useFXAA);
+   *pVal = m_useFXAA;
 
    return S_OK;
 }
 
-STDMETHODIMP PinTable::put_EnableFXAA(VARIANT_BOOL newVal)
+STDMETHODIMP PinTable::put_EnableFXAA(int newVal)
 {
    STARTUNDO
-   m_useFXAA = VBTOF(newVal);
+   m_useFXAA = newVal;
    STOPUNDO
 
    return S_OK;
