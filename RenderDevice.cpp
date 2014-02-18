@@ -5,10 +5,10 @@
 #pragma comment(lib, "d3d9.lib")        // TODO: put into build system
 
 
-void ReportError(HRESULT hr, const char *file, int line)
+void ReportError(const HRESULT hr, const char *file, const int line)
 {
     char msg[128];
-    sprintf(msg, "Fatal error: HRESULT %x at %s:%d", hr, file, line);
+    sprintf_s(msg, 128, "Fatal error: HRESULT %x at %s:%d", hr, file, line);
     ShowError(msg);
     exit(-1);
 }
