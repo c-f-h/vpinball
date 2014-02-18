@@ -72,7 +72,7 @@ Light::Light() : m_lightcenter(this)
    normalMoverVBuffer = NULL;
    m_d.m_szOffImage[0]=0;
    m_d.m_szOnImage[0]=0;
-   m_d.m_OnImageIsLightMap=false;
+   m_d.m_OnImageIsLightMap=fFalse;
 }
 
 Light::~Light()
@@ -206,17 +206,17 @@ void Light::SetDefaults(bool fromMouseClick)
    if ((hr == S_OK) && fromMouseClick)
       m_d.m_EnableLighting = iTmp;
    else
-      m_d.m_EnableLighting = true;
+      m_d.m_EnableLighting = fTrue;
    hr = GetRegInt("DefaultProps\\Light","EnableOffLighting", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
       m_d.m_EnableOffLighting = iTmp;
    else
-      m_d.m_EnableOffLighting = true;
+      m_d.m_EnableOffLighting = fTrue;
    hr = GetRegInt("DefaultProps\\Light","OnImageIsLightmap", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
       m_d.m_OnImageIsLightMap = iTmp;
    else
-      m_d.m_OnImageIsLightMap = false;
+      m_d.m_OnImageIsLightMap = fFalse;
 }
 
 void Light::WriteRegDefaults()
@@ -1210,8 +1210,8 @@ HRESULT Light::InitLoad(IStream *pstm, PinTable *ptable, int *pid, int version, 
    m_fLockedByLS = false;			//>>> added by chris
    m_realState	= m_d.m_state;		//>>> added by chris
 
-   m_d.m_EnableLighting = true;
-   m_d.m_EnableOffLighting = true;
+   m_d.m_EnableLighting = fTrue;
+   m_d.m_EnableOffLighting = fTrue;
 
    br.Load();
    return S_OK;

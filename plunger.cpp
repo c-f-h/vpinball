@@ -86,9 +86,9 @@ void Plunger::SetDefaults(bool fromMouseClick)
 	
 	hr = GetRegInt("DefaultProps\\Plunger","TimerEnabled", &iTmp);
 	if ((hr == S_OK) && fromMouseClick)
-		m_d.m_tdr.m_fTimerEnabled = iTmp == 0 ? false : true;
+		m_d.m_tdr.m_fTimerEnabled = iTmp == 0 ? fFalse : fTrue;
 	else
-		m_d.m_tdr.m_fTimerEnabled = false;
+		m_d.m_tdr.m_fTimerEnabled = fFalse;
 	
 	hr = GetRegInt("DefaultProps\\Plunger","TimerInterval", &iTmp);
 	if ((hr == S_OK) && fromMouseClick)
@@ -298,7 +298,7 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pin->CreateAlphaChannel();
             pin->Set(ePictureTexture);
             pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE );
-            ppin3d->EnableAlphaBlend( 1, false );
+            ppin3d->EnableAlphaBlend( 1, fFalse );
             ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
             static const WORD idx[6] = {0,1,2,2,3,0};
             pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, frame*4, 4, (LPWORD)idx, 6);
@@ -313,7 +313,7 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
                 pin->CreateAlphaChannel();
                 pin->Set(ePictureTexture);
                 pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE );
-                ppin3d->EnableAlphaBlend( 1, false );
+                ppin3d->EnableAlphaBlend( 1, fFalse );
                 ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
             }
 

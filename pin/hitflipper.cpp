@@ -387,7 +387,7 @@ float HitFlipper::HitTestFlipperEnd(Ball * const pball, const float dtime, Verte
       (ballvx - phitnormal[1].x *anglespeed*distance), 
       (ballvy - phitnormal[1].y *anglespeed*distance)); //delta velocity ball to face
 
-   const float bnv = dv.x*phitnormal->x + dv.y*phitnormal->y;  //dot Normal to delta v
+   const float bnv = dv.x*phitnormal[0].x + dv.y*phitnormal[0].y;  //dot Normal to delta v
 
    if (bnv >= 0) 
       return -1.0f; // not hit ... ball is receding from face already, must have been embedded or shallow angled
@@ -542,7 +542,7 @@ float HitFlipper::HitTestFlipperFace(Ball * const pball, const float dtime, Vert
       (ballvx - phitnormal[1].x *anglespeed*distance), 
       (ballvy - phitnormal[1].y *anglespeed*distance)); //delta velocity ball to face
 
-   const float bnv = dv.x*phitnormal->x + dv.y*phitnormal->y;  //dot Normal to delta v
+   const float bnv = dv.x*phitnormal[0].x + dv.y*phitnormal[0].y;  //dot Normal to delta v
 
    if (bnv >= C_LOWNORMVEL) 
       return -1.0f; // not hit ... ball is receding from endradius already, must have been embedded

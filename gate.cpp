@@ -100,9 +100,9 @@ void Gate::SetDefaults(bool fromMouseClick)
 
    hr = GetRegInt("DefaultProps\\Gate","TimerEnabled", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
-      m_d.m_tdr.m_fTimerEnabled = iTmp == 0 ? false : true;
+      m_d.m_tdr.m_fTimerEnabled = iTmp == 0 ? fFalse : fTrue;
    else
-      m_d.m_tdr.m_fTimerEnabled = false;
+      m_d.m_tdr.m_fTimerEnabled = fFalse;
 
    hr = GetRegInt("DefaultProps\\Gate","TimerInterval", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
@@ -142,9 +142,9 @@ void Gate::SetDefaults(bool fromMouseClick)
 
    hr = GetRegInt("DefaultProps\\Gate","EnableLighting", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
-      m_d.m_fEnableLighting = iTmp == 0 ? false : true;
+      m_d.m_fEnableLighting = iTmp == 0 ? fFalse : fTrue;
    else
-      m_d.m_fEnableLighting = true;
+      m_d.m_fEnableLighting = fTrue;
 }
 
 

@@ -101,10 +101,10 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Flasher)
 	FlasherData m_d;
 
 	VertexBuffer *dynamicVertexBuffer;
-	BOOL dynamicVertexBufferRegenerate;
     Material solidMaterial;
     Material textureMaterial;
     Vertex3D_NoLighting vertices[4];
+	bool dynamicVertexBufferRegenerate;
 
 // IFlasher
 public:

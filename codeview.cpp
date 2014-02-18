@@ -1097,7 +1097,7 @@ void CodeViewer::FindCodeFromEvent()
       else
       {
          szLine[i+1] = '\0';
-         if (lstrcmpi(&szLine[i-2], "sub"))
+         if (lstrcmpi(&szLine[i-2], "sub")) //!! correct like this?
             fGoodMatch = false;
       }
 

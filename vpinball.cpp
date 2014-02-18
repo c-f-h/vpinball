@@ -361,7 +361,7 @@ void VPinball::EnsureWorkerThread()
    if (!m_workerthread)
    {
       g_hWorkerStarted = CreateEvent(NULL,TRUE,FALSE,NULL);
-      m_workerthread = CreateThread(NULL, 0, VPWorkerThreadStart, 0, 0, &m_workerthreadid);
+      m_workerthread = CreateThread(NULL, 0, VPWorkerThreadStart, 0, 0, &m_workerthreadid); //!! _beginthreadex is safer
       if (WaitForSingleObject(g_hWorkerStarted, 5000) == WAIT_TIMEOUT)
       {
       }
@@ -3511,9 +3511,9 @@ void FillVideoModesList(HWND hwnd, const std::vector<VideoMode>& modes, const Vi
     {
         char szT[128];
         if (modes[i].depth)
-            sprintf_s(szT, "%u x %u x %u", modes[i].width, modes[i].height, modes[i].depth);
+            sprintf_s(szT, "%d x %d x %d", modes[i].width, modes[i].height, modes[i].depth);
         else
-            sprintf_s(szT, "%u x %u", modes[i].width, modes[i].height);
+            sprintf_s(szT, "%d x %d", modes[i].width, modes[i].height);
         SendMessage(hwnd, LB_ADDSTRING, 0, (LPARAM)szT);
 
         if (curSelMode &&
@@ -3896,7 +3896,7 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
          allVideoModes.push_back(mode);
 
          char szT[128];
-         sprintf_s(szT, "%u x %u (windowed fullscreen)", mode.width, mode.height);
+         sprintf_s(szT, "%d x %d (windowed fullscreen)", mode.width, mode.height);
          SendMessage(hwndList, LB_ADDSTRING, 0, (LPARAM)szT);
          if (mode.width == widthcur && mode.height == heightcur)
              indexcur = SendMessage(hwndList, LB_GETCOUNT, 0, 0) - 1;

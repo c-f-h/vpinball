@@ -109,9 +109,9 @@ void Ramp::SetDefaults(bool fromMouseClick)
 
    hr = GetRegInt("DefaultProps\\Ramp","TimerEnabled", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
-      m_d.m_tdr.m_fTimerEnabled = iTmp == 0 ? false : true;
+      m_d.m_tdr.m_fTimerEnabled = iTmp == 0 ? fFalse : fTrue;
    else
-      m_d.m_tdr.m_fTimerEnabled = false;
+      m_d.m_tdr.m_fTimerEnabled = fFalse;
 
    hr = GetRegInt("DefaultProps\\Ramp","TimerInterval", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
@@ -808,7 +808,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
             ph3dpoly->m_scatter = ANGTORAD(m_d.m_scatter);
 
             if (m_d.m_type == RampTypeFlat)
-               ph3dpoly->m_fVisible = true;
+               ph3dpoly->m_fVisible = fTrue;
 
             pvho->AddElement(ph3dpoly);
 
@@ -832,7 +832,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
          ph3dpoly->m_scatter = ANGTORAD(m_d.m_scatter);
 
          if (m_d.m_type == RampTypeFlat)
-            ph3dpoly->m_fVisible = true;
+            ph3dpoly->m_fVisible = fTrue;
 
          pvho->AddElement(ph3dpoly);
 

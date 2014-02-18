@@ -319,10 +319,6 @@ public:
    int indexListSize;       // only used during loading
 
 private:
-   VertexBuffer *vertexBuffer;
-   BOOL vertexBufferRegenerate;
-   IndexBuffer *indexBuffer;
-
    Material material;
 
    // Vertices for editor display
@@ -330,6 +326,10 @@ private:
    Vector<Vertex3Ds> verticesBottom;
 
    Matrix3D fullMatrix, rotMatrix;
+
+   VertexBuffer *vertexBuffer;
+   IndexBuffer *indexBuffer;
+   bool vertexBufferRegenerate;
 };
 
 #endif // !defined(AFX_PRIMITIVE_H__31CD2D6B-9BDD-4B1B-BC62-B9DE588A0CAA__INCLUDED_)

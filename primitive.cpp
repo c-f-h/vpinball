@@ -310,15 +310,9 @@ void Primitive::GetHitShapes(Vector<HitObject> * const pvho)
    for( unsigned i=0; i<indexList.size(); i+=3 )
    {
       Vertex3Ds * const rgv3D = new Vertex3Ds[3];
-      rgv3D[0].x = verticesTop.ElementAt( indexList[i  ] )->x;
-      rgv3D[0].y = verticesTop.ElementAt( indexList[i  ] )->y;
-      rgv3D[0].z = verticesTop.ElementAt( indexList[i  ] )->z;
-      rgv3D[1].x = verticesTop.ElementAt( indexList[i+1] )->x;
-      rgv3D[1].y = verticesTop.ElementAt( indexList[i+1] )->y;
-      rgv3D[1].z = verticesTop.ElementAt( indexList[i+1] )->z;
-      rgv3D[2].x = verticesTop.ElementAt( indexList[i+2] )->x;
-      rgv3D[2].y = verticesTop.ElementAt( indexList[i+2] )->y;
-      rgv3D[2].z = verticesTop.ElementAt( indexList[i+2] )->z;
+      rgv3D[0] = *verticesTop.ElementAt( indexList[i  ] );
+      rgv3D[1] = *verticesTop.ElementAt( indexList[i+1] );
+      rgv3D[2] = *verticesTop.ElementAt( indexList[i+2] );
       Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3);
       ph3dpoly->m_elasticity = m_d.m_elasticity;
       ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;
@@ -784,12 +778,6 @@ void Primitive::CalculateBuiltin()
       for (int i = m_d.m_Sides; i < m_d.m_Sides * 2; i++)
       {
          builtin_depth[i*2] = 
-            (builtin_rgv[builtin_indices[i*12  ]].z+
-             builtin_rgv[builtin_indices[i*12+1]].z)
-            * zM05 +
-            (builtin_rgv[builtin_indices[i*12  ]].y+
-             builtin_rgv[builtin_indices[i*12+1]].y)
-            * yM05;
          builtin_depth[i*2+1] = 
             (builtin_rgv[builtin_indices[i*12  ]].z+
              builtin_rgv[builtin_indices[i*12+1]].z)
@@ -891,7 +879,7 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       {
          pin->CreateAlphaChannel();
          pin->Set( ePictureTexture );
-         g_pplayer->m_pin3d.EnableAlphaBlend(1, false);
+         g_pplayer->m_pin3d.EnableAlphaBlend(1, fFalse);
 
          pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 

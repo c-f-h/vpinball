@@ -41,7 +41,7 @@ BOOL CALLBACK DSEnumCallBack(LPGUID guid, LPCSTR desc, LPCSTR mod, LPVOID list)
     ad->description = desc;
     ad->module = mod;
     (static_cast<DSAudioDevices*>(list))->push_back(ad);
-    return true;
+    return fTrue;
 }
 
 void PinDirectSound::InitDirectSound(HWND hwnd)

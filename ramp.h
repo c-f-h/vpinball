@@ -135,17 +135,17 @@ private:
 	Vertex2D *rgvInit;    // just for setup/static drawing
     float *rgheightInit,*rgratioInit;
 
-	VertexBuffer *staticVertexBuffer;
-	VertexBuffer *dynamicVertexBuffer;
-    IndexBuffer *dynamicIndexBuffer;
-	BOOL dynamicVertexBufferRegenerate;
-
     int m_numVertices;      // this goes along with dynamicVertexBuffer
 
     Material solidMaterial;
     Material textureMaterial;
 
 	Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
+
+	VertexBuffer *staticVertexBuffer;
+	VertexBuffer *dynamicVertexBuffer;
+    IndexBuffer *dynamicIndexBuffer;
+	bool dynamicVertexBufferRegenerate;
 
     bool isHabitrail() const;
 

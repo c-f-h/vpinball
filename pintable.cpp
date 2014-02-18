@@ -1707,33 +1707,33 @@ void PinTable::Play()
 			 char tmp[256];
 
 			 m_fOverrideGravityConstant = 1.6774f;
-		     sprintf_s(tmp,256,"TablePhysicsGravityConstant%u",m_fOverridePhysics-1);
+		     sprintf_s(tmp,256,"TablePhysicsGravityConstant%d",m_fOverridePhysics-1);
 			 hr = GetRegStringAsFloat("Player", tmp, &m_fOverrideGravityConstant);
 			 if (hr != S_OK)
 				m_fOverrideGravityConstant = 1.6774f;
 			 m_fOverrideGravityConstant *= GRAVITYCONST;
 
 			 m_fOverrideContactFriction = 0.0005f;
-		     sprintf_s(tmp,256,"TablePhysicsContactFriction%u",m_fOverridePhysics-1);
+		     sprintf_s(tmp,256,"TablePhysicsContactFriction%d",m_fOverridePhysics-1);
 			 hr = GetRegStringAsFloat("Player", tmp, &m_fOverrideContactFriction);
 			 if (hr != S_OK)
 				m_fOverrideContactFriction = 0.0005f;
 
 			 m_fOverrideContactScatterAngle = 0.5f;
-		     sprintf_s(tmp,256,"TablePhysicsContactScatterAngle%u",m_fOverridePhysics-1);
+		     sprintf_s(tmp,256,"TablePhysicsContactScatterAngle%d",m_fOverridePhysics-1);
 			 hr = GetRegStringAsFloat("Player", tmp, &m_fOverrideContactScatterAngle);
 			 if (hr != S_OK)
 				m_fOverrideContactScatterAngle = 0.5f;
 			 m_fOverrideContactScatterAngle = ANGTORAD(m_fOverrideContactScatterAngle);
 
 			 m_fOverrideDampeningSpeed = 65.f;
-		     sprintf_s(tmp,256,"TablePhysicsDampeningSpeed%u",m_fOverridePhysics-1);
+		     sprintf_s(tmp,256,"TablePhysicsDampeningSpeed%d",m_fOverridePhysics-1);
 			 hr = GetRegStringAsFloat("Player", tmp, &m_fOverrideDampeningSpeed);
 			 if (hr != S_OK)
 				m_fOverrideDampeningSpeed = 65.f;
 
 			 m_fOverrideDampeningFriction = 0.95f;
-		     sprintf_s(tmp,256,"TablePhysicsDampeningFriction%u",m_fOverridePhysics-1);
+		     sprintf_s(tmp,256,"TablePhysicsDampeningFriction%d",m_fOverridePhysics-1);
 			 hr = GetRegStringAsFloat("Player", tmp, &m_fOverrideDampeningFriction);
 			 if (hr != S_OK)
 				m_fOverrideDampeningFriction = 0.95f;
@@ -3279,7 +3279,7 @@ void PinTable::SetLoadDefaults()
    m_angletiltMax = 726.0f;
    m_angletiltMin = 4.5f;
 
-   m_NormalizeNormals = false;
+   m_NormalizeNormals = fFalse;
 
    m_useReflectionForBalls = -1;
    m_ballReflectionStrength = 50;

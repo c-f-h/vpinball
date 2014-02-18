@@ -83,9 +83,9 @@ void Flipper::SetDefaults(bool fromMouseClick)
 
    hr = GetRegInt("DefaultProps\\Flipper","TimerEnabled", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
-      m_d.m_tdr.m_fTimerEnabled = iTmp == 0 ? false : true;
+      m_d.m_tdr.m_fTimerEnabled = iTmp == 0 ? fFalse : fTrue;
    else
-      m_d.m_tdr.m_fTimerEnabled = false;
+      m_d.m_tdr.m_fTimerEnabled = fFalse;
 
    hr = GetRegInt("DefaultProps\\Flipper","TimerInterval", &iTmp);
    m_d.m_tdr.m_TimerInterval = (hr == S_OK) && fromMouseClick ? iTmp : 100;
@@ -216,50 +216,50 @@ void Flipper::GetHitShapes(Vector<HitObject> * const pvho)
    {
 	     char tmp[256];
 		 m_d.m_OverrideSpeed = 0.15f;
-	     sprintf_s(tmp,256,"FlipperPhysicsSpeed%u",m_d.m_OverridePhysics-1);
+	     sprintf_s(tmp,256,"FlipperPhysicsSpeed%d",m_d.m_OverridePhysics-1);
          HRESULT hr = GetRegStringAsFloat("Player", tmp, &m_d.m_OverrideSpeed);
          if (hr != S_OK)
             m_d.m_OverrideSpeed = 0.15f;
 
 		 m_d.m_OverrideStrength = 3.f;
-	     sprintf_s(tmp,256,"FlipperPhysicsStrength%u",m_d.m_OverridePhysics-1);
+	     sprintf_s(tmp,256,"FlipperPhysicsStrength%d",m_d.m_OverridePhysics-1);
          hr = GetRegStringAsFloat("Player", tmp, &m_d.m_OverrideStrength);
          if (hr != S_OK)
             m_d.m_OverrideStrength = 3.f;
 
  		 m_d.m_OverrideElasticity = 0.55f;
-	     sprintf_s(tmp,256,"FlipperPhysicsElasticity%u",m_d.m_OverridePhysics-1);
+	     sprintf_s(tmp,256,"FlipperPhysicsElasticity%d",m_d.m_OverridePhysics-1);
          hr = GetRegStringAsFloat("Player", tmp, &m_d.m_OverrideElasticity);
          if (hr != S_OK)
             m_d.m_OverrideElasticity = 0.55f;
 
   		 m_d.m_OverrideScatter = -11.f;
-	     sprintf_s(tmp,256,"FlipperPhysicsScatter%u",m_d.m_OverridePhysics-1);
+	     sprintf_s(tmp,256,"FlipperPhysicsScatter%d",m_d.m_OverridePhysics-1);
          hr = GetRegStringAsFloat("Player", tmp, &m_d.m_OverrideScatter);
          if (hr != S_OK)
             m_d.m_OverrideScatter = -11.f;
 		 m_d.m_OverrideScatter = ANGTORAD(m_d.m_OverrideScatter);
 
   		 m_d.m_OverrideReturnStrength = 0.09f;
-	     sprintf_s(tmp,256,"FlipperPhysicsReturnStrength%u",m_d.m_OverridePhysics-1);
+	     sprintf_s(tmp,256,"FlipperPhysicsReturnStrength%d",m_d.m_OverridePhysics-1);
          hr = GetRegStringAsFloat("Player", tmp, &m_d.m_OverrideReturnStrength);
          if (hr != S_OK)
             m_d.m_OverrideReturnStrength = 0.09f;
 
 		 m_d.m_OverrideRecoil = 2.f;
-	     sprintf_s(tmp,256,"FlipperPhysicsRecoil%u",m_d.m_OverridePhysics-1);
+	     sprintf_s(tmp,256,"FlipperPhysicsRecoil%d",m_d.m_OverridePhysics-1);
          hr = GetRegStringAsFloat("Player", tmp, &m_d.m_OverrideRecoil);
          if (hr != S_OK)
             m_d.m_OverrideRecoil = 2.f;
 
   		 m_d.m_OverridePowerLaw = 1.f;
-	     sprintf_s(tmp,256,"FlipperPhysicsPowerLaw%u",m_d.m_OverridePhysics-1);
+	     sprintf_s(tmp,256,"FlipperPhysicsPowerLaw%d",m_d.m_OverridePhysics-1);
          hr = GetRegStringAsFloat("Player", tmp, &m_d.m_OverridePowerLaw);
          if (hr != S_OK)
             m_d.m_OverridePowerLaw = 1.f;
 
 		 m_d.m_OverrideOblique = 3.f;
-	     sprintf_s(tmp,256,"FlipperPhysicsOblique%u",m_d.m_OverridePhysics-1);
+	     sprintf_s(tmp,256,"FlipperPhysicsOblique%d",m_d.m_OverridePhysics-1);
          hr = GetRegStringAsFloat("Player", tmp, &m_d.m_OverrideOblique);
          if (hr != S_OK)
             m_d.m_OverrideOblique = 3.f;
@@ -721,7 +721,7 @@ void Flipper::RenderSetup(const RenderDevice* _pd3dDevice)
         idx[102 + 96 + i*6  ] = 76 + o;
         idx[102 + 96 + i*6+1] = 76 + (o+1)%32;
         idx[102 + 96 + i*6+2] = 76 + (o+2)%32;
-        idx[102 + 96 + i*6+3] = 76 + (o+1)%32;;
+        idx[102 + 96 + i*6+3] = 76 + (o+1)%32;
         idx[102 + 96 + i*6+4] = 76 + (o+3)%32;
         idx[102 + 96 + i*6+5] = 76 + (o+2)%32;
     }

@@ -2290,23 +2290,23 @@ void Player::Render()
 #endif
 
 #ifdef _DEBUGPHYSICS
-		len = sprintf_s(szFoo, sizeof(szFoo), "period: %3d ms (%3d avg %10d max)      ",
+		len = sprintf_s(szFoo, sizeof(szFoo), "period: %3u ms (%3u avg %10u max)      ",
 		period, (U32)( m_total / m_count ), (U32) m_max );
 		TextOut(hdcNull, 10, 120, szFoo, len);
 
-		len = sprintf_s(szFoo, sizeof(szFoo), "physTimes %10d uS(%12d avg %12d max)    ",
+		len = sprintf_s(szFoo, sizeof(szFoo), "physTimes %10u uS(%12u avg %12u max)    ",
 			   	(U32)phys_period,
 			   	(U32)(m_phys_total / m_count),
 			   	(U32)m_phys_max );
 		TextOut(hdcNull, 10, 140, szFoo, len);
 
-		len = sprintf_s(szFoo, sizeof(szFoo), "phys:%5d iterations(%5d avg %5d max))   ",
+		len = sprintf_s(szFoo, sizeof(szFoo), "phys:%5u iterations(%5u avg %5u max))   ",
 			   	phys_iterations,
 			   	(U32)( m_phys_total_iterations / m_count ),
 				(U32)m_phys_max_iterations );
 		TextOut(hdcNull, 10, 160, szFoo, len);
 
-		len = sprintf_s(szFoo, sizeof(szFoo), "Hits:%5d Collide:%5d Ctacs:%5d Static:%5d Embed: %5d    ",
+		len = sprintf_s(szFoo, sizeof(szFoo), "Hits:%5u Collide:%5u Ctacs:%5u Static:%5u Embed: %5u    ",
 		c_hitcnts, c_collisioncnt, c_contactcnt, c_staticcnt, c_embedcnts);
 		TextOut(hdcNull, 10, 180, szFoo, len);
 #endif
