@@ -1,7 +1,4 @@
 #include "stdafx.h"
-#include <xmmintrin.h>
-
-//spare
 
 float c_maxBallSpeedSqr = C_SPEEDLIMIT*C_SPEEDLIMIT; 
 float c_dampingFriction = C_DAMPFRICTION;

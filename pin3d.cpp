@@ -263,7 +263,6 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
 {
     m_hwnd = hwnd;
     //fullscreen = fFullScreen;
-    // Check if we are rendering in hardware.
 
     // Get the dimensions of the viewport and screen bounds
     GetClientRect( hwnd, &m_rcScreen );

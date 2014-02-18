@@ -640,10 +640,6 @@ PinTable::PinTable()
 	   m_timeout = tmp*1000/60;
 #endif
 
-   tmp = 1;
-   hr = GetRegInt("Player", "HardwareRender", &tmp);
-   g_pvp->m_pdd.m_fHardwareAccel = (tmp != 0);
-
    tmp = 0;										
    hr = GetRegInt("Player", "AlternateRender", &tmp);
    g_pvp->m_pdd.m_fAlternateRender = (tmp != 0);
@@ -8916,30 +8912,16 @@ STDMETHODIMP PinTable::put_AlternateRender(VARIANT_BOOL newVal)
 
 STDMETHODIMP PinTable::get_HardwareRender(VARIANT_BOOL *pVal)
 {
-   *pVal = (VARIANT_BOOL)FTOVB((g_pvp) ? g_pvp->m_pdd.m_fHardwareAccel : false); //VP Editor
+	//!! deprecated
+    *pVal = (VARIANT_BOOL)FTOVB((g_pvp) ? true : false); //VP Editor
 
-   return S_OK;
+    return S_OK;
 }
 
 STDMETHODIMP PinTable::put_HardwareRender(VARIANT_BOOL newVal)
 {
-   if (!g_pplayer && g_pvp) 
-   {														//VP Editor
-      int tmp;
-      const HRESULT hr = GetRegInt("Player", "HardwareRender", &tmp);
-      if ((hr == S_OK) && (tmp == 1))
-      {
-         tmp = 0;
-         g_pvp->m_pdd.m_fHardwareAccel = tmp;
-      }
-      else
-      {
-         tmp = 1;
-         g_pvp->m_pdd.m_fHardwareAccel = tmp;
-      }
-      SetRegValue("Player", "HardwareRender", REG_DWORD, &tmp, 4);
-   }
-   return S_OK;
+	//!! deprecated
+	return S_OK;
 }
 
 STDMETHODIMP PinTable::get_Accelerometer(VARIANT_BOOL *pVal)

@@ -424,17 +424,13 @@ void VPinball::InitTools()
 ///<summary>
 ///Initializes Default Values of many variables (from Registry if keys are present). 
 ///<para>Registry Values under HKEY-CURRENT-USER/Software/Visual Pinball</para>
-///<para>HardwareAceelleration, Deadzone, AlternateRender, ShowDragPoints, DrawLightCenters,</para>
+///<para>Deadzone, AlternateRender, ShowDragPoints, DrawLightCenters,</para>
 ///<para>AutoSaveOn, AutoSaveTime, SecurityLevel</para>
 ///<para>Gets the last loaded Tables (List under File-Menu)</para>
 ///</summary>
 void VPinball::InitRegValues()
 {
    HRESULT hr;
-
-   hr = GetRegInt("Player", "HardwareRender", &m_fHardwareAccel);
-   if (hr != S_OK)
-      g_pvp->m_pdd.m_fHardwareAccel = 1; // default value
 
    hr = GetRegInt("Player", "DeadZone", &m_DeadZ);
    if (hr != S_OK)
@@ -3641,34 +3637,6 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             stereo3DY = fFalse;
          SendMessage(hwndCheck, BM_SETCHECK, stereo3DY ? BST_CHECKED : BST_UNCHECKED, 0);
 
-         hwndCheck = GetDlgItem(hwndDlg, IDC_ENABLE_REGION_UPDATES);
-         int enableRegionUpdates;
-         hr = GetRegInt("Player", "EnableRegionUpdates", &enableRegionUpdates);
-         if (hr != S_OK)
-            enableRegionUpdates = fTrue;
-         SendMessage(hwndCheck, BM_SETCHECK, enableRegionUpdates ? BST_CHECKED : BST_UNCHECKED, 0);
-
-         hwndCheck = GetDlgItem(hwndDlg, IDC_ENABLE_REGION_UPDATE_OPTIMIZATION);
-         int enableRegionUpdateOptimization;
-         hr = GetRegInt("Player", "EnableRegionUpdateOptimization", &enableRegionUpdateOptimization);
-         if (hr != S_OK)
-            enableRegionUpdateOptimization = fTrue;
-         SendMessage(hwndCheck, BM_SETCHECK, enableRegionUpdateOptimization ? BST_CHECKED : BST_UNCHECKED, 0);
-
-         hwndCheck = GetDlgItem(hwndDlg, IDC_VB_IN_VRAM); 
-         int vbInVram;
-         hr = GetRegInt("Player", "VBinVRAM", &vbInVram);
-         if (hr != S_OK)
-            vbInVram = fFalse;
-         SendMessage(hwndCheck, BM_SETCHECK, vbInVram ? BST_CHECKED : BST_UNCHECKED, 0);
-
-         hwndCheck = GetDlgItem(hwndDlg, 211); //HardwareRender
-         int hardrend;
-         hr = GetRegInt("Player", "HardwareRender", &hardrend);
-         if (hr != S_OK)
-            hardrend = fTrue;
-         SendMessage(hwndCheck, BM_SETCHECK, hardrend ? BST_CHECKED : BST_UNCHECKED, 0);
-
          hwndCheck = GetDlgItem(hwndDlg, 216); //AlternateRender
          int altrender;
          hr = GetRegInt("Player", "AlternateRender", &altrender);
@@ -3837,23 +3805,6 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
                   HWND hwndStereo3DY = GetDlgItem(hwndDlg, IDC_3D_STEREO_Y);
                   int stereo3DY = SendMessage(hwndStereo3DY, BM_GETCHECK, 0, 0);
                   SetRegValue("Player", "Stereo3DYAxis", REG_DWORD, &stereo3DY, 4);
-
-                  HWND hwndEnableRegionUpdates = GetDlgItem(hwndDlg, IDC_ENABLE_REGION_UPDATES);
-                  int enableRegionUpdates = SendMessage(hwndEnableRegionUpdates, BM_GETCHECK, 0, 0);
-                  SetRegValue("Player", "EnableRegionUpdates", REG_DWORD, &enableRegionUpdates, 4);
-
-                  HWND hwndEnableRegionUpdateOptimization = GetDlgItem(hwndDlg, IDC_ENABLE_REGION_UPDATE_OPTIMIZATION);
-                  int enableRegionUpdateOptimization = SendMessage(hwndEnableRegionUpdateOptimization, BM_GETCHECK, 0, 0);
-                  SetRegValue("Player", "EnableRegionUpdateOptimization", REG_DWORD, &enableRegionUpdateOptimization, 4);
-
-                  HWND hwndVbInVRAM = GetDlgItem(hwndDlg, IDC_VB_IN_VRAM);
-                  int vbInVram = SendMessage(hwndVbInVRAM, BM_GETCHECK, 0, 0);
-                  SetRegValue("Player", "VBinVRAM", REG_DWORD, &vbInVram, 4);
-
-                  HWND hwndHWR = GetDlgItem(hwndDlg, 211);
-                  int hardrend = SendMessage(hwndHWR, BM_GETCHECK, 0, 0);
-                  SetRegValue("Player", "HardwareRender", REG_DWORD, &hardrend, 4);
-                  g_pvp->m_pdd.m_fHardwareAccel = (hardrend != 0);
 
                   HWND hwndARend = GetDlgItem(hwndDlg, 216);
                   int altrend = SendMessage(hwndARend, BM_GETCHECK, 0, 0);

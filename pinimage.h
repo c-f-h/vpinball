@@ -12,7 +12,6 @@ public:
 
     BaseTexture* CreateOffscreenWithCustomTransparency(const int width, const int height, const int color);
 
-	BOOL m_fHardwareAccel;
 	BOOL m_fAlternateRender;
 };
 

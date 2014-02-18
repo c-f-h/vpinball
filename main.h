@@ -31,14 +31,10 @@ using namespace MSAPC;
 #include <dinput.h>
 #include <dsound.h>
 
-#ifdef VPINBALL_DX9
-# ifdef _DEBUG
-#  define D3D_DEBUG_INFO
-# endif
-# include <d3d9.h>
-#else
-# include <d3d.h>
+#ifdef _DEBUG
+ #define D3D_DEBUG_INFO
 #endif
+#include <d3d9.h>
 
 #include "stdio.h"
 #include "wchar.h"

@@ -247,24 +247,6 @@ Player::Player()
 		stereo3DY = fFalse; // The default
 	m_fStereo3DY = (stereo3DY == 1);
 
-	int enableRegionUpdates;
-	hr = GetRegInt("Player", "EnableRegionUpdates", &enableRegionUpdates);
-	if (hr != S_OK)
-		enableRegionUpdates = fTrue; // The default
-	m_fEnableRegionUpdates = (enableRegionUpdates == 1);
-
-	int enableRegionUpdateOptimization;
-	hr = GetRegInt("Player", "EnableRegionUpdateOptimization", &enableRegionUpdateOptimization);
-	if (hr != S_OK)
-		enableRegionUpdateOptimization = fTrue; // The default
-	m_fEnableRegionUpdateOptimization = (enableRegionUpdateOptimization == 1);
-
-   int vbInVram;
-   hr = GetRegInt("Player", "VBinVRAM", &vbInVram);
-   if (hr != S_OK)
-      vbInVram = fFalse; // The default
-   m_fVertexBuffersInVRAM = (vbInVram == 1);
-
    int detecthang;
 	hr = GetRegInt("Player", "DetectHang", &detecthang);
 	if (hr != S_OK)
