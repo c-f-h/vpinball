@@ -369,12 +369,9 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
     Texture * const pinback = m_ptable->GetImage(m_d.m_szImageBack);
     Texture * const pinfront = m_ptable->GetImage(m_d.m_szImageFront);
 
-    if (g_pvp->m_pdd.m_fHardwareAccel)
-    {
-        pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
-        pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
-        pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
-    }
+    pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
+    pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
+    pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
 
     // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
     pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_MIRROR);

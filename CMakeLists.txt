@@ -126,7 +126,6 @@ set(SOURCES
   kicker.cpp
   light.cpp
   lightseq.cpp
-  Material.cpp
   memutil.cpp
   mesh.cpp
   mixer.cpp

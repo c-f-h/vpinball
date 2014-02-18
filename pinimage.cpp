@@ -4,9 +4,6 @@
 
 PinDirectDraw::PinDirectDraw()
 {
-   int tmp = 1;
-   HRESULT hr = GetRegInt("Player", "HardwareRender", &tmp);
-   m_fHardwareAccel = (tmp != 0);
 }
 
 PinDirectDraw::~PinDirectDraw()
@@ -18,9 +15,7 @@ typedef int(CALLBACK *DDCreateFunction)(GUID FAR *lpGUID, LPVOID *lplpDD, REFIID
 
 BaseTexture* PinDirectDraw::CreateOffscreenWithCustomTransparency(const int width, const int height, const int color)
 {
-#ifdef VPINBALL_DX9
-    return NULL;
-#else
+#ifndef VPINBALL_DX9
 	DDSURFACEDESC2 ddsd;
 	ZeroMemory( &ddsd, sizeof(ddsd) );
 	ddsd.dwSize = sizeof(ddsd);
@@ -37,11 +32,7 @@ BaseTexture* PinDirectDraw::CreateOffscreenWithCustomTransparency(const int widt
 	ddsd.dwHeight       = height < 1 ? 1 : height; // rare, it's easier just to create a tiny surface to handle it.
 	ddsd.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;// | DDSCAPS_3DDEVICE;
 
-	// Check if we are rendering in hardware.
-	if (m_fHardwareAccel)
-		ddsd.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY; // slower(?): | DDSCAPS_LOCALVIDMEM;
-	else
-		ddsd.ddsCaps.dwCaps |= DDSCAPS_SYSTEMMEMORY;
+	ddsd.ddsCaps.dwCaps |= DDSCAPS_VIDEOMEMORY; // slower(?): | DDSCAPS_LOCALVIDMEM;
 
 retry0:
 	BaseTexture* pdds;
@@ -58,5 +49,6 @@ retry0:
 
 	return pdds;
 #endif
+    return NULL;
 }
 

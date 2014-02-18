@@ -247,24 +247,6 @@ Player::Player()
 		stereo3DY = fFalse; // The default
 	m_fStereo3DY = (stereo3DY == 1);
 
-	int enableRegionUpdates;
-	hr = GetRegInt("Player", "EnableRegionUpdates", &enableRegionUpdates);
-	if (hr != S_OK)
-		enableRegionUpdates = fTrue; // The default
-	m_fEnableRegionUpdates = (enableRegionUpdates == 1);
-
-	int enableRegionUpdateOptimization;
-	hr = GetRegInt("Player", "EnableRegionUpdateOptimization", &enableRegionUpdateOptimization);
-	if (hr != S_OK)
-		enableRegionUpdateOptimization = fTrue; // The default
-	m_fEnableRegionUpdateOptimization = (enableRegionUpdateOptimization == 1);
-
-   int vbInVram;
-   hr = GetRegInt("Player", "VBinVRAM", &vbInVram);
-   if (hr != S_OK)
-      vbInVram = fFalse; // The default
-   m_fVertexBuffersInVRAM = (vbInVram == 1);
-
    int detecthang;
 	hr = GetRegInt("Player", "DetectHang", &detecthang);
 	if (hr != S_OK)
@@ -713,7 +695,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	InitRegValues();
 
 	// width, height, and colordepth are only defined if fullscreen is true.
-	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, !!m_fFXAA, (!!m_fStereo3D) || (!!m_fFXAA));
+	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)));
 
 	if (hr != S_OK)
 	{
@@ -2058,13 +2040,13 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 	if(gShader == NULL)
 	{
 		ID3DXBuffer *tmp;
-		D3DXCompileShader( (m_fFXAA != 0) ? FXAAshader : stereo3Dshader, (m_fFXAA != 0) ? sizeof(FXAAshader)-1 : sizeof(stereo3Dshader)-1, 0, 0, "ps_main", "ps_2_a", D3DXSHADER_OPTIMIZATION_LEVEL3|D3DXSHADER_PREFER_FLOW_CONTROL, &tmp, 0, 0 );
+		D3DXCompileShader( ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)) ? FXAAshader : stereo3Dshader, ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)) ? sizeof(FXAAshader)-1 : sizeof(stereo3Dshader)-1, 0, 0, "ps_main", "ps_2_a", D3DXSHADER_OPTIMIZATION_LEVEL3|D3DXSHADER_PREFER_FLOW_CONTROL, &tmp, 0, 0 );
 		//D3DXCompileShader( copyshader, sizeof(copyshader)-1, 0, 0, "ps_main", "ps_2_a", D3DXSHADER_OPTIMIZATION_LEVEL3|D3DXSHADER_PREFER_FLOW_CONTROL, &tmp, 0, 0 );
 		m_pin3d.m_pd3dDevice->m_pD3DDevice->CreatePixelShader( (DWORD*)tmp->GetBufferPointer(), &gShader );
 	}
 
 	m_pin3d.m_pd3dDevice->CopySurface(m_pin3d.m_pdds3DBackBuffer, m_pin3d.m_pddsBackBuffer);
-	if(m_fFXAA == 0)
+	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)))
 		m_pin3d.m_pd3dDevice->CopyDepth(m_pin3d.m_pdds3DZBuffer, m_pin3d.m_pddsZBuffer);
 
     m_pin3d.m_pd3dDevice->BeginScene();
@@ -2076,7 +2058,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 
 	m_pin3d.m_pd3dDevice->SetTexture(0,m_pin3d.m_pdds3DBackBuffer);
 	m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_BILINEAR);
-	if(m_fFXAA == 0)
+	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)))
 	{
 		m_pin3d.m_pd3dDevice->SetTexture(1,m_pin3d.m_pdds3DZBuffer);
 		m_pin3d.m_pd3dDevice->SetTextureFilter(1, TEXTURE_MODE_POINT); //TEXTURE_MODE_BILINEAR?
@@ -2094,7 +2076,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 	m_pin3d.m_pd3dDevice->SetTransform( TRANSFORMSTATE_PROJECTION, &ident );
 
 	m_pin3d.m_pd3dDevice->m_pD3DDevice->SetPixelShader( gShader );
-	if(m_fFXAA != 0)
+	if((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1))
 	{
 		const float temp[4] = {1.0/(double)m_width, 1.0/(double)m_height, 0, 0};
 		m_pin3d.m_pd3dDevice->m_pD3DDevice->SetPixelShaderConstantF(0,temp,1);
@@ -2116,7 +2098,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 
 	m_pin3d.m_pd3dDevice->SetTexture(0,NULL);
 	m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_TRILINEAR );
-	if(m_fFXAA == 0)
+	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)))
 	{
 		m_pin3d.m_pd3dDevice->SetTexture(1,NULL);
 		m_pin3d.m_pd3dDevice->SetTextureFilter(1, TEXTURE_MODE_TRILINEAR );
@@ -2194,7 +2176,8 @@ void Player::Render()
                 vsync = true;
     }
 
-    if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (m_fFXAA == 0)) || (m_pin3d.m_maxSeparation <= 0.0f) || (m_pin3d.m_maxSeparation >= 1.0f) || (m_pin3d.m_ZPD <= 0.0f) || (m_pin3d.m_ZPD >= 1.0f) || !m_pin3d.m_pdds3DBackBuffer || !m_pin3d.m_pdds3DZBuffer)
+
+    if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)))) || (m_pin3d.m_maxSeparation <= 0.0f) || (m_pin3d.m_maxSeparation >= 1.0f) || (m_pin3d.m_ZPD <= 0.0f) || (m_pin3d.m_ZPD >= 1.0f) || !m_pin3d.m_pdds3DBackBuffer || !m_pin3d.m_pdds3DZBuffer)
     {
         FlipVideoBuffersNormal( vsync );
     }
@@ -2720,7 +2703,7 @@ void Player::DrawBalls()
         Vertex3D_NoTex2 *buf;
         Ball::vertexBuffer->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY);
         memcpy( buf, pball->vertices, sizeof(Vertex3D_NoTex2)*4 );
-        if ( m_ptable->m_useReflectionForBalls )
+        if ((m_fReflectionForBalls && (m_ptable->m_useReflectionForBalls == -1)) || (m_ptable->m_useReflectionForBalls == 1))
             memcpy( &buf[16], pball->reflectVerts, sizeof(Vertex3D_NoTex2)*4 );
 
         if (m_fBallShadows)
@@ -2803,7 +2786,7 @@ void Player::DrawBalls()
         }
 
         // ball trails //!! misses lighting disabled part!
-        if( m_ptable->m_useTrailForBalls==fTrue && m_fBallAntialias )
+        if( ((m_fTrailForBalls && (m_ptable->m_useTrailForBalls == -1)) || (m_ptable->m_useTrailForBalls == 1)) && m_fBallAntialias )
         {
             Vertex3D_NoLighting rgv3D_all[10*2];
             unsigned int num_rgv3D = 0;
