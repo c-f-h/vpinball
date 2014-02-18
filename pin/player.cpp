@@ -2721,7 +2721,7 @@ void Player::DrawBalls()
         Vertex3D_NoTex2 *buf;
         Ball::vertexBuffer->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY);
         memcpy( buf, pball->vertices, sizeof(Vertex3D_NoTex2)*4 );
-        if ( m_ptable->m_useReflectionForBalls )
+        if ((m_fReflectionForBalls && (m_ptable->m_useReflectionForBalls == -1)) || (m_ptable->m_useReflectionForBalls == 1))
             memcpy( &buf[16], pball->reflectVerts, sizeof(Vertex3D_NoTex2)*4 );
 
         if (m_fBallShadows)
@@ -2804,7 +2804,7 @@ void Player::DrawBalls()
         }
 
         // ball trails //!! misses lighting disabled part!
-        if( m_ptable->m_useTrailForBalls==fTrue && m_fBallAntialias )
+        if( ((m_fTrailForBalls && (m_ptable->m_useTrailForBalls == -1)) || (m_ptable->m_useTrailForBalls == 1)) && m_fBallAntialias )
         {
             Vertex3D_NoLighting rgv3D_all[10*2];
             unsigned int num_rgv3D = 0;
