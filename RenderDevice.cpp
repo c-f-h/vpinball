@@ -228,9 +228,24 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     memset(&materialStateCache, 0xCC, sizeof(Material));
 }
 
+#define CHECKNVAPI(s) { NvAPI_Status hr = (s); if (hr != NVAPI_OK) { NvAPI_ShortString ss; NvAPI_GetErrorMessage(hr,ss); MessageBox(NULL, ss, "NVAPI", MB_OK | MB_ICONEXCLAMATION); } }
+static bool NVAPIinit = false; //!! meh
+static RenderTarget *src_cache = NULL; //!! meh
+static D3DTexture* dest_cache = NULL;
+
 RenderDevice::~RenderDevice()
 {
-    SAFE_RELEASE(m_pBackBuffer);
+	if(src_cache != NULL)
+		CHECKNVAPI(NvAPI_D3D9_UnregisterResource(src_cache)); //!! meh
+	src_cache = NULL;
+	if(dest_cache != NULL)
+		CHECKNVAPI(NvAPI_D3D9_UnregisterResource(dest_cache)); //!! meh
+	dest_cache = NULL;
+	if(NVAPIinit)
+		CHECKNVAPI(NvAPI_Unload());
+	NVAPIinit = false;
+
+	SAFE_RELEASE(m_pBackBuffer);
     m_pD3DDevice->Release();
     m_pD3D->Release();
 }
@@ -292,17 +307,26 @@ void RenderDevice::CopySurface(D3DTexture* dest, RenderTarget* src)
     CHECKD3D(m_pD3DDevice->StretchRect(src, NULL, textureSurface, NULL, D3DTEXF_NONE));
 }
 
-static bool NVAPIinit = false; //!! meh
-#define CHECKNVAPI(s) { NvAPI_Status hr = (s); if (hr != NVAPI_OK) { NvAPI_ShortString ss; NvAPI_GetErrorMessage(hr,ss); MessageBox(NULL, ss, "NVAPI", MB_OK | MB_ICONEXCLAMATION); } }
-
 void RenderDevice::CopyDepth(D3DTexture* dest, RenderTarget* src)
 {
 	if(!NVAPIinit)
 	{
 		 CHECKNVAPI(NvAPI_Initialize()); //!! meh
-		 CHECKNVAPI(NvAPI_D3D9_RegisterResource(src)); //!! meh
-		 CHECKNVAPI(NvAPI_D3D9_RegisterResource(dest)); //!! meh
 		 NVAPIinit = true;
+	}
+	if(src != src_cache)
+	{
+		if(src_cache != NULL)
+			CHECKNVAPI(NvAPI_D3D9_UnregisterResource(src_cache)); //!! meh
+		CHECKNVAPI(NvAPI_D3D9_RegisterResource(src)); //!! meh
+		src_cache = src;
+	}
+	if(dest != dest_cache)
+	{
+		if(dest_cache != NULL)
+			CHECKNVAPI(NvAPI_D3D9_UnregisterResource(dest_cache)); //!! meh
+		CHECKNVAPI(NvAPI_D3D9_RegisterResource(dest)); //!! meh
+		dest_cache = dest;
 	}
 
 	//CHECKNVAPI(NvAPI_D3D9_AliasSurfaceAsTexture(m_pD3DDevice,src,dest,0));
@@ -350,39 +374,34 @@ void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 {
 	switch ( mode )
 	{
+	default:
 	case TEXTURE_MODE_POINT:
-		// Don't filter textures.  Don't filter between mip levels.
+		// Don't filter textures.
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_POINT));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_POINT));
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_NONE));
 		break;
 
 	case TEXTURE_MODE_BILINEAR:
-		// Filter textures when magnified or reduced (average of 2x2 texels).  Don't filter between mip levels.
+		// Filter textures (average of 2x2 texels).
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR));
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_NONE));
 		break;
 
 	case TEXTURE_MODE_TRILINEAR:
-		// Filter textures when magnified or reduced (average of 2x2 texels).  And filter between the 2 mip levels.
+		// Filter textures on 2 mip levels (average of 2x2 texels).  And filter between the 2 mip levels.
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR));
 		break;
 
 	case TEXTURE_MODE_ANISOTROPIC:
-		// Filter textures when magnified or reduced (filter to account for perspective distortion).  And filter between the 2 mip levels.
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));        // anisotropic mag filter generally not supported
+		// Full HQ anisotropic Filter. Should lead to driver doing whatever it thinks is best.
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC));
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR));
-		break;
-
-	default:
-		// Don't filter textures.  Don't filter between mip levels.
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_POINT));
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_POINT));
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_NONE));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAXANISOTROPY,16));
 		break;
 	}
 }
