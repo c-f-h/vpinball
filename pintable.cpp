@@ -969,6 +969,7 @@ void PinTable::SwitchToLayer(int layerNumber )
          }
       }
    }
+
    SetDirtyDraw();
 }
 
@@ -4089,18 +4090,16 @@ STDMETHODIMP PinTable::put_GridSize(float gs)
 {
    STARTUNDO
 
-      if (gs < 1)
-      {
-         gs = 1;
-      }
+   if (gs < 1)
+     gs = 1;
 
-      m_gridsize = gs;
+   m_gridsize = gs;
 
-      SetDirtyDraw();
+   SetDirtyDraw();
 
-      STOPUNDO
+   STOPUNDO
 
-         return S_OK;
+   return S_OK;
 }
 
 void PinTable::SetZoom(float zoom)
@@ -6972,7 +6971,7 @@ STDMETHODIMP PinTable::put_Image(BSTR newVal)
 {
    STARTUNDO
 
-      WideCharToMultiByte(CP_ACP, 0, newVal, -1, m_szImage, 32, NULL, NULL);
+   WideCharToMultiByte(CP_ACP, 0, newVal, -1, m_szImage, 32, NULL, NULL);
 
    if (!g_pplayer)
    {
@@ -6982,7 +6981,7 @@ STDMETHODIMP PinTable::put_Image(BSTR newVal)
 
    STOPUNDO
 
-      return S_OK;
+   return S_OK;
 }
 
 STDMETHODIMP PinTable::GetPredefinedStrings(DISPID dispID, CALPOLESTR *pcaStringsOut, CADWORD *pcaCookiesOut)
@@ -7368,13 +7367,13 @@ STDMETHODIMP PinTable::put_DisplayGrid(VARIANT_BOOL newVal)
 {
    STARTUNDO
 
-      m_fGrid = VBTOF(newVal);
+   m_fGrid = VBTOF(newVal);
 
    SetDirtyDraw();
 
    STOPUNDO
 
-      return S_OK;
+   return S_OK;
 }
 
 STDMETHODIMP PinTable::get_DisplayBackdrop(VARIANT_BOOL *pVal)
@@ -7388,13 +7387,13 @@ STDMETHODIMP PinTable::put_DisplayBackdrop(VARIANT_BOOL newVal)
 {
    STARTUNDO
 
-      m_fBackdrop = VBTOF(newVal);
+   m_fBackdrop = VBTOF(newVal);
 
    SetDirtyDraw();
 
    STOPUNDO
 
-      return S_OK;
+   return S_OK;
 }
 
 INT_PTR CALLBACK ProgressProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)

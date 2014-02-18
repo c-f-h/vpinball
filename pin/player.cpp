@@ -219,7 +219,7 @@ Player::Player()
 
 	hr = GetRegInt("Player", "BallReflection", &m_fReflectionForBalls);
     if (hr != S_OK)
-      m_fReflectionForBalls = fFalse; // The default = on
+      m_fReflectionForBalls = fTrue; // The default = on
 
     hr = GetRegInt("Player", "USEAA", &m_fAA);
     if (hr != S_OK)

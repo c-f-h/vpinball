@@ -1,6 +1,6 @@
 #pragma once
 
-#define DEFAULT_PLAYER_WIDTH 912
+#define DEFAULT_PLAYER_WIDTH 1024
 
 class IBlink;
 
