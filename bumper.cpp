@@ -298,7 +298,6 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         else            // on
         {
             ppin3d->lightTexture[0].Set( ePictureTexture );
-            ppin3d->EnableLightMap(fFalse, -1);
             pd3dDevice->SetMaterial(topLitMaterial);
         }
 
@@ -318,7 +317,6 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         else
         {
             ppin3d->lightTexture[0].Set( ePictureTexture );
-            ppin3d->EnableLightMap(fFalse, -1);
             pd3dDevice->SetMaterial(sideLitMaterial);
         }
 
@@ -336,7 +334,6 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
         if (state == 0)
         {
-            ppin3d->EnableLightMap(fFalse, -1);
             pd3dDevice->SetMaterial(nonLitMaterial);
         }
         else
@@ -353,7 +350,7 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
         // Reset all the texture coordinates
         if (state == 1)
         {
-            ppin3d->EnableLightMap(fFalse, -1);
+            ppin3d->DisableLightMap();
         }
     }
 
@@ -544,38 +541,13 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
    memcpy(buf+32, dynVerts, 8*32*sizeof(buf[0]));
    memcpy(buf+32+8*32, moverVertices, 2*32*sizeof(buf[0]));
    vtxBuf->unlock();
+
+   // ensure we are not disabled at game start
+   m_fDisabled = fFalse;
 }
 
 void Bumper::RenderStatic(const RenderDevice* _pd3dDevice)
 {
-   RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
-
-   // ensure we are not disabled at game start
-   m_fDisabled = fFalse;
-   if(!m_d.m_fVisible)	return;
-   
-   Material staticMaterial;
-
-   // All this function does is render the bumper image so the black shows through where it's missing in the animated form
-   // TODO: is this still needed with the dynamic renderer? Probably not
-   Texture * const pin = m_ptable->GetImage(m_d.m_szImage);	
-   if (pin)
-   {
-      Pin3D *const ppin3d = &g_pplayer->m_pin3d;
-
-      pin->CreateAlphaChannel();
-      pin->Set(ePictureTexture);
-
-      pd3dDevice->SetRenderState( RenderDevice::ALPHABLENDENABLE, TRUE);
-      pd3dDevice->SetMaterial(staticMaterial);
-
-      pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, vtxBuf, 0, 32);
-
-      pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 32, 8*32, idxBuf, 6*32, 12*32);
-
-      pd3dDevice->SetRenderState( RenderDevice::ALPHABLENDENABLE, FALSE);
-      ppin3d->SetTexture(NULL);
-   }
 }
 
 void Bumper::SetObjectPos()
