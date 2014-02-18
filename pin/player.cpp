@@ -2085,7 +2085,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 	{
 		const float temp[4] = {m_pin3d.m_maxSeparation, m_pin3d.m_ZPD, m_fStereo3DY ? 1.0f : 0.0f, (m_fStereo3D == 1) ? 1.0f : 0.0f};
 		m_pin3d.m_pd3dDevice->m_pD3DDevice->SetPixelShaderConstantF(0,temp,1);
-		const float temp2[4] = {1.0f/m_width, 1.0f/m_height, (float)m_height, 0};
+		const float temp2[4] = {1.0f/m_width, 1.0f/m_height, (float)m_height, 1.0f+(float)(usec()&0x1FF)*(float)(1.0/0x1FF)}; //!!
 		m_pin3d.m_pd3dDevice->m_pD3DDevice->SetPixelShaderConstantF(1,temp2,1);
 	}
     m_pin3d.m_pd3dDevice->m_pD3DDevice->SetFVF( D3DFVF_XYZ|D3DFVF_TEX1 );
