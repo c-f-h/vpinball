@@ -540,6 +540,9 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
 
 void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
 {
+   if (m_d.m_decaltype != DecalImage)
+       return;      // TODO: support text decals as well
+
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
@@ -553,8 +556,6 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
    {
       pin = m_ptable->GetImage(m_d.m_szImage);
    }
-
-   pd3dDevice->SetRenderState( RenderDevice::ZWRITEENABLE, FALSE);
 
    // Set texture to mirror, so the alpha state of the texture blends correctly to the outside
    pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_MIRROR);
@@ -575,18 +576,23 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
       pd3dDevice->SetTexture(ePictureTexture, NULL);
    }
 
-   // Render all alpha pixels.
-   pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, (DWORD)0x00000001);
+   // Perform alpha test so that we don't write to the depth buffer on transparent pixels.
+   pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
    pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATEREQUAL);
-   pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
+   pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
 
    // Turn on anisotopic filtering.
    ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_ANISOTROPIC );
+
+   float depthbias = -1e-5f; // range: [0..1], covering the whole depth buffer
+   pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
 
    if( !m_fBackglass || GetPTable()->GetDecalsEnabled())
    {
       pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4 );
    }
+
+   pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, 0);
 
    // Set the texture state.
    pd3dDevice->SetTexture(ePictureTexture, NULL);
@@ -594,7 +600,6 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
 
    // Set the render state.
    pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
-   pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
    pd3dDevice->SetTextureAddressMode(ePictureTexture, RenderDevice::TEX_WRAP);
 }
 
