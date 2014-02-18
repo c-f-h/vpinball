@@ -582,25 +582,25 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 
     m_proj.SetFieldOfView(FOV, aspect, m_proj.m_rznear, m_proj.m_rzfar);
 
-	const float skew = -tanf(m_layback*(float)(M_PI/360));
+	const float skew = -tanf(0.5f*ANGTORAD(m_layback));
 	// skew the coordinate system from kartesian to non kartesian.
 	skewX = -sinf(m_rotation)*skew;
 	skewY =  cosf(m_rotation)*skew;
-	Matrix3D matTrans;
-    matTrans.SetIdentity();
 	// Skew for FOV of 0 Deg. is not supported. so change it a little bit.
 	const float skewFOV = (FOV < 0.01f) ? 0.01f : FOV;
 	// create skew the z axis to x and y direction.
 	const float skewtan = tanf(ANGTORAD((180.0f-skewFOV)*0.5f))*m_proj.m_vertexcamera.y;
-	matTrans._42 = skewtan*skewY;
+	Matrix3D matTrans;
+	matTrans.SetIdentity();
+	matTrans._31 = skewX;
 	matTrans._32 = skewY;
 	matTrans._41 = skewtan*skewX;
-	matTrans._31 = skewX;
+	matTrans._42 = skewtan*skewY;
 	m_proj.Multiply(matTrans);
 
     m_proj.Scale( m_scalex != 0.0f ? m_scalex : 1.0f, m_scaley != 0.0f ? m_scaley : 1.0f, 1.0f );
 	m_proj.Rotate( 0, 0, m_rotation );
-	m_proj.Translate(m_xlatex-m_proj.m_vertexcamera.x,m_xlatey-m_proj.m_vertexcamera.y,-m_proj.m_vertexcamera.z);
+	m_proj.Translate(m_xlatex-m_proj.m_vertexcamera.x, m_xlatey-m_proj.m_vertexcamera.y, -m_proj.m_vertexcamera.z);
 	m_proj.Rotate( m_inclination, 0, 0 );
 
 	m_pd3dDevice->SetTransform(TRANSFORMSTATE_PROJECTION, &m_proj.m_matProj);
@@ -1121,15 +1121,7 @@ void PinProjection::Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT
 void PinProjection::Translate(const float x, const float y, const float z)
 {
 	Matrix3D matTrans;
-
-	matTrans._11 = matTrans._22 = matTrans._33 = matTrans._44 = 1.0f;
-	matTrans._12 = matTrans._13 = matTrans._14 = 0.0f;
-	matTrans._21 = matTrans._23 = matTrans._24 = 0.0f;
-	matTrans._31 = matTrans._32 = matTrans._34 = 0.0f;
-
-	matTrans._41 = x;
-	matTrans._42 = y;
-	matTrans._43 = z;
+	matTrans.SetTranslation(x, y, z);
 	m_matWorld.Multiply(matTrans, m_matWorld);
 }
 
@@ -1156,7 +1148,7 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 	// Field of view along the axis = atan(tan(yFOV)*width/height)
 	// So the slope of x simply equals slopey*width/height
 
-	const GPINFLOAT slopex = slopey*aspect;// slopey*m_rcHard.width/m_rcHard.height;
+	const GPINFLOAT slopex = slopey*aspect;
 
 	GPINFLOAT maxyintercept = -DBL_MAX;
 	GPINFLOAT minyintercept = DBL_MAX;
@@ -1203,12 +1195,12 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 	const GPINFLOAT ydist = (maxyintercept - minyintercept) / (slopey*2.0);
 	const GPINFLOAT xdist = (maxxintercept - minxintercept) / (slopex*2.0);
 	m_vertexcamera.z = (float)(max(ydist,xdist));
-   m_vertexcamera.z += xlatez;
+	m_vertexcamera.z += xlatez;
 	// changed this since it's the same and better understandable.
 	// m_vertexcamera.y = (float)(slopey*ydist + minyintercept);
-	m_vertexcamera.y = (float)((maxyintercept - minyintercept)*0.5 + minyintercept);
+	m_vertexcamera.y = (float)((maxyintercept + minyintercept) / 2);
 	//m_vertexcamera.x = (float)(slopex*xdist + minxintercept);
-	m_vertexcamera.x = (float)((maxxintercept - minxintercept)*0.5 + minxintercept);
+	m_vertexcamera.x = (float)((maxxintercept + minxintercept) / 2);
 
 	m_rznear += m_vertexcamera.z;
 	m_rzfar += m_vertexcamera.z;
