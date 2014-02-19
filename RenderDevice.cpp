@@ -406,17 +406,17 @@ void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 	{
 	default:
 	case TEXTURE_MODE_POINT:
-		// Don't filter textures.
+		// Don't filter textures, no mipmapping.
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_POINT));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_POINT));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_NONE));
 		break;
 
 	case TEXTURE_MODE_BILINEAR:
-		// Filter textures (average of 2x2 texels).
+		// Filter textures (average of 2x2 texels), use a single mipmap.
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR));
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_NONE));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT));
 		break;
 
 	case TEXTURE_MODE_TRILINEAR:
@@ -428,9 +428,9 @@ void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 
 	case TEXTURE_MODE_ANISOTROPIC:
 		// Full HQ anisotropic Filter. Should lead to driver doing whatever it thinks is best.
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_ANISOTROPIC));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC));
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAXANISOTROPY,16));
 		break;
 	}
