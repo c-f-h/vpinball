@@ -2722,9 +2722,6 @@ HRESULT PinTable::SaveData(IStream* pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryp
    bw.WriteFloat(FID(SDIX), m_shadowDirX);
    bw.WriteFloat(FID(SDIY), m_shadowDirY);
 
-   bw.WriteInt(FID(REGU), m_TableRegionUpdates);
-   bw.WriteInt(FID(REGO), m_TableRegionOptimization);
-
    bw.WriteFloat(FID(SVOL), m_TableSoundVolume);
    bw.WriteFloat(FID(MVOL), m_TableMusicVolume);
 
@@ -3287,9 +3284,6 @@ void PinTable::SetLoadDefaults()
    m_useTrailForBalls = -1;
    m_ballTrailStrength = 100;
 
-   m_TableRegionUpdates = -1;
-   m_TableRegionOptimization = -1;
-
    m_useAA = -1;
    m_useFXAA = -1;
 
@@ -3776,14 +3770,6 @@ BOOL PinTable::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(AVSY))
    {
       pbr->GetInt(&m_TableAdaptiveVSync);
-   }
-   else if (id == FID(REGU))
-   {
-      pbr->GetInt(&m_TableRegionUpdates);
-   }
-   else if (id == FID(REGO))
-   {
-      pbr->GetInt(&m_TableRegionOptimization);
    }
    else if ( id == FID(ARAC))
    {

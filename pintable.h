@@ -620,9 +620,6 @@ END_CONNECTION_POINT_MAP()
 
 	Vector< PinSoundCopy > m_voldsound; // copied sounds currently playing
 
-	int m_TableRegionUpdates;
-	int m_TableRegionOptimization;
-
 	float m_TableSoundVolume;
 	float m_TableMusicVolume;
 

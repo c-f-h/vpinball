@@ -80,8 +80,6 @@
 
 //
 
-#define ONLY3DUPD               // faster 3D stereo code (same trick as VP2D does: only update regions each frame)
-
 #define ADAPT_VSYNC_FACTOR 0.95 // safety factor where vsync is turned off (f.e. drops below 60fps * 0.95 = 57fps)
 
 #define ACCURATETIMERS 1
