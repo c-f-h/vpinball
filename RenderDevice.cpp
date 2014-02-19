@@ -67,6 +67,8 @@ static unsigned int fvfToSize(DWORD fvf)
         case MY_D3DFVF_NOTEX_VERTEX:
         case MY_D3DTRANSFORMED_NOTEX_VERTEX:
             return sizeof(Vertex3D_NoTex);
+		case MY_D3DFVF_TEX:
+			return 5*sizeof(float);
         default:
             assert(0 && "Unknown FVF type in fvfToSize");
             return 0;
@@ -168,8 +170,8 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     params.BackBufferHeight = fullscreen ? screenHeight : height;
     params.BackBufferFormat = format;
     params.BackBufferCount = 1;
-    params.MultiSampleType = useAA ? D3DMULTISAMPLE_4_SAMPLES : D3DMULTISAMPLE_NONE;
-    params.MultiSampleQuality = 0;
+    params.MultiSampleType = useAA ? D3DMULTISAMPLE_4_SAMPLES : D3DMULTISAMPLE_NONE; // D3DMULTISAMPLE_NONMASKABLE?
+    params.MultiSampleQuality = 0; // if D3DMULTISAMPLE_NONMASKABLE then set to > 0
     params.SwapEffect = D3DSWAPEFFECT_DISCARD;  // FLIP ?
     params.hDeviceWindow = hwnd;
     params.Windowed = !fullscreen;
@@ -228,10 +230,15 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     memset(&materialStateCache, 0xCC, sizeof(Material));
 }
 
+#include <d3dx9.h> //!! meh
+#pragma comment(lib, "d3dx9.lib")        // TODO: put into build system
+
 #define CHECKNVAPI(s) { NvAPI_Status hr = (s); if (hr != NVAPI_OK) { NvAPI_ShortString ss; NvAPI_GetErrorMessage(hr,ss); MessageBox(NULL, ss, "NVAPI", MB_OK | MB_ICONEXCLAMATION); } }
 static bool NVAPIinit = false; //!! meh
 static RenderTarget *src_cache = NULL; //!! meh
 static D3DTexture* dest_cache = NULL;
+static IDirect3DPixelShader9 *gShader = NULL; //!! meh
+static const char * shader_cache = NULL;
 
 RenderDevice::~RenderDevice()
 {
@@ -241,9 +248,15 @@ RenderDevice::~RenderDevice()
 	if(dest_cache != NULL)
 		CHECKNVAPI(NvAPI_D3D9_UnregisterResource(dest_cache)); //!! meh
 	dest_cache = NULL;
-	if(NVAPIinit)
+	if(NVAPIinit) //!! meh
 		CHECKNVAPI(NvAPI_Unload());
 	NVAPIinit = false;
+	if(gShader != NULL) //!! meh
+		gShader->Release();
+	gShader = NULL;
+	shader_cache = NULL;
+
+	//
 
 	SAFE_RELEASE(m_pBackBuffer);
     m_pD3DDevice->Release();
@@ -258,6 +271,23 @@ void RenderDevice::BeginScene()
 void RenderDevice::EndScene()
 {
    CHECKD3D(m_pD3DDevice->EndScene());
+}
+
+void RenderDevice::CreatePixelShader( const char* shader )
+{
+	if(shader != shader_cache)
+	{
+		if(gShader != NULL) //!! meh
+		{
+			gShader->Release();
+			gShader = NULL;
+		}
+		ID3DXBuffer *tmp;
+		CHECKD3D(D3DXCompileShader( shader, strlen(shader), 0, 0, "ps_main", "ps_2_a", D3DXSHADER_OPTIMIZATION_LEVEL3|D3DXSHADER_PREFER_FLOW_CONTROL, &tmp, 0, 0 ));
+		CHECKD3D(m_pD3DDevice->CreatePixelShader( (DWORD*)tmp->GetBufferPointer(), &gShader ));
+		shader_cache = shader;
+	}
+	CHECKD3D(m_pD3DDevice->SetPixelShader(gShader));
 }
 
 void RenderDevice::Flip(int offsetx, int offsety, bool vsync)

@@ -263,6 +263,8 @@ public:
    void SetTransform( TransformStateType, D3DMATRIX* );
    void GetTransform( TransformStateType, D3DMATRIX* );
 
+   void CreatePixelShader( const char* shader );
+
    IDirect3DDevice9* m_pD3DDevice; //!! meh
 private:
    IDirect3D9* m_pD3D;

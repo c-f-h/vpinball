@@ -1196,11 +1196,8 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 	const GPINFLOAT xdist = (maxxintercept - minxintercept) / (slopex*2.0);
 	m_vertexcamera.z = (float)(max(ydist,xdist));
 	m_vertexcamera.z += xlatez;
-	// changed this since it's the same and better understandable.
-	// m_vertexcamera.y = (float)(slopey*ydist + minyintercept);
-	m_vertexcamera.y = (float)((maxyintercept + minyintercept) / 2);
-	//m_vertexcamera.x = (float)(slopex*xdist + minxintercept);
-	m_vertexcamera.x = (float)((maxxintercept + minxintercept) / 2);
+	m_vertexcamera.y = (float)((maxyintercept + minyintercept) * 0.5);
+	m_vertexcamera.x = (float)((maxxintercept + minxintercept) * 0.5);
 
 	m_rznear += m_vertexcamera.z;
 	m_rzfar += m_vertexcamera.z;
