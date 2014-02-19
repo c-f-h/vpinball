@@ -310,6 +310,16 @@ void RenderDevice::CreatePixelShader( const char* shader )
 	CHECKD3D(m_pD3DDevice->SetPixelShader(gShader));
 }
 
+void RenderDevice::SetPixelShaderConstants(const float* constantData, const unsigned int numFloat4s)
+{
+    m_pD3DDevice->SetPixelShaderConstantF(0, constantData, numFloat4s);
+}
+
+void RenderDevice::RevertPixelShaderToFixedFunction()
+{
+    m_pD3DDevice->SetPixelShader( NULL );
+}
+
 void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
 {
     // TODO: we can't handle shake or vsync here
