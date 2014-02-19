@@ -284,6 +284,9 @@ private:
    VertexBuffer* m_curVertexBuffer;     // for caching
    IndexBuffer* m_curIndexBuffer;       // for caching
 
+   DWORD m_maxaniso;
+   bool m_mag_aniso;
+
 public:
    TextureManager m_texMan;
 };
