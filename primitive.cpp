@@ -16,8 +16,6 @@ Primitive::Primitive()
    m_d.useLighting=false;
    m_d.staticRendering=false;
    m_d.sphereMapping=false;
-   m_d.m_triggerUpdateRegion = true;
-   m_d.m_triggerSingleUpdateRegion = true;
 } 
 
 Primitive::~Primitive() 
@@ -91,9 +89,6 @@ void Primitive::SetDefaults(bool fromMouseClick)
    // Draw Textures inside
    hr = GetRegInt("DefaultProps\\Primitive", "DrawTexturesInside", &iTmp);
    m_d.m_DrawTexturesInside = (hr == S_OK) && fromMouseClick ? (iTmp==1) : true;
-
-   hr = GetRegInt("DefaultProps\\Primitive", "UpdateRegions", &iTmp);
-   m_d.m_triggerUpdateRegion = (hr == S_OK) && fromMouseClick ? (iTmp==1) : true;
 
    // Position (X and Y is already set by the click of the user)
    hr = GetRegStringAsFloat("DefaultProps\\Primitive","Position_Z", &fTmp);
@@ -219,9 +214,6 @@ void Primitive::WriteRegDefaults()
 
    iTmp = (m_d.m_DrawTexturesInside) ? 1 : 0;
    SetRegValue("DefaultProps\\Primitive","DrawTexturesInside",REG_DWORD,&iTmp,4);
-
-   iTmp = (m_d.m_triggerUpdateRegion) ? 1 : 0;
-   SetRegValue("DefaultProps\\Primitive","UpdateRegions",REG_DWORD,&iTmp,4);
 
    sprintf_s(strTmp, 40, "%f", m_d.m_vPosition.z);
    SetRegValue("DefaultProps\\Primitive","Position_Z", REG_SZ, &strTmp,strlen(strTmp));	
@@ -392,8 +384,6 @@ void Primitive::EndPlay()
 		delete [] objMesh;
 		objMesh = 0;
 	}
-
-    m_d.m_triggerSingleUpdateRegion = true;
 }
 
 //////////////////////////////
@@ -1041,7 +1031,6 @@ HRESULT Primitive::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcry
    bw.WriteInt(FID(SCOL), m_d.m_SideColor);
    bw.WriteInt(FID(TVIS), (m_d.m_TopVisible) ? 1 : 0);
    bw.WriteInt(FID(DTXI), (m_d.m_DrawTexturesInside) ? 1 : 0);
-   bw.WriteInt(FID(TRUR), (m_d.m_triggerUpdateRegion) ? 1 : 0);
    bw.WriteBool(FID(HTEV), m_d.m_fHitEvent);
    bw.WriteFloat(FID(THRS), m_d.m_threshold);
    bw.WriteFloat(FID(ELAS), m_d.m_elasticity);
@@ -1174,12 +1163,6 @@ BOOL Primitive::LoadToken(int id, BiffReader *pbr)
       int iTmp;
       pbr->GetInt(&iTmp);
       m_d.m_DrawTexturesInside = (iTmp==1);
-   }
-   else if (id == FID(TRUR))
-   {
-      int iTmp;
-      pbr->GetInt(&iTmp);
-      m_d.m_triggerUpdateRegion = (iTmp==1);
    }
    else if (id == FID(HTEV))
    {
@@ -2438,26 +2421,21 @@ STDMETHODIMP Primitive::put_IsToy(VARIANT_BOOL newVal)
 
 STDMETHODIMP Primitive::get_UpdateRegions(VARIANT_BOOL *pVal)
 {
-   *pVal = (VARIANT_BOOL)FTOVB(m_d.m_triggerUpdateRegion);
+   //!! deprecated
+   *pVal = (VARIANT_BOOL)FTOVB(false);
 
    return S_OK;
 }
 
 STDMETHODIMP Primitive::put_UpdateRegions(VARIANT_BOOL newVal)
 {
-   STARTUNDO
-
-   m_d.m_triggerUpdateRegion = VBTOF(newVal);
-   
-   STOPUNDO
-
+   //!! deprecated
    return S_OK;
 }
 
 STDMETHODIMP Primitive::TriggerSingleUpdate() 
 {
-   m_d.m_triggerSingleUpdateRegion = true;
-
+   //!! deprecated
    return S_OK;
 }
 

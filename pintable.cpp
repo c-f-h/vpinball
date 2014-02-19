@@ -8043,42 +8043,6 @@ STDMETHODIMP PinTable::put_TableSoundVolume(int newVal )
    return S_OK;
 }
 
-STDMETHODIMP PinTable::get_TableRegionUpdates(int *pVal)
-{
-   *pVal = m_TableRegionUpdates;
-
-   return S_OK;
-}
-
-STDMETHODIMP PinTable::put_TableRegionUpdates(int newVal )
-{
-   STARTUNDO
-
-   m_TableRegionUpdates = newVal;
-
-   STOPUNDO
-
-   return S_OK;
-}
-
-STDMETHODIMP PinTable::get_TableRegionOptimization(int *pVal)
-{
-   *pVal = m_TableRegionOptimization;
-
-   return S_OK;
-}
-
-STDMETHODIMP PinTable::put_TableRegionOptimization(int newVal )
-{
-   STARTUNDO
-
-   m_TableRegionOptimization = newVal;
-
-   STOPUNDO
-
-   return S_OK;
-}
-
 STDMETHODIMP PinTable::get_AlphaRampAccuracy(int *pVal)
 {
    *pVal = m_alphaRampsAccuracy;

@@ -49,8 +49,6 @@ public:
    bool useLighting;
    bool staticRendering;
    bool sphereMapping;
-   bool m_triggerUpdateRegion;              // no-op; TODO: remove
-   bool m_triggerSingleUpdateRegion;        // no-op; TODO: remove
 
    bool m_fCollidable;
    bool m_fToy;
@@ -92,6 +90,7 @@ public:
    STDMETHOD(get_TopVisible)(/*[out, retval]*/ VARIANT_BOOL *pVal);
    STDMETHOD(put_TopVisible)(/*[in]*/ VARIANT_BOOL newVal);
 
+   //!! deprecated
    STDMETHOD(get_UpdateRegions)(/*[out, retval]*/ VARIANT_BOOL *pVal);
    STDMETHOD(put_UpdateRegions)(/*[in]*/ VARIANT_BOOL newVal);
    STDMETHOD(TriggerSingleUpdate)();

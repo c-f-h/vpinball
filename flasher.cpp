@@ -5,8 +5,6 @@ Flasher::Flasher()
    m_d.m_IsVisible = true;
    dynamicVertexBuffer = 0;
    dynamicVertexBufferRegenerate = true;
-   m_d.m_triggerUpdateRegion = false;
-   m_d.m_triggerSingleUpdateRegion = true;
 }
 
 Flasher::~Flasher()
@@ -111,18 +109,11 @@ void Flasher::SetDefaults(bool fromMouseClick)
    else
       m_d.m_IsVisible = true;
 
-   hr = GetRegInt("DefaultProps\\Flasher","UpdateRegions", &iTmp);
-   if ((hr == S_OK) && fromMouseClick)
-      m_d.m_triggerUpdateRegion = iTmp == 0 ? false : true;
-   else
-      m_d.m_triggerUpdateRegion = fromMouseClick; // new elements have it true, old saved tables will have it false
-   
    hr = GetRegInt("DefaultProps\\Flasher","AddBlend", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
       m_d.m_fAddBlend = iTmp == 0 ? false : true;
    else
       m_d.m_fAddBlend = false;
-
 }
 
 void Flasher::WriteRegDefaults()
@@ -147,7 +138,6 @@ void Flasher::WriteRegDefaults()
    SetRegValue("DefaultProps\\Flasher","Image", REG_SZ, &m_d.m_szImage, strlen(m_d.m_szImage));
    SetRegValue("DefaultProps\\Flasher","Alpha",REG_DWORD,&m_d.m_fAlpha,4);
    SetRegValue("DefaultProps\\Flasher","Visible",REG_DWORD,&m_d.m_IsVisible,4);
-   SetRegValue("DefaultProps\\Flasher","UpdateRegions",REG_DWORD,&m_d.m_triggerUpdateRegion,4);
    SetRegValue("DefaultProps\\Flasher","AddBlend",REG_DWORD,&m_d.m_fAddBlend,4);
 }
 
@@ -295,8 +285,6 @@ void Flasher::EndPlay()
 		dynamicVertexBuffer = 0;
 		dynamicVertexBufferRegenerate = true;
 	}
-
-    m_d.m_triggerSingleUpdateRegion = true;
 }
 
 void Flasher::RenderSetup(const RenderDevice* _pd3dDevice)
@@ -389,8 +377,7 @@ HRESULT Flasher::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcrypt
    bw.WriteWideString(FID(NAME), (WCHAR *)m_wzName);
    bw.WriteString(FID(IMAG), m_d.m_szImage);
    bw.WriteInt(FID(FALP), m_d.m_fAlpha);
-   bw.WriteBool(FID(FVIS), m_d.m_IsVisible);	
-   bw.WriteBool(FID(TRUR), m_d.m_triggerUpdateRegion);
+   bw.WriteBool(FID(FVIS), m_d.m_IsVisible);
    bw.WriteBool(FID(ADDB), m_d.m_fAddBlend);
 
    ISelect::SaveData(pstm, hcrypthash, hcryptkey);
@@ -481,12 +468,6 @@ BOOL Flasher::LoadToken(int id, BiffReader *pbr)
 	  BOOL iTmp;
       pbr->GetBool(&iTmp);
       m_d.m_IsVisible = (iTmp==1);
-   }
-   else if (id == FID(TRUR))
-   {
-      BOOL iTmp;
-      pbr->GetBool(&iTmp);
-      m_d.m_triggerUpdateRegion = (iTmp==1);
    }
    else if (id == FID(ADDB))
    {
@@ -829,25 +810,21 @@ STDMETHODIMP Flasher::put_DisplayTexture(VARIANT_BOOL newVal)
 
 STDMETHODIMP Flasher::get_UpdateRegions(VARIANT_BOOL *pVal)
 {
-   *pVal = (VARIANT_BOOL)FTOVB(m_d.m_triggerUpdateRegion);
+   //!! deprecated
+   *pVal = (VARIANT_BOOL)FTOVB(false);
 
    return S_OK;
 }
 
 STDMETHODIMP Flasher::put_UpdateRegions(VARIANT_BOOL newVal)
 {
-   STARTUNDO
-
-   m_d.m_triggerUpdateRegion = VBTOF(newVal);
-   
-   STOPUNDO
-
+   //!! deprecated
    return S_OK;
 }
 
 STDMETHODIMP Flasher::TriggerSingleUpdate() 
 {
-   m_d.m_triggerSingleUpdateRegion = true;
+   //!! deprecated
    return S_OK;
 }
 

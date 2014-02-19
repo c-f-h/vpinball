@@ -10,8 +10,6 @@ Ramp::Ramp()
    dynamicIndexBuffer = 0;
    dynamicVertexBufferRegenerate = true;
    m_d.m_enableLightingImage = true;
-   m_d.m_triggerUpdateRegion = false;
-   m_d.m_triggerSingleUpdateRegion = true;
 }
 
 Ramp::~Ramp()
@@ -215,12 +213,6 @@ void Ramp::SetDefaults(bool fromMouseClick)
    else
       m_d.m_fModify3DStereo = true;
 
-   hr = GetRegInt("DefaultProps\\Ramp","UpdateRegions", &iTmp);
-   if ((hr == S_OK) && fromMouseClick)
-      m_d.m_triggerUpdateRegion = iTmp == 0 ? false : true;
-   else
-      m_d.m_triggerUpdateRegion = fromMouseClick; // new elements have it true, old saved tables will have it false
-   
    hr = GetRegInt("DefaultProps\\Ramp","AddBlend", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
       m_d.m_fAddBlend = iTmp == 0 ? false : true;
@@ -271,7 +263,6 @@ void Ramp::WriteRegDefaults()
    SetRegValue("DefaultProps\\Ramp","Collidable",REG_DWORD,&m_d.m_fCollidable,4);
    SetRegValue("DefaultProps\\Ramp","Visible",REG_DWORD,&m_d.m_IsVisible,4);
    SetRegValue("DefaultProps\\Ramp","Modify3DStereo",REG_DWORD,&m_d.m_fModify3DStereo,4);
-   SetRegValue("DefaultProps\\Ramp","UpdateRegions",REG_DWORD,&m_d.m_triggerUpdateRegion,4);
    SetRegValue("DefaultProps\\Ramp","AddBlend",REG_DWORD,&m_d.m_fAddBlend,4);
    SetRegValue("DefaultProps\\Ramp","EnableLighingOnImage",REG_DWORD,&m_d.m_enableLightingImage,4);
 }
@@ -1037,8 +1028,6 @@ void Ramp::EndPlay()
 		dynamicIndexBuffer->release();
 		dynamicIndexBuffer = 0;
     }
-
-    m_d.m_triggerSingleUpdateRegion = true;
 }
 
 static const WORD rgicrosssection[] = {
@@ -1748,7 +1737,6 @@ HRESULT Ramp::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryptkey
    bw.WriteBool(FID(CLDRP), m_d.m_fCollidable);
    bw.WriteBool(FID(RVIS), m_d.m_IsVisible);	
    bw.WriteBool(FID(MSTE), m_d.m_fModify3DStereo);
-   bw.WriteBool(FID(TRUR), m_d.m_triggerUpdateRegion);
    bw.WriteBool(FID(ADDB), m_d.m_fAddBlend);
    bw.WriteBool(FID(ERLI), m_d.m_enableLightingImage);
 
@@ -1896,12 +1884,6 @@ BOOL Ramp::LoadToken(int id, BiffReader *pbr)
       BOOL iTmp;
       pbr->GetBool(&iTmp);
       m_d.m_fModify3DStereo = (iTmp==1);
-   }
-   else if (id == FID(TRUR))
-   {
-      BOOL iTmp;
-      pbr->GetBool(&iTmp);
-      m_d.m_triggerUpdateRegion = (iTmp==1);
    }
    else if (id == FID(ADDB))
    {
@@ -2568,25 +2550,21 @@ STDMETHODIMP Ramp::put_Modify3DStereo(VARIANT_BOOL newVal)
 
 STDMETHODIMP Ramp::get_UpdateRegions(VARIANT_BOOL *pVal)
 {
-   *pVal = (VARIANT_BOOL)FTOVB(m_d.m_triggerUpdateRegion);
+   //!! deprecated
+   *pVal = (VARIANT_BOOL)FTOVB(false);
 
    return S_OK;
 }
 
 STDMETHODIMP Ramp::put_UpdateRegions(VARIANT_BOOL newVal)
 {
-   STARTUNDO
-
-   m_d.m_triggerUpdateRegion = VBTOF(newVal);
-   
-   STOPUNDO
-
+   //!! deprecated
    return S_OK;
 }
 
 STDMETHODIMP Ramp::TriggerSingleUpdate() 
 {
-   m_d.m_triggerSingleUpdateRegion = true;
+   //!! deprecated
    return S_OK;
 }
 

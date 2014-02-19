@@ -272,8 +272,8 @@ BEGIN
     CONTROL         "Reflect Ball on Playfield",IDC_GLOBAL_REFLECTION_CHECK,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,54,91,10
     CONTROL         "Ball Trails/Motion Blur",IDC_GLOBAL_TRAIL_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,66,91,10
-    LTEXT           "Adaptive VSync (avoid tearing)",IDC_STATIC,162,128,150,10
-    CONTROL         "Reorder Playfield Objects (for ATI/AMD gfx)",216,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,152,155,10
+    LTEXT           "Adaptive VSync (avoid tearing)",IDC_STATIC,162,154,150,10
+    CONTROL         "Reorder Playfield Objects (for ATI/AMD gfx)",216,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,167,155,10
     CONTROL         "512",IDC_Tex512,"Button",BS_AUTORADIOBUTTON | WS_GROUP,166,192,28,10
     CONTROL         "1024",IDC_Tex1024,"Button",BS_AUTORADIOBUTTON,166,202,32,10
     CONTROL         "2048",IDC_Tex2048,"Button",BS_AUTORADIOBUTTON,166,212,32,10
@@ -288,12 +288,12 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,218,280,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,277,280,50,14
     LISTBOX         IDC_SIZELIST,14,42,129,122,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_ADAPTIVE_VSYNC,262,126,20,12,ES_RIGHT | ES_AUTOHSCROLL
-    LTEXT           "Hz  (1=auto)",IDC_STATIC,283,128,45,10
+    EDITTEXT        IDC_ADAPTIVE_VSYNC,262,152,20,12,ES_RIGHT | ES_AUTOHSCROLL
+    LTEXT           "Hz  (1=auto)",IDC_STATIC,283,154,45,10
     GROUPBOX        "Video Mode",IDC_STATIC,7,7,142,263
     GROUPBOX        "Ball Rendering",IDC_STATIC,154,7,103,72
     GROUPBOX        "3D Stereo Output",IDC_STATIC,259,7,85,72
-    GROUPBOX        "Performance and Troubleshooting",IDC_STATIC,154,81,190,188
+    GROUPBOX        "Performance and Troubleshooting",IDC_STATIC,154,141,190,128
     GROUPBOX        "Max Texture Dimension (for low-end gfx boards)",IDC_STATIC,159,181,180,54
     LTEXT           "Alpha Ramp Accuracy (decrease = performance)",IDC_STATIC,162,238,156,8
     GROUPBOX        "Ball aspect ratio for stretched Tables",IDC_STATIC,12,200,133,62
@@ -882,7 +882,6 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,74,96,10
     CONTROL         "Custom2",5,"ColorControl",WS_TABSTOP,27,88,40,14
     CONTROL         "Shadows",107,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,106,41,10
-    CONTROL         "Update Regions",IDC_UPDATEREGIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,106,66,10
     CONTROL         "Visible",112,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,118,40,10
     CONTROL         "Normal 3D Stereo",IDC_MODIFY3DSTEREO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,118,70,10
     CONTROL         "Solid",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,7,135,31,10
@@ -1253,16 +1252,12 @@ BEGIN
     LTEXT           "FXAA",IDC_STATIC,80,47,40,8
     EDITTEXT        IDC_ENABLE_FXAA,101,45,20,12,ES_AUTOHSCROLL
     CONTROL         "Render Shadows",9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,57,71,10
-    EDITTEXT        IDC_REGION_UPDATES_TABLE,101,69,20,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_REGION_OPT_TABLE,101,83,20,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_TABLESOUNDVOLUME,101,97,20,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_TABLEMUSICVOLUME,101,111,20,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_TABLEAVSYNC,101,125,20,12,ES_AUTOHSCROLL
     CONTROL         "",IDC_ALPHA_SLIDER,"msctls_trackbar32",TBS_AUTOTICKS | TBS_TOP | WS_TABSTOP,9,149,107,25
-    LTEXT           "Region Upd.    (-1=default)",IDC_STATIC,7,71,94,8
     LTEXT           "I&mage:",IDC_STATIC,7,23,22,8
     LTEXT           "&Color",IDC_STATIC,7,10,20,9
-    LTEXT           "Region Opt.     (0=off, 1=on)",IDC_STATIC,7,85,94,8
     LTEXT           "Table Sound Volume (0..100)",IDC_STATIC,7,99,94,8
     LTEXT           "Table Music Volume (0..100)",IDC_STATIC,7,113,94,8
     LTEXT           "Adaptive VSync (-1=default)",IDC_STATIC,7,127,94,8
@@ -1599,7 +1594,6 @@ BEGIN
     CONTROL         "Custom2",102,"ColorControl",WS_TABSTOP,74,78,40,14
     CONTROL         "Custom2",104,"ColorControl",WS_TABSTOP,74,93,40,14
     CONTROL         "Visible",103,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,108,76,10
-    CONTROL         "Update Regions",IDC_UPDATEREGIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,118,76,10
     CONTROL         "Draw Textures inside",106,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,128,82,10
     CONTROL         "Enable lighting",IDC_CHECK_PRIMITIVE_LIGHTING,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,138,66,10
     CONTROL         "Sphere Map 3D Mesh",IDC_PRIM_ENV_MAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,148,85,10
@@ -1636,7 +1630,6 @@ BEGIN
     CONTROL         "Custom2",11,"ColorControl",WS_TABSTOP,27,43,40,14
     LTEXT           "&Color",IDC_STATIC,7,46,17,8
     CONTROL         "Display &Image in Editor",13,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,29,87,10
-    CONTROL         "Update Regions",IDC_UPDATEREGIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,73,66,10
 END
 
 IDD_PROPFLASHER_POSITION DIALOGEX 0, 0, 125, 140

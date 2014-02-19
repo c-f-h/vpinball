@@ -23,8 +23,6 @@ public:
 	bool m_IsVisible;
 	bool m_fAddBlend;
     bool m_fDisplayTexture;
-	bool m_triggerUpdateRegion;
-    bool m_triggerSingleUpdateRegion;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -135,6 +133,7 @@ public:
     STDMETHOD(get_DisplayTexture)(/*[out, retval]*/ VARIANT_BOOL *pVal);
     STDMETHOD(put_DisplayTexture)(/*[in]*/ VARIANT_BOOL newVal);
 
+	//!! deprecated
 	STDMETHOD(get_UpdateRegions)(/*[out, retval]*/ VARIANT_BOOL *pVal);
 	STDMETHOD(put_UpdateRegions)(/*[in]*/ VARIANT_BOOL newVal);
 	STDMETHOD(TriggerSingleUpdate)();

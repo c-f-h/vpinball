@@ -36,8 +36,6 @@ public:
 	bool m_fCastsShadow;
 	bool m_fAcrylic;
 	bool m_fAlpha;
-	bool m_triggerUpdateRegion;             // no-op; TODO: remove
-    bool m_triggerSingleUpdateRegion;       // no-op; TODO: remove
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -215,6 +213,7 @@ public:
 	STDMETHOD(get_Modify3DStereo)(/*[out, retval]*/ VARIANT_BOOL *pVal);
 	STDMETHOD(put_Modify3DStereo)(/*[in]*/ VARIANT_BOOL newVal);
 
+	//!! deprecated
 	STDMETHOD(get_UpdateRegions)(/*[out, retval]*/ VARIANT_BOOL *pVal);
 	STDMETHOD(put_UpdateRegions)(/*[in]*/ VARIANT_BOOL newVal);
 	STDMETHOD(TriggerSingleUpdate)();

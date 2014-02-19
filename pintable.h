@@ -270,11 +270,6 @@ public:
 	STDMETHOD(get_TiltTriggerTime)(/*[out, retval]*/ int *pVal);
 	STDMETHOD(put_TiltTriggerTime)(/*[in]*/ int newVal);
 
-	STDMETHOD(get_TableRegionUpdates)(/*[out, retval]*/ int *pVal);
-	STDMETHOD(put_TableRegionUpdates)(/*[in]*/ int newVal);
-	STDMETHOD(get_TableRegionOptimization)(/*[out, retval]*/ int *pVal);
-	STDMETHOD(put_TableRegionOptimization)(/*[in]*/ int newVal);
-
 	STDMETHOD(get_TableSoundVolume)(/*[out, retval]*/ int *pVal);
 	STDMETHOD(put_TableSoundVolume)(/*[in]*/ int newVal);
 	STDMETHOD(get_TableMusicVolume)(/*[out, retval]*/ int *pVal);
