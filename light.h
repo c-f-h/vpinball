@@ -142,7 +142,7 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Light)
 	virtual void GetPointCenter(Vertex2D * const pv) const;
 	virtual void PutPointCenter(const Vertex2D * const pv);
 
-	virtual void DrawFrame(BOOL fOn);
+	virtual void DrawFrame(BOOL fOn)  { }
     void PostRenderStaticCustom(RenderDevice* pd3dDevice);
 
     virtual bool IsTransparent()    { return m_d.m_OnImageIsLightMap != FALSE; }

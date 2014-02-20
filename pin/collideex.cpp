@@ -37,7 +37,7 @@ void BumperHitCircle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 	}
 }
 
-void BumperAnimObject::Check3D()
+void BumperAnimObject::UpdateAnimation()
 {
 	if(!m_fVisible)
 		return;

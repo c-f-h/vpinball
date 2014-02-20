@@ -446,14 +446,6 @@ void Light::GetTimers(Vector<HitTimer> * const pvht)
 
 void Light::GetHitShapes(Vector<HitObject> * const pvho)
 {
-   // HACK - should pass pointer to vector in
-   if (m_d.m_state == LightStateBlinking)
-   {
-      g_pplayer->m_vblink.AddElement((IBlink *)this);
-      m_timenextblink = g_pplayer->m_time_msec + m_blinkinterval;
-   }
-
-   m_iblinkframe = 0;
 }
 
 void Light::GetHitShapesDebug(Vector<HitObject> * const pvho)
@@ -557,6 +549,9 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
 
+    if (m_d.m_state == LightStateBlinking)
+        UpdateBlinker(g_pplayer->m_time_msec);
+
     if (m_d.m_shape == ShapeCustom)
     {
         PostRenderStaticCustom(pd3dDevice);
@@ -580,9 +575,9 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     const float b = (float)(m_d.m_color & 16711680) * (float)(1.0/16711680.0);
 
     Material mtrl;
-    const int i = m_realState ? 1 : 0;      // TODO: fix blinking
+    const bool isOn = (m_realState == LightStateBlinking) ? (m_rgblinkpattern[m_iblinkframe] == '1') : !!m_realState;
 
-    if(i == LightStateOff) 
+    if (isOn)
     {
         if(!m_d.m_EnableOffLighting)
             pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
@@ -596,7 +591,6 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     {
         if(!m_d.m_EnableLighting)
             pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
-        ppin3d->DisableLightMap();
         mtrl.setDiffuse( 1.0f, 0.0f, 0.0f, 0.0f );
         mtrl.setAmbient( 1.0f, 0.0f, 0.0f, 0.0f );
         mtrl.setEmissive( 0.0f, r, g, b );
@@ -609,19 +603,11 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
         pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, normalMoverVBuffer, 0, 32);
     }
 
-    // TODO (DX9): check decal interaction
-    //for (int iedit=0;iedit<m_ptable->m_vedit.Size();iedit++)
-    //{
-    //    IEditable * const pie = m_ptable->m_vedit.ElementAt(iedit);
-    //    if ((pie->GetItemType() == eItemDecal) && (fIntRectIntersect(((Decal *)pie)->m_rcBounds, m_pobjframe[i]->rc)))
-    //        pie->GetIHitable()->RenderStatic(pd3dDevice);
-    //}
-
     // reset render states
     ppin3d->SetTexture(NULL);
     pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
     pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-    if (i == LightStateOff)
+    if (isOn)
         ppin3d->DisableLightMap();
 }
 
@@ -634,7 +620,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
 
     bool useLightmap = false;
 
-    const int i = m_realState ? 1 : 0;      // TODO: fix blinking
+    const bool isOn = (m_realState == LightStateBlinking) ? (m_rgblinkpattern[m_iblinkframe] == '1') : !!m_realState;
     const float height = m_surfaceHeight;
 
     const float r = (float)(m_d.m_color & 255) * (float)(1.0/255.0);
@@ -644,7 +630,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
     Texture* pin = NULL;
     Material mtrl;
 
-    if(i == LightStateOff) 
+    if (isOn)
     {
         if(!m_d.m_EnableOffLighting)
             pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
@@ -679,7 +665,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
         if ((pin = m_ptable->GetImage(m_d.m_szOnImage)) != NULL)
         {
             // Set the texture to the one defined in the editor.
-            if ( i==1 && m_d.m_OnImageIsLightMap )
+            if ( isOn && m_d.m_OnImageIsLightMap )
             {
                 Texture *offTexel=m_ptable->GetImage(m_d.m_szOffImage);
                 if ( offTexel )
@@ -714,23 +700,15 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
 
     if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
     {
-        pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customMoverVBuffer, (i*customMoverVertexNum), customMoverVertexNum);
+        pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customMoverVBuffer, (isOn ? customMoverVertexNum : 0), customMoverVertexNum);
     }
 
     if ( useLightmap )
     {
-        pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_MODULATE );
+        pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP, D3DTOP_MODULATE );
         ppin3d->SetTexture(pin);
         pd3dDevice->SetTexture(1,NULL);
     }
-
-    // TODO (DX9): check decal interaction
-    //for (int iedit=0; iedit<m_ptable->m_vedit.Size(); iedit++)
-    //{
-    //    IEditable * const pie = m_ptable->m_vedit.ElementAt(iedit);
-    //    if ((pie->GetItemType() == eItemDecal) && (fIntRectIntersect(((Decal *)pie)->m_rcBounds, m_pobjframe[i]->rc)))
-    //        pie->GetIHitable()->RenderStatic(pd3dDevice);
-    //}
 
     ppin3d->SetTexture(NULL);
     pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
@@ -1019,6 +997,9 @@ void Light::PrepareMoversCustom()
 void Light::RenderSetup(const RenderDevice* _pd3dDevice)
 {
     m_surfaceHeight = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
+
+    if (m_d.m_state == LightStateBlinking)
+        RestartBlinker(g_pplayer->m_time_msec);
 
     if (m_d.m_shape == ShapeCustom)
     {
@@ -1483,15 +1464,6 @@ STDMETHODIMP Light::put_State(LightState newVal)
    return S_OK;
 }
 
-void Light::DrawFrame(BOOL fOn)
-{
-    /*
-     * TODO (DX9): This method used to blit a sprite directly into the back buffer.
-     * We can't do that in the new renderer. Right now, this method is only called
-     * by the blinking functionality in Player, so that is currently broken.
-     */
-}
-
 void Light::FlipY(Vertex2D * const pvCenter)
 {
    IHaveDragPoints::FlipPointY(pvCenter);
@@ -1650,14 +1622,7 @@ STDMETHODIMP Light::put_BlinkPattern(BSTR newVal)
 
    if (g_pplayer)
    {
-      // Restart the sequence
-      // BUG - merge with code in player for light blinking someday
-      const char cold = m_rgblinkpattern[m_iblinkframe];
-      m_iblinkframe = 0;
-      const char cnew = m_rgblinkpattern[m_iblinkframe];
-      if (cold != cnew)
-          DrawFrame(cnew == '1');
-      m_timenextblink = g_pplayer->m_time_msec + m_blinkinterval;
+       RestartBlinker(g_pplayer->m_time_msec);
    }
 
    STOPUNDO
@@ -1906,16 +1871,8 @@ void Light::setLightState(const LightState newVal)
          // notify the player that we changed our state (for draw order determination)
          g_pplayer->m_triggeredLights.push_back(this);
 
-         if (lastState == LightStateBlinking)
+         if (m_realState == LightStateBlinking)
          {
-            // must not be blinking anymore
-            g_pplayer->m_vblink.RemoveElement((IBlink *)this);
-         }
-         else if (m_realState == LightStateBlinking)
-         {
-            // must be blinking now
-            // We know we can't be on the list already because we make sure our state has changed
-            g_pplayer->m_vblink.AddElement((IBlink *)this);
             m_timenextblink = g_pplayer->m_time_msec; // Start pattern right away // + m_d.m_blinkinterval;
             m_iblinkframe = 0; // reset pattern
          }

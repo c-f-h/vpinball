@@ -5,9 +5,10 @@ class Surface;
 class BumperAnimObject : public AnimObject
 {
 public:
-	virtual void Check3D();
+	virtual void Check3D()   { }
 	virtual ObjFrame *Draw3D(const RECT * const prc)    { return NULL; }
 	virtual void Reset();
+    void UpdateAnimation();
 
 	int m_iframe;
 	int m_TimeReset; // Time at which to turn off light

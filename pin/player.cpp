@@ -1116,21 +1116,6 @@ void Player::InitAnimations(HWND hwndProgress)
         if (hwndProgress)
             SendMessage(hwndProgress, PBM_SETPOS, 85 + ((15*i)/m_ptable->m_vedit.Size()), 0);
 	}
-
-	// Init lights to initial state -- TODO: remove
-	for (int i=0;i<m_ptable->m_vedit.Size();i++)
-	{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemLight)
-		{
-			Light * const plight = ((Light *)m_ptable->m_vedit.ElementAt(i));
-			plight->DrawFrame(plight->m_d.m_state == LightStateBlinking ? (plight->m_rgblinkpattern[0] == '1') : (plight->m_d.m_state != LightStateOff));
-		}
-		else if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemBumper)
-		{
-			Bumper * const pbumper = ((Bumper *)m_ptable->m_vedit.ElementAt(i));
-			pbumper->DrawFrame(pbumper->m_d.m_state == LightStateBlinking ? (pbumper->m_rgblinkpattern[0] == '1') : (pbumper->m_d.m_state != LightStateOff));
-		}
-	}
 }
 
 Ball *Player::CreateBall(const float x, const float y, const float z, const float vx, const float vy, const float vz, const float radius)
@@ -1965,32 +1950,6 @@ void Player::RenderDynamics()
 
 void Player::CheckAndUpdateRegions()
 {
-    //rlc BUG -- moved this code before copy of static buffers being copied to back and z buffers
-    //rlc  JEP placed code for copy of static buffers too soon 
-    // Notice - the light can only update once per frame, so if the light
-    // is blinking faster than the frame rate, the user will still see
-    // the light blinking, it will just be slower than intended.
-    for (int i=0;i<m_vblink.Size();i++)
-    {
-        IBlink * const pblink = m_vblink.ElementAt(i);
-        if (pblink->m_timenextblink <= m_time_msec)
-        {
-            const char cold = pblink->m_rgblinkpattern[pblink->m_iblinkframe];
-            pblink->m_iblinkframe++;
-            char cnew = pblink->m_rgblinkpattern[pblink->m_iblinkframe];
-            if (cnew == 0)
-            {
-                pblink->m_iblinkframe = 0;
-                cnew = pblink->m_rgblinkpattern[0];
-            }
-
-            if (cold != cnew)
-                pblink->DrawFrame(cnew == '1');
-
-            pblink->m_timenextblink += pblink->m_blinkinterval;
-        }
-    }
-
     //
     // copy static buffers to back buffer and z buffer
     //

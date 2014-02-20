@@ -17,6 +17,33 @@ public:
 
 	int m_timenextblink;
 	int m_iblinkframe;
+
+    void UpdateBlinker(int time_msec)
+    {
+        if (m_timenextblink <= time_msec)
+        {
+            m_iblinkframe++;
+            char cnew = m_rgblinkpattern[m_iblinkframe];
+            if (cnew == 0)
+            {
+                m_iblinkframe = 0;
+                cnew = m_rgblinkpattern[0];
+            }
+
+            DrawFrame(cnew == '1');
+            m_timenextblink += m_blinkinterval;
+        }
+    }
+
+    void RestartBlinker(int cur_time_msec)
+    {
+        m_iblinkframe = 0;
+        const char cnew = m_rgblinkpattern[m_iblinkframe];
+
+        DrawFrame(cnew == '1');
+        m_timenextblink = cur_time_msec + m_blinkinterval;
+    }
+
 	};
 
 class BumperData

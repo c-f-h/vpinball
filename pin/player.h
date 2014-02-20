@@ -114,7 +114,6 @@ public:
 	Vector<Ball> m_vball;
 	Vector<AnimObject> m_vscreenupdate;
 	Vector<HitTimer> m_vht;
-	Vector<IBlink> m_vblink;	// Lights which are set to blink
 
     BOOL m_fThrowBalls;
 	BOOL m_fAccelerometer;		//true if electronic Accelerometer enabled

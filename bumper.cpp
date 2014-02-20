@@ -238,10 +238,8 @@ void Bumper::GetHitShapes(Vector<HitObject> * const pvho)
 
    phitcircle->m_bumperanim.m_fVisible = m_d.m_fVisible;
 
-   // HACK - should pass pointer to vector in
    if (m_d.m_state == LightStateBlinking)
    {
-      g_pplayer->m_vblink.AddElement((IBlink *)this);
       m_timenextblink = g_pplayer->m_time_msec + m_blinkinterval;
    }
    m_iblinkframe = 0;
@@ -285,6 +283,9 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
+    if (m_d.m_state == LightStateBlinking)
+        UpdateBlinker(g_pplayer->m_time_msec);
+    m_pbumperhitcircle->m_bumperanim.UpdateAnimation();
     const int state = m_pbumperhitcircle->m_bumperanim.m_iframe ? 1 : 0;    // 0 = off, 1 = lit
 
     Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
@@ -359,6 +360,9 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
 void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
 {
+    if (m_d.m_state == LightStateBlinking)
+        RestartBlinker(g_pplayer->m_time_msec);
+
    const float outerradius = m_d.m_radius + m_d.m_overhang;
    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
    float maxtu, maxtv;
@@ -1007,14 +1011,7 @@ STDMETHODIMP Bumper::put_BlinkPattern(BSTR newVal)
 
    if (g_pplayer)
    {
-      // Restart the sequence
-      // BUG - merge with code in player for light blinking someday
-      const char cold = m_rgblinkpattern[m_iblinkframe];
-      m_iblinkframe = 0;
-      const char cnew = m_rgblinkpattern[m_iblinkframe];
-      if (cold != cnew)
-          DrawFrame(cnew == '1');
-      m_timenextblink = g_pplayer->m_time_msec + m_blinkinterval;
+       RestartBlinker(g_pplayer->m_time_msec);
    }
 
    STOPUNDO
@@ -1146,18 +1143,6 @@ void Bumper::setLightState(const LightState newVal)
 
       if (m_pbumperhitcircle)
       {
-         if (lastState == LightStateBlinking)
-         {
-            // must not be blinking anymore
-            g_pplayer->m_vblink.RemoveElement((IBlink *)this);
-         }
-         else if (m_realState == LightStateBlinking)
-         {
-            // must be blinking now
-            g_pplayer->m_vblink.AddElement((IBlink *)this);
-            m_timenextblink = g_pplayer->m_time_msec; // Start pattern right away // + m_d.m_blinkinterval;
-         }
-
          switch (m_realState)
          {
          case LightStateOff:
@@ -1169,8 +1154,8 @@ void Bumper::setLightState(const LightState newVal)
             break;
 
          case LightStateBlinking:
-            // We know we can't be on the list already because we make sure our state has changed
             m_iblinkframe = 0; // reset pattern
+            m_timenextblink = g_pplayer->m_time_msec; // Start pattern right away // + m_d.m_blinkinterval;
             break;
          }
       }
