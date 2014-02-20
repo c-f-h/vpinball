@@ -2650,6 +2650,8 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
          ppin3d->EnableAlphaBlend( 1, m_d.m_fAddBlend );
 
          pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, m_d.m_fModify3DStereo || (g_pplayer->m_fStereo3D == 0) || !g_pplayer->m_fStereo3Denabled); // do not update z if just a fake ramp (f.e. flasher fakes, etc)
+         if (m_d.m_fAddBlend)
+             pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
 
          ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
