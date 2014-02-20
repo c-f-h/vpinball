@@ -731,6 +731,7 @@ void Pin3D::RenderPlayfieldGraphics()
 	if (pin)
 	{
 		SetTexture(pin);
+        SetTextureFilter(ePictureTexture, TEXTURE_MODE_ANISOTROPIC);
 	}
 	else // No image by that name
 	{
@@ -749,6 +750,7 @@ void Pin3D::RenderPlayfieldGraphics()
     {
         m_pd3dDevice->SetTexture(0, NULL);
         m_pd3dDevice->m_texMan.UnloadTexture(pin->m_pdsBuffer);
+        SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
     }
 
 	m_pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLEFAN, tableVBuffer, numVerts, 7, (LPWORD)rgiPin3D1, 4);
