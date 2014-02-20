@@ -61,10 +61,15 @@ BaseTexture* MemTexture::CreateFromFile(const char *szfile)
 	  {
          int newWidth = min(pictureWidth,maxTexDim);
          int newHeight = min(pictureHeight,maxTexDim);
-         if (pictureWidth - newWidth > pictureHeight - newHeight)
-             newHeight = min(pictureHeight * newWidth / pictureWidth, maxTexDim);
-         else
-             newWidth = min(pictureWidth * newHeight / pictureHeight, maxTexDim);
+         /*
+          * The following code tries to maintain the aspect ratio while resizing. This is
+          * however not really necessary and makes playfield textures more blurry than they
+          * need to be, so it's disabled for now.
+          */
+         //if (pictureWidth - newWidth > pictureHeight - newHeight)
+         //    newHeight = min(pictureHeight * newWidth / pictureWidth, maxTexDim);
+         //else
+         //    newWidth = min(pictureWidth * newHeight / pictureHeight, maxTexDim);
          dib = FreeImage_Rescale(dib, newWidth, newHeight, FILTER_BILINEAR);
       }
 
@@ -231,10 +236,11 @@ bool Texture::LoadFromMemory(BYTE *data, DWORD size)
     {
          int newWidth = min(pictureWidth,maxTexDim);
          int newHeight = min(pictureHeight,maxTexDim);
-         if (m_originalWidth - newWidth > m_originalHeight - newHeight)
-             newHeight = min(m_originalHeight * newWidth / m_originalWidth, maxTexDim);
-         else
-             newWidth = min(m_originalWidth * newHeight / m_originalHeight, maxTexDim);
+         // see comment in CreateFromFile()
+         //if (m_originalWidth - newWidth > m_originalHeight - newHeight)
+         //    newHeight = min(m_originalHeight * newWidth / m_originalWidth, maxTexDim);
+         //else
+         //    newWidth = min(m_originalWidth * newHeight / m_originalHeight, maxTexDim);
          dib = FreeImage_Rescale(dib, newWidth, newHeight, FILTER_BILINEAR);
          m_width = newWidth;
          m_height = newHeight;
