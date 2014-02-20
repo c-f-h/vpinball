@@ -264,10 +264,14 @@ public:
    void GetTransform( TransformStateType, D3DMATRIX* );
 
    void CreatePixelShader( const char* shader );
+   void SetPixelShaderConstants(const float* constantData, const unsigned int numFloat4s);
 
-   IDirect3DDevice9* m_pD3DDevice; //!! meh
+   void RevertPixelShaderToFixedFunction();
+
 private:
    IDirect3D9* m_pD3D;
+
+   IDirect3DDevice9* m_pD3DDevice;
 
    IDirect3DSurface9* m_pBackBuffer;
    CComPtr<IndexBuffer> m_dynIndexBuffer;      // workaround for DrawIndexedPrimitiveVB
@@ -283,6 +287,9 @@ private:
 
    VertexBuffer* m_curVertexBuffer;     // for caching
    IndexBuffer* m_curIndexBuffer;       // for caching
+
+   DWORD m_maxaniso;
+   bool m_mag_aniso;
 
 public:
    TextureManager m_texMan;

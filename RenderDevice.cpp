@@ -151,9 +151,34 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
         throw 0;
     }
 
-    D3DFORMAT format;
+    D3DDEVTYPE devtype = D3DDEVTYPE_HAL;
+
+    // Look for 'NVIDIA PerfHUD' adapter
+    // If it is present, override default settings
+    // This only takes effect if run under NVPerfHud, otherwise does nothing
+    for (UINT adapter=0; adapter < m_pD3D->GetAdapterCount(); adapter++)
+    {
+        D3DADAPTER_IDENTIFIER9 Identifier;
+        m_pD3D->GetAdapterIdentifier(adapter, 0, &Identifier);
+        if (strstr(Identifier.Description, "PerfHUD") != 0)
+        {
+            m_adapter = adapter;
+            devtype = D3DDEVTYPE_REF;
+            break;
+        }
+    }
+
+    D3DCAPS9 caps;
+    m_pD3D->GetDeviceCaps(m_adapter, devtype, &caps);
+
+    m_mag_aniso = (caps.TextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC) != 0;
+    m_maxaniso = caps.MaxAnisotropy;
+
+    if(((caps.TextureCaps & D3DPTEXTURECAPS_NONPOW2CONDITIONAL) != 0) || ((caps.TextureCaps & D3DPTEXTURECAPS_POW2) != 0))
+	ShowError("D3D device does only support power of 2 textures");
 
     // get the current display format
+    D3DFORMAT format;
     if (!fullscreen)
     {
         D3DDISPLAYMODE mode;
@@ -181,22 +206,17 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     params.FullScreen_RefreshRateInHz = fullscreen ? refreshrate : 0;
     params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // D3DPRESENT_INTERVAL_ONE for vsync
 
-    D3DDEVTYPE devtype = D3DDEVTYPE_HAL;
-
-    // Look for 'NVIDIA PerfHUD' adapter
-    // If it is present, override default settings
-    // This only takes effect if run under NVPerfHud, otherwise does nothing
-    for (UINT adapter=0; adapter < m_pD3D->GetAdapterCount(); adapter++)
+    DWORD MultiSampleQualityLevels;
+    if( !SUCCEEDED(m_pD3D->CheckDeviceMultiSampleType( m_adapter, 
+                                devtype, params.BackBufferFormat, 
+                                params.Windowed, params.MultiSampleType, &MultiSampleQualityLevels ) ) )
     {
-        D3DADAPTER_IDENTIFIER9 Identifier;
-        m_pD3D->GetAdapterIdentifier(adapter, 0, &Identifier);
-        if (strstr(Identifier.Description, "PerfHUD") != 0)
-        {
-            m_adapter = adapter;
-            devtype = D3DDEVTYPE_REF;
-            break;
-        }
+	ShowError("D3D device does not support this MultiSampleType");
+	params.MultiSampleType = D3DMULTISAMPLE_NONE;
+	params.MultiSampleQuality = 0;
     }
+    else
+	params.MultiSampleQuality = min(params.MultiSampleQuality, MultiSampleQualityLevels);
 
     // Create the D3D device. This optionally goes to the proper fullscreen mode.
     // It also creates the default swap chain (front and back buffer).
@@ -288,6 +308,16 @@ void RenderDevice::CreatePixelShader( const char* shader )
 		shader_cache = shader;
 	}
 	CHECKD3D(m_pD3DDevice->SetPixelShader(gShader));
+}
+
+void RenderDevice::SetPixelShaderConstants(const float* constantData, const unsigned int numFloat4s)
+{
+    m_pD3DDevice->SetPixelShaderConstantF(0, constantData, numFloat4s);
+}
+
+void RenderDevice::RevertPixelShaderToFixedFunction()
+{
+    m_pD3DDevice->SetPixelShader( NULL );
 }
 
 void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
@@ -428,10 +458,10 @@ void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 
 	case TEXTURE_MODE_ANISOTROPIC:
 		// Full HQ anisotropic Filter. Should lead to driver doing whatever it thinks is best.
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, m_mag_aniso ? D3DTEXF_ANISOTROPIC : D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_ANISOTROPIC));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR));
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAXANISOTROPY,16));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAXANISOTROPY, min(m_maxaniso,16)));
 		break;
 	}
 }

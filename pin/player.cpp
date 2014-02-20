@@ -2069,18 +2069,17 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 	if((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1))
 	{
 		const float temp[4] = {(float)(1.0/(double)m_width), (float)(1.0/(double)m_height), 0.f, 0.f};
-		m_pin3d.m_pd3dDevice->m_pD3DDevice->SetPixelShaderConstantF(0,temp,1);
+		m_pin3d.m_pd3dDevice->SetPixelShaderConstants(temp,1);
 	}
 	else
 	{
-		const float temp[4] = {m_pin3d.m_maxSeparation, m_pin3d.m_ZPD, m_fStereo3DY ? 1.0f : 0.0f, (m_fStereo3D == 1) ? 1.0f : 0.0f};
-		m_pin3d.m_pd3dDevice->m_pD3DDevice->SetPixelShaderConstantF(0,temp,1);
-		const float temp2[4] = {(float)(1.0/(double)m_width), (float)(1.0/(double)m_height), (float)m_height, 1.0f+(float)(usec()&0x1FF)*(float)(1.0/0x1FF)}; //!!
-		m_pin3d.m_pd3dDevice->m_pD3DDevice->SetPixelShaderConstantF(1,temp2,1);
+		const float temp[8] = {m_pin3d.m_maxSeparation, m_pin3d.m_ZPD, m_fStereo3DY ? 1.0f : 0.0f, (m_fStereo3D == 1) ? 1.0f : 0.0f,
+				       (float)(1.0/(double)m_width), (float)(1.0/(double)m_height), (float)m_height, 1.0f+(float)(usec()&0x1FF)*(float)(1.0/0x1FF)}; //!!
+		m_pin3d.m_pd3dDevice->SetPixelShaderConstants(temp,2);
 	}
     m_pin3d.m_pd3dDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_TEX, (LPVOID)quadVerts, 4);
 	
-	m_pin3d.m_pd3dDevice->m_pD3DDevice->SetPixelShader( NULL );
+	m_pin3d.m_pd3dDevice->RevertPixelShaderToFixedFunction();
 
 	m_pin3d.m_pd3dDevice->SetTransform( TRANSFORMSTATE_WORLD,      &matWorld );
 	m_pin3d.m_pd3dDevice->SetTransform( TRANSFORMSTATE_VIEW,       &matView );
