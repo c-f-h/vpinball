@@ -139,7 +139,7 @@ void EnumerateDisplayModes(int adapter, std::vector<VideoMode>& modes)
 //#define MY_IDX_BUF_SIZE 8192
 #define MY_IDX_BUF_SIZE 65536
 
-RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate, bool useAA, bool stereo3DFXAA)
+RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate, bool useVSync, bool useAA, bool stereo3DFXAA)
     : m_texMan(*this)
 {
     m_adapter = D3DADAPTER_DEFAULT;     // for now, always use the default adapter
@@ -204,7 +204,7 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     params.AutoDepthStencilFormat = D3DFMT_UNKNOWN;      // ignored
     params.Flags = /*stereo3DFXAA ?*/ 0 /*: D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL*/;
     params.FullScreen_RefreshRateInHz = fullscreen ? refreshrate : 0;
-    params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; // D3DPRESENT_INTERVAL_ONE for vsync
+    params.PresentationInterval = useVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 
     DWORD MultiSampleQualityLevels;
     if( !SUCCEEDED(m_pD3D->CheckDeviceMultiSampleType( m_adapter, 
@@ -324,6 +324,10 @@ void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
 {
     // TODO: we can't handle shake or vsync here
     // (vsync should be set when creating the device)
+    /*if(vsync) {
+	//Flush?
+	m_pD3DDevice->WaitForVBlank(0); // does not work on XP (needs IDirect3DDevice9Ex)
+    }*/
     CHECKD3D(m_pD3DDevice->Present(NULL, NULL, NULL, NULL));
 }
 

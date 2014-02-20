@@ -346,7 +346,7 @@ float Ball::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phi
 		|| (bnd <= (float)(-PHYS_TOUCH)))
 			hittime = 0;						// slow moving but embedded
 		else
-			hittime = (float)(bnd/(2.0f*PHYS_TOUCH)) + 0.5f;	// don't compete for fast zero time events
+			hittime = bnd/(float)(2.0*PHYS_TOUCH) + 0.5f;	// don't compete for fast zero time events
 	}
 	else
 	{

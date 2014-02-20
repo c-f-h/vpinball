@@ -158,7 +158,7 @@ public:
 
 	GPINFLOAT m_pixelaspectratio;
 
-	unsigned int m_fVSync; // targeted refresh rate in Hz
+	unsigned int m_fVSync; // targeted refresh rate in Hz //!! currently does not work adaptively as it would require IDirect3DDevice9Ex which is not supported on WinXP
 
 	BOOL m_fFXAA;
     BOOL m_fAA;

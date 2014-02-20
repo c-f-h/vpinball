@@ -695,7 +695,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	InitRegValues();
 
 	// width, height, and colordepth are only defined if fullscreen is true.
-	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)));
+	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, !!m_fVSync, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)));
 
 	if (hr != S_OK)
 	{
