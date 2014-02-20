@@ -604,6 +604,8 @@
 #define IDC_VP_HEIGHT                   422
 #define IDC_TABLE_DIM_LIST              423
 #define IDC_LIST3                       424
+#define IDC_FORCE_ANISO					425
+#define IDC_QFXAA                       426
 #define IDC_JOYLFLIPCOMBO               501
 #define IDC_JOYRFLIPCOMBO               502
 #define IDC_JOYPLUNGERCOMBO             503
@@ -660,7 +662,7 @@
 #define IDD_PROPRAMP_PHYSICS1           550
 #define IDD_PROPPRIMITIVE_PHYSICS       550
 #define IDS_INPUT                       551
-#define IDC_FXAA                        552
+#define IDC_FFXAA                       552
 #define IDS_UNHIDEALL                   552
 #define IDS_HIDE                        553
 #define IDC_MODIFY3DSTEREO              554
