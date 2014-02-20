@@ -24,16 +24,26 @@ static const char stereo3Dshader[] = \
 "const bool yaxis = (ms_zpd_ya_td.z != 0.0);" //!! uniform
 "const bool topdown = (ms_zpd_ya_td.w != 0.0);" //!! uniform
 "const int y = w_h_height.z*u.y;"
+"const bool aa = (w_h_height.w != 0.0);" //!! uniform
 "const bool l = topdown ? (u.y < 0.5) : ((y+1)/2 == y/2);" //last check actually means (y&1)
 "if(topdown) { u.y *= 2.0; if(!l) u.y -= 1.0; }"  //!! !topdown: (u.y+w_h_height.y) ?
 "const float su = l ? MaxSeparation : -MaxSeparation;"
-"const float minDepth = min(min(tex2D(depth,u + (yaxis ? float2(0.0,0.5*su) : float2(0.5*su,0.0))).x, tex2D(depth,u + (yaxis ? float2(0.0,0.666*su) : float2(0.666*su,0.0))).x), tex2D(depth,u + (yaxis ? float2(0.0,su) : float2(su,0.0))).x);"
+"float minDepth = min(min(tex2D(depth,u + (yaxis ? float2(0.0,0.5*su) : float2(0.5*su,0.0))).x, tex2D(depth,u + (yaxis ? float2(0.0,0.666*su) : float2(0.666*su,0.0))).x), tex2D(depth,u + (yaxis ? float2(0.0,su) : float2(su,0.0))).x);"
 "float parallax = MaxSeparation - min(MaxSeparation*ZPD/minDepth, MaxSeparation);"
 "if(!l)"
 "parallax = -parallax;"
 "if(yaxis)"
 "parallax = -parallax;"
-"return tex2D(back,u + (yaxis ? float2(0.0,parallax) : float2(parallax,0.0)));"
+"const float4 col = tex2D(back,u + (yaxis ? float2(0.0,parallax) : float2(parallax,0.0)));"
+"if(!aa)"
+"return col;" // otherwise blend with 'missing' scanline
+"minDepth = min(min(tex2D(depth,u + (yaxis ? float2(0.0,0.5*su+w_h_height.y) : float2(0.5*su,w_h_height.y))).x, tex2D(depth,u + (yaxis ? float2(0.0,0.666*su+w_h_height.y) : float2(0.666*su,w_h_height.y))).x), tex2D(depth,u + (yaxis ? float2(0.0,su+w_h_height.y) : float2(su,w_h_height.y))).x);"
+"parallax = MaxSeparation - min(MaxSeparation*ZPD/minDepth, MaxSeparation);"
+"if(!l)"
+"parallax = -parallax;"
+"if(yaxis)"
+"parallax = -parallax;"
+"return (col + tex2D(back,u + (yaxis ? float2(0.0,parallax+w_h_height.y) : float2(parallax,w_h_height.y))))*0.5;"
 "}";
 #else
 "float4 w_h_height : register(c1);"
