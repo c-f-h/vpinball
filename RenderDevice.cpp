@@ -223,12 +223,12 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
                                 devtype, params.BackBufferFormat, 
                                 params.Windowed, params.MultiSampleType, &MultiSampleQualityLevels ) ) )
     {
-	ShowError("D3D device does not support this MultiSampleType");
-	params.MultiSampleType = D3DMULTISAMPLE_NONE;
-	params.MultiSampleQuality = 0;
+		ShowError("D3D device does not support this MultiSampleType");
+		params.MultiSampleType = D3DMULTISAMPLE_NONE;
+		params.MultiSampleQuality = 0;
     }
     else
-	params.MultiSampleQuality = min(params.MultiSampleQuality, MultiSampleQualityLevels);
+		params.MultiSampleQuality = min(params.MultiSampleQuality, MultiSampleQualityLevels);
 
     // Create the D3D device. This optionally goes to the proper fullscreen mode.
     // It also creates the default swap chain (front and back buffer).
@@ -241,7 +241,7 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
                hwnd,
                D3DCREATE_HARDWARE_VERTEXPROCESSING /*| D3DCREATE_PUREDEVICE*/,
                &params,
-	       fullscreen ? &mode : NULL,
+               fullscreen ? &mode : NULL,
                &m_pD3DDevice));
 
     // Get the display mode so that we can report back the actual refresh rate.
@@ -464,6 +464,9 @@ void RenderDevice::SetTexture(DWORD p1, D3DTexture* p2 )
 
 void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 {
+	if((mode == TEXTURE_MODE_TRILINEAR) && m_force_aniso)
+		mode = TEXTURE_MODE_ANISOTROPIC;
+
 	switch ( mode )
 	{
 	default:
@@ -612,7 +615,6 @@ RenderTarget* RenderDevice::AttachZBufferTo(RenderTarget* surf)
     return pZBuf;
 }
 
-
 void RenderDevice::DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, LPVOID vertices, DWORD vertexCount)
 {
     m_pD3DDevice->SetFVF(fvf);
@@ -701,7 +703,6 @@ void RenderDevice::GetTransform( TransformStateType p1, D3DMATRIX* p2)
    CHECKD3D(m_pD3DDevice->GetTransform((D3DTRANSFORMSTATETYPE)p1, p2));
 }
 
-
 void RenderDevice::GetMaterial( BaseMaterial *_material )
 {
    m_pD3DDevice->GetMaterial((D3DMATERIAL9*)_material);
@@ -736,4 +737,3 @@ void RenderDevice::GetViewport( ViewPort* p1)
 {
    m_pD3DDevice->GetViewport((D3DVIEWPORT9*)p1);
 }
-

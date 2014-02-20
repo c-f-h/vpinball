@@ -176,7 +176,6 @@ private:
 };
 
 
-
 class RenderDevice
 {
 public:
@@ -268,6 +267,8 @@ public:
 
    void RevertPixelShaderToFixedFunction();
 
+   void ForceAnisotropicFiltering( const bool enable ) { m_force_aniso = enable; }
+
 private:
 #ifdef USE_D3D9EX
    IDirect3D9Ex* m_pD3D;
@@ -296,6 +297,8 @@ private:
 
    DWORD m_maxaniso;
    bool m_mag_aniso;
+
+   bool m_force_aniso;
 
 public:
    TextureManager m_texMan;

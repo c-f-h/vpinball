@@ -277,6 +277,13 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
         return E_FAIL;
     }
 
+	int forceAniso;
+	HRESULT hr = GetRegInt("Player", "ForceAnisotropicFiltering", &forceAniso);
+	if (hr != S_OK)
+		forceAniso = fFalse; // The default
+
+	m_pd3dDevice->ForceAnisotropicFiltering(!!forceAniso);
+
     // set the viewport for the newly created device
     vp.X=0;
     vp.Y=0;

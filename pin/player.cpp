@@ -211,7 +211,7 @@ Player::Player()
 
     hr = GetRegInt("Player", "FXAA", &m_fFXAA);
     if (hr != S_OK)
-      m_fFXAA = fFalse; // The default = off
+      m_fFXAA = 0; // The default = off
 
     hr = GetRegInt("Player", "BallTrail", &m_fTrailForBalls);
     if (hr != S_OK)
@@ -247,7 +247,7 @@ Player::Player()
 		stereo3DY = fFalse; // The default
 	m_fStereo3DY = (stereo3DY == 1);
 
-   int detecthang;
+    int detecthang;
 	hr = GetRegInt("Player", "DetectHang", &detecthang);
 	if (hr != S_OK)
 		detecthang = fFalse; // The default
@@ -695,7 +695,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	InitRegValues();
 
 	// width, height, and colordepth are only defined if fullscreen is true.
-	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, !!m_fVSync, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)));
+	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, !!m_fVSync, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)));
 
 	if (hr != S_OK)
 	{
@@ -2033,10 +2033,10 @@ static const float quadVerts[4*5] =
 
 void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 {
-	m_pin3d.m_pd3dDevice->CreatePixelShader( ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)) ? FXAAshader : stereo3Dshader );
+	m_pin3d.m_pd3dDevice->CreatePixelShader( (((m_fFXAA == 1) && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)) ? FXAAshader1 : (((m_fFXAA == 2) && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 2)) ? FXAAshader2 : stereo3Dshader );
 
 	m_pin3d.m_pd3dDevice->CopySurface(m_pin3d.m_pdds3DBackBuffer, m_pin3d.m_pddsBackBuffer);
-	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)))
+	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))
 		m_pin3d.m_pd3dDevice->CopyDepth(m_pin3d.m_pdds3DZBuffer, m_pin3d.m_pddsZBuffer);
 
     m_pin3d.m_pd3dDevice->BeginScene();
@@ -2048,10 +2048,10 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 
 	m_pin3d.m_pd3dDevice->SetTexture(0,m_pin3d.m_pdds3DBackBuffer);
 	m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_BILINEAR);
-	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)))
+	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))
 	{
 		m_pin3d.m_pd3dDevice->SetTexture(1,m_pin3d.m_pdds3DZBuffer);
-		m_pin3d.m_pd3dDevice->SetTextureFilter(1, TEXTURE_MODE_POINT); //TEXTURE_MODE_BILINEAR?
+		m_pin3d.m_pd3dDevice->SetTextureFilter(1, TEXTURE_MODE_POINT); //!! TEXTURE_MODE_BILINEAR?
 	}
 
 	Matrix3D matWorld, matView, matProj;
@@ -2066,7 +2066,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 	m_pin3d.m_pd3dDevice->SetTransform( TRANSFORMSTATE_PROJECTION, &ident );
 
 	//m_pin3d.m_pd3dDevice->SetPixelShader();
-	if((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1))
+	if((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0))
 	{
 		const float temp[4] = {(float)(1.0/(double)m_width), (float)(1.0/(double)m_height), 0.f, 0.f};
 		m_pin3d.m_pd3dDevice->SetPixelShaderConstants(temp,1);
@@ -2087,7 +2087,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 
 	m_pin3d.m_pd3dDevice->SetTexture(0,NULL);
 	m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_TRILINEAR );
-	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)))
+	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))
 	{
 		m_pin3d.m_pd3dDevice->SetTexture(1,NULL);
 		m_pin3d.m_pd3dDevice->SetTextureFilter(1, TEXTURE_MODE_TRILINEAR );
@@ -2166,7 +2166,7 @@ void Player::Render()
     }
 
 
-    if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)))) || (m_pin3d.m_maxSeparation <= 0.0f) || (m_pin3d.m_maxSeparation >= 1.0f) || (m_pin3d.m_ZPD <= 0.0f) || (m_pin3d.m_ZPD >= 1.0f) || !m_pin3d.m_pdds3DBackBuffer || !m_pin3d.m_pdds3DZBuffer)
+    if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))) || (m_pin3d.m_maxSeparation <= 0.0f) || (m_pin3d.m_maxSeparation >= 1.0f) || (m_pin3d.m_ZPD <= 0.0f) || (m_pin3d.m_ZPD >= 1.0f) || !m_pin3d.m_pdds3DBackBuffer || !m_pin3d.m_pdds3DZBuffer)
     {
         FlipVideoBuffersNormal( vsync );
     }

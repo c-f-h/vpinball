@@ -3609,12 +3609,14 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             m_useAA = 0;
          SendMessage(hwndCheck, BM_SETCHECK, (m_useAA != 0) ? BST_CHECKED : BST_UNCHECKED, 0);
 
-         hwndCheck = GetDlgItem(hwndDlg, IDC_FXAA);
          int fxaa;
          hr = GetRegInt("Player", "FXAA", &fxaa);
          if (hr != S_OK)
             fxaa = 0;
-         SendMessage(hwndCheck, BM_SETCHECK, (fxaa != 0) ? BST_CHECKED : BST_UNCHECKED, 0);
+         hwndCheck = GetDlgItem(hwndDlg, IDC_FFXAA);
+         SendMessage(hwndCheck, BM_SETCHECK, (fxaa == 1) ? BST_CHECKED : BST_UNCHECKED, 0);
+         hwndCheck = GetDlgItem(hwndDlg, IDC_QFXAA);
+         SendMessage(hwndCheck, BM_SETCHECK, (fxaa == 2) ? BST_CHECKED : BST_UNCHECKED, 0);
 
          hwndCheck = GetDlgItem(hwndDlg, IDC_3D_STEREO);
          int stereo3D;
@@ -3636,6 +3638,13 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
          if (hr != S_OK)
             stereo3DY = fFalse;
          SendMessage(hwndCheck, BM_SETCHECK, stereo3DY ? BST_CHECKED : BST_UNCHECKED, 0);
+
+         hwndCheck = GetDlgItem(hwndDlg, IDC_FORCE_ANISO);
+		 int forceAniso;
+         hr = GetRegInt("Player", "ForceAnisotropicFiltering", &forceAniso);
+		 if (hr != S_OK)
+            forceAniso = fFalse;
+         SendMessage(hwndCheck, BM_SETCHECK, forceAniso ? BST_CHECKED : BST_UNCHECKED, 0);
 
          hwndCheck = GetDlgItem(hwndDlg, 216); //AlternateRender
          int altrender;
@@ -3785,9 +3794,14 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				  int vsync = GetDlgItemInt(hwndDlg, IDC_ADAPTIVE_VSYNC, NULL, TRUE);
                   SetRegValue("Player", "AdaptiveVSync", REG_DWORD, &vsync, 4);
 
-                  HWND hwndFXAA = GetDlgItem(hwndDlg, IDC_FXAA);
-                  int fxaa = SendMessage(hwndFXAA, BM_GETCHECK, 0, 0);
-                  SetRegValue("Player", "FXAA", REG_DWORD, &fxaa, 4);
+                  HWND hwndFXAA = GetDlgItem(hwndDlg, IDC_FFXAA);
+                  int ffxaa = SendMessage(hwndFXAA, BM_GETCHECK, 0, 0);
+				  hwndFXAA = GetDlgItem(hwndDlg, IDC_QFXAA);
+                  int qfxaa = SendMessage(hwndFXAA, BM_GETCHECK, 0, 0)*2;
+				  if(qfxaa)
+					SetRegValue("Player", "FXAA", REG_DWORD, &qfxaa, 4);
+				  else
+					SetRegValue("Player", "FXAA", REG_DWORD, &ffxaa, 4);
 
                   HWND hwndUseAA = GetDlgItem(hwndDlg, IDC_AA_ALL_TABLES);
                   int m_useAA = SendMessage(hwndUseAA, BM_GETCHECK, 0, 0);
@@ -3806,7 +3820,11 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
                   int stereo3DY = SendMessage(hwndStereo3DY, BM_GETCHECK, 0, 0);
                   SetRegValue("Player", "Stereo3DYAxis", REG_DWORD, &stereo3DY, 4);
 
-                  HWND hwndARend = GetDlgItem(hwndDlg, 216);
+                  HWND hwndForceAniso = GetDlgItem(hwndDlg, IDC_FORCE_ANISO);
+                  int forceAniso = SendMessage(hwndForceAniso, BM_GETCHECK, 0, 0);
+                  SetRegValue("Player", "ForceAnisotropicFiltering", REG_DWORD, &forceAniso, 4);
+
+				  HWND hwndARend = GetDlgItem(hwndDlg, 216);
                   int altrend = SendMessage(hwndARend, BM_GETCHECK, 0, 0);
                   SetRegValue("Player", "AlternateRender", REG_DWORD, &altrend, 4);
                   g_pvp->m_pdd.m_fAlternateRender = (altrend != 0);
