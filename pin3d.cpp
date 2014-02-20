@@ -375,7 +375,7 @@ void Pin3D::InitRenderState()
 	m_pd3dDevice->SetTexture(ePictureTexture, NULL);
 
     // initialize second texture stage (light map)
-	SetTextureFilter( eLightProject1, TEXTURE_MODE_BILINEAR );
+	SetTextureFilter( eLightProject1, TEXTURE_MODE_TRILINEAR );
 	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLORARG1, D3DTA_TEXTURE );
 	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLORARG2, D3DTA_CURRENT );
 	m_pd3dDevice->SetTextureStageState( eLightProject1, D3DTSS_COLOROP,   D3DTOP_MODULATE );

@@ -2633,7 +2633,7 @@ void Player::DrawBalls()
 
     m_pin3d.EnableAlphaTestReference( 0x0000001 );
     m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-    m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_BILINEAR);
+    m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_TRILINEAR);
 
     const float sn = sinf(m_pin3d.m_inclination);
     const float cs = cosf(m_pin3d.m_inclination);

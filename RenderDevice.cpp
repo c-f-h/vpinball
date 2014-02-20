@@ -443,14 +443,14 @@ void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
 		break;
 
 	case TEXTURE_MODE_BILINEAR:
-		// Filter textures (average of 2x2 texels), use a single mipmap.
+		// Interpolate in 2x2 texels, no mipmapping.
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR));
-		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_POINT));
+		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_NONE));
 		break;
 
 	case TEXTURE_MODE_TRILINEAR:
-		// Filter textures on 2 mip levels (average of 2x2 texels).  And filter between the 2 mip levels.
+		// Filter textures on 2 mip levels (interpolate in 2x2 texels). And filter between the 2 mip levels.
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MINFILTER, D3DTEXF_LINEAR));
 		CHECKD3D(m_pD3DDevice->SetSamplerState(texUnit, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR));
