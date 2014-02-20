@@ -144,12 +144,20 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
 {
     m_adapter = D3DADAPTER_DEFAULT;     // for now, always use the default adapter
 
+#ifdef USE_D3D9EX
+    CHECKD3D(Direct3DCreate9Ex(D3D_SDK_VERSION, &m_pD3D));
+    if (m_pD3D == NULL)
+    {
+        throw 0;
+    }
+#else
     m_pD3D = Direct3DCreate9(D3D_SDK_VERSION);
     if (m_pD3D == NULL)
     {
         ShowError("Could not create D3D9 object.");
         throw 0;
     }
+#endif
 
     D3DDEVTYPE devtype = D3DDEVTYPE_HAL;
 
@@ -204,7 +212,11 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     params.AutoDepthStencilFormat = D3DFMT_UNKNOWN;      // ignored
     params.Flags = /*stereo3DFXAA ?*/ 0 /*: D3DPRESENTFLAG_DISCARD_DEPTHSTENCIL*/;
     params.FullScreen_RefreshRateInHz = fullscreen ? refreshrate : 0;
+#ifdef USE_D3D9EX
+    params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; //!! or have a special mode to force normal vsync?
+#else
     params.PresentationInterval = useVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+#endif
 
     DWORD MultiSampleQualityLevels;
     if( !SUCCEEDED(m_pD3D->CheckDeviceMultiSampleType( m_adapter, 
@@ -220,6 +232,21 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
 
     // Create the D3D device. This optionally goes to the proper fullscreen mode.
     // It also creates the default swap chain (front and back buffer).
+#ifdef USE_D3D9EX
+    D3DDISPLAYMODEEX mode;
+    mode.Size = sizeof(D3DDISPLAYMODEEX);
+    CHECKD3D(m_pD3D->CreateDeviceEx(
+               m_adapter,
+               devtype,
+               hwnd,
+               D3DCREATE_HARDWARE_VERTEXPROCESSING /*| D3DCREATE_PUREDEVICE*/,
+               &params,
+	       fullscreen ? &mode : NULL,
+               &m_pD3DDevice));
+
+    // Get the display mode so that we can report back the actual refresh rate.
+    CHECKD3D(m_pD3DDevice->GetDisplayModeEx(m_adapter, &mode, NULL));
+#else
     CHECKD3D(m_pD3D->CreateDevice(
                m_adapter,
                devtype,
@@ -231,6 +258,8 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     // Get the display mode so that we can report back the actual refresh rate.
     D3DDISPLAYMODE mode;
     CHECKD3D(m_pD3DDevice->GetDisplayMode(m_adapter, &mode));
+#endif
+
     refreshrate = mode.RefreshRate;
 
     // Retrieve a reference to the back buffer.
@@ -322,12 +351,11 @@ void RenderDevice::RevertPixelShaderToFixedFunction()
 
 void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
 {
-    // TODO: we can't handle shake or vsync here
-    // (vsync should be set when creating the device)
-    /*if(vsync) {
-	//Flush?
-	m_pD3DDevice->WaitForVBlank(0); // does not work on XP (needs IDirect3DDevice9Ex)
-    }*/
+    // TODO: we can't handle shake here
+#ifdef USE_D3D9EX
+    if(vsync)
+	m_pD3DDevice->WaitForVBlank(0);
+#endif
     CHECKD3D(m_pD3DDevice->Present(NULL, NULL, NULL, NULL));
 }
 

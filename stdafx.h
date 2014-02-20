@@ -2,6 +2,8 @@
 
 //#define DISABLE_FORCE_NVIDIA_OPTIMUS // do not enable NVIDIA Optimus cards (on Laptops, etc) by default
 
+//#define USE_D3D9EX // if enabled can use extended API, does not work on XP though // currently only allows to enable adaptive vsync again
+
 //#define _CRTDBG_MAP_ALLOC
 #ifdef _CRTDBG_MAP_ALLOC
  #include <crtdbg.h>

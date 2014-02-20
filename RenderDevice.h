@@ -269,9 +269,15 @@ public:
    void RevertPixelShaderToFixedFunction();
 
 private:
+#ifdef USE_D3D9EX
+   IDirect3D9Ex* m_pD3D;
+
+   IDirect3DDevice9Ex* m_pD3DDevice;
+#else
    IDirect3D9* m_pD3D;
 
    IDirect3DDevice9* m_pD3DDevice;
+#endif
 
    IDirect3DSurface9* m_pBackBuffer;
    CComPtr<IndexBuffer> m_dynIndexBuffer;      // workaround for DrawIndexedPrimitiveVB

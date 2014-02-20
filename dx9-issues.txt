@@ -4,7 +4,7 @@ DX9 renderer known issues:
 *) textboxes don't work
 *) EM reels only work in Image Reel mode, not Text Reel
 *) text decals don't work
-*) Stereo 3D AA disabled, Stereo 3D in general is a bit hacky currently
+*) Stereo 3D AA disabled, Stereo 3D only works on NVIDIA so far
 *) AA hardwired to 4xMSAA
 *) renderer uses non-power-of-two textures, may cause troubles on some older cards
 *) "real" full screen mode doesn't work with VPM. Workaround: set "ddraw" to 0 in the VPM settings (though DMD doesn't seem to show).
@@ -13,3 +13,4 @@ DX9 renderer known issues:
 *) lost devices aren't handled properly
 *) screen shake doesn't work
 *) use aniso texture filtering
+*) adaptive vsync always falls back to normal vsync (can only be supported if we drop XP)
