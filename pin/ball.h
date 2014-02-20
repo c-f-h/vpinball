@@ -37,10 +37,11 @@ public:
 	virtual AnimObject *GetAnimObject() {return &m_ballanim;}
 
 	//semi-generic collide methods
-	void CollideWall(const Vertex3Ds * const phitnormal, const float elasticity, float antifriction, float scatter_angle);
-	void Collide3DWall(const Vertex3Ds * const phitnormal, const float m_elasticity, float antifriction, float scatter_angle);
+	void CollideWall(const Vertex3Ds * const phitnormal, const float elasticity, float antifriction, float scatter_angle, bool collide3D=false);
+	void Collide3DWall(const Vertex3Ds * const phitnormal, const float elasticity, float antifriction, float scatter_angle)
+      { CollideWall(phitnormal, elasticity, antifriction, scatter_angle, true); }
 
-	void AngularAcceleration(const Vertex3Ds * const phitnormal);
+	void AngularAcceleration(const Vertex3Ds& hitnormal);
 
 	void CalcBoundingRect();
 

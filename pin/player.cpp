@@ -1592,7 +1592,6 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 				m_hitoctree.HitTestBall(pball);			// find the hit objects and hit times
 
 				const float htz = pball->m_hittime;		// this ball's hit time
-
 				if(htz < 0.f) pball->m_pho = NULL;		// no negative time allowed
 
 				if (pball->m_pho)						// hit object
@@ -1631,7 +1630,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 		for (int i=0;i<m_vmover.Size();i++)
 			m_vmover.ElementAt(i)->UpdateDisplacements(hittime); //step 2:  move the objects about according to velocities
 
-		//  ok find balls that need to be collided and script'ed (generally there will be one, but more are possible)
+		//  find balls that need to be collided and script'ed (generally there will be one, but more are possible)
 
 		for (int i=0; i < m_vball.Size(); i++)					 // use m_vball.Size(), in case script deletes a ball
 		{
@@ -1760,7 +1759,7 @@ void Player::UpdatePhysics()
 #endif
 
 #ifdef LOG
-	const double timepassed = (double)(initial_time_usec - m_curPhysicsFrameTime) * (1.0/1000000.0);
+	const double timepassed = (double)(initial_time_usec - m_curPhysicsFrameTime) / 1000000.0;
 
 	const float frametime =
 #ifdef PLAYBACK

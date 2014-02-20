@@ -82,10 +82,6 @@ public:
 
 	virtual void CalcHitRect();
 
-	//LineSeg m_linesegConnect;
-
-	//Vector<HitObject> m_vho;
-
 	Flipper *m_pflipper;
 
 	float m_forcemass; // Force of the flipper, treated as the mass of the moving object;

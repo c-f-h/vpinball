@@ -63,10 +63,6 @@ public:
 
 	virtual AnimObject *GetAnimObject() {return &m_plungeranim;}
 
-	//Vector<HitObject> m_vho;
-
-	//float m_acc;
-
 	PlungerAnimObject m_plungeranim;
 
 	Plunger *m_pplunger;

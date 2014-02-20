@@ -49,14 +49,6 @@ class Ball;
 class HitObject;
 class AnimObject;
 
-class UpdateRect
-	{
-public:
-	RECT m_rcupdate;
-	Vector<AnimObject> m_vobject;
-	BOOL m_fSeeThrough;
-	};
-
 HitObject *CreateCircularHitPoly(const float x, const float y, const float z, const float r, const int sections);
 
 class HitObject

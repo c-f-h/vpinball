@@ -198,20 +198,23 @@ void FlipperAnimObject::UpdateDisplacements(const float dtime)
 
 void FlipperAnimObject::UpdateVelocities()
 {
-   if (m_fAcc == 0) ;//m_anglespeed = 0; //idle
+   if (m_fAcc == 0)
+   {
+       //m_anglespeed = 0; //idle
+   }
    else if (m_fAcc > 0) // positive ... increasing angle
-   {			
+   {
       m_anglespeed += (m_force/m_mass) * C_FLIPPERACCEL; //new angular rate
 
       if (m_anglespeed > m_maxvelocity) 
-         m_anglespeed = m_maxvelocity; //limit			
+         m_anglespeed = m_maxvelocity; //limit
    }
    else // negative ... decreasing angle
-   {		
+   {
       m_anglespeed -= (m_force/m_mass) * C_FLIPPERACCEL; //new angular rate
 
       if (m_anglespeed < -m_maxvelocity) 
-         m_anglespeed = -m_maxvelocity; //limit			
+         m_anglespeed = -m_maxvelocity; //limit
    }
 }
 
@@ -318,20 +321,7 @@ float HitFlipper::HitTestFlipperEnd(Ball * const pball, const float dtime, Verte
 
       if (fabsf(bfend) <= C_PRECISION) break; 
 
-      if (k >= 3)// MFP root search +++++++++++++++++++++++++++++++++++++++++
-      {
-         if (bfend*d0 <= 0.0f)										// zero crossing
-         { t1 = t; d1 = bfend; if (dp*bfend > 0.0) d0 *= 0.5f; } // 	move right interval limit			
-         else 
-         { t0 = t; d0 = bfend; if (dp*bfend > 0.0) d1 *= 0.5f; }	// 	move left interval limit		
-      }		
-      else if (k == 2) // end pass two, check if zero crossing on initial interval, exit if none
-      {
-         if (dp*bfend > 0.0f) return -1.0f;	// no solution ... no obvious zero crossing
-
-         t0 = 0; t1 = dtime; d0 = dp; d1 = bfend; // set initial boundaries
-      }
-      else // (k == 1) end of pass one ... set full interval pass, t = dtime
+      if (k == 1)   // end of pass one ... set full interval pass, t = dtime
       { // test for extreme conditions
          if (bfend < -((float)PHYS_SKIN + feRadius)) return -1.0f;	// too deeply embedded, ambigious position
          if (bfend <= (float)PHYS_TOUCH) 
@@ -339,6 +329,19 @@ float HitFlipper::HitTestFlipperEnd(Ball * const pball, const float dtime, Verte
 
          t0 = t1 = dtime; d0 = 0; d1 = bfend; // set for second pass, force t=dtime
       }
+      else if (k == 2) // end pass two, check if zero crossing on initial interval, exit if none
+      {
+         if (dp*bfend > 0.0f) return -1.0f;	// no solution ... no obvious zero crossing
+
+         t0 = 0; t1 = dtime; d0 = dp; d1 = bfend; // set initial boundaries
+      }
+      else // (k >= 3) // MFP root search +++++++++++++++++++++++++++++++++++++++++
+      {
+         if (bfend*d0 <= 0.0f)										// zero crossing
+         { t1 = t; d1 = bfend; if (dp*bfend > 0.0) d0 *= 0.5f; } // 	move right interval limit			
+         else 
+         { t0 = t; d0 = bfend; if (dp*bfend > 0.0) d1 *= 0.5f; }	// 	move left interval limit		
+      }		
 
       t = t0 - d0*(t1 - t0)/(d1 - d0);			// estimate next t
       dp = bfend;									// remember 
@@ -429,8 +432,7 @@ float HitFlipper::HitTestFlipperFace(Ball * const pball, const float dtime, Vert
    Vertex2D F;			// flipper face normal
 
    float bffnd;		// ball flipper face normal distance (negative for normal side)
-   float ballvtx;		// new ball position at time t in flipper face coordinate
-   float ballvty;
+   float ballvtx, ballvty;		// new ball position at time t in flipper face coordinate
    float contactAng;
 
    float t,t0,t1, d0,d1,dp; // Modified False Position control
@@ -465,26 +467,26 @@ float HitFlipper::HitTestFlipperFace(Ball * const pball, const float dtime, Vert
 
       // loop control, boundary checks, next estimate, etc.
 
-      if (k >= 3)// MFP root search +++++++++++++++++++++++++++++++++++++++++
-      {
-         if (bffnd*d0 <= 0.0)									// zero crossing
-         { t1 = t; d1 = bffnd; if (dp*bffnd > 0.0) d0 *= 0.5f; } // 	move right limits
-         else 
-         { t0 = t; d0 = bffnd; if (dp*bffnd > 0.0) d1 *= 0.5f; } // move left limits
-      }		
-      else if (k == 2)// end pass two, check if zero crossing on initial interval, exit
-      {	
-         if (dp*bffnd > 0.0) return -1.0f;	// no solution ... no obvious zero crossing
-         t0 = 0; t1 = dtime; d0 = dp; d1 = bffnd; // testing MFP estimates			
-      }
-      else // (k == 1) end of pass one ... set full interval pass, t = dtime
-      {// test for already inside flipper plane, either embedded or beyond the face endpoints
+      if (k == 1)   // end of pass one ... set full interval pass, t = dtime
+      {    // test for already inside flipper plane, either embedded or beyond the face endpoints
          if (bffnd < -((float)PHYS_SKIN + feRadius)) return -1.0f;		// wrong side of face, or too deeply embedded			
          if (bffnd <= (float)PHYS_TOUCH) 
             break; // inside the clearance limits, go check face endpoints
 
          t0 = t1 = dtime; d0 = 0; d1 = bffnd; // set for second pass, so t=dtime
       }
+      else if (k == 2)// end pass two, check if zero crossing on initial interval, exit
+      {	
+         if (dp*bffnd > 0.0) return -1.0f;	// no solution ... no obvious zero crossing
+         t0 = 0; t1 = dtime; d0 = dp; d1 = bffnd; // testing MFP estimates			
+      }
+      else // (k >= 3) // MFP root search +++++++++++++++++++++++++++++++++++++++++
+      {
+         if (bffnd*d0 <= 0.0)									// zero crossing
+         { t1 = t; d1 = bffnd; if (dp*bffnd > 0.0) d0 *= 0.5f; } // 	move right limits
+         else 
+         { t0 = t; d0 = bffnd; if (dp*bffnd > 0.0) d1 *= 0.5f; } // move left limits
+      }		
 
       t = t0 - d0*(t1-t0)/(d1-d0);					// next estimate
       dp = bffnd;	// remember 
@@ -687,6 +689,6 @@ void HitFlipper::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
    }
 
    const Vertex3Ds vnormal(phitnormal->x, phitnormal->y, 0.0f);
-   pball->AngularAcceleration(&vnormal);
+   pball->AngularAcceleration(vnormal);
 }
 

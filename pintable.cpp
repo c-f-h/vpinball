@@ -553,7 +553,7 @@ PinTable::PinTable()
    m_hardFriction = C_FRICTIONCONST;
    m_hardScatter = 0;
    m_maxBallSpeed = C_SPEEDLIMIT;
-   m_dampingFriction = 0.95f;
+   m_dampingFriction = C_DAMPFRICTION;
 
    m_plungerNormalize = 100;  //Mech-Plunger component adjustment or weak spring, aging
    m_plungerFilter = fFalse;
