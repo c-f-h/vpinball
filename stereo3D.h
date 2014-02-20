@@ -1,5 +1,3 @@
-#define FAST_FXAA
-
 static const char copyshader[] = \
 
 "float4 w_h : register(c0);"
@@ -85,9 +83,8 @@ static const char stereo3Dshader[] = \
 "}";
 #endif
 
-static const char FXAAshader[] = \
-
-#ifdef FAST_FXAA // Own approximation of FXAA
+// Approximation of FXAA
+static const char FXAAshader1[] = \
 
 "float4 w_h : register(c0);"
 "sampler2D back : register(s0);" //RGB
@@ -133,7 +130,8 @@ static const char FXAAshader[] = \
 "return ((lumaB < lumaMin) || (lumaB > lumaMax)) ? rgbA : rgbB;"
 "}";
 
-#else // Full mid-quality PC FXAA 3.11
+// Full mid-quality PC FXAA 3.11
+static const char FXAAshader2[] = \
 
 "float4 w_h : register(c0);"
 "sampler2D back : register(s0);" //RGB
@@ -261,5 +259,3 @@ static const char FXAAshader[] = \
 "else un.x += pl;"
 "return tex2D(back, un);"
 "}";
-
-#endif
