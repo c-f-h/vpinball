@@ -356,7 +356,6 @@ void Texture::CreateAlphaChannel()
       m_fTransparent = Texture::SetAlpha(m_pdsBufferColorKey, m_rgbTransparent);
       if (!m_fTransparent)
          m_rgbTransparent = NOTRANSCOLOR; // set to magic color to disable future checking
-      CreateNextMipMapLevel(m_pdsBufferColorKey);
    }
 }
 
@@ -370,7 +369,6 @@ void Texture::EnsureBackdrop(const COLORREF color)
       }
       *m_pdsBufferBackdrop = *m_pdsBuffer;  // copy texture
       SetOpaqueBackdrop(m_pdsBufferBackdrop, m_rgbTransparent, color);
-      CreateNextMipMapLevel(m_pdsBufferBackdrop);
       m_rgbBackdropCur = color;
    }
 }
@@ -535,11 +533,6 @@ void Texture::SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent
       }
       pch += lpitch-(width*4);
    }
-}
-
-void Texture::CreateMipMap()
-{
-   CreateNextMipMapLevel( m_pdsBufferColorKey );
 }
 
 BOOL Texture::SetAlpha(const COLORREF rgbTransparent)

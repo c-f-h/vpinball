@@ -6680,8 +6680,6 @@ void PinTable::ReImportImage(HWND hwndListView, Texture *ppi, char *filename)
 
    lstrcpy(ppi->m_szPath, filename);
 
-   Texture::CreateNextMipMapLevel(ppi->m_pdsBuffer);
-
    ppi->EnsureMaxTextureCoordinates();
 }
 
@@ -6930,8 +6928,6 @@ HRESULT PinTable::LoadImageFromStream(IStream *pstm, int version)
 
       if (ppi->LoadFromStream(pstm, version, this) == S_OK)
       {
-          Texture::CreateNextMipMapLevel(ppi->m_pdsBuffer);
-
          m_vimage.AddElement(ppi);
       }
       else

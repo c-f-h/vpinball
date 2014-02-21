@@ -298,6 +298,8 @@ private:
    DWORD m_maxaniso;
    bool m_mag_aniso;
 
+   bool m_autogen_mipmap;
+
    bool m_force_aniso;
 
 public:
