@@ -547,6 +547,9 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
          && m_ptable->GetImage(m_d.m_szOnImage) == NULL)
         return;
 
+    if (m_fBackglass && !GetPTable()->GetDecalsEnabled())
+        return;
+
     RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
 
     if (m_d.m_state == LightStateBlinking)
@@ -581,11 +584,22 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     {
         if(!m_d.m_EnableOffLighting)
             pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
-        if (!m_fBackglass)
-            ppin3d->EnableLightMap(height);
+
         mtrl.setDiffuse( 1.0f, r*0.3f, g*0.3f, b*0.3f );
         mtrl.setAmbient( 1.0f, r*0.3f, g*0.3f, b*0.3f );
         mtrl.setEmissive( 0.0f, 0.0f, 0.0f, 0.0f );
+
+        if (!m_fBackglass)
+            ppin3d->EnableLightMap(height);
+        else  // backglass
+        {
+            /*
+             * Pre-transformed vertices are not affected by vertex lighting, so we have to provide the
+             * color through the texture factor.
+             */
+            pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR);
+            pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, BGR(255*b*0.3f, 255*g*0.3f, 255*r*0.3f));
+        }
     } 
     else 
     {
@@ -594,14 +608,17 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
         mtrl.setDiffuse( 1.0f, 0.0f, 0.0f, 0.0f );
         mtrl.setAmbient( 1.0f, 0.0f, 0.0f, 0.0f );
         mtrl.setEmissive( 0.0f, r, g, b );
+
+        if (m_fBackglass)
+        {
+            pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR);
+            pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, BGR(255*b, 255*g, 255*r));
+        }
     }
 
     pd3dDevice->SetMaterial(mtrl);
 
-    if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
-    {
-        pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, normalMoverVBuffer, 0, 32);
-    }
+    pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, normalMoverVBuffer, 0, 32);
 
     // reset render states
     ppin3d->SetTexture(NULL);
@@ -609,6 +626,11 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
     if (!isOn)
         ppin3d->DisableLightMap();
+    if (m_fBackglass)
+    {
+        pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);
+    }
 }
 
 
@@ -900,11 +922,8 @@ void Light::PrepareMoversCustom()
                {
                   const float dx = customMoverVertex[i][k+l].x - m_d.m_vCenter.x;
                   const float dy = customMoverVertex[i][k+l].y - m_d.m_vCenter.y;
-                  const float ang = atan2f(dx,dy);
-                  const float dist = sqrtf(dx*dx + dy*dy);
-
-                  customMoverVertex[i][k+l].tu2 = 0.5f + sinf(ang) * (dist*inv_maxdist);
-                  customMoverVertex[i][k+l].tv2 = 0.5f + cosf(ang) * (dist*inv_maxdist);
+                  customMoverVertex[i][k+l].tu2 = 0.5f + dx * inv_maxdist;
+                  customMoverVertex[i][k+l].tv2 = 0.5f + dy * inv_maxdist;
                }
                else
                {
@@ -922,11 +941,8 @@ void Light::PrepareMoversCustom()
                // Set texture coordinates for default light.
                const float dx = customMoverVertex[i][k+l].x - m_d.m_vCenter.x;
                const float dy = customMoverVertex[i][k+l].y - m_d.m_vCenter.y;
-               const float ang = atan2f(dy,dx);
-               const float dist = sqrtf(dx*dx + dy*dy);
-
-               customMoverVertex[i][k+l].tu = 0.5f + sinf(ang) * (dist*inv_maxdist);
-               customMoverVertex[i][k+l].tv = 0.5f + cosf(ang) * (dist*inv_maxdist);
+               customMoverVertex[i][k+l].tu = 0.5f + dx * inv_maxdist;
+               customMoverVertex[i][k+l].tv = 0.5f + dy * inv_maxdist;
             }
          }
 
