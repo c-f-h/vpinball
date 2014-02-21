@@ -577,7 +577,7 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     Material mtrl;
     const bool isOn = (m_realState == LightStateBlinking) ? (m_rgblinkpattern[m_iblinkframe] == '1') : !!m_realState;
 
-    if (isOn)
+    if (!isOn)
     {
         if(!m_d.m_EnableOffLighting)
             pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
@@ -607,7 +607,7 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     ppin3d->SetTexture(NULL);
     pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
     pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-    if (isOn)
+    if (!isOn)
         ppin3d->DisableLightMap();
 }
 
@@ -630,7 +630,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
     Texture* pin = NULL;
     Material mtrl;
 
-    if (isOn)
+    if (!isOn)
     {
         if(!m_d.m_EnableOffLighting)
             pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1 by default -> do not modify tex by diffuse lighting
