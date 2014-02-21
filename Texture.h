@@ -84,10 +84,8 @@ public:
    BaseTexture *CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * const pheight);
    void CreateFromResource(const int id, int * const pwidth = NULL, int * const pheight = NULL);
 
-   void CreateMipMap();
    BOOL SetAlpha(const COLORREF rgbTransparent);
 
-   static void CreateNextMipMapLevel(BaseTexture* pdds) {}        // TODO: remove
    static void SetOpaque(BaseTexture* pdds);
    static void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop);
    static BOOL SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent);

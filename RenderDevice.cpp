@@ -179,11 +179,12 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     D3DCAPS9 caps;
     m_pD3D->GetDeviceCaps(m_adapter, devtype, &caps);
 
+	// check which parameters can be used for anisotropic filter
     m_mag_aniso = (caps.TextureFilterCaps & D3DPTFILTERCAPS_MAGFANISOTROPIC) != 0;
     m_maxaniso = caps.MaxAnisotropy;
 
     if(((caps.TextureCaps & D3DPTEXTURECAPS_NONPOW2CONDITIONAL) != 0) || ((caps.TextureCaps & D3DPTEXTURECAPS_POW2) != 0))
-	ShowError("D3D device does only support power of 2 textures");
+		ShowError("D3D device does only support power of 2 textures");
 
     // get the current display format
     D3DFORMAT format;
@@ -218,6 +219,12 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     params.PresentationInterval = useVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 #endif
 
+	// check if auto generation of mipmaps can be used, otherwise will be done via d3dx
+	m_autogen_mipmap = (caps.Caps2 & D3DCAPS2_CANAUTOGENMIPMAP) != 0;
+	if(m_autogen_mipmap)
+		m_autogen_mipmap = (m_pD3D->CheckDeviceFormat(m_adapter, devtype, params.BackBufferFormat, D3DUSAGE_AUTOGENMIPMAP, D3DRTYPE_TEXTURE, D3DFMT_A8R8G8B8)) == D3D_OK;
+
+	// check if requested MSAA is possible
     DWORD MultiSampleQualityLevels;
     if( !SUCCEEDED(m_pD3D->CheckDeviceMultiSampleType( m_adapter, 
                                 devtype, params.BackBufferFormat, 
@@ -379,7 +386,8 @@ D3DTexture* RenderDevice::DuplicateTexture(RenderTarget* src)
     D3DSURFACE_DESC desc;
     src->GetDesc(&desc);
 	D3DTexture* dup;
-	CHECKD3D(m_pD3DDevice->CreateTexture(desc.Width, desc.Height, 1, D3DUSAGE_RENDERTARGET, desc.Format, D3DPOOL_DEFAULT, &dup, NULL));
+	CHECKD3D(m_pD3DDevice->CreateTexture(desc.Width, desc.Height, 1,
+		     D3DUSAGE_RENDERTARGET, desc.Format, D3DPOOL_DEFAULT, &dup, NULL)); // D3DUSAGE_AUTOGENMIPMAP?
 	return dup;
 }
 
@@ -388,7 +396,8 @@ D3DTexture* RenderDevice::DuplicateDepthTexture(RenderTarget* src)
     D3DSURFACE_DESC desc;
     src->GetDesc(&desc);
 	D3DTexture* dup;
-	CHECKD3D(m_pD3DDevice->CreateTexture(desc.Width, desc.Height, 1, D3DUSAGE_DEPTHSTENCIL, (D3DFORMAT)MAKEFOURCC('I','N','T','Z'), D3DPOOL_DEFAULT, &dup, NULL));
+	CHECKD3D(m_pD3DDevice->CreateTexture(desc.Width, desc.Height, 1,
+		     D3DUSAGE_DEPTHSTENCIL, (D3DFORMAT)MAKEFOURCC('I','N','T','Z'), D3DPOOL_DEFAULT, &dup, NULL)); // D3DUSAGE_AUTOGENMIPMAP?
 	return dup;
 }
 
@@ -435,7 +444,7 @@ D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth, int *p
     if (pTexWidth) *pTexWidth = texwidth;
     if (pTexHeight) *pTexHeight = texheight;
 
-    CHECKD3D(m_pD3DDevice->CreateTexture(texwidth, texheight, 1, 0, D3DFMT_A8R8G8B8,
+    CHECKD3D(m_pD3DDevice->CreateTexture(texwidth, texheight, m_autogen_mipmap ? 1 : 0, 0, D3DFMT_A8R8G8B8,
                 D3DPOOL_SYSTEMMEM, &sysTex, NULL));
 
     // copy data into system memory texture
@@ -448,12 +457,18 @@ D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth, int *p
     }
     CHECKD3D(sysTex->UnlockRect(0));
 
-    CHECKD3D(m_pD3DDevice->CreateTexture(texwidth, texheight, 0, D3DUSAGE_AUTOGENMIPMAP, D3DFMT_A8R8G8B8,
+	if(!m_autogen_mipmap)
+		CHECKD3D(D3DXFilterTexture(sysTex,NULL,D3DX_DEFAULT,D3DX_DEFAULT));
+
+	CHECKD3D(m_pD3DDevice->CreateTexture(texwidth, texheight, m_autogen_mipmap ? 0 : sysTex->GetLevelCount(), m_autogen_mipmap ? D3DUSAGE_AUTOGENMIPMAP : 0, D3DFMT_A8R8G8B8,
                 D3DPOOL_DEFAULT, &tex, NULL));
 
     CHECKD3D(m_pD3DDevice->UpdateTexture(sysTex, tex));
-    CHECKD3D(sysTex->Release());
-
+	CHECKD3D(sysTex->Release());
+	
+	if(m_autogen_mipmap)
+	    tex->GenerateMipSubLevels(); // tell driver that now is a good time to generate mipmaps
+    
     return tex;
 }
 
