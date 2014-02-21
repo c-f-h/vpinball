@@ -671,13 +671,13 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
                 if ( offTexel )
                 {
                     pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP,   D3DTOP_ADD );
-                    ppin3d->SetBaseTexture(0, offTexel->m_pdsBuffer);
-                    ppin3d->SetBaseTexture(1, pin->m_pdsBuffer);
+                    ppin3d->SetBaseTexture(ePictureTexture, offTexel->m_pdsBuffer);
+                    ppin3d->SetBaseTexture(eLightProject1, pin->m_pdsBuffer);
                     useLightmap=true;
                 }
                 else
                 {
-                    ppin3d->SetBaseTexture(0, pin->m_pdsBuffer);
+                    ppin3d->SetBaseTexture(ePictureTexture, pin->m_pdsBuffer);
                 }
             }
             else
@@ -706,8 +706,6 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
     if ( useLightmap )
     {
         pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP, D3DTOP_MODULATE );
-        ppin3d->SetTexture(pin);
-        pd3dDevice->SetTexture(1,NULL);
     }
 
     ppin3d->SetTexture(NULL);
