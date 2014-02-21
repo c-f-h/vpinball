@@ -105,7 +105,7 @@ END_CONNECTION_POINT_MAP()
 
 	virtual void RenderShadow(ShadowSur * const psur, const float height);
 
-    void RenderAtThickness(RenderDevice* pd3dDevice, float angle, float height, float baseradius, float endradius, float flipperheight, bool isRubber, VertexBuffer* vb);
+    void RenderAtThickness(RenderDevice* pd3dDevice, float angle, float height, float baseradius, float endradius, float flipperheight, Vertex3D* buf);
 
 	void WriteRegDefaults();
 

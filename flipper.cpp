@@ -648,15 +648,17 @@ void Flipper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matNew);
 
-    //draw flipper
+    // render flipper
     pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, 108, indexBuffer, 0, numIndices );
 
-    // render the rubber
-    mat.setColor( 1.0f, m_d.m_rubbercolor);
-    pd3dDevice->SetMaterial(mat);
+    // render rubber
+    if (m_d.m_rubberthickness > 0)
+    {
+        mat.setColor( 1.0f, m_d.m_rubbercolor);
+        pd3dDevice->SetMaterial(mat);
 
-    //draw rubber
-    pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 108, 108, indexBuffer, 0, numIndices );
+        pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 108, 108, indexBuffer, 0, numIndices );
+    }
 
     pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matOrig);
 }
@@ -730,14 +732,19 @@ void Flipper::RenderSetup(const RenderDevice* _pd3dDevice)
         indexBuffer->release();
     indexBuffer = pd3dDevice->CreateAndFillIndexBuffer(numIndices, idx);
 
+    Vertex3D *buf;
+    vertexBuffer->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY);
+
     // Render just the flipper (in standard position, angle=0)
-    RenderAtThickness(pd3dDevice, 0.0f, height, m_d.m_BaseRadius - (float)m_d.m_rubberthickness, m_d.m_EndRadius - (float)m_d.m_rubberthickness, m_d.m_height, false, vertexBuffer );
+    RenderAtThickness(pd3dDevice, 0.0f, height, m_d.m_BaseRadius - (float)m_d.m_rubberthickness, m_d.m_EndRadius - (float)m_d.m_rubberthickness, m_d.m_height, buf);
 
     // Render just the rubber.
     if (m_d.m_rubberthickness > 0)
     {
-        RenderAtThickness(pd3dDevice, 0.0f, height + (float)m_d.m_rubberheight, m_d.m_BaseRadius, m_d.m_EndRadius, (float)m_d.m_rubberwidth, true, vertexBuffer );// 34);
+        RenderAtThickness(pd3dDevice, 0.0f, height + (float)m_d.m_rubberheight, m_d.m_BaseRadius, m_d.m_EndRadius, (float)m_d.m_rubberwidth, buf+108);
     }
+
+    vertexBuffer->unlock();
 }
 
 void Flipper::RenderStatic(const RenderDevice* pd3dDevice)
@@ -748,7 +755,7 @@ static const WORD rgiFlipper1[4] = {0,4,5,1};
 static const WORD rgiFlipper2[4] = {2,6,7,3};
 
 void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float height,
-                                float baseradius, float endradius, float flipperheight, bool isRubber, VertexBuffer* vb)
+                                float baseradius, float endradius, float flipperheight, Vertex3D* buf)
 {
     RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
@@ -767,10 +774,7 @@ void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float he
         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
     }
 
-    unsigned long offset = isRubber ? 108 : 0;
-
-    Vertex3D *buf;
-    vb->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY);
+    unsigned long offset = 0;
 
     SetNormal(rgv3D, rgi0123, 3, NULL, NULL, 4);
     // Draw top.
@@ -832,8 +836,8 @@ void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float he
     {
         // set normal according to cylinder surface
         const float anglel = (float)(M_PI*2.0/16.0)*(float)l;
-        rgv3D[l].nx = rgv3D[l+16].nx = + sinf(anglel)*baseradius;
-        rgv3D[l].ny = rgv3D[l+16].ny = - cosf(anglel)*baseradius;
+        rgv3D[l].nx = rgv3D[l+16].nx = +sinf(anglel);
+        rgv3D[l].ny = rgv3D[l+16].ny = -cosf(anglel);
         rgv3D[l].nz = rgv3D[l+16].nz = 0.0f;
 
         memcpy( &buf[offset], &rgv3D[l], sizeof(Vertex3D));
@@ -874,8 +878,8 @@ void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float he
     for (int l=0;l<16;l++)
     {
         const float anglel = (float)(M_PI*2.0/16.0)*(float)l;
-        rgv3D[l].nx = rgv3D[l+16].nx = + sinf(anglel)*baseradius;
-        rgv3D[l].ny = rgv3D[l+16].ny = - cosf(anglel)*baseradius;
+        rgv3D[l].nx = rgv3D[l+16].nx = +sinf(anglel);
+        rgv3D[l].ny = rgv3D[l+16].ny = -cosf(anglel);
         rgv3D[l].nz = rgv3D[l+16].nz = 0.0f;
 
         memcpy( &buf[offset], &rgv3D[l], sizeof(Vertex3D));
@@ -884,8 +888,6 @@ void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float he
     }
 
     // offset = 108
-
-    vb->unlock();
 }
 
 
