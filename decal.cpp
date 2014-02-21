@@ -478,7 +478,6 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
          m_ptable->GetTVTU(pin, &maxtu, &maxtv);
 
       pin->CreateAlphaChannel();
-      ppin3d->EnableLightMap(fFalse, -1);
    }
 
    for (int l=0;l<4;l++)
@@ -520,7 +519,11 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
    else
    {
       SetHUDVertices(vertices, 4);
-      SetDiffuse(vertices, 4, 0xFFFFFF);
+      SetDiffuse(vertices, 4, 0xFFFFFFFF);
+
+      // make sure depth is very small so that we render in front of table
+      for (int i = 0; i < 4; ++i)
+          vertices[i].rhw = 1e5f;
    }
 
    if ( vertexBuffer== NULL )
@@ -540,6 +543,9 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
 
 void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
 {
+   if( m_fBackglass && !GetPTable()->GetDecalsEnabled())
+       return;
+
    if (m_d.m_decaltype != DecalImage)
        return;      // TODO: support text decals as well
 
@@ -566,10 +572,7 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
       pin->Set( ePictureTexture );
 
       ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
-
       pd3dDevice->SetRenderState( RenderDevice::ALPHABLENDENABLE, TRUE);
-
-      ppin3d->EnableLightMap(fFalse, -1);
    }
    else // No image by that name
    {
@@ -584,13 +587,13 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
    // Turn on anisotopic filtering.
    ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_ANISOTROPIC );
 
-   float depthbias = -1e-5f; // range: [0..1], covering the whole depth buffer
-   pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
-
-   if( !m_fBackglass || GetPTable()->GetDecalsEnabled())
+   if (!m_fBackglass)
    {
-      pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4 );
+       float depthbias = -1e-5f; // range: [0..1], covering the whole depth buffer
+       pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
    }
+
+   pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, vertexBuffer, 0, 4 );
 
    pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, 0);
 
