@@ -290,12 +290,15 @@ private:
 #ifdef FPS
 	int m_lastfpstime;
 	int m_cframes;
-	int m_fps;
-    int m_fpsAvg;
+	float m_fps;
+    float m_fpsAvg;
     int m_fpsCount;
+    U64 m_lastTime_usec;
+    U64 m_lastFrameDuration;
 	U64 m_count;
 	U64 m_total;
-	U32 m_max;
+	U64 m_max;
+    int m_lastMaxChangeTime;
 	U64 m_phys_total;
 	U64 m_phys_max;
 	U64 m_phys_total_iterations;

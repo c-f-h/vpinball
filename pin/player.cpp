@@ -362,12 +362,14 @@ void Player::ToggleFPS()
 	m_fShowFPS = !m_fShowFPS;
 	m_lastfpstime = m_time_msec;
 	m_cframes = 0;
-	m_fps = 0;
-    m_fpsAvg = 0;
-    m_fpsCount = 1;
+	m_fps = 0.0f;
+    m_fpsAvg = 0.0f;
+    m_fpsCount = 0;
 	m_total = 0;
 	m_count = 0;
 	m_max = 0;
+    m_lastMaxChangeTime = 0;
+    m_lastTime_usec = 0;
 
 	m_phys_total = 0;
 	m_phys_max = 0;
@@ -780,16 +782,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_time_msec = 0;
 
 #ifdef FPS
-	m_lastfpstime = m_time_msec;
-	m_cframes = 0;
-	m_fps = 0;
-	m_max = 0;
-	m_count = 0;
-	m_total = 0;
-	m_phys_total = 0;
-	m_phys_max = 0;
-	m_phys_max_iterations = 0;
-	m_phys_total_iterations = 0;
+    ToggleFPS();
+    m_fShowFPS = FALSE;
 #endif
 
 	for (int i=0;i<m_ptable->m_vedit.Size();i++)
@@ -1729,13 +1723,18 @@ void Player::UpdatePhysics()
 #ifdef FPS
 	//if (m_fShowFPS)
 	{
+        m_lastFrameDuration = initial_time_usec - m_lastTime_usec;
+        if (m_lastFrameDuration > 1000000)
+            m_lastFrameDuration = 0;
+        m_lastTime_usec = initial_time_usec;
+
 		m_cframes++;
 		if ((m_time_msec - m_lastfpstime) > 1000)
 		{
-			m_fps = m_cframes * 1000 / (m_time_msec - m_lastfpstime);
+			m_fps = m_cframes * 1000.0f / (m_time_msec - m_lastfpstime);
+            m_lastfpstime = m_time_msec;
             m_fpsAvg += m_fps;
             m_fpsCount++;
-			m_lastfpstime = m_time_msec;
 			m_cframes = 0;
 		}
 	}
@@ -2178,8 +2177,6 @@ void Player::Render()
 #ifdef FPS
     if (m_fShowFPS)
     {
-        static U32 stamp;
-        static U32 period;
         HDC hdcNull = GetDC(NULL);
         char szFoo[128];
 
@@ -2189,7 +2186,8 @@ void Player::Render()
         // TextOut(hdcNull, 10, 30, szFoo, len);
 
         // Draw the framerate.
-        int len2 = sprintf_s(szFoo, " FPS: %d FPS(avg): %d", m_fps,m_fpsAvg/m_fpsCount);
+        const float fpsAvg = (m_fpsCount == 0) ? 0.0f : m_fpsAvg/m_fpsCount;
+        int len2 = sprintf_s(szFoo, " FPS: %.1f FPS(avg): %.1f", m_fps, fpsAvg);
         if( len2>=0 )
         {
             for(int l = len2; l < len+1; ++l)
@@ -2197,12 +2195,16 @@ void Player::Render()
             TextOut(hdcNull, 10, 10, szFoo, len);
         }
 
-        const U32 curr_msec = msec();
-        period = curr_msec-stamp;
-        stamp = curr_msec;
-        if( period > m_max ) m_max = period;
+        const U64 period = m_lastFrameDuration;
+        if( period > m_max || m_time_msec - m_lastMaxChangeTime > 1000)
+        {
+            m_max = period;
+            m_lastMaxChangeTime = m_time_msec;
+        }
+
         if( phys_period > m_phys_max ) m_phys_max = phys_period;
         if( phys_iterations > m_phys_max_iterations ) m_phys_max_iterations = phys_iterations;
+
         if( m_count == 0 )
         {
             m_total = period;
@@ -2238,8 +2240,8 @@ void Player::Render()
 #endif
 
 #ifdef _DEBUGPHYSICS
-		len = sprintf_s(szFoo, sizeof(szFoo), "period: %3u ms (%3u avg %10u max)      ",
-		period, (U32)( m_total / m_count ), (U32) m_max );
+		len = sprintf_s(szFoo, sizeof(szFoo), "period: %.1f ms (%.1f avg %.1f max)      ",
+		  float(1e-3f*period), float(1e-3f*(m_total/m_count)), float(1e-3f*m_max) );
 		TextOut(hdcNull, 10, 120, szFoo, len);
 
 		len = sprintf_s(szFoo, sizeof(szFoo), "physTimes %10u uS(%12u avg %12u max)    ",
