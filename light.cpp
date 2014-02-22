@@ -563,11 +563,7 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
     pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
-    //ppin3d->SetTexture( &ppin3d->lightTexture[1] );
     ppin3d->lightTexture[1].Set( ePictureTexture );
-
-    //pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-    //pd3dDevice->SetTextureStageState( 0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
 
     g_pplayer->m_pin3d.SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
 
@@ -618,7 +614,23 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     pd3dDevice->SetMaterial(mtrl);
 
+    if (!m_fBackglass)
+    {
+        float depthbias = -1e-5f; // range: [0..1], covering the whole depth buffer
+        pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
+    }
+
+    /* VP9COMPAT:
+     * In VP9, black pixels are considered transparent. We emulate this by
+     * (1) making them transparent during upload with Texture::MakeBlackTransparent()
+     * (2) setting alpha test with a low reference value here.
+     */
+    ppin3d->EnableAlphaTestReference(1);
+
     pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, normalMoverVBuffer, 0, 32);
+
+    pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, 0);
+    pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
 
     // reset render states
     ppin3d->SetTexture(NULL);
@@ -720,10 +732,23 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
     }
     pd3dDevice->SetMaterial(mtrl);    
 
-    if (!m_fBackglass || GetPTable()->GetDecalsEnabled())
+    if (!m_fBackglass)
     {
-        pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customMoverVBuffer, (isOn ? customMoverVertexNum : 0), customMoverVertexNum);
+        float depthbias = -1e-5f; // range: [0..1], covering the whole depth buffer
+        pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
     }
+
+    /* VP9COMPAT:
+     * In VP9, black pixels are considered transparent. We emulate this by
+     * (1) making them transparent during upload with Texture::MakeBlackTransparent()
+     * (2) setting alpha test with a low reference value here.
+     */
+    ppin3d->EnableAlphaTestReference(1);
+
+    pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customMoverVBuffer, (isOn ? customMoverVertexNum : 0), customMoverVertexNum);
+
+    pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, 0);
+    pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
 
     if ( useLightmap )
     {

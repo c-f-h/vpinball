@@ -944,13 +944,13 @@ void Pin3D::EnableAlphaTestReference(DWORD alphaRefValue) const
 	m_pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, alphaRefValue);
 	m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE); 
 	m_pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATEREQUAL);
-	m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
 }
 
 void Pin3D::EnableAlphaBlend( DWORD alphaRefValue, BOOL additiveBlending )
 {
 	m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
 	EnableAlphaTestReference( alphaRefValue );
+	m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
 	m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
 	m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, additiveBlending ? D3DBLEND_ONE : D3DBLEND_INVSRCALPHA);
 	if(additiveBlending)
