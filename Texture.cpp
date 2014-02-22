@@ -611,28 +611,6 @@ BOOL Texture::SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent)
 }
 
 
-void Texture::MakeBlackTransparent(MemTexture* tex)       // VP9COMPAT
-{
-    // Set alpha of each pixel
-    const int width = tex->width();
-    const int height = tex->height();
-    const int pitch = tex->pitch();
-
-    BYTE *pch = tex->data();
-
-    for (int i=0;i<height;i++)
-    {
-        for (int l=0;l<width;l++)
-        {
-            if ( (*((D3DCOLOR*)pch) & 0x00FFFFFF) == 0)     // is RGB=0?
-                (*((D3DCOLOR*)pch)) = 0;                    // then also set alpha to 0
-            pch += 4;
-        }
-        pch += pitch-(width*4);
-    }
-}
-
-
 static const int rgfilterwindow[7][7] =
 {
     1,  4,  8, 10,  8,  4,  1,

@@ -438,8 +438,6 @@ D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth, int *p
 {
     IDirect3DTexture9 *sysTex, *tex;
 
-    Texture::MakeBlackTransparent(surf);        // VP9COMPAT
-
     int texwidth = surf->width();
     int texheight = surf->height();
 

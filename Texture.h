@@ -89,7 +89,6 @@ public:
    static void SetOpaque(BaseTexture* pdds);
    static void SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop);
    static BOOL SetAlpha(BaseTexture* pdds, const COLORREF rgbTransparent);
-   static void MakeBlackTransparent(MemTexture* tex);       // VP9COMPAT
    static void Blur(BaseTexture* pdds, const BYTE * const pbits, const int shadwidth, const int shadheight);
 
    // create/release a DC which contains a (read-only) copy of the texture; for editor use

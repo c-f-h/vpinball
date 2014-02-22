@@ -620,12 +620,7 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
         pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
     }
 
-    /* VP9COMPAT:
-     * In VP9, black pixels are considered transparent. We emulate this by
-     * (1) making them transparent during upload with Texture::MakeBlackTransparent()
-     * (2) setting alpha test with a low reference value here.
-     */
-    ppin3d->EnableAlphaTestReference(1);
+    ppin3d->EnableAlphaTestReference(1);        // don't alpha blend, but do honor transparent pixels
 
     pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, normalMoverVBuffer, 0, 32);
 
@@ -738,12 +733,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
         pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
     }
 
-    /* VP9COMPAT:
-     * In VP9, black pixels are considered transparent. We emulate this by
-     * (1) making them transparent during upload with Texture::MakeBlackTransparent()
-     * (2) setting alpha test with a low reference value here.
-     */
-    ppin3d->EnableAlphaTestReference(1);
+    ppin3d->EnableAlphaTestReference(1);        // don't alpha blend, but do honor transparent pixels
 
     pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLELIST, customMoverVBuffer, (isOn ? customMoverVertexNum : 0), customMoverVertexNum);
 
@@ -1039,6 +1029,14 @@ void Light::RenderSetup(const RenderDevice* _pd3dDevice)
 
     if (m_d.m_state == LightStateBlinking)
         RestartBlinker(g_pplayer->m_time_msec);
+
+    // VP9COMPAT
+    Texture *tex;
+    if ((tex = m_ptable->GetImage(m_d.m_szOffImage)) != NULL)
+        tex->CreateAlphaChannel();
+    if ((tex = m_ptable->GetImage(m_d.m_szOnImage)) != NULL)
+        tex->CreateAlphaChannel();
+    // end compat
 
     if (m_d.m_shape == ShapeCustom)
     {

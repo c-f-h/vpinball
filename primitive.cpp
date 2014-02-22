@@ -957,6 +957,11 @@ void Primitive::RenderSetup( const RenderDevice* _pd3dDevice )
 
    if( !m_d.use3DMesh )
       CalculateBuiltinOriginal();
+
+   // make sure alpha channel is set up
+   Texture * const tex = m_ptable->GetImage(m_d.m_szImage);
+   if (tex)
+       tex->CreateAlphaChannel();
 }
 
 void Primitive::RenderStatic(const RenderDevice* _pd3dDevice)

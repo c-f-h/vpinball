@@ -908,7 +908,14 @@ BaseTexture* Pin3D::CreateShadow(const float z)
 
 void Pin3D::SetTexture(Texture* pTexture)
 {
-    SetBaseTexture(ePictureTexture, pTexture ? pTexture->m_pdsBuffer : NULL);
+    BaseTexture* tex = NULL;
+    if (pTexture)
+    {
+        tex = pTexture->m_pdsBufferColorKey;
+        if (tex == NULL)
+            tex = pTexture->m_pdsBuffer;
+    }
+    SetBaseTexture(ePictureTexture, tex);
 }
 
 void Pin3D::SetBaseTexture(DWORD texUnit, BaseTexture* pddsTexture)
