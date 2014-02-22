@@ -1,6 +1,5 @@
 DX9 renderer known issues:
 
-*) lights set to blinking don't work
 *) textboxes don't work
 *) EM reels only work in Image Reel mode, not Text Reel
 *) text decals don't work
