@@ -981,6 +981,5 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
 
       ppin3d->SetTexture(NULL);
-	  pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
       pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE); 	
 }

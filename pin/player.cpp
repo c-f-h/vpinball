@@ -2697,7 +2697,6 @@ void Player::DrawBalls()
         // reflection of ball
         if( drawReflection && m_fBallAntialias )
         {
-            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_DESTALPHA);
@@ -2716,7 +2715,6 @@ void Player::DrawBalls()
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-			m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA);
         }
 
@@ -2828,7 +2826,6 @@ void Player::DrawBalls()
 
             if(num_rgv3D > 0)
             {
-                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_DESTALPHA);
@@ -2836,7 +2833,6 @@ void Player::DrawBalls()
 
                 m_pin3d.m_pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLESTRIP, MY_D3DFVF_NOLIGHTING_VERTEX, rgv3D_all, num_rgv3D, (LPWORD)rgi_all, num_rgv3D);
 
-                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
                 m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA);
@@ -2885,7 +2881,6 @@ void Player::DrawBalls()
 
     m_pin3d.m_pd3dDevice->SetTexture(0, NULL);
     m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
-    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
     m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
 }
 

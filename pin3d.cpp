@@ -355,7 +355,6 @@ void Pin3D::InitRenderState()
 	m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA );
 
 	m_pd3dDevice->SetRenderState(RenderDevice::SPECULARENABLE, FALSE);
-	m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE);
 
 	m_pd3dDevice->SetRenderState(RenderDevice::ZENABLE, TRUE);
 	m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
@@ -955,7 +954,6 @@ void Pin3D::EnableAlphaTestReference(DWORD alphaRefValue) const
 
 void Pin3D::EnableAlphaBlend( DWORD alphaRefValue, BOOL additiveBlending )
 {
-	m_pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, TRUE); 	
 	EnableAlphaTestReference( alphaRefValue );
 	m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
 	m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,  D3DBLEND_SRCALPHA);
