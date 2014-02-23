@@ -564,11 +564,6 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	m_rotation = ANGTORAD(rotation);
 	m_inclination = ANGTORAD(inclination);
 
-	m_lightproject.m_v.x = g_pplayer->m_ptable->m_right *0.5f;
-	m_lightproject.m_v.y = g_pplayer->m_ptable->m_bottom *0.5f;
-    m_lightproject.inv_width  = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
-    m_lightproject.inv_height = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
-
 	Vector<Vertex3Ds> vvertex3D;
 	for (int i=0; i<g_pplayer->m_ptable->m_vedit.Size(); ++i)
 		g_pplayer->m_ptable->m_vedit.ElementAt(i)->GetBoundingVertices(&vvertex3D);
@@ -648,9 +643,10 @@ void Pin3D::RenderPlayfieldGraphics()
 
 		rgv[i].tv = (i&2) ? 1.0f : 0.f;
 		rgv[i].tu = (i==1 || i==2) ? 1.0f : 0.f;
-
-		m_lightproject.CalcCoordinates(&rgv[i]);
 	}
+	
+	CalcShadowCoordinates(rgv,4);
+
 	// triangulate for better vertex based lighting //!! disable/set to 0 as soon as pixel shaders do the lighting
 
 	const DWORD numVerts = (TRIANGULATE_BACK+1)*(TRIANGULATE_BACK+1);
@@ -659,7 +655,8 @@ void Pin3D::RenderPlayfieldGraphics()
     assert(tableVBuffer == NULL);
     m_pd3dDevice->CreateVertexBuffer( numVerts+7, 0, MY_D3DFVF_VERTEX, &tableVBuffer); //+7 verts for second rendering step
 
-    std::vector<Vertex3D> buffer(numVerts);
+    Vertex3D *buffer;
+	tableVBuffer->lock(0,0,(void**)&buffer, VertexBuffer::WRITEONLY);
 
 	const float inv_tb = (float)(1.0/TRIANGULATE_BACK);
 	unsigned int offs = 0;
@@ -678,9 +675,10 @@ void Pin3D::RenderPlayfieldGraphics()
 			tmp.nx = rgv[0].nx;
 			tmp.ny = rgv[0].ny;
 			tmp.nz = rgv[0].nz;
-			m_lightproject.CalcCoordinates(&tmp);
 		}
 	}
+
+	CalcShadowCoordinates(buffer,numVerts);
 
     std::vector<WORD> playfieldPolyIndices(numIndices);
 
@@ -698,11 +696,9 @@ void Pin3D::RenderPlayfieldGraphics()
 		}
 	}
 
-	Vertex3D *buf;
-	tableVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
-	memcpy( buf, &buffer[0], sizeof(Vertex3D)*numVerts);
 	SetNormal(rgv, rgiPin3D1, 4, NULL, NULL, 0);
-	memcpy( &buf[numVerts], rgv, 7*sizeof(Vertex3D));
+	memcpy( buffer+numVerts, rgv, 7*sizeof(Vertex3D));
+
 	tableVBuffer->unlock();
 
 	EnableLightMap(0);
@@ -819,26 +815,33 @@ void Pin3D::CreateBallShadow()
 	}
 }
 
+void Pin3D::CalcShadowCoordinates(Vertex3D * const pv, const unsigned int count) const
+{
+	const float inv_tu = 1.0f/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
+	const float inv_tv = 1.0f/(g_pplayer->m_ptable->m_top  + g_pplayer->m_ptable->m_bottom);
+	const float tu_offs = 0.5f - g_pplayer->m_ptable->m_right * 0.5f * inv_tu;
+	const float tv_offs = 0.5f - g_pplayer->m_ptable->m_bottom * 0.5f * inv_tv;
+
+	for(unsigned int i = 0; i < count; ++i)
+	{
+		pv[i].tu2 = pv[i].x*inv_tu + tu_offs;
+		pv[i].tv2 = pv[i].y*inv_tv + tv_offs;
+	}
+}
+
 BaseTexture* Pin3D::CreateShadow(const float z)
 {
-	const float centerx = (g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right)*0.5f;
-	const float centery = (g_pplayer->m_ptable->m_top + g_pplayer->m_ptable->m_bottom)*0.5f;
-
 	int shadwidth;
 	int shadheight;
-	if (centerx > centery)
+	if ((g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right) > (g_pplayer->m_ptable->m_top + g_pplayer->m_ptable->m_bottom))
 	{
 		shadwidth = 256;
-		m_maxtu = 1.0f;
-		m_maxtv = centery/centerx;
-		shadheight = (int)(256.0f*m_maxtv);
+		shadheight = (int)(256.0f*(g_pplayer->m_ptable->m_top + g_pplayer->m_ptable->m_bottom)/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right));
 	}
 	else
 	{
 		shadheight = 256;
-		m_maxtu = centerx/centery;
-		m_maxtv = 1.0f;
-		shadwidth = (int)(256.0f*m_maxtu);
+		shadwidth = (int)(256.0f*(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right)/(g_pplayer->m_ptable->m_top + g_pplayer->m_ptable->m_bottom));
 	}
 
 	// Create Shadow Picture
@@ -861,8 +864,8 @@ BaseTexture* Pin3D::CreateShadow(const float z)
 	HBITMAP hdib = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, (void **)&pbits, NULL, 0);
 
 	HBITMAP hbmOld = (HBITMAP)SelectObject(hdc2, hdib);
-	const float zoom = (float)shadwidth/(centerx*2.0f);
-	ShadowSur * const psur = new ShadowSur(hdc2, zoom, centerx, centery, shadwidth, shadheight, z, NULL);
+	const float zoom = (float)shadwidth/(g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right);
+	ShadowSur * const psur = new ShadowSur(hdc2, zoom, (g_pplayer->m_ptable->m_left + g_pplayer->m_ptable->m_right)*0.5f, (g_pplayer->m_ptable->m_top + g_pplayer->m_ptable->m_bottom)*0.5f, shadwidth, shadheight, z, NULL);
 
 	SelectObject(hdc2, GetStockObject(WHITE_BRUSH));
 	PatBlt(hdc2, 0, 0, shadwidth, shadheight, PATCOPY);
@@ -874,11 +877,6 @@ BaseTexture* Pin3D::CreateShadow(const float z)
 
 	BaseTexture* pddsProjectTexture = new MemTexture(shadwidth, shadheight);
 	m_xvShadowMap.AddElement(pddsProjectTexture, (int)z);
-
-    DWORD texWidth = pddsProjectTexture->width();
-    DWORD texHeight = pddsProjectTexture->height();
-	m_maxtu = (float)shadwidth/(float)texWidth;
-	m_maxtv = (float)shadheight/(float)texHeight;
 
 	SelectObject(hdc2, hbmOld);
 	DeleteDC(hdc2);

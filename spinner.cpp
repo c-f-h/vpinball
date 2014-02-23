@@ -546,9 +546,8 @@ void Spinner::PrepareStatic( RenderDevice* pd3dDevice )
       staticVertices[l].y += m_d.m_vCenter.y;
       staticVertices[l].z += height;
       staticVertices[l].z *= m_ptable->m_zScale;
-      ppin3d->m_lightproject.CalcCoordinates(&staticVertices[l]);
    }
-
+   ppin3d->CalcShadowCoordinates(staticVertices,8);
 }
 
 void Spinner::PrepareMovers( RenderDevice* pd3dDevice )
@@ -644,9 +643,8 @@ void Spinner::PrepareMovers( RenderDevice* pd3dDevice )
          //rgv3D[l].z += 60.0f + height;
          rgv3D[l].z += h + height;
          rgv3D[l].z *= m_ptable->m_zScale;
-
-         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
       }
+      ppin3d->CalcShadowCoordinates(rgv3D,8);
 
       if (pinback)
       {			

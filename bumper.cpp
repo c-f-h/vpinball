@@ -492,13 +492,8 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
          moverVertices[l+128].tu2 = (0.5f+sinangle*0.5f)*lightmaxtu;
          moverVertices[l+128].tv2 = (0.5f+cosangle*0.5f)*lightmaxtv;
       }
-
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+32]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+64]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+96]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+128]);
    }
+   ppin3d->CalcShadowCoordinates(moverVertices,32*5);
 
    for( int l=0,k=0; l<32*12; l+=6,k+=4 )
    {

@@ -771,8 +771,8 @@ void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float he
         rgv3D[l].y = rgv[l&3].y;
         rgv3D[l].z = (l<4) ? height + flipperheight + 0.1f : height; // Make flippers a bit taller so they draw above walls
         rgv3D[l].z *= m_ptable->m_zScale;
-        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
     }
+    ppin3d->CalcShadowCoordinates(rgv3D,8);
 
     unsigned long offset = 0;
 
@@ -812,10 +812,8 @@ void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float he
         rgv3D[l+16].y = rgv3D[l].y;
         rgv3D[l+16].z = height;
         rgv3D[l+16].z *= m_ptable->m_zScale;
-
-        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
-        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l+16]);
     }
+    ppin3d->CalcShadowCoordinates(rgv3D,32);
 
     // Draw end caps of cylinders of large ends.
     WORD endCapsIndex[3*14];
@@ -859,10 +857,8 @@ void Flipper::RenderAtThickness(RenderDevice* _pd3dDevice, float angle, float he
         rgv3D[l+16].y = rgv3D[l].y;
         rgv3D[l+16].z = height;
         rgv3D[l+16].z *= m_ptable->m_zScale;
-
-        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
-        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l+16]);
     }
+    ppin3d->CalcShadowCoordinates(rgv3D,32);
 
     // Draw end caps to vertical cylinder at small end.
     for (int l=0;l<14;l++)

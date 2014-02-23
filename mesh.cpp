@@ -1,44 +1,5 @@
 #include "StdAfx.h"
 
-
-void LightProjected::CalcCoordinates(Vertex3D * const pv) const
-	{
-	const Vertex2D vOrigin(
-	// light is rotated around the light as the origin
-	// z doesn't matter because the texture is projected through z
-		pv->x - m_v.x,
-		pv->y - m_v.y);
-	//	pv->z);
-
-	// Rotation
-	//Vertex2D vT;
-	{
-	//const float sn = sinf(rotation);
-	//const float cs = cosf(rotation);
-
-	//vT.x = cs * vOrigin.x + sn * vOrigin.y;
-	//vT.y = cs * vOrigin.y - sn * vOrigin.x;
-	}
-
-	// Inclination
-	{
-	//const float sn = sinf(inclination);
-	//const float cs = cosf(inclination);
-
-	//vT.z = cs * vOrigin.z - sn * vT.y;
-	//vT.y = cs * vT.y + sn * vOrigin.z;
-	}
-
-	// Put coordinates into vertex
-	//vT.x += m_v.x;
-	//vT.y += m_v.y;
-	//vT.z += 0;
-
-	pv->tu2 = (vOrigin.x /*(vT.x - m_v.x)*/ * inv_width  + 0.5f) * g_pplayer->m_pin3d.m_maxtu;
-	pv->tv2 = (vOrigin.y /*(vT.y - m_v.y)*/ * inv_height + 0.5f) * g_pplayer->m_pin3d.m_maxtv;
-	}
-
-
 void RecurseSmoothLine(const CatmullCurve * const pcc, const float t1, const float t2, const RenderVertex * const pvt1, const RenderVertex * const pvt2, Vector<RenderVertex> * const pvv)
 	{
         RecurseSmoothLineWithAccuracy(pcc, t1, t2, pvt1, pvt2, pvv, 1.0 / (0.5 * 0.5));

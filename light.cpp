@@ -830,8 +830,7 @@ void Light::PrepareStaticCustom()
          staticCustomVertex[k+1].nx = 0;    staticCustomVertex[k+1].ny = 0;    staticCustomVertex[k+1].nz = -1.0f;
          staticCustomVertex[k+2].nx = 0;    staticCustomVertex[k+2].ny = 0;    staticCustomVertex[k+2].nz = -1.0f;
 
-         for (int l=0; l<3; l++)
-            ppin3d->m_lightproject.CalcCoordinates(&staticCustomVertex[k+l]);
+         ppin3d->CalcShadowCoordinates(&staticCustomVertex[k],3);
       }
       else
       {
@@ -925,7 +924,7 @@ void Light::PrepareMoversCustom()
          for (int l=0;l<3;l++)
          {
             if (!m_fBackglass)
-               ppin3d->m_lightproject.CalcCoordinates(&customMoverVertex[i][k+l]);
+               ppin3d->CalcShadowCoordinates(&customMoverVertex[i][k+l],1);
 
             // Check if we are using a custom texture.
             if (pin != NULL)
@@ -1061,9 +1060,8 @@ void Light::RenderSetup(const RenderDevice* _pd3dDevice)
             circleVertex[l].x = m_d.m_vCenter.x + sinf(angle)*(m_d.m_radius + m_d.m_borderwidth);
             circleVertex[l].y = m_d.m_vCenter.y - cosf(angle)*(m_d.m_radius + m_d.m_borderwidth);
             circleVertex[l].z = height + 0.05f;
-
-            ppin3d->m_lightproject.CalcCoordinates(&circleVertex[l]);
         }
+        ppin3d->CalcShadowCoordinates(circleVertex,32);
 
         if( !m_fBackglass )
             SetNormal(circleVertex, rgiLightStatic1, 32, NULL, NULL, 0);
@@ -1092,9 +1090,8 @@ void Light::RenderSetup(const RenderDevice* _pd3dDevice)
 
             rgv3D[l].tu = 0.5f + sinangle*0.5f;
             rgv3D[l].tv = 0.5f + cosangle*0.5f;
-
-            ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
         }
+        ppin3d->CalcShadowCoordinates(rgv3D,32);
 
         if (!m_fBackglass)
             SetNormal(rgv3D, rgiLightStatic1, 32, NULL, NULL, 0);

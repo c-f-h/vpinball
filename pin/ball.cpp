@@ -68,21 +68,13 @@ void Ball::RenderSetup()
    vertices[1].ny = 0;
    vertices[1].nz = -1.0f;
 
-   if (!m_pin)
-   {
-      vertices[3].tv = 1.0f;
-      vertices[2].tu = 1.0f;
-      vertices[2].tv = 1.0f;
-      vertices[1].tu = 1.0f;
-   }
-   else
-   {
+   if (m_pin)
       m_pin->CreateAlphaChannel();
-      vertices[3].tv = m_pin->m_maxtv;
-      vertices[2].tu = m_pin->m_maxtu;
-      vertices[2].tv = m_pin->m_maxtv;
-      vertices[1].tu = m_pin->m_maxtu;
-   }
+
+   vertices[3].tv = 1.0f;
+   vertices[2].tu = 1.0f;
+   vertices[2].tv = 1.0f;
+   vertices[1].tu = 1.0f;
 
    logoVertices[0].tu = 0;
    logoVertices[0].tv = 0;

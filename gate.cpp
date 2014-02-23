@@ -565,9 +565,8 @@ void Gate::PrepareStatic(RenderDevice* pd3dDevice)
       staticVertices[l].x += m_d.m_vCenter.x;
       staticVertices[l].y += m_d.m_vCenter.y;
       staticVertices[l].z += height*m_ptable->m_zScale;
-
-      ppin3d->m_lightproject.CalcCoordinates(&staticVertices[l]);
    }
+   ppin3d->CalcShadowCoordinates(staticVertices,8);
 }
 
 void Gate::PrepareMovers(RenderDevice* pd3dDevice )
@@ -616,9 +615,8 @@ void Gate::PrepareMovers(RenderDevice* pd3dDevice )
             rgv3D[l].tu = (l & 1) ? 1.0f : 0.f;
             rgv3D[l].tv = (l & 4) ? 1.0f : 0.f;
         }
-
-        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
     }
+    ppin3d->CalcShadowCoordinates(rgv3D,8);
 
     // create vertex buffer
     std::vector<Vertex3D> vbVerts;

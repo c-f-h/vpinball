@@ -106,14 +106,12 @@ private:
 public:
 
    // width and height of texture can be different than width and height
-   // of dd surface, since the surface has to be in powers of 2
+   // of dd surface, since the surface can be limited to smaller sizes by the user
    int m_width, m_height;
+   int m_originalWidth, m_originalHeight;
+
    COLORREF m_rgbTransparent;
    BOOL m_fTransparent; // Whether this picture actually contains transparent bits
-
-   // Filled at runtime, accounts for buffer space to meet the power of 2
-   // requirement
-   float m_maxtu, m_maxtv;
 
    BaseTexture* m_pdsBuffer;
    BaseTexture* m_pdsBufferColorKey;
@@ -124,9 +122,6 @@ public:
    char m_szName[MAXTOKEN];
    char m_szInternalName[MAXTOKEN];
    char m_szPath[MAX_PATH];
-
-   int m_originalWidth, m_originalHeight;
-
 
 private:
    COLORREF m_rgbBackdropCur;
