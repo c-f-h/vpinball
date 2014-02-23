@@ -390,6 +390,12 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
     Texture * const pinback = m_ptable->GetImage(m_d.m_szImageBack);
     Texture * const pinfront = m_ptable->GetImage(m_d.m_szImageFront);
 
+    /* HACK / VP9COMPAT:
+     * Make pure black gates invisible for compatibility (e.g., Centaur by PacDude).
+     */
+    if (pinback == NULL && pinfront == NULL && m_d.m_color == 0)
+        return;
+
     pd3dDevice->SetRenderState(RenderDevice::ALPHAREF, 0x80);
     pd3dDevice->SetRenderState(RenderDevice::ALPHAFUNC, D3DCMP_GREATER);
     pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, TRUE);
