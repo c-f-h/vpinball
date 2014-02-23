@@ -295,16 +295,6 @@ void Flasher::RenderSetup(const RenderDevice* _pd3dDevice)
    NumVideoBytes += 4*sizeof(Vertex3D_NoLighting);     
    solidMaterial.setColor( 1.0f, m_d.m_color );
 
-   Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-   float maxtu = 0;
-   float maxtv = 0;
-
-   if (pin)
-   {
-      //m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-      maxtu = pin->m_maxtu;
-      maxtv = pin->m_maxtv;
-   }
    const float halfwidth = m_d.m_sizeX*0.5f;
    const float halfheight = m_d.m_sizeY*0.5f;
    const float height = m_d.m_height*m_ptable->m_zScale;
@@ -320,23 +310,22 @@ void Flasher::RenderSetup(const RenderDevice* _pd3dDevice)
    vertices[1].y = m_d.m_vCenter.y - halfheight;
    vertices[1].z = height;
    vertices[1].color = m_d.m_color;
-   vertices[1].tu = maxtu;
+   vertices[1].tu = 1.0f;
    vertices[1].tv = 0;
 
    vertices[2].x = m_d.m_vCenter.x + halfwidth;
    vertices[2].y = m_d.m_vCenter.y + halfheight;
    vertices[2].z = height;
    vertices[2].color = m_d.m_color;
-   vertices[2].tu = maxtu;
-   vertices[2].tv = maxtv;
+   vertices[2].tu = 1.0f;
+   vertices[2].tv = 1.0f;
 
    vertices[3].x = m_d.m_vCenter.x - halfwidth;
    vertices[3].y = m_d.m_vCenter.y + halfheight;
    vertices[3].z = height;
    vertices[3].color = m_d.m_color;
    vertices[3].tu = 0;
-   vertices[3].tv = maxtv;
-
+   vertices[3].tv = 1.0f;
 }
 
 void Flasher::RenderStatic(const RenderDevice* _pd3dDevice)
@@ -865,14 +854,9 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
       Pin3D * const ppin3d = &g_pplayer->m_pin3d;
       Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-      float maxtu = 0.f;
-      float maxtv = 0.f;
 
       if (pin)
       {
-         //m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-         maxtu = pin->m_maxtu;
-         maxtv = pin->m_maxtv;
          pin->CreateAlphaChannel();
          pin->Set(ePictureTexture);
 
@@ -909,22 +893,22 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
          lvertices[1].y = m_d.m_vCenter.y - halfheight;
          lvertices[1].z = height;
          lvertices[1].color = m_d.m_color;
-         lvertices[1].tu = maxtu;
+         lvertices[1].tu = 1.0f;
          lvertices[1].tv = 0;
 
          lvertices[2].x = m_d.m_vCenter.x + halfwidth;
          lvertices[2].y = m_d.m_vCenter.y + halfheight;
          lvertices[2].z = height;
          lvertices[2].color = m_d.m_color;
-         lvertices[2].tu = maxtu;
-         lvertices[2].tv = maxtv;
+         lvertices[2].tu = 1.0f;
+         lvertices[2].tv = 1.0f;
 
          lvertices[3].x = m_d.m_vCenter.x - halfwidth;
          lvertices[3].y = m_d.m_vCenter.y + halfheight;
          lvertices[3].z = height;
          lvertices[3].color = m_d.m_color;
          lvertices[3].tu = 0;
-         lvertices[3].tv = maxtv;
+         lvertices[3].tv = 1.0f;
 
          Matrix3D tempMatrix,RTmatrix,TMatrix,T2Matrix;
          RTmatrix.SetIdentity();

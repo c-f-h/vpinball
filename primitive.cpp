@@ -542,17 +542,6 @@ void Primitive::Render(Sur * const psur)
 
 void Primitive::CalculateBuiltinOriginal()
 {
-   Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-   float maxtu,maxtv;
-   if (pin) 
-   {
-      pin->EnsureMaxTextureCoordinates();
-      maxtu = pin->m_maxtu;
-      maxtv = pin->m_maxtv;
-   }
-   else
-      maxtu = maxtv = 1.f;
-
    // this recalculates the Original Vertices -> should be only called, when sides are altered.
    const float outerRadius = -0.5f/(cosf((float)M_PI/(float)m_d.m_Sides));
    const float addAngle = (float)(2.0*M_PI)/(float)m_d.m_Sides;
@@ -603,14 +592,14 @@ void Primitive::CalculateBuiltinOriginal()
 
    // these have to be replaced for image mapping
    middle = &builtin_rgvOriginal[0]; // middle point top
-   middle->tu = maxtu*0.25f;   // /4
-   middle->tv = maxtv*0.25f;   // /4
+   middle->tu = 0.25f;   // /4
+   middle->tv = 0.25f;   // /4
    middle = &builtin_rgvOriginal[m_d.m_Sides+1]; // middle point bottom
-   middle->tu = maxtu*(float)(0.25*3.); // /4*3
-   middle->tv = maxtv*0.25f;   // /4
-   const float invx = (maxtu*0.5f)/(maxX-minX);
-   const float invy = (maxtv*0.5f)/(maxY-minY);
-   const float invs = maxtu/(float)m_d.m_Sides;
+   middle->tu = (float)(0.25*3.); // /4*3
+   middle->tv = 0.25f;   // /4
+   const float invx = 0.5f/(maxX-minX);
+   const float invy = 0.5f/(maxY-minY);
+   const float invs = 1.0f/(float)m_d.m_Sides;
    for (int i = 0; i < m_d.m_Sides; i++)
    {
       Vertex3D_NoTex2 * const topVert = &builtin_rgvOriginal[i+1]; // top point at side
@@ -618,16 +607,16 @@ void Primitive::CalculateBuiltinOriginal()
       topVert->tv = (topVert->y - minY)*invy;
 
       Vertex3D_NoTex2 * const bottomVert = &builtin_rgvOriginal[i+1 + m_d.m_Sides+1]; // bottompoint at side
-      bottomVert->tu = topVert->tu+0.5f*maxtu;
+      bottomVert->tu = topVert->tu+0.5f;
       bottomVert->tv = topVert->tv;
 
       Vertex3D_NoTex2 * const sideTopVert = &builtin_rgvOriginal[m_d.m_Sides*2 + 2 + i];
       Vertex3D_NoTex2 * const sideBottomVert = &builtin_rgvOriginal[m_d.m_Sides*3 + 2 + i];
 
       sideTopVert->tu = (float)i*invs;
-      sideTopVert->tv = 0.5f*maxtv;
+      sideTopVert->tv = 0.5f;
       sideBottomVert->tu = sideTopVert->tu;
-      sideBottomVert->tv = /*1.0f**/maxtv;
+      sideBottomVert->tv = 1.0f;
    }
    // 2 restore indices
    //   check if anti culling is enabled:

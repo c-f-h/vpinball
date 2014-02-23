@@ -680,7 +680,6 @@ void DispReel::RenderSetup(const RenderDevice* _pd3dDevice)
             ShowError("DispReel: GridCols/GridRows are zero!");
         }
 
-        pin->EnsureMaxTextureCoordinates();
         pin->CreateAlphaChannel();
 
         const float ratiox = (float)m_reeldigitwidth  * pin->m_maxtu / (float)pin->m_width;

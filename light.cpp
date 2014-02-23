@@ -930,9 +930,7 @@ void Light::PrepareMoversCustom()
             // Check if we are using a custom texture.
             if (pin != NULL)
             {
-               float maxtu, maxtv;
-               m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-//                // Set texture coordinates for custom texture (world mode).
+               // Set texture coordinates for custom texture (world mode).
                if ( i==1 && m_d.m_OnImageIsLightMap )
                {
                   const float dx = customMoverVertex[i][k+l].x - m_d.m_vCenter.x;
@@ -942,12 +940,12 @@ void Light::PrepareMoversCustom()
                }
                else
                {
-                  customMoverVertex[i][k+l].tu = customMoverVertex[i][k+l].x * (inv_tablewidth * maxtu);
-                  customMoverVertex[i][k+l].tv = customMoverVertex[i][k+l].y * (inv_tableheight * maxtv);
+                  customMoverVertex[i][k+l].tu = customMoverVertex[i][k+l].x * inv_tablewidth;
+                  customMoverVertex[i][k+l].tv = customMoverVertex[i][k+l].y * inv_tableheight;
                   if ( i==0 && m_d.m_OnImageIsLightMap )
                   {
-                     customMoverVertex[i+1][k+l].tu = customMoverVertex[i][k+l].x * (inv_tablewidth * maxtu);
-                     customMoverVertex[i+1][k+l].tv = customMoverVertex[i][k+l].y * (inv_tableheight * maxtv);
+                     customMoverVertex[i+1][k+l].tu = customMoverVertex[i][k+l].x * inv_tablewidth;
+                     customMoverVertex[i+1][k+l].tv = customMoverVertex[i][k+l].y * inv_tableheight;
                   }
                }
             }

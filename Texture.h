@@ -69,7 +69,6 @@ public:
    void EnsureBackdrop(const COLORREF color);
    void FreeStuff();
    void SetTransparentColor(const COLORREF color);
-   void EnsureMaxTextureCoordinates();
 
    static void SetRenderDevice( RenderDevice *_device );
    void Set(DWORD textureChannel);

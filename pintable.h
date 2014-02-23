@@ -341,7 +341,6 @@ public:
 	void RemoveImage(Texture *ppi);
 	HRESULT LoadImageFromStream(IStream *pstm, int version);
 	Texture *GetImage(char *szName);
-	void GetTVTU(Texture * const ppi, float * const pmaxtu, float * const pmaxtv);
 	void CreateGDIBackdrop();
 	int GetImageLink(Texture *ppi);
 	PinBinary *PinTable::GetImageLinkBinary(int id);

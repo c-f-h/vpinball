@@ -836,7 +836,6 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
 {
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
    Texture * const pinSide = m_ptable->GetImage(m_d.m_szSideImage);
-   float maxtuSide=1.0f, maxtvSide=1.0f;
 
    Vector<RenderVertex> vvertex;
    GetRgVertex(&vvertex);
@@ -844,7 +843,6 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
 
    if (pinSide)
    {
-      m_ptable->GetTVTU(pinSide, &maxtuSide, &maxtvSide);		
       GetTextureCoords(&vvertex, &rgtexcoord);
    }
 
@@ -919,17 +917,17 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
 
          if (pinSide)
          {
-            verts[offset].tu = rgtexcoord[i] * maxtuSide;
-            verts[offset].tv = maxtvSide;
+            verts[offset].tu = rgtexcoord[i];
+            verts[offset].tv = 1.0f;
 
-            verts[offset+1].tu = rgtexcoord[i] * maxtuSide;
+            verts[offset+1].tu = rgtexcoord[i];
             verts[offset+1].tv = 0;
 
-            verts[offset+2].tu = rgtexcoord[c] * maxtuSide;
+            verts[offset+2].tu = rgtexcoord[c];
             verts[offset+2].tv = 0;
 
-            verts[offset+3].tu = rgtexcoord[c] * maxtuSide;
-            verts[offset+3].tv = maxtvSide;
+            verts[offset+3].tu = rgtexcoord[c];
+            verts[offset+3].tv = 1.0f;
          }
 
          ppin3d->m_lightproject.CalcCoordinates(&verts[offset]);
@@ -963,16 +961,11 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
       Vector<Triangle> vtri;
       PolygonToTriangles(vvertex, &vpoly, &vtri);
 
-      Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-      float maxtu=1.0f, maxtv=1.0f;
-      if (pin)
-         m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-
 	  const float heightNotDropped = m_d.m_heighttop;
       const float heightDropped = (m_d.m_heightbottom + 0.1f);
 
-      const float inv_tablewidth = maxtu/(m_ptable->m_right - m_ptable->m_left);
-      const float inv_tableheight = maxtv/(m_ptable->m_bottom - m_ptable->m_top);
+      const float inv_tablewidth = 1.0f/(m_ptable->m_right - m_ptable->m_left);
+      const float inv_tableheight = 1.0f/(m_ptable->m_bottom - m_ptable->m_top);
 
       numPolys = vtri.Size();
       if( numPolys==0 )

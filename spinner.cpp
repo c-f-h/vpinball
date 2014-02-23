@@ -563,26 +563,6 @@ void Spinner::PrepareMovers( RenderDevice* pd3dDevice )
    Texture* const pinback = m_ptable->GetImage(m_d.m_szImageBack);
    Texture* const pinfront = m_ptable->GetImage(m_d.m_szImageFront);
 
-   float maxtuback, maxtvback;
-   float maxtufront, maxtvfront;
-   if (pinback)
-   {
-      m_ptable->GetTVTU(pinback, &maxtuback, &maxtvback);
-   }
-   else
-   {
-      maxtuback = maxtvback = 1.0f;
-   }
-
-   if (pinfront)
-   {
-      m_ptable->GetTVTU(pinfront, &maxtufront, &maxtvfront);
-   }
-   else
-   {
-      maxtufront = maxtvfront = 1.0f;
-   }
-
    int cframes;
    if (m_d.m_animations > 0) cframes = m_d.m_animations;
    else if (m_d.m_angleMax != m_d.m_angleMin)
@@ -635,13 +615,13 @@ void Spinner::PrepareMovers( RenderDevice* pd3dDevice )
 
          if (l & 2)
          {
-            rgv3D[l].tu = (l & 1) ? maxtufront : 0;
-            rgv3D[l].tv = (l & 4) ? 0 : maxtvfront;
+            rgv3D[l].tu = (l & 1) ? 1.0f : 0.f;
+            rgv3D[l].tv = (l & 4) ? 0.f : 1.0f;
          }
          else
          {
-            rgv3D[l].tu = (l & 1) ? maxtuback : 0;
-            rgv3D[l].tv = (l & 4) ? maxtvback : 0;
+            rgv3D[l].tu = (l & 1) ? 1.0f : 0.f;
+            rgv3D[l].tv = (l & 4) ? 1.0f : 0.f;
          }
       }
 

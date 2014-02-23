@@ -397,11 +397,7 @@ void Pin3D::DrawBackground()
 	Texture * const pin = ptable->GetDecalsEnabled() ? ptable->GetImage((char *)g_pplayer->m_ptable->m_szImageBackdrop) : NULL;
 	if (pin)
 	{
-		float maxtu,maxtv;
-		g_pplayer->m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-
 		Vertex3D_NoTex2 rgv3D[4];
-
 		rgv3D[0].x = 0;
 		rgv3D[0].y = 0;
 		rgv3D[0].tu = 0;
@@ -409,18 +405,18 @@ void Pin3D::DrawBackground()
 
 		rgv3D[1].x = 1000.0f;
 		rgv3D[1].y = 0;
-		rgv3D[1].tu = maxtu;
+		rgv3D[1].tu = 1.0f;
 		rgv3D[1].tv = 0;
 
 		rgv3D[2].x = 1000.0f;
 		rgv3D[2].y = 750.0f;
-		rgv3D[2].tu = maxtu;
-		rgv3D[2].tv = maxtv;
+		rgv3D[2].tu = 1.0f;
+		rgv3D[2].tv = 1.0f;
 
 		rgv3D[3].x = 0;
 		rgv3D[3].y = 750.0f;
 		rgv3D[3].tu = 0;
-		rgv3D[3].tv = maxtv;
+		rgv3D[3].tv = 1.0f;
 
 		SetHUDVertices(rgv3D, 4);
 		SetDiffuse(rgv3D, 4, 0xFFFFFF);
@@ -641,17 +637,6 @@ void Pin3D::RenderPlayfieldGraphics()
 	//rgv[7].x=g_pplayer->m_ptable->m_right;    rgv[7].y=g_pplayer->m_ptable->m_top;      rgv[7].z=50.0f;
 
 	Texture * const pin = g_pplayer->m_ptable->GetImage((char *)g_pplayer->m_ptable->m_szImage);
-	float maxtu,maxtv;
-
-	if (pin)
-	{
-		// Calculate texture coordinates.
-		g_pplayer->m_ptable->GetTVTU(pin, &maxtu, &maxtv);		
-	}
-	else // No image by that name
-	{
-		maxtv = maxtu = 1.0f;
-	}
 
 	EnableLightMap(0);
 
@@ -661,8 +646,8 @@ void Pin3D::RenderPlayfieldGraphics()
 		rgv[i].ny = 0;
 		rgv[i].nz = -1.0f;
 
-		rgv[i].tv = (i&2) ? maxtv : 0;
-		rgv[i].tu = (i==1 || i==2) ? maxtu : 0;
+		rgv[i].tv = (i&2) ? 1.0f : 0.f;
+		rgv[i].tu = (i==1 || i==2) ? 1.0f : 0.f;
 
 		m_lightproject.CalcCoordinates(&rgv[i]);
 	}

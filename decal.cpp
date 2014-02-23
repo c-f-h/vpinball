@@ -450,16 +450,12 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
 
    float leading, descent; // For fonts
-   float maxtu, maxtv;
    Texture *pin;
    if (m_d.m_decaltype != DecalImage)
    {
       leading = m_leading;
       descent = m_descent;
 
-      m_pinimage.EnsureMaxTextureCoordinates();
-      maxtu = m_pinimage.m_maxtu;
-      maxtv = m_pinimage.m_maxtv;
       pin = &m_pinimage;
    }
    else
@@ -468,17 +464,10 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
       pin = m_ptable->GetImage(m_d.m_szImage);
       leading = 0;
       descent = 0;
-      maxtu = 1.0f;
-      maxtv = 1.0f;
    }
 
    if (pin)
-   {
-      if (m_d.m_decaltype == DecalImage)
-         m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-
       pin->CreateAlphaChannel();
-   }
 
    for (int l=0;l<4;l++)
    {
@@ -499,18 +488,18 @@ void Decal::RenderSetup(const RenderDevice* _pd3dDevice )
 
    vertices[1].x = m_d.m_vCenter.x + sn*(halfheight+leading) + cs*halfwidth;
    vertices[1].y = m_d.m_vCenter.y - cs*(halfheight+leading) + sn*halfwidth;
-   vertices[1].tu = maxtu;
+   vertices[1].tu = 1.0f;
    vertices[1].tv = 0;
 
    vertices[2].x = m_d.m_vCenter.x - sn*(halfheight+descent) + cs*halfwidth;
    vertices[2].y = m_d.m_vCenter.y + cs*(halfheight+descent) + sn*halfwidth;
-   vertices[2].tu = maxtu;
-   vertices[2].tv = maxtv;
+   vertices[2].tu = 1.0f;
+   vertices[2].tv = 1.0f;
 
    vertices[3].x = m_d.m_vCenter.x - sn*(halfheight+descent) - cs*halfwidth;
    vertices[3].y = m_d.m_vCenter.y + cs*(halfheight+descent) - sn*halfwidth;
    vertices[3].tu = 0;
-   vertices[3].tv = maxtv;
+   vertices[3].tv = 1.0f;
 
    if (!m_fBackglass)
    {
