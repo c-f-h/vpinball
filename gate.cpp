@@ -371,8 +371,8 @@ void Gate::EndPlay()
 
 static const WORD rgiGate2[4] = {0,1,5,4};      // back
 static const WORD rgiGate3[4] = {2,6,7,3};      // front
-static const WORD rgiGate4[4] = {0,2,3,1};      // top
-static const WORD rgiGate5[4] = {4,5,7,6};      // bottom
+static const WORD rgiGate4[4] = {0,2,3,1};      // bottom
+static const WORD rgiGate5[4] = {4,5,7,6};      // top
 static const WORD rgiGate6[4] = {0,4,6,2};      // left
 static const WORD rgiGate7[4] = {1,3,7,5};      // right
 
@@ -636,32 +636,32 @@ void Gate::PrepareMovers(RenderDevice* pd3dDevice )
     std::vector<Vertex3D> vbVerts;
 
     // back
-    SetNormal(rgv3D, rgiGate2, 3, NULL, NULL, 4);
+    SetNormal(rgv3D, rgiGate2, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate2[i]] );
 
     // front
-    SetNormal(rgv3D, rgiGate3, 3, NULL, NULL, 4);
+    SetNormal(rgv3D, rgiGate3, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate3[i]] );
 
-    // top
-    SetNormal(rgv3D, rgiGate4, 3, NULL, NULL, 4);
+    // bottom
+    SetNormal(rgv3D, rgiGate4, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate4[i]] );
 
-    // bottom
-    SetNormal(rgv3D, rgiGate5, 3, NULL, NULL, 4);
+    // top
+    SetNormal(rgv3D, rgiGate5, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate5[i]] );
 
     // left
-    SetNormal(rgv3D, rgiGate6, 3, NULL, NULL, 4);
+    SetNormal(rgv3D, rgiGate6, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate6[i]] );
 
     // right
-    SetNormal(rgv3D, rgiGate7, 3, NULL, NULL, 4);
+    SetNormal(rgv3D, rgiGate7, 4);
     for (int i = 0; i < 4; ++i)
         vbVerts.push_back( rgv3D[rgiGate7[i]] );
 

@@ -215,8 +215,10 @@ inline float GetAngle(const Vertex2D * const pvEnd1, const Vertex2D * const pvJo
 }
 */
 
+// Computes the normal for a single, plane polygon described by the indices and applies it either
+// to the original vertices or to the vertices indexed by rgiApply.
 template <class VtxType>
-void SetNormal(VtxType * const rgv, const WORD * const rgi, const int count, void * prgvApply, const WORD * rgiApply, int applycount)
+void SetNormal(VtxType * const rgv, const WORD * const rgi, const int count, void * prgvApply=NULL, const WORD * rgiApply=NULL, int applycount=NULL)
 {
 	// If apply-to array is null, just apply the resulting normal to incoming array
     VtxType * rgvApply = prgvApply ? (VtxType*)prgvApply : rgv;
