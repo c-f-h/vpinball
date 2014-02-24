@@ -513,7 +513,7 @@ void PinInput::Init(const HWND hwnd)
 
 	hr = m_pKeyboard->SetDataFormat( &c_dfDIKeyboard );
 
-	hr = m_pKeyboard->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND);
+	hr = m_pKeyboard->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
 
    DIPROPDWORD dipdw;
    dipdw.diph.dwSize = sizeof(DIPROPDWORD);
