@@ -207,7 +207,7 @@
     <ClCompile Include="xaudplayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
+    <ClCompile Include="hash.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RenderDevice.cpp">

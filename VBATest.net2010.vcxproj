@@ -913,7 +913,7 @@ copy "$(TargetPath)" "%VPIN_DIR%"
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="flasher.cpp" />
-    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="hash.cpp" />
     <ClCompile Include="objloader.cpp" />
     <ClCompile Include="Pin\ball.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
