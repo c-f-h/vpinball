@@ -288,11 +288,10 @@ extern "C" int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, 
     _Module.Term();
     CoUninitialize();
 #ifdef _CRTDBG_MAP_ALLOC
-	_CrtDumpMemoryLeaks();
-#endif
 #ifdef DEBUG_XXX  //disable this in perference to DevPartner
 	_CrtSetDumpClient(MemLeakAlert);
-	_CrtDumpMemoryLeaks( );
+#endif
+	_CrtDumpMemoryLeaks();
 #endif
 	//SET_CRT_DEBUG_FIELD( _CRTDBG_LEAK_CHECK_DF );
 
