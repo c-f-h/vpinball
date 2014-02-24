@@ -27,7 +27,6 @@ public:
 	int			m_digitrange;			// max number of digits per reel (usually 9)
 
     char        m_szSound[MAXTOKEN];    // sound to play for each turn of a digit
-    BOOL        m_fShading;             // apply alpha shading to the reel (darken the Y axis edges)
     long        m_updateinterval;       // time in ms between each animation update
 
     COLORREF    m_backcolor;            // colour of the background

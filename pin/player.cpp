@@ -868,7 +868,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
     //----------------------------------------------------------------------------------
    //#define IS_ATI(DDDEVICEID) (DDDEVICEID.dwVendorId==0x1002)  //BDS
     //if (m_pin3d.m_pd3dDevice->dwVendorID==0x1002)	//ATI
-	if (g_pvp->m_pdd.m_fAlternateRender)
+	if (g_pvp->m_fAlternateRender)
 		{
 		ReOrder();
 		}
@@ -886,12 +886,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	// Direct all renders to the back buffer.
     m_pin3d.SetRenderTarget(m_pin3d.m_pddsBackBuffer, m_pin3d.m_pddsZBuffer);
 
-	SendMessage(hwndProgress, PBM_SETPOS, 80, 0);
-	SetWindowText(hwndProgressName, "Rendering Animations...");
-
-	// Pre-render all elements which have animations.
-	// Add the pre-rendered animations to the display list. 
-	InitAnimations(hwndProgress);
+	SendMessage(hwndProgress, PBM_SETPOS, 90, 0);
 
 	m_ptable->m_pcv->Start(); // Hook up to events and start cranking script
 
@@ -1092,24 +1087,13 @@ void Player::InitStatic(HWND hwndProgress)
 				{
 				ph->RenderStatic(m_pin3d.m_pd3dDevice);
 				if (hwndProgress)
-					SendMessage(hwndProgress, PBM_SETPOS, 75 + ((5*i)/m_ptable->m_vedit.Size()), 0);
+					SendMessage(hwndProgress, PBM_SETPOS, 75 + ((15*i)/m_ptable->m_vedit.Size()), 0);
 				}
 			}
 		}
 
 	// Finish the frame.
 	m_pin3d.m_pd3dDevice->EndScene();
-}
-
-void Player::InitAnimations(HWND hwndProgress)
-{
-	// Draw stuff
-	for (int i=0;i<m_ptable->m_vedit.Size();i++)
-    {
-        // TODO: does nothing, rescale the progress bar
-        if (hwndProgress)
-            SendMessage(hwndProgress, PBM_SETPOS, 85 + ((15*i)/m_ptable->m_vedit.Size()), 0);
-	}
 }
 
 Ball *Player::CreateBall(const float x, const float y, const float z, const float vx, const float vy, const float vz, const float radius)

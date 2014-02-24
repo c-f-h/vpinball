@@ -906,15 +906,6 @@ void Pin3D::SetBaseTexture(DWORD texUnit, BaseTexture* pddsTexture)
             m_pd3dDevice->m_texMan.LoadTexture((pddsTexture == NULL) ? m_pddsLightWhite.m_pdsBufferColorKey : pddsTexture));
 }
 
-
-void Pin3D::EnableLightMap(const BOOL fEnable, const float z)
-{
-    if (fEnable)
-        EnableLightMap(z);
-    else
-        DisableLightMap();
-}
-
 void Pin3D::EnableLightMap(const float z)
 {
     BaseTexture* pdds = (BaseTexture*)m_xvShadowMap.ElementAt((int)z);

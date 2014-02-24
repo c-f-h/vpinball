@@ -247,13 +247,7 @@ void DispReel::SetDefaults(bool fromMouseClick)
 
 	hr = GetRegInt("DefaultProps\\EMReel","DigitRange", &iTmp);
 	m_d.m_digitrange = (hr == S_OK) && fromMouseClick ? iTmp : 9;
-    
-	hr = GetRegInt("DefaultProps\\EMReel","Shading", &iTmp);
-	if ((hr == S_OK) && fromMouseClick)
-		m_d.m_fShading = iTmp == 0 ? false : true;
-	else
-		m_d.m_fShading = fFalse;
-    
+
 	hr = GetRegInt("DefaultProps\\EMReel","UpdateInterval", &iTmp);
 	m_d.m_updateinterval = (hr == S_OK) && fromMouseClick ? iTmp : 50;
 
@@ -344,7 +338,6 @@ void DispReel::WriteRegDefaults()
 	sprintf_s(strTmp, 40, "%f", m_d.m_motorsteps);
 	SetRegValue("DefaultProps\\EMReel","MotorSteps", REG_SZ, &strTmp,strlen(strTmp));
 	SetRegValue("DefaultProps\\Decal","DigitRange",REG_DWORD,&m_d.m_digitrange,4);
-	SetRegValue("DefaultProps\\Decal","Shading",REG_DWORD,&m_d.m_fShading,4);
 	SetRegValue("DefaultProps\\Decal","UpdateInterval",REG_DWORD,&m_d.m_updateinterval,4);
 	SetRegValue("DefaultProps\\EMReel","BackColor",REG_DWORD,&m_d.m_backcolor,4);
 	SetRegValue("DefaultProps\\EMReel","FontColor",REG_DWORD,&m_d.m_fontcolor,4);
@@ -605,7 +598,7 @@ void DispReel::RenderSetup(const RenderDevice* _pd3dDevice)
 
     // get the render sizes of the objects (reels and frame)
     m_renderwidth  = max(0.0f, (m_d.m_width / 1000.0f) * ppin3d->m_dwRenderWidth);
-    m_renderheight = max(0.0f, (m_d.m_height / 750.0f) * ppin3d->m_dwRenderHeight);
+    m_renderheight = max(0.0f, (m_d.m_height / 750.0f) * ppin3d->m_dwRenderHeight); //!!
     const float m_renderspacingx = max(0.0f, (m_d.m_reelspacing / 1000.0f) * ppin3d->m_dwRenderWidth);
     const float m_renderspacingy = max(0.0f, (m_d.m_reelspacing / 750.0f)  * ppin3d->m_dwRenderHeight);
 
@@ -1088,7 +1081,6 @@ HRESULT DispReel::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryp
     bw.WriteFloat(FID(RCNT), reel);
     bw.WriteFloat(FID(RSPC), m_d.m_reelspacing);
     bw.WriteFloat(FID(MSTP), m_d.m_motorsteps);
-    bw.WriteBool(FID(SHAD), m_d.m_fShading);
 	const float dig = (float)m_d.m_digitrange;
     bw.WriteFloat(FID(RANG), dig);
     bw.WriteInt(FID(UPTM), m_d.m_updateinterval);
@@ -1192,10 +1184,6 @@ BOOL DispReel::LoadToken(int id, BiffReader *pbr)
     else if (id == FID(SOUN))
 		{
 			pbr->GetString(m_d.m_szSound);
-		}
-    else if (id == FID(SHAD))
-		{
-			pbr->GetBool(&m_d.m_fShading);
 		}
 	else if (id == FID(TYPE))
 		{
@@ -1480,17 +1468,15 @@ STDMETHODIMP DispReel::put_Steps(float newVal)
 
 STDMETHODIMP DispReel::get_IsShading(VARIANT_BOOL *pVal)
 {
-    *pVal = (VARIANT_BOOL)FTOVB(m_d.m_fShading);
+	//!! deprecated
+    *pVal = (VARIANT_BOOL)FTOVB(fFalse);
 
 	return S_OK;
 }
 
 STDMETHODIMP DispReel::put_IsShading(VARIANT_BOOL newVal)
 {
-	STARTUNDO
-    m_d.m_fShading = VBTOF(newVal);
-	STOPUNDO
-
+	//!! deprecated
 	return S_OK;
 }
 

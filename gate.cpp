@@ -86,12 +86,6 @@ void Gate::SetDefaults(bool fromMouseClick)
    else
       m_d.m_fVisible = fTrue;
 
-   hr = GetRegInt("DefaultProps\\Gate","Animations", &iTmp);
-   if ((hr == S_OK) && fromMouseClick)
-      m_d.m_animations = iTmp;
-   else
-      m_d.m_animations = 0;	// animations frames, zero will calculate 1 frames per 6 degrees
-
    hr = GetRegInt("DefaultProps\\Gate","Color", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
       m_d.m_color = iTmp;
@@ -165,7 +159,6 @@ void Gate::WriteRegDefaults()
    sprintf_s(strTmp, 40, "%f", m_d.m_angleMax);
    SetRegValue("DefaultProps\\Gate","AngleMax", REG_SZ, &strTmp,strlen(strTmp));
    SetRegValue("DefaultProps\\Gate","Visible",REG_DWORD,&m_d.m_fVisible,4);
-   SetRegValue("DefaultProps\\Gate","Animations",REG_DWORD,&m_d.m_animations,4);
    SetRegValue("DefaultProps\\Gate","Color",REG_DWORD,&m_d.m_color,4);
    SetRegValue("DefaultProps\\Gate","TimerEnabled",REG_DWORD,&m_d.m_tdr.m_fTimerEnabled,4);
    SetRegValue("DefaultProps\\Gate","TimerInterval", REG_DWORD, &m_d.m_tdr.m_TimerInterval, 4);
@@ -727,7 +720,6 @@ HRESULT Gate::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryptkey
    bw.WriteFloat(FID(HGTH), m_d.m_height);
    bw.WriteFloat(FID(ROTA), m_d.m_rotation);
    bw.WriteInt(FID(COLR), m_d.m_color);
-   bw.WriteInt(FID(GANM), m_d.m_animations);
    bw.WriteBool(FID(TMON), m_d.m_tdr.m_fTimerEnabled);
    bw.WriteBool(FID(GSUPT), m_d.m_fSupports);
    bw.WriteBool(FID(GCOLD), m_d.m_fCollidable);
@@ -787,10 +779,6 @@ BOOL Gate::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(COLR))
    {
       pbr->GetInt(&m_d.m_color);
-   }
-   else if (id == FID(GANM))
-   {
-      pbr->GetInt(&m_d.m_animations);
    }
    else if (id == FID(TMON))
    {
@@ -1298,25 +1286,15 @@ STDMETHODIMP Gate::put_Friction(float newVal)
 
 STDMETHODIMP Gate::get_Animations(int *pVal)
 {
-   if (!g_pplayer)
-   {
-      *pVal = m_d.m_animations;
-   }
+   //!! deprecated
+   *pVal = 0;
 
    return S_OK;
 }
 
 STDMETHODIMP Gate::put_Animations(int newVal)
-{	
-   if (!g_pplayer)
-   {
-      STARTUNDO
-
-         m_d.m_animations = newVal;
-
-      STOPUNDO
-   }
-
+{
+   //!! deprecated
    return S_OK;
 }
 

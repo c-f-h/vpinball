@@ -197,7 +197,6 @@ public:
     void SetTexture(Texture* pTexture);
 	void SetBaseTexture(DWORD texUnit, BaseTexture* pddsTexture);
 
-    void EnableLightMap(const BOOL fEnable, const float z);     // TODO: remove
     void EnableLightMap(const float z);
     void DisableLightMap();
 
@@ -240,7 +239,6 @@ public:
 	RenderTarget* m_pddsStatic;
 	RenderTarget* m_pddsStaticZ;
 
-   BaseTexture *antiAliasTexture;
 	Texture ballTexture;
 	MemTexture *ballShadowTexture;
 	Texture lightTexture[2]; // 0=bumper, 1=lights

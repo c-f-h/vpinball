@@ -1,21 +1,8 @@
 #include "StdAfx.h"
-#include "freeimage.h"
-#include "Texture.h"
 
-PinDirectDraw::PinDirectDraw()
-{
-}
-
-PinDirectDraw::~PinDirectDraw()
-{
-}
-
-typedef int(CALLBACK *DDCreateFunction)(GUID FAR *lpGUID, LPVOID *lplpDD, REFIID iid, IUnknown FAR *pUnkOuter);
-
-
+#ifdef VPINBALL_DX7_LEFTOVERS
 BaseTexture* PinDirectDraw::CreateOffscreenWithCustomTransparency(const int width, const int height, const int color)
 {
-#ifdef VPINBALL_DX7_LEFTOVERS
 	DDSURFACEDESC2 ddsd;
 	ZeroMemory( &ddsd, sizeof(ddsd) );
 	ddsd.dwSize = sizeof(ddsd);
@@ -48,7 +35,5 @@ retry0:
 	}
 
 	return pdds;
-#endif
-    return NULL;
 }
-
+#endif

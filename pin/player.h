@@ -45,7 +45,6 @@ public:
 
 	void ReOrder();
 	void InitStatic(HWND hwndProgress);
-	void InitAnimations(HWND hwndProgress);
 
     void UpdatePhysics();
 	void Render();

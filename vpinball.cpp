@@ -452,7 +452,7 @@ void VPinball::InitRegValues()
 
    hr = GetRegInt("Player", "AlternateRender", &m_fAlternateRender);
    if (hr != S_OK)
-      g_pvp->m_pdd.m_fAlternateRender=0; // default value
+      g_pvp->m_fAlternateRender=0; // default value
 
    hr = GetRegInt("Editor", "ShowDragPoints", &m_fAlwaysDrawDragPoints);
    if (hr != S_OK)
@@ -3862,7 +3862,7 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 				  HWND hwndARend = GetDlgItem(hwndDlg, 216);
                   int altrend = SendMessage(hwndARend, BM_GETCHECK, 0, 0);
                   SetRegValue("Player", "AlternateRender", REG_DWORD, &altrend, 4);
-                  g_pvp->m_pdd.m_fAlternateRender = (altrend != 0);
+                  g_pvp->m_fAlternateRender = (altrend != 0);
 
                   HWND hwndAraSlider = GetDlgItem(hwndDlg, IDC_ARASlider);
                   int alphaRampsAccuracy = SendMessage(hwndAraSlider, TBM_GETPOS, 0, 0);

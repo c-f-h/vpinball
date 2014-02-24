@@ -1272,7 +1272,7 @@ void Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fDrop)
 
     pd3dDevice->SetMaterial(sideMaterial);
     if (m_d.m_fEnableLighting)
-        ppin3d->EnableLightMap(fTrue, fDrop ? m_d.m_heightbottom : m_d.m_heighttop);
+        ppin3d->EnableLightMap(fDrop ? m_d.m_heightbottom : m_d.m_heighttop);
     else
     {
         ppin3d->DisableLightMap();

@@ -642,7 +642,7 @@ PinTable::PinTable()
 
    tmp = 0;										
    hr = GetRegInt("Player", "AlternateRender", &tmp);
-   g_pvp->m_pdd.m_fAlternateRender = (tmp != 0);
+   g_pvp->m_fAlternateRender = (tmp != 0);
 
    m_tblAccelerometer = fTrue;							// true if electronic accelerometer enabled
    hr = GetRegInt("Player", "PBWEnabled", &m_tblAccelerometer);
@@ -8819,7 +8819,7 @@ STDMETHODIMP PinTable::put_GlobalDifficulty(float newVal)
 
 STDMETHODIMP PinTable::get_AlternateRender(VARIANT_BOOL *pVal)
 {
-   *pVal = (VARIANT_BOOL)FTOVB((g_pvp) ? g_pvp->m_pdd.m_fAlternateRender : false); //VP Editor
+   *pVal = (VARIANT_BOOL)FTOVB((g_pvp) ? g_pvp->m_fAlternateRender : false); //VP Editor
 
    return S_OK;
 }
@@ -8833,12 +8833,12 @@ STDMETHODIMP PinTable::put_AlternateRender(VARIANT_BOOL newVal)
       if ((hr == S_OK) && (tmp == 1))
       {
          tmp = 0;
-         g_pvp->m_pdd.m_fAlternateRender = tmp;
+         g_pvp->m_fAlternateRender = tmp;
       }
       else
       {
          tmp = 1;
-         g_pvp->m_pdd.m_fAlternateRender = tmp;
+         g_pvp->m_fAlternateRender = tmp;
       }
       SetRegValue("Player", "AlternateRender", REG_DWORD, &tmp, 4);
    }

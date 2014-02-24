@@ -29,7 +29,6 @@ public:
 	char m_szImageBack[MAXTOKEN];
 	float m_angleMin;
 	float m_angleMax;
-	int m_animations; //animation frames // TODO: obsolete, remove
 	BOOL m_fVisible;
 	BOOL m_fEnableLighting;
 	};

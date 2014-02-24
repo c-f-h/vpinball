@@ -90,7 +90,6 @@ class PinBinary;
 #include "media/wavread.h"
 #include "PinInput.h"
 #include "PinSound.h"
-#include "PinImage.h"
 #include "PinBinary.h"
 
 #include "VPinball.h"

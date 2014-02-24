@@ -145,7 +145,6 @@ public:
 
 	PinDirectSound m_pds;
 	PinDirectSound *m_pbackglassds;
-	PinDirectDraw m_pdd;
 
 	int m_ToolCur; // Palette button currently pressed
 

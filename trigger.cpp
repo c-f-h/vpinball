@@ -484,7 +484,7 @@ void Trigger::RenderStatic(const RenderDevice* _pd3dDevice)
    RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y);
-   ppin3d->EnableLightMap(fTrue, height);
+   ppin3d->EnableLightMap(height);
 
    pd3dDevice->SetMaterial(material);
 
@@ -507,7 +507,7 @@ void Trigger::RenderStatic(const RenderDevice* _pd3dDevice)
       }
    }
 
-   ppin3d->EnableLightMap(fFalse, -1);
+   ppin3d->DisableLightMap();
 }
 
 void Trigger::SetObjectPos()
