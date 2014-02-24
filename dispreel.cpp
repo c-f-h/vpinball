@@ -742,7 +742,7 @@ void DispReel::RenderStatic(const RenderDevice* pd3dDevice)
 // to use in the process
 //
 
-#ifndef VPINBALL_DX9
+#ifdef VPINBALL_DX7_LEFTOVERS
 void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
 {
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
@@ -1001,7 +1001,7 @@ bool DispReel::RenderAnimation()
 //
 void DispReel::RenderText()
 {
-#ifndef VPINBALL_DX9
+#ifdef VPINBALL_DX7_LEFTOVERS
     // update the object frame (or in this case, draw it for the first time)
     UpdateObjFrame();
 
@@ -1772,7 +1772,7 @@ float DispReel::getBoxHeight() const
 //
 void DispReel::UpdateObjFrame()
 {
-#ifndef VPINBALL_DX9
+#ifdef VPINBALL_DX7_LEFTOVERS
 	if( !GetPTable()->GetEMReelsEnabled() ) return;
 
 	// is the background box transparent?

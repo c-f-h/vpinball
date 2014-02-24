@@ -15,7 +15,7 @@ typedef int(CALLBACK *DDCreateFunction)(GUID FAR *lpGUID, LPVOID *lplpDD, REFIID
 
 BaseTexture* PinDirectDraw::CreateOffscreenWithCustomTransparency(const int width, const int height, const int color)
 {
-#ifndef VPINBALL_DX9
+#ifdef VPINBALL_DX7_LEFTOVERS
 	DDSURFACEDESC2 ddsd;
 	ZeroMemory( &ddsd, sizeof(ddsd) );
 	ddsd.dwSize = sizeof(ddsd);

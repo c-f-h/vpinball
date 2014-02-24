@@ -282,7 +282,7 @@ void Textbox::RenderStatic(const RenderDevice* pd3dDevice)
 {
 }
 	
-#ifndef VPINBALL_DX9
+#ifdef VPINBALL_DX7_LEFTOVERS
 void Textbox::RenderMovers(const RenderDevice* pd3dDevice)
 	{
 	Pin3D * const ppin3d = &g_pplayer->m_pin3d;
@@ -319,7 +319,7 @@ void Textbox::RenderMovers(const RenderDevice* pd3dDevice)
 
 void Textbox::RenderText()
 	{
-#ifndef VPINBALL_DX9
+#ifdef VPINBALL_DX7_LEFTOVERS
 	//DDBLTFX ddbfx;
 	Pin3D *const ppin3d = &g_pplayer->m_pin3d;
 
