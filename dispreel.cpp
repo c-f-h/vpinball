@@ -538,10 +538,6 @@ void DispReel::PostRenderStatic(const RenderDevice* _pd3dDevice)
     RenderDevice* pd3dDevice = (RenderDevice*)_pd3dDevice;
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
-    // set any defaults for the game rendering
-    m_timenextupdate = g_pplayer->m_time_msec + m_d.m_updateinterval;
-    m_fforceupdate = false;
-
     pd3dDevice->SetRenderState(RenderDevice::ZENABLE, FALSE);
 
     // Set up the reel strip (either using bitmaps or fonts)
@@ -716,6 +712,9 @@ void DispReel::RenderSetup(const RenderDevice* _pd3dDevice)
     {
         // TODO: ReelText not supported yet
     }
+
+    m_timenextupdate = g_pplayer->m_time_msec + m_d.m_updateinterval;
+    m_fforceupdate = false;
 
     RenderText();
 }

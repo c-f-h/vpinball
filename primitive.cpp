@@ -898,7 +898,6 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       if ( !m_d.useLighting )
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
 
-	  pd3dDevice->SetRenderState(RenderDevice::DITHERENABLE, FALSE);
 	  pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE); 	
 
 	  if (pin)

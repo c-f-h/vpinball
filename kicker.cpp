@@ -280,7 +280,7 @@ void Kicker::PreRenderStatic( RenderDevice* pd3dDevice)
          {
             SetNormal(vertices+16, rgi+l*3, 3, NULL, NULL, 0);
          }
-         float depthbias = -1e-4f; // range: [0..1], covering the whole depth buffer
+         float depthbias = -1e-4f;
          pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
          pd3dDevice->SetRenderState(RenderDevice::COLORWRITEENABLE, 0);         // write only to depth buffer
          pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, vertices+16, 16, rgi, 3*14);
@@ -334,7 +334,7 @@ void Kicker::PreRenderStatic( RenderDevice* pd3dDevice)
 
             SetNormal(vertices+32, rgi+l*3, 3, NULL, NULL, 0);
          }
-         float depthbias = -3e-7f; // range: [0..1], covering the whole depth buffer
+         float depthbias = -1e-4f;
          pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
          pd3dDevice->SetRenderState(RenderDevice::COLORWRITEENABLE, 0);         // write only to depth buffer
          pd3dDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, MY_D3DFVF_VERTEX, vertices+32, 16, rgi, 3*14);
