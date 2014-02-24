@@ -361,7 +361,7 @@ void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
     // TODO: we can't handle shake here
 #ifdef USE_D3D9EX
     if(vsync)
-	m_pD3DDevice->WaitForVBlank(0);
+		m_pD3DDevice->WaitForVBlank(0);
 #endif
     CHECKD3D(m_pD3DDevice->Present(NULL, NULL, NULL, NULL));
 }

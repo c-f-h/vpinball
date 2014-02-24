@@ -216,6 +216,8 @@ public:
     void DrawBackground();
     void RenderPlayfieldGraphics();
 
+	void CalcShadowCoordinates(Vertex3D * const pv, const unsigned int count) const;
+
 private:
     void InitRenderState();
     void InitLights();
@@ -225,7 +227,7 @@ private:
 	BaseTexture* CreateShadow(const float height);
 	void CreateBallShadow();
 
-    // Data members
+	// Data members
 public:
 	RenderDevice* m_pd3dDevice;
 	RenderTarget* m_pddsBackBuffer;
@@ -261,8 +263,6 @@ public:
 	int m_width;
 	int m_height;
 	HWND m_hwnd;
-	float m_maxtu;
-	float m_maxtv;
 
 	float m_rotation, m_inclination, m_layback;
 	float m_scalex, m_scaley;
@@ -270,7 +270,6 @@ public:
 
     Vertex3Ds m_viewVec;        // direction the camera is facing
 
-	LightProjected m_lightproject;
     //bool fullscreen;
 	float m_maxSeparation, m_ZPD;
     ViewPort vp;

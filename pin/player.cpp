@@ -697,7 +697,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	InitRegValues();
 
 	// width, height, and colordepth are only defined if fullscreen is true.
-	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, !!m_fVSync, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)));
+	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, (m_ptable->m_TableAdaptiveVSync == -1) ? !!m_fVSync : !!m_ptable->m_TableAdaptiveVSync, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)));
 
 	if (hr != S_OK)
 	{
@@ -2516,8 +2516,8 @@ void Player::CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
             rgv3DArrowTransformed[iPoint].x = pball->x - tmp.x*pball->radius;
             rgv3DArrowTransformed[iPoint].y = pball->y - tmp.y*pball->radius;
             rgv3DArrowTransformed[iPoint].z = zheight - tmp.z*pball->radius;
-            rgv3DArrowTransformed[iPoint].tu = pball->logoVertices[iPoint].tu * pball->m_pinFront->m_maxtu;
-            rgv3DArrowTransformed[iPoint].tv = pball->logoVertices[iPoint].tv * pball->m_pinFront->m_maxtv;
+            rgv3DArrowTransformed[iPoint].tu = pball->logoVertices[iPoint].tu;
+            rgv3DArrowTransformed[iPoint].tv = pball->logoVertices[iPoint].tv;
          }
       }
 
@@ -2538,8 +2538,8 @@ void Player::CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
             rgv3DArrowTransformed2[iPoint].x = pball->x - tmp.x*pball->radius;
             rgv3DArrowTransformed2[iPoint].y = pball->y - tmp.y*pball->radius;
             rgv3DArrowTransformed2[iPoint].z = zheight - tmp.z*pball->radius;
-            rgv3DArrowTransformed2[iPoint].tu = pball->logoVertices[iPoint].tu * pball->m_pinBack->m_maxtu;
-            rgv3DArrowTransformed2[iPoint].tv = pball->logoVertices[iPoint].tv * pball->m_pinBack->m_maxtv;
+            rgv3DArrowTransformed2[iPoint].tu = pball->logoVertices[iPoint].tu;
+            rgv3DArrowTransformed2[iPoint].tv = pball->logoVertices[iPoint].tv;
             pball->logoVertices[iPoint].x = -pball->logoVertices[iPoint].x;
             pball->logoVertices[iPoint].z = -pball->logoVertices[iPoint].z;
          }

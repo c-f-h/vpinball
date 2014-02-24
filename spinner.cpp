@@ -546,9 +546,8 @@ void Spinner::PrepareStatic( RenderDevice* pd3dDevice )
       staticVertices[l].y += m_d.m_vCenter.y;
       staticVertices[l].z += height;
       staticVertices[l].z *= m_ptable->m_zScale;
-      ppin3d->m_lightproject.CalcCoordinates(&staticVertices[l]);
    }
-
+   ppin3d->CalcShadowCoordinates(staticVertices,8);
 }
 
 void Spinner::PrepareMovers( RenderDevice* pd3dDevice )
@@ -562,26 +561,6 @@ void Spinner::PrepareMovers( RenderDevice* pd3dDevice )
 
    Texture* const pinback = m_ptable->GetImage(m_d.m_szImageBack);
    Texture* const pinfront = m_ptable->GetImage(m_d.m_szImageFront);
-
-   float maxtuback, maxtvback;
-   float maxtufront, maxtvfront;
-   if (pinback)
-   {
-      m_ptable->GetTVTU(pinback, &maxtuback, &maxtvback);
-   }
-   else
-   {
-      maxtuback = maxtvback = 1.0f;
-   }
-
-   if (pinfront)
-   {
-      m_ptable->GetTVTU(pinfront, &maxtufront, &maxtvfront);
-   }
-   else
-   {
-      maxtufront = maxtvfront = 1.0f;
-   }
 
    int cframes;
    if (m_d.m_animations > 0) cframes = m_d.m_animations;
@@ -635,13 +614,13 @@ void Spinner::PrepareMovers( RenderDevice* pd3dDevice )
 
          if (l & 2)
          {
-            rgv3D[l].tu = (l & 1) ? maxtufront : 0;
-            rgv3D[l].tv = (l & 4) ? 0 : maxtvfront;
+            rgv3D[l].tu = (l & 1) ? 1.0f : 0.f;
+            rgv3D[l].tv = (l & 4) ? 0.f : 1.0f;
          }
          else
          {
-            rgv3D[l].tu = (l & 1) ? maxtuback : 0;
-            rgv3D[l].tv = (l & 4) ? maxtvback : 0;
+            rgv3D[l].tu = (l & 1) ? 1.0f : 0.f;
+            rgv3D[l].tv = (l & 4) ? 1.0f : 0.f;
          }
       }
 
@@ -664,9 +643,8 @@ void Spinner::PrepareMovers( RenderDevice* pd3dDevice )
          //rgv3D[l].z += 60.0f + height;
          rgv3D[l].z += h + height;
          rgv3D[l].z *= m_ptable->m_zScale;
-
-         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
       }
+      ppin3d->CalcShadowCoordinates(rgv3D,8);
 
       if (pinback)
       {			

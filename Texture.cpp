@@ -204,8 +204,6 @@ HRESULT Texture::LoadFromStream(IStream *pstream, int version, PinTable *pt)
 
    br.Load();
 
-   EnsureMaxTextureCoordinates();
-
    return ((m_pdsBuffer != NULL) ? S_OK : E_FAIL);
 }
 
@@ -373,17 +371,6 @@ void Texture::EnsureBackdrop(const COLORREF color)
    }
 }
 
-void Texture::EnsureMaxTextureCoordinates()
-{
-   //DWORD texWidth, texHeight;
-   //g_pplayer->m_pin3d.m_pd3dDevice->GetTextureSize(m_pdsBuffer, &texWidth, &texHeight);
-
-   //m_maxtu = (float)m_width / (float)texWidth;
-   //m_maxtv = (float)m_height / (float)texHeight;
-   // TODO (DX9): tex coords
-   m_maxtu = m_maxtv = 1.0f;
-}
-
 void Texture::FreeStuff()
 {
    delete m_pdsBuffer; m_pdsBuffer = NULL;
@@ -450,8 +437,6 @@ void Texture::ReleaseTextureDC(HDC dc)
     DeleteDC(dc);
 }
 
-
-
 void Texture::CreateFromResource(const int id, int * const pwidth, int * const pheight)
 {
    HBITMAP hbm = (HBITMAP)LoadImage(g_hinst, MAKEINTRESOURCE(id), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION);
@@ -464,7 +449,6 @@ void Texture::CreateFromResource(const int id, int * const pwidth, int * const p
 
    m_pdsBufferColorKey = CreateFromHBitmap(hbm, pwidth, pheight);
 }
-
 
 BaseTexture* Texture::CreateFromHBitmap(HBITMAP hbm, int * const pwidth, int * const pheight)
 {
@@ -480,7 +464,6 @@ void Texture::CreateTextureOffscreen(const int width, const int height)
    m_pdsBufferColorKey = new MemTexture( width, height );
    SetSizeFrom( m_pdsBufferColorKey );
 }
-
 
 void Texture::SetOpaque(BaseTexture* pdds)
 {
@@ -500,7 +483,6 @@ void Texture::SetOpaque(BaseTexture* pdds)
         pch += pitch;
     }
 }
-
 
 void Texture::SetOpaqueBackdrop(BaseTexture* pdds, const COLORREF rgbTransparent, const COLORREF rgbBackdrop)
 {

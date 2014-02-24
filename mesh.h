@@ -66,16 +66,6 @@ private:
 	float y1,y2,y3,y4;
 };
 
-class LightProjected
-{
-public:
-	Vertex3Ds m_v;
-    float inv_width;
-    float inv_height;
-
-	void CalcCoordinates(Vertex3D * const pv) const;
-};
-
 class RenderVertex : public Vertex2D
 {
 public:

@@ -571,9 +571,8 @@ void Gate::PrepareStatic(RenderDevice* pd3dDevice)
       staticVertices[l].x += m_d.m_vCenter.x;
       staticVertices[l].y += m_d.m_vCenter.y;
       staticVertices[l].z += height*m_ptable->m_zScale;
-
-      ppin3d->m_lightproject.CalcCoordinates(&staticVertices[l]);
    }
+   ppin3d->CalcShadowCoordinates(staticVertices,8);
 }
 
 void Gate::PrepareMovers(RenderDevice* pd3dDevice )
@@ -587,24 +586,12 @@ void Gate::PrepareMovers(RenderDevice* pd3dDevice )
     m_posZ = (height + h) * m_ptable->m_zScale;  // remember for renderer
 
     Texture * const pinback = m_ptable->GetImage(m_d.m_szImageBack);
-    float maxtuback, maxtvback;
     if (pinback)
-    {
         pinback->CreateAlphaChannel();
-        m_ptable->GetTVTU(pinback, &maxtuback, &maxtvback);
-    }
-    else
-        maxtuback = maxtvback = 1.0f;
 
     Texture * const pinfront = m_ptable->GetImage(m_d.m_szImageFront);
-    float maxtufront, maxtvfront;
     if (pinfront)
-    {
         pinfront->CreateAlphaChannel();
-        m_ptable->GetTVTU(pinfront, &maxtufront, &maxtvfront);
-    }
-    else
-        maxtufront = maxtvfront = 1.0f;
 
     const float halflength = m_d.m_length * 0.5f;
     const float halfwidth =  m_d.m_height; //50;
@@ -626,17 +613,16 @@ void Gate::PrepareMovers(RenderDevice* pd3dDevice )
 
         if (l & 2)
         {
-            rgv3D[l].tu = (l & 1) ? maxtufront : 0;
-            rgv3D[l].tv = (l & 4) ? 0 : maxtvfront;
+            rgv3D[l].tu = (l & 1) ? 1.0f : 0.f;
+            rgv3D[l].tv = (l & 4) ? 0.f : 1.0f;
         }
         else
         {
-            rgv3D[l].tu = (l & 1) ? maxtuback : 0;
-            rgv3D[l].tv = (l & 4) ? maxtvback : 0;
+            rgv3D[l].tu = (l & 1) ? 1.0f : 0.f;
+            rgv3D[l].tv = (l & 4) ? 1.0f : 0.f;
         }
-
-        ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
     }
+    ppin3d->CalcShadowCoordinates(rgv3D,8);
 
     // create vertex buffer
     std::vector<Vertex3D> vbVerts;

@@ -836,7 +836,6 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
 {
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
    Texture * const pinSide = m_ptable->GetImage(m_d.m_szSideImage);
-   float maxtuSide=1.0f, maxtvSide=1.0f;
 
    Vector<RenderVertex> vvertex;
    GetRgVertex(&vvertex);
@@ -844,7 +843,6 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
 
    if (pinSide)
    {
-      m_ptable->GetTVTU(pinSide, &maxtuSide, &maxtvSide);		
       GetTextureCoords(&vvertex, &rgtexcoord);
    }
 
@@ -855,9 +853,6 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
       sideVBuffer->release();
       sideVBuffer=0;
    }
-
-   pd3dDevice->CreateVertexBuffer( numVertices*4, 0, MY_D3DFVF_VERTEX, &sideVBuffer );
-   std::vector<Vertex3D> verts(numVertices*4);
 
    for (int i=0;i<numVertices;i++)
    {
@@ -872,8 +867,9 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
       rgnormal[i].y = dx*inv_len;
    }
 
-   Vertex3D *texelBuf;
-   sideVBuffer->lock( 0, 0, (void**)&texelBuf, VertexBuffer::WRITEONLY);
+   pd3dDevice->CreateVertexBuffer( numVertices*4, 0, MY_D3DFVF_VERTEX, &sideVBuffer );
+   Vertex3D *verts;
+   sideVBuffer->lock( 0, 0, (void**)&verts, VertexBuffer::WRITEONLY);
 
    int offset=0;
    // Render side
@@ -919,23 +915,18 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
 
          if (pinSide)
          {
-            verts[offset].tu = rgtexcoord[i] * maxtuSide;
-            verts[offset].tv = maxtvSide;
+            verts[offset].tu = rgtexcoord[i];
+            verts[offset].tv = 1.0f;
 
-            verts[offset+1].tu = rgtexcoord[i] * maxtuSide;
+            verts[offset+1].tu = rgtexcoord[i];
             verts[offset+1].tv = 0;
 
-            verts[offset+2].tu = rgtexcoord[c] * maxtuSide;
+            verts[offset+2].tu = rgtexcoord[c];
             verts[offset+2].tv = 0;
 
-            verts[offset+3].tu = rgtexcoord[c] * maxtuSide;
-            verts[offset+3].tv = maxtvSide;
+            verts[offset+3].tu = rgtexcoord[c];
+            verts[offset+3].tv = 1.0f;
          }
-
-         ppin3d->m_lightproject.CalcCoordinates(&verts[offset]);
-         ppin3d->m_lightproject.CalcCoordinates(&verts[offset+1]);
-         ppin3d->m_lightproject.CalcCoordinates(&verts[offset+2]);
-         ppin3d->m_lightproject.CalcCoordinates(&verts[offset+3]);
 
          verts[offset].nx = verts[offset+1].nx = -vnormal[0].x;
          verts[offset].ny = verts[offset+1].ny = vnormal[0].y;
@@ -944,14 +935,15 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
          verts[offset+2].nx = verts[offset+3].nx = -vnormal[1].x;
          verts[offset+2].ny = verts[offset+3].ny = vnormal[1].y;
          verts[offset+2].nz = verts[offset+3].nz = 0;
-
-         memcpy( &texelBuf[offset], &verts[offset], sizeof(Vertex3D)*4 );
       }
    }
+   delete[] rgnormal;
+
+   ppin3d->CalcShadowCoordinates(verts,numVertices);
+
    sideVBuffer->unlock();
 
    // draw top
-   delete[] rgnormal;
    SAFE_VECTOR_DELETE(rgtexcoord);
    if (m_d.m_fVisible)      // BUG? Visible could still be set later if rendered dynamically?
    {
@@ -963,16 +955,11 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
       Vector<Triangle> vtri;
       PolygonToTriangles(vvertex, &vpoly, &vtri);
 
-      Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-      float maxtu=1.0f, maxtv=1.0f;
-      if (pin)
-         m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-
 	  const float heightNotDropped = m_d.m_heighttop;
       const float heightDropped = (m_d.m_heightbottom + 0.1f);
 
-      const float inv_tablewidth = maxtu/(m_ptable->m_right - m_ptable->m_left);
-      const float inv_tableheight = maxtv/(m_ptable->m_bottom - m_ptable->m_top);
+      const float inv_tablewidth = 1.0f/(m_ptable->m_right - m_ptable->m_left);
+      const float inv_tableheight = 1.0f/(m_ptable->m_bottom - m_ptable->m_top);
 
       numPolys = vtri.Size();
       if( numPolys==0 )
@@ -984,10 +971,16 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
          return;
       }
 
-      std::vector<Vertex3D> vertsTop[2];
-      vertsTop[0].resize(numPolys*3);
-      vertsTop[1].resize(numPolys*3);
-      
+      if( topVBuffer )
+         topVBuffer->release();
+      pd3dDevice->CreateVertexBuffer( 2*numPolys*3, 0, MY_D3DFVF_VERTEX, &topVBuffer );
+
+	  Vertex3D *buf;
+      topVBuffer->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY);
+      Vertex3D * vertsTop[2];
+	  vertsTop[0] = buf;
+	  vertsTop[1] = buf + 3*numPolys;
+
       offset=0;
       for (int i=0;i<vtri.Size();i++, offset+=3)
       {
@@ -1014,14 +1007,6 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
             vertsTop[1][offset+1].z = heightDropped;
             vertsTop[1][offset+2].z = heightDropped;
             
-			ppin3d->m_lightproject.CalcCoordinates(&vertsTop[0][offset]);
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[0][offset+1]);
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[0][offset+2]);
-
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[1][offset]);
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[1][offset+1]);
-            ppin3d->m_lightproject.CalcCoordinates(&vertsTop[1][offset+2]);
-
             for (int l=offset;l<offset+3;l++)
             {
                vertsTop[0][l].nx = 0;
@@ -1035,14 +1020,9 @@ void Surface::PrepareWallsAtHeight( RenderDevice* pd3dDevice )
          delete vtri.ElementAt(i);
       }
 
-      if( topVBuffer )
-         topVBuffer->release();
-      pd3dDevice->CreateVertexBuffer( 2*numPolys*3, 0, MY_D3DFVF_VERTEX, &topVBuffer );
+	  ppin3d->CalcShadowCoordinates(vertsTop[0],numPolys*3);
+	  ppin3d->CalcShadowCoordinates(vertsTop[1],numPolys*3);
 
-      Vertex3D *buf;
-      topVBuffer->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY);
-      memcpy(buf, &vertsTop[0][0], 3*numPolys*sizeof(Vertex3D));
-      memcpy(buf + 3*numPolys, &vertsTop[1][0], 3*numPolys*sizeof(Vertex3D));
 	  topVBuffer->unlock();
    }
 
@@ -1123,8 +1103,7 @@ void Surface::PrepareSlingshots( RenderDevice *pd3dDevice )
          rgv3D[l+6].z = rgv3D[l].z;
       }
 
-      for (int l=0;l<12;l++)
-         ppin3d->m_lightproject.CalcCoordinates(&rgv3D[l]);
+      ppin3d->CalcShadowCoordinates(rgv3D,12);
       
       SetNormal(rgv3D, rgiSlingshot0, 4, NULL, NULL, NULL);
       buf[offset++] = rgv3D[rgiSlingshot0[0]];

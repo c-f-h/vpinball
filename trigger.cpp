@@ -441,10 +441,9 @@ void Trigger::RenderSetup(const RenderDevice* _pd3dDevice)
 
          staticVertices[l+offset].x =  cs*x + sn*y + m_d.m_vCenter.x;
          staticVertices[l+offset].y = -sn*x + cs*y + m_d.m_vCenter.y;
-
-         ppin3d->m_lightproject.CalcCoordinates(&staticVertices[l+offset]);
       }
    }
+   ppin3d->CalcShadowCoordinates(staticVertices,40);
 
    for (int i=0;i<4;i++)
    {

@@ -1294,9 +1294,6 @@ void Ramp::prepareStatic(RenderDevice* pd3dDevice)
    Pin3D *const ppin3d = &g_pplayer->m_pin3d;
 
    Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-   float maxtu = 0, maxtv = 0;
-   if (pin)
-      m_ptable->GetTVTU(pin, &maxtu, &maxtv);
 
    const float tablewidth = m_ptable->m_right - m_ptable->m_left;
    const float tableheight = m_ptable->m_bottom - m_ptable->m_top;
@@ -1307,8 +1304,8 @@ void Ramp::prepareStatic(RenderDevice* pd3dDevice)
    const float inv_width = scalewidth / (float)g_pplayer->m_pin3d.m_dwRenderWidth;
    const float inv_height = scaleheight / (float)g_pplayer->m_pin3d.m_dwRenderHeight;
 
-   const float inv_width2 = maxtu / tablewidth;
-   const float inv_height2 = maxtv / tableheight;
+   const float inv_width2 = 1.0f / tablewidth;
+   const float inv_height2 = 1.0f / tableheight;
 
    Vertex3D_NoTex2 *buf;
    staticVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
@@ -1367,14 +1364,14 @@ void Ramp::prepareStatic(RenderDevice* pd3dDevice)
          }
          else
          {
-            rgv3D[0].tu = maxtu;
-            rgv3D[0].tv = rgratioInit[i] * maxtv;
+            rgv3D[0].tu = 1.0f;
+            rgv3D[0].tv = rgratioInit[i];
             rgv3D[1].tu = 0;
-            rgv3D[1].tv = rgratioInit[i] * maxtv;
+            rgv3D[1].tv = rgratioInit[i];
             rgv3D[2].tu = 0;
-            rgv3D[2].tv = rgratioInit[i+1] * maxtv;
-            rgv3D[3].tu = maxtu;
-            rgv3D[3].tv = rgratioInit[i+1] * maxtv;
+            rgv3D[2].tv = rgratioInit[i+1];
+            rgv3D[3].tu = 1.0f;
+            rgv3D[3].tv = rgratioInit[i+1];
          }
       }
 
@@ -1438,10 +1435,10 @@ void Ramp::prepareStatic(RenderDevice* pd3dDevice)
          }
          else
          {
-            rgv3D[0].tu = maxtu;
-            rgv3D[0].tv = rgratioInit[i] * maxtv;
-            rgv3D[2].tu = maxtu;
-            rgv3D[2].tv = rgratioInit[i+1] * maxtv;
+            rgv3D[0].tu = 1.0f;
+            rgv3D[0].tv = rgratioInit[i];
+            rgv3D[2].tu = 1.0f;
+            rgv3D[2].tv = rgratioInit[i+1];
 
             rgv3D[1].tu = rgv3D[0].tu;
             rgv3D[1].tv = rgv3D[0].tv;
@@ -1517,9 +1514,9 @@ void Ramp::prepareStatic(RenderDevice* pd3dDevice)
          else
          {
             rgv3D[0].tu = 0;
-            rgv3D[0].tv = rgratioInit[i] * maxtv;
+            rgv3D[0].tv = rgratioInit[i];
             rgv3D[2].tu = 0;
-            rgv3D[2].tv = rgratioInit[i+1] * maxtv;
+            rgv3D[2].tv = rgratioInit[i+1];
 
             rgv3D[1].tu = rgv3D[0].tu;
             rgv3D[1].tv = rgv3D[0].tv;
@@ -2709,21 +2706,11 @@ void Ramp::GenerateVertexBuffer(RenderDevice* pd3dDevice)
     dynamicVertexBufferRegenerate = false;
 
     Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
-    float maxtu = 0;
-    float maxtv = 0;
-
-    if (pin)
-    {
-        //m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-        maxtu = pin->m_maxtu;
-        maxtv = pin->m_maxtv;
-    }
-
     float *rgheight, *rgratio;
     const Vertex2D * const rgvLocal = GetRampVertex(rampVertex, &rgheight, NULL, &rgratio);
 
-    const float inv_tablewidth = maxtu/(m_ptable->m_right - m_ptable->m_left);
-    const float inv_tableheight = maxtv/(m_ptable->m_bottom - m_ptable->m_top);
+    const float inv_tablewidth = 1.0f/(m_ptable->m_right - m_ptable->m_left);
+    const float inv_tableheight = 1.0f/(m_ptable->m_bottom - m_ptable->m_top);
 
     m_numVertices=(rampVertex-1)*4;
     unsigned int offset=0;
@@ -2773,14 +2760,14 @@ void Ramp::GenerateVertexBuffer(RenderDevice* pd3dDevice)
             }
             else
             {
-                rgv3D[0].tu = maxtu;
-                rgv3D[0].tv = rgratio[i] * maxtv;
+                rgv3D[0].tu = 1.0f;
+                rgv3D[0].tv = rgratio[i];
                 rgv3D[1].tu = 0;
-                rgv3D[1].tv = rgratio[i] * maxtv;
+                rgv3D[1].tv = rgratio[i];
                 rgv3D[2].tu = 0;
-                rgv3D[2].tv = rgratio[i+1] * maxtv;
-                rgv3D[3].tu = maxtu;
-                rgv3D[3].tv = rgratio[i+1] * maxtv;
+                rgv3D[2].tv = rgratio[i+1];
+                rgv3D[3].tu = 1.0f;
+                rgv3D[3].tv = rgratio[i+1];
             }
         }
 
@@ -2848,9 +2835,9 @@ void Ramp::GenerateVertexBuffer(RenderDevice* pd3dDevice)
             else
             {
                 rgv3D[0].tu = 0;
-                rgv3D[0].tv = rgratio[i] * maxtv;
+                rgv3D[0].tv = rgratio[i];
                 rgv3D[2].tu = 0;
-                rgv3D[2].tv = rgratio[i+1] * maxtv;
+                rgv3D[2].tv = rgratio[i+1];
             }
 
             rgv3D[1].tu = rgv3D[0].tu;
@@ -2910,9 +2897,9 @@ void Ramp::GenerateVertexBuffer(RenderDevice* pd3dDevice)
                 else
                 {
                     rgv3D[0].tu = 0;
-                    rgv3D[0].tv = rgratio[i] * maxtv;
+                    rgv3D[0].tv = rgratio[i];
                     rgv3D[2].tu = 0;
-                    rgv3D[2].tv = rgratio[i+1] * maxtv;
+                    rgv3D[2].tv = rgratio[i+1];
                 }
 
                 rgv3D[1].tu = rgv3D[0].tu;

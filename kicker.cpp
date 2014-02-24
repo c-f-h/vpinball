@@ -201,16 +201,13 @@ void Kicker::RenderSetup(const RenderDevice* _pd3dDevice)
       vertices[l+32].x = m_d.m_vCenter.x + sinf(angle)*(m_d.m_radius+6.0f);
       vertices[l+32].y = m_d.m_vCenter.y - cosf(angle)*(m_d.m_radius+6.0f);
       vertices[l+32].z = height + 0.05f*m_ptable->m_zScale;
-
-      ppin3d->m_lightproject.CalcCoordinates(&vertices[l]);
-      ppin3d->m_lightproject.CalcCoordinates(&vertices[l+16]);
-      ppin3d->m_lightproject.CalcCoordinates(&vertices[l+32]);
    }
 
    vertices[48].x = m_d.m_vCenter.x;
    vertices[48].y = m_d.m_vCenter.y;
    vertices[48].z = height + (0.1f - 30.0f)*m_ptable->m_zScale;
-   ppin3d->m_lightproject.CalcCoordinates(&vertices[48]);
+
+   ppin3d->CalcShadowCoordinates(vertices,16*3+1);
 }
 
 

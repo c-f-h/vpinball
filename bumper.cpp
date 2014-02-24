@@ -334,9 +334,6 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     if (pin)
     {
-        float maxtu, maxtv;
-        m_ptable->GetTVTU(pin, &maxtu, &maxtv);
-
         pin->EnsureBackdrop(m_d.m_color);
         pin->SetBackDrop( ePictureTexture );
 
@@ -372,7 +369,6 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
 
    const float outerradius = m_d.m_radius + m_d.m_overhang;
    const float height = m_ptable->GetSurfaceHeight(m_d.m_szSurface, m_d.m_vCenter.x, m_d.m_vCenter.y) * m_ptable->m_zScale;
-   float maxtu, maxtv;
 
    Pin3D * const ppin3d = &g_pplayer->m_pin3d;
    Texture * const pin = m_ptable->GetImage(m_d.m_szImage);	
@@ -402,9 +398,6 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
    litMaterial.setAmbient( 1.0f, 0.0f, 0.0f, 0.0f );
    litMaterial.setDiffuse( 1.0f, 0.0f, 0.0f, 0.0f );
    litMaterial.setEmissive(0.0f, 1.0f, 1.0f, 1.0f );
-
-   if ( pin )
-      m_ptable->GetTVTU(pin, &maxtu, &maxtv);
 
    Vertex3D moverVertices[5*32];
    WORD     indices[4*32];
@@ -478,12 +471,12 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
 
       if ( pin )
       {
-         moverVertices[l+64].tu = (0.5f+sinangle*0.25f)*maxtu;
-         moverVertices[l+64].tv = (0.5f+cosangle*0.25f)*maxtv;
-         moverVertices[l+96].tu = (0.5f+sinangle*(float)(0.5*0.9))*maxtu;
-         moverVertices[l+96].tv = (0.5f+cosangle*(float)(0.5*0.9))*maxtv;
-         moverVertices[l+128].tu = (0.5f+sinangle*0.5f)*maxtu;
-         moverVertices[l+128].tv = (0.5f+cosangle*0.5f)*maxtv;
+         moverVertices[l+64].tu = 0.5f+sinangle*0.25f;
+         moverVertices[l+64].tv = 0.5f+cosangle*0.25f;
+         moverVertices[l+96].tu = 0.5f+sinangle*(float)(0.5*0.9);
+         moverVertices[l+96].tv = 0.5f+cosangle*(float)(0.5*0.9);
+         moverVertices[l+128].tu = 0.5f+sinangle*0.5f;
+         moverVertices[l+128].tv = 0.5f+cosangle*0.5f;
 
          const float lightmaxtu = 0.8f;
          const float lightmaxtv = 0.8f;
@@ -499,13 +492,8 @@ void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )
          moverVertices[l+128].tu2 = (0.5f+sinangle*0.5f)*lightmaxtu;
          moverVertices[l+128].tv2 = (0.5f+cosangle*0.5f)*lightmaxtv;
       }
-
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+32]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+64]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+96]);
-      ppin3d->m_lightproject.CalcCoordinates(&moverVertices[l+128]);
    }
+   ppin3d->CalcShadowCoordinates(moverVertices,32*5);
 
    for( int l=0,k=0; l<32*12; l+=6,k+=4 )
    {

@@ -6623,14 +6623,6 @@ Texture *PinTable::GetImage(char *szName)
    return NULL;
 }
 
-// TODO: this should be a method of the texture itself
-void PinTable::GetTVTU(Texture * const ppi, float * const pmaxtu, float * const pmaxtv)
-{
-    ppi->EnsureMaxTextureCoordinates();     // is this needed?
-    *pmaxtu = ppi->m_maxtu;
-    *pmaxtv = ppi->m_maxtv;
-}
-
 void PinTable::CreateGDIBackdrop()
 {
 }
@@ -6679,8 +6671,6 @@ void PinTable::ReImportImage(HWND hwndListView, Texture *ppi, char *filename)
    ppi->m_pdsBuffer = tex;
 
    lstrcpy(ppi->m_szPath, filename);
-
-   ppi->EnsureMaxTextureCoordinates();
 }
 
 
