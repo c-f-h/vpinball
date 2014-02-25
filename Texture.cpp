@@ -7,12 +7,39 @@ RenderDevice *Texture::renderDevice=0;
 
 MemTexture* MemTexture::CreateFromFreeImage(FIBITMAP* dib)
 {
-    FIBITMAP* dib32 = FreeImage_ConvertTo32Bits(dib);
+    // check if Textures exceed the maximum texture dimension
+    int maxTexDim;
+    HRESULT hrMaxTex = GetRegInt("Player", "MaxTexDimension", &maxTexDim);
+    if (hrMaxTex != S_OK)
+        maxTexDim = 0; // default: Don't resize textures
+    if(maxTexDim <= 0)
+        maxTexDim = 65536;
+
+    const int pictureWidth = FreeImage_GetWidth(dib);
+    const int pictureHeight = FreeImage_GetHeight(dib);
+    FIBITMAP* dibResized = dib;
+    if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
+    {
+        int newWidth = min(pictureWidth, maxTexDim);
+        int newHeight = min(pictureHeight, maxTexDim);
+        /*
+         * The following code tries to maintain the aspect ratio while resizing. This is
+         * however not really necessary and makes playfield textures more blurry than they
+         * need to be, so it's disabled for now.
+         */
+        //if (pictureWidth - newWidth > pictureHeight - newHeight)
+        //    newHeight = min(pictureHeight * newWidth / pictureWidth, maxTexDim);
+        //else
+        //    newWidth = min(pictureWidth * newHeight / pictureHeight, maxTexDim);
+        dibResized = FreeImage_Rescale(dib, newWidth, newHeight, FILTER_BILINEAR);
+    }
+
+    FIBITMAP* dib32 = FreeImage_ConvertTo32Bits(dibResized);
 
     MemTexture* tex = new MemTexture(FreeImage_GetWidth(dib32), FreeImage_GetHeight(dib32));
 
     BYTE *psrc = FreeImage_GetBits(dib32), *pdst = tex->data();
-    int pitchdst = FreeImage_GetPitch(dib32), pitchsrc = tex->pitch();
+    const int pitchdst = FreeImage_GetPitch(dib32), pitchsrc = tex->pitch();
     const int height = tex->height();
 
     for (int y = 0; y < height; ++y)
@@ -20,9 +47,10 @@ MemTexture* MemTexture::CreateFromFreeImage(FIBITMAP* dib)
         memcpy(pdst + (height-y-1)*pitchdst, psrc + y*pitchsrc, 4 * tex->width());
     }
 
-    //memcpy(tex->data(), FreeImage_GetBits(dib32), tex->pitch()*tex->height());
-
     FreeImage_Unload(dib32);
+    if (dibResized != dib)      // did we allocate a rescaled copy?
+        FreeImage_Unload(dibResized);
+
     return tex;
 }
 
@@ -31,10 +59,8 @@ BaseTexture* MemTexture::CreateFromFile(const char *szfile)
    FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
 
    // check the file signature and deduce its format
-   // (the second argument is currently not used by FreeImage)
    fif = FreeImage_GetFileType(szfile, 0);
    if(fif == FIF_UNKNOWN) {
-      // no signature ?
       // try to guess the file format from the file extension
       fif = FreeImage_GetFIFFromFilename(szfile);
    }
@@ -43,38 +69,7 @@ BaseTexture* MemTexture::CreateFromFile(const char *szfile)
       // ok, let's load the file
       FIBITMAP *dib = FreeImage_Load(fif, szfile, 0);
 
-      // check if Textures exceed the maximum texture diemension
-      int maxTexDim;
-      HRESULT hrMaxTex = GetRegInt("Player", "MaxTexDimension", &maxTexDim);
-      if (hrMaxTex != S_OK)
-      {
-         maxTexDim = 0; // default: Don't resize textures
-      }
-      if(maxTexDim <= 0)
-      {
-         maxTexDim = 65536;
-      }
-      const int pictureWidth = FreeImage_GetWidth(dib);
-      const int pictureHeight = FreeImage_GetHeight(dib);
-      // save original width and height, if the texture is rescaled
-	  if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
-	  {
-         int newWidth = min(pictureWidth,maxTexDim);
-         int newHeight = min(pictureHeight,maxTexDim);
-         /*
-          * The following code tries to maintain the aspect ratio while resizing. This is
-          * however not really necessary and makes playfield textures more blurry than they
-          * need to be, so it's disabled for now.
-          */
-         //if (pictureWidth - newWidth > pictureHeight - newHeight)
-         //    newHeight = min(pictureHeight * newWidth / pictureWidth, maxTexDim);
-         //else
-         //    newWidth = min(pictureWidth * newHeight / pictureHeight, maxTexDim);
-         dib = FreeImage_Rescale(dib, newWidth, newHeight, FILTER_BILINEAR);
-      }
-
       MemTexture* mySurface = MemTexture::CreateFromFreeImage(dib);
-
       FreeImage_Unload(dib);
 
       //if (bitsPerPixel == 24)
@@ -166,8 +161,8 @@ HRESULT Texture::SaveToStream(IStream *pstream, PinTable *pt)
 
    bw.WriteString(FID(PATH), m_szPath);
 
-   bw.WriteInt(FID(WDTH), m_originalWidth);
-   bw.WriteInt(FID(HGHT), m_originalHeight);
+   bw.WriteInt(FID(WDTH), m_width);
+   bw.WriteInt(FID(HGHT), m_height);
 
    bw.WriteInt(FID(TRNS), m_rgbTransparent);
 
@@ -213,42 +208,12 @@ bool Texture::LoadFromMemory(BYTE *data, DWORD size)
     FIMEMORY *hmem = FreeImage_OpenMemory(data, size);
     FREE_IMAGE_FORMAT fif = FreeImage_GetFileTypeFromMemory(hmem, 0);
     FIBITMAP *dib = FreeImage_LoadFromMemory(fif, hmem, 0);
-
-    // check if Textures exceed the maximum texture dimension
-    int maxTexDim;
-    HRESULT hrMaxTex = GetRegInt("Player", "MaxTexDimension", &maxTexDim);
-    if (hrMaxTex != S_OK)
-    {
-        maxTexDim = 0; // default: Don't resize textures
-    }
-    if(maxTexDim <= 0)
-    {
-        maxTexDim = 65536;
-    }
-    int pictureWidth = FreeImage_GetWidth(dib);
-    int pictureHeight = FreeImage_GetHeight(dib);
-    // save original width and height, if the texture is rescaled
-    m_originalWidth = pictureWidth;
-    m_originalHeight = pictureHeight;
-    if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
-    {
-         int newWidth = min(pictureWidth,maxTexDim);
-         int newHeight = min(pictureHeight,maxTexDim);
-         // see comment in CreateFromFile()
-         //if (m_originalWidth - newWidth > m_originalHeight - newHeight)
-         //    newHeight = min(m_originalHeight * newWidth / m_originalWidth, maxTexDim);
-         //else
-         //    newWidth = min(m_originalWidth * newHeight / m_originalHeight, maxTexDim);
-         dib = FreeImage_Rescale(dib, newWidth, newHeight, FILTER_BILINEAR);
-         m_width = newWidth;
-         m_height = newHeight;
-    }
+    FreeImage_CloseMemory(hmem);
 
     m_pdsBuffer = MemTexture::CreateFromFreeImage(dib);
-    SetSizeFrom(m_pdsBuffer);
-
     FreeImage_Unload(dib);
 
+    SetSizeFrom(m_pdsBuffer);
     return true;
 }
 
@@ -274,12 +239,10 @@ BOOL Texture::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(WDTH))
    {
       pbr->GetInt(&m_width);
-      m_originalWidth = m_width;
    }
    else if (id == FID(HGHT))
    {
       pbr->GetInt(&m_height);
-      m_originalHeight = m_height;
    }
    else if (id == FID(BITS))
    {

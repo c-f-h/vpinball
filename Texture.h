@@ -108,7 +108,6 @@ public:
    // width and height of texture can be different than width and height
    // of dd surface, since the surface can be limited to smaller sizes by the user
    int m_width, m_height;
-   int m_originalWidth, m_originalHeight;
 
    COLORREF m_rgbTransparent;
    BOOL m_fTransparent; // Whether this picture actually contains transparent bits

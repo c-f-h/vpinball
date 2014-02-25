@@ -6667,8 +6667,8 @@ void PinTable::ReImportImage(HWND hwndListView, Texture *ppi, char *filename)
 
    //SAFE_RELEASE(ppi->m_pdsBuffer);
 
-   ppi->m_width = ppi->m_originalWidth = tex->width();
-   ppi->m_height = ppi->m_originalHeight = tex->height();
+   ppi->m_width = tex->width();
+   ppi->m_height = tex->height();
    ppi->m_pdsBuffer = tex;
 
    lstrcpy(ppi->m_szPath, filename);
