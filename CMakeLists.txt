@@ -188,7 +188,6 @@ set(HEADERS
   dragpoint.h
   eventproxy.h
   extern.h
-  exvector.h
   flipper.h
   freeimage.h
   gate.h

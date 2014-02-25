@@ -65,7 +65,6 @@ class PinBinary;
 
 #include "variant.h"
 #include "vector.h"
-#include "exvector.h"
 #include "vectorsort.h"
 #include "VBATest.h"
 #include "OLEAUTO.h"

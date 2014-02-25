@@ -31,8 +31,8 @@ Pin3D::~Pin3D()
 
 	SAFE_RELEASE(m_pddsStaticZ);
 
-	for (int i=0; i<m_xvShadowMap.AbsoluteSize(); ++i)
-		delete (BaseTexture*)m_xvShadowMap.AbsoluteElementAt(i);
+    for (std::map<int,MemTexture*>::iterator it = m_xvShadowMap.begin(); it != m_xvShadowMap.end(); ++it)
+        delete it->second;
 
    delete ballShadowTexture;
    ballTexture.FreeStuff();
@@ -875,7 +875,7 @@ BaseTexture* Pin3D::CreateShadow(const float z)
 	delete psur;
 
 	BaseTexture* pddsProjectTexture = new MemTexture(shadwidth, shadheight);
-	m_xvShadowMap.AddElement(pddsProjectTexture, (int)z);
+	m_xvShadowMap[(int)z] = pddsProjectTexture;
 
 	SelectObject(hdc2, hbmOld);
 	DeleteDC(hdc2);
@@ -908,7 +908,7 @@ void Pin3D::SetBaseTexture(DWORD texUnit, BaseTexture* pddsTexture)
 
 void Pin3D::EnableLightMap(const float z)
 {
-    BaseTexture* pdds = (BaseTexture*)m_xvShadowMap.ElementAt((int)z);
+    BaseTexture* pdds = m_xvShadowMap[(int)z];
     if (!pdds)
         pdds = CreateShadow(z);
     SetBaseTexture(eLightProject1, pdds);

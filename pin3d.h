@@ -244,11 +244,6 @@ public:
 	Texture lightTexture[2]; // 0=bumper, 1=lights
 	Texture m_pddsLightWhite;
 
-   VertexBuffer *backgroundVBuffer;
-    VertexBuffer *tableVBuffer;
-    IndexBuffer *tableIBuffer;
-	ExVector<void> m_xvShadowMap;
-
     PinProjection m_proj;
 
 	RECT m_rcScreen;
@@ -271,4 +266,11 @@ public:
     //bool fullscreen;
 	float m_maxSeparation, m_ZPD;
     ViewPort vp;
+
+private:
+    VertexBuffer *backgroundVBuffer;
+    VertexBuffer *tableVBuffer;
+    IndexBuffer *tableIBuffer;
+    std::map<int, MemTexture*> m_xvShadowMap;
+
 };
