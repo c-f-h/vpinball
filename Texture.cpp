@@ -4,6 +4,7 @@
 
 RenderDevice *Texture::renderDevice=0;
 
+#define MIN_TEXTURE_SIZE 8
 
 MemTexture* MemTexture::CreateFromFreeImage(FIBITMAP* dib)
 {
@@ -18,10 +19,11 @@ MemTexture* MemTexture::CreateFromFreeImage(FIBITMAP* dib)
     const int pictureWidth = FreeImage_GetWidth(dib);
     const int pictureHeight = FreeImage_GetHeight(dib);
     FIBITMAP* dibResized = dib;
+
     if ((pictureHeight > maxTexDim) || (pictureWidth > maxTexDim))
     {
-        int newWidth = min(pictureWidth, maxTexDim);
-        int newHeight = min(pictureHeight, maxTexDim);
+        int newWidth = max(min(pictureWidth, maxTexDim), MIN_TEXTURE_SIZE);
+        int newHeight = max(min(pictureHeight, maxTexDim), MIN_TEXTURE_SIZE);
         /*
          * The following code tries to maintain the aspect ratio while resizing. This is
          * however not really necessary and makes playfield textures more blurry than they
@@ -32,6 +34,13 @@ MemTexture* MemTexture::CreateFromFreeImage(FIBITMAP* dib)
         //else
         //    newWidth = min(pictureWidth * newHeight / pictureHeight, maxTexDim);
         dibResized = FreeImage_Rescale(dib, newWidth, newHeight, FILTER_BILINEAR);
+    }
+    else if (pictureWidth < MIN_TEXTURE_SIZE || pictureHeight < MIN_TEXTURE_SIZE)
+    {
+        // some drivers seem to choke on small (1x1) textures, so be safe by scaling them up
+        int newWidth = max(pictureWidth, MIN_TEXTURE_SIZE);
+        int newHeight = max(pictureHeight, MIN_TEXTURE_SIZE);
+        dibResized = FreeImage_Rescale(dib, newWidth, newHeight, FILTER_BOX);
     }
 
     FIBITMAP* dib32 = FreeImage_ConvertTo32Bits(dibResized);
