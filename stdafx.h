@@ -15,6 +15,9 @@
 //#define ULTRAPIN       // define to enable deprecated UltraPin functionality
 //#define DONGLE_SUPPORT // define to enable deprecated UltraPin dongle (Remember to run hdd32.exe (HASP dongle driver setup) on host)
 
+#define EDITOR_BG_WIDTH 1000
+#define EDITOR_BG_HEIGHT 750
+
 #define GRAVITYCONST 0.86543f
 
 // Collisions:
@@ -73,8 +76,8 @@
 #define MAX_REELS           32
 
 #define LIGHTSEQGRIDSCALE	20
-#define	LIGHTSEQGRIDWIDTH	1000/LIGHTSEQGRIDSCALE
-#define	LIGHTSEQGRIDHEIGHT	2000/LIGHTSEQGRIDSCALE
+#define	LIGHTSEQGRIDWIDTH	EDITOR_BG_WIDTH/LIGHTSEQGRIDSCALE
+#define	LIGHTSEQGRIDHEIGHT	(2*EDITOR_BG_WIDTH)/LIGHTSEQGRIDSCALE
 
 #define LIGHTSEQQUEUESIZE	100
 

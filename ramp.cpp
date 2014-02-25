@@ -692,8 +692,6 @@ void Ramp::GetTimers(Vector<HitTimer> * const pvht)
 
 void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
 {
-   //!! Somehow reduce number of update elements that originate from this?
-
    int cvertex;
    float *rgheight1;
    Vertex2D * const rgvLocal = GetRampVertex(cvertex, &rgheight1, NULL, NULL);

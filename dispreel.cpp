@@ -597,14 +597,14 @@ void DispReel::RenderSetup(const RenderDevice* _pd3dDevice)
     //    pd3dDevice->CreateVertexBuffer( 4, 0, MY_D3DTRANSFORMED_NOTEX2_VERTEX, &vertexBuffer );
 
     // get the render sizes of the objects (reels and frame)
-    m_renderwidth  = max(0.0f, (m_d.m_width / 1000.0f) * ppin3d->m_dwRenderWidth);
-    m_renderheight = max(0.0f, (m_d.m_height / 750.0f) * ppin3d->m_dwRenderHeight); //!!
-    const float m_renderspacingx = max(0.0f, (m_d.m_reelspacing / 1000.0f) * ppin3d->m_dwRenderWidth);
-    const float m_renderspacingy = max(0.0f, (m_d.m_reelspacing / 750.0f)  * ppin3d->m_dwRenderHeight);
+    m_renderwidth  = max(0.0f, (m_d.m_width / (float)EDITOR_BG_WIDTH) * ppin3d->m_dwRenderWidth);
+    m_renderheight = max(0.0f, (m_d.m_height / (float)EDITOR_BG_HEIGHT) * ppin3d->m_dwRenderHeight);
+    const float m_renderspacingx = max(0.0f, (m_d.m_reelspacing / (float)EDITOR_BG_WIDTH) * ppin3d->m_dwRenderWidth);
+    const float m_renderspacingy = max(0.0f, (m_d.m_reelspacing / (float)EDITOR_BG_HEIGHT)  * ppin3d->m_dwRenderHeight);
 
     // set up all the reel positions within the object frame
-    const float x0 = (m_d.m_v1.x / 1000.0f) * ppin3d->m_dwRenderWidth;
-    const float y0 = (m_d.m_v1.y / 750.0f) * ppin3d->m_dwRenderHeight;
+    const float x0 = (m_d.m_v1.x / (float)EDITOR_BG_WIDTH) * ppin3d->m_dwRenderWidth;
+    const float y0 = (m_d.m_v1.y / (float)EDITOR_BG_HEIGHT) * ppin3d->m_dwRenderHeight;
     float x1 = x0 + m_renderspacingx;
 
     for (int i=0; i<m_d.m_reelcount; ++i)
@@ -752,14 +752,14 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
 	// get the render sizes of the objects (reels and frame)
-    m_renderwidth  = max(0, (int)((m_d.m_width * (float)(1.0/1000.0)) * ppin3d->m_dwRenderWidth));
-    m_renderheight = max(0, (int)((m_d.m_height * (float)(1.0/750.0)) * ppin3d->m_dwRenderHeight));
-    const int m_renderspacingx = max(0, (int)((m_d.m_reelspacing * (float)(1.0/1000.0)) * ppin3d->m_dwRenderWidth));
-    const int m_renderspacingy = max(0, (int)((m_d.m_reelspacing * (float)(1.0/750.0))  * ppin3d->m_dwRenderHeight));
+    m_renderwidth  = max(0, (int)((m_d.m_width * (float)(1.0/EDITOR_BG_WIDTH)) * ppin3d->m_dwRenderWidth));
+    m_renderheight = max(0, (int)((m_d.m_height * (float)(1.0/EDITOR_BG_HEIGHT)) * ppin3d->m_dwRenderHeight));
+    const int m_renderspacingx = max(0, (int)((m_d.m_reelspacing * (float)(1.0/EDITOR_BG_WIDTH)) * ppin3d->m_dwRenderWidth));
+    const int m_renderspacingy = max(0, (int)((m_d.m_reelspacing * (float)(1.0/EDITOR_BG_HEIGHT))  * ppin3d->m_dwRenderHeight));
 
     // get the size of the object frame (size of entire reel set and border)
-	m_pobjframe->rc.left = (int)((m_d.m_v1.x * (float)(1.0/1000.0)) * ppin3d->m_dwRenderWidth);
-	m_pobjframe->rc.top = (int)((m_d.m_v1.y * (float)(1.0/750.0)) * ppin3d->m_dwRenderHeight);
+	m_pobjframe->rc.left = (int)((m_d.m_v1.x * (float)(1.0/EDITOR_BG_WIDTH)) * ppin3d->m_dwRenderWidth);
+	m_pobjframe->rc.top = (int)((m_d.m_v1.y * (float)(1.0/EDITOR_BG_HEIGHT)) * ppin3d->m_dwRenderHeight);
 	// i cant use v2 as it really doesn't scale properly.
 	m_pobjframe->rc.right = m_pobjframe->rc.left + m_d.m_reelcount * (m_renderwidth+m_renderspacingx) + m_renderspacingx;
 	m_pobjframe->rc.bottom = m_pobjframe->rc.top + m_renderheight + (2 * m_renderspacingy);
@@ -799,7 +799,7 @@ void DispReel::RenderMovers(const RenderDevice* _pd3dDevice)
         // scale the font (either up or down) to suit the screen resolution
         CY size;
         m_pIFontPlay->get_Size(&size);
-        size.int64 = size.int64 / 1000 * ppin3d->m_dwRenderWidth;
+        size.int64 = size.int64 / EDITOR_BG_WIDTH * ppin3d->m_dwRenderWidth;
         m_pIFontPlay->put_Size(size);
 
         HFONT   hFont;

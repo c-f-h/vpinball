@@ -1140,8 +1140,8 @@ void PinTable::Init(VPinball *pvp)
 
    m_left = 0;
    m_top = 0;
-   m_right = 1000;
-   m_bottom = 2000;
+   m_right = EDITOR_BG_WIDTH;
+   m_bottom = EDITOR_BG_WIDTH*2;
 
    m_scalex = 1.0f;
    m_scaley = 1.0f;
@@ -1425,7 +1425,7 @@ void PinTable::Render(Sur * const psur)
       psur->SetObject(NULL);
       psur->SetFillColor(-1);
       psur->SetBorderColor(RGB(0,0,0), false, 1);
-      psur->Rectangle(0,0,1000,750);
+      psur->Rectangle(0,0,EDITOR_BG_WIDTH,EDITOR_BG_HEIGHT);
    }
 
    if (m_fDragging)
@@ -1469,8 +1469,8 @@ void PinTable::Render3DProjection(Sur * const psur)
    PinProjection pinproj;
    pinproj.m_rcviewport.left = 0;
    pinproj.m_rcviewport.top = 0;
-   pinproj.m_rcviewport.right = 1000;
-   pinproj.m_rcviewport.bottom = 750;
+   pinproj.m_rcviewport.right = EDITOR_BG_WIDTH;
+   pinproj.m_rcviewport.bottom = EDITOR_BG_HEIGHT;
 
    const GPINFLOAT aspect = 4.0/3.0;
 
@@ -4107,8 +4107,8 @@ void PinTable::GetViewRect(FRect *pfrect)
    {
       pfrect->left = 0;
       pfrect->top = 0;
-      pfrect->right = 1000;
-      pfrect->bottom = 750;
+      pfrect->right = EDITOR_BG_WIDTH;
+      pfrect->bottom = EDITOR_BG_HEIGHT;
    }
 }
 
@@ -4917,8 +4917,8 @@ void PinTable::ExportBlueprint()
    float tableheight, tablewidth;
    if (g_pvp->m_fBackglassView)
    {
-      tablewidth = 1000.0f;
-      tableheight = 750.0f;
+      tablewidth = (float)EDITOR_BG_WIDTH;
+      tableheight = (float)EDITOR_BG_HEIGHT;
    }
    else
    {

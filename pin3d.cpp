@@ -402,18 +402,18 @@ void Pin3D::DrawBackground()
 		rgv3D[0].tu = 0;
 		rgv3D[0].tv = 0;
 
-		rgv3D[1].x = 1000.0f;
+		rgv3D[1].x = (float)EDITOR_BG_WIDTH;
 		rgv3D[1].y = 0;
 		rgv3D[1].tu = 1.0f;
 		rgv3D[1].tv = 0;
 
-		rgv3D[2].x = 1000.0f;
-		rgv3D[2].y = 750.0f;
+		rgv3D[2].x = (float)EDITOR_BG_WIDTH;
+		rgv3D[2].y = (float)EDITOR_BG_HEIGHT;
 		rgv3D[2].tu = 1.0f;
 		rgv3D[2].tv = 1.0f;
 
 		rgv3D[3].x = 0;
-		rgv3D[3].y = 750.0f;
+		rgv3D[3].y = (float)EDITOR_BG_HEIGHT;
 		rgv3D[3].tu = 0;
 		rgv3D[3].tv = 1.0f;
 

@@ -379,7 +379,7 @@ void Textbox::RenderText()
 				break;
 			}
 
-		int border = (4 * ppin3d->m_dwRenderWidth) / 1000;
+		int border = (4 * ppin3d->m_dwRenderWidth) / EDITOR_BG_WIDTH;
 		RECT rcOut;
 
 		rcOut.left = border;

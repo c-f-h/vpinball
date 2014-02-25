@@ -79,7 +79,7 @@ public:
 template <class VtxType>
 void SetHUDVertices(VtxType * const rgv, const int count)
 	{
-	const float mult = (float)g_pplayer->m_pin3d.m_dwRenderWidth * (float)(1.0/1000.0);
+	const float mult = (float)g_pplayer->m_pin3d.m_dwRenderWidth * (float)(1.0/EDITOR_BG_WIDTH);
 	const float ymult = mult / (float)g_pplayer->m_pixelaspectratio;
 
 	for (int i=0; i<count; ++i)

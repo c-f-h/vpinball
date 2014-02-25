@@ -46,13 +46,13 @@ void LightSeq::SetDefaults(bool fromMouseClick)
 	if ((hr == S_OK) && fromMouseClick)
 		m_d.m_vCenter.x = fTmp;
 	else
-		m_d.m_vCenter.x = 1000/2;
+		m_d.m_vCenter.x = EDITOR_BG_WIDTH/2;
 
 	hr = GetRegStringAsFloat("DefaultProps\\LightSequence","CenterY", &fTmp);
 	if ((hr == S_OK) && fromMouseClick)
 		m_d.m_vCenter.y = fTmp;
 	else
-		m_d.m_vCenter.y = 2000/2;
+		m_d.m_vCenter.y = (2*EDITOR_BG_WIDTH)/2;
 	
 	hr = GetRegInt("DefaultProps\\LightSequence","TimerEnabled", &iTmp);
 	if ((hr == S_OK) && fromMouseClick)
@@ -350,7 +350,7 @@ void LightSeq::RenderSetup(const RenderDevice* _pd3dDevice)
 			// scale down to suit the size of the light sequence grid
 			const unsigned int ix = (int)(x * (float)(1.0/LIGHTSEQGRIDSCALE));
 			const unsigned int iy = (int)(y * (float)(1.0/LIGHTSEQGRIDSCALE));
-			// if on the playfield (1000 by 2000)
+			// if on the playfield
 			if ( /*(ix >= 0) &&*/ (ix < (unsigned int)m_lightSeqGridWidth) && //>=0 handled by unsigned int
 				 /*(iy >= 0) &&*/ (iy < (unsigned int)m_lightSeqGridHeight) ) //>=0 handled by unsigned int
 			{
@@ -598,7 +598,7 @@ STDMETHODIMP LightSeq::get_CenterX(float *pVal)
 
 STDMETHODIMP LightSeq::put_CenterX(float newVal)
 {
-	if ((newVal < 0) || (newVal >= 1000.0f))
+	if ((newVal < 0) || (newVal >= (float)EDITOR_BG_WIDTH))
 		return E_FAIL;
 	STARTUNDO
 	m_d.m_vCenter.x = newVal;
@@ -619,7 +619,7 @@ STDMETHODIMP LightSeq::get_CenterY(float *pVal)
 
 STDMETHODIMP LightSeq::put_CenterY(float newVal)
 {
-	if ((newVal < 0) || (newVal >= 2000.0f))
+	if ((newVal < 0) || (newVal >= (float)(2*EDITOR_BG_WIDTH)))
 		return E_FAIL;
 
 	STARTUNDO
