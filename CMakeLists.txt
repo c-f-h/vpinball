@@ -133,7 +133,6 @@ set(SOURCES
   paintsur.cpp
   pin3d.cpp
   pinbinary.cpp
-  pinimage.cpp
   pininput.cpp
   pinsound.cpp
   pintable.cpp
@@ -214,7 +213,6 @@ set(HEADERS
   paintsur.h
   pin3d.h
   pinbinary.h
-  pinimage.h
   pininput.h
   pinsound.h
   pintable.h
