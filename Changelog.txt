@@ -6,7 +6,7 @@ VP 9.9.0 Changelog
 
 - enable NVIDIA Optimus cards by default
 
-- texture size limit/downscale now respects aspect ratio
+- texture size limit/downscale now respects aspect ratio (currently disabled)
 - new video setting: Force anisotropic texture filtering. This results in higher quality results, but can affect performance on lower end cards.
 
 - stereo 3D AA is now basically for free and can always be enabled if stereo 3D output is used
@@ -14,6 +14,7 @@ VP 9.9.0 Changelog
 - FXAA now has two modes: Fast and Quality
 
 - region updates and optimizations settings are not needed anymore due to the new graphics pipeline
+- same goes for alternate render
 
 VP 9.2.1 Changelog
 ------------------------

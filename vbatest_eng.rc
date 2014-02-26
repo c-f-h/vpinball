@@ -275,15 +275,11 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,54,91,10
     CONTROL         "Ball Trails/Motion Blur",IDC_GLOBAL_TRAIL_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,66,91,10
     CONTROL         "Force Anisotropic Texture Filtering (quality)",IDC_FORCE_ANISO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,90,155,10
-    LTEXT           "Adaptive VSync (avoid tearing)",IDC_STATIC,162,154,150,10
-    CONTROL         "Reorder Playfield Objects (for ATI/AMD gfx)",216,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,162,167,155,10
+    LTEXT           "Adaptive VSync (avoid tearing)",IDC_STATIC,162,164,150,10
     CONTROL         "512",IDC_Tex512,"Button",BS_AUTORADIOBUTTON | WS_GROUP,166,192,28,10
     CONTROL         "1024",IDC_Tex1024,"Button",BS_AUTORADIOBUTTON,166,202,32,10
     CONTROL         "2048",IDC_Tex2048,"Button",BS_AUTORADIOBUTTON,166,212,32,10
     CONTROL         "Unlimited",IDC_TexUnlimited,"Button",BS_AUTORADIOBUTTON,166,222,45,10
-    LTEXT           "Restart Visual Pinball.",IDC_STATIC,244,195,72,8
-    LTEXT           "Only works for Images",IDC_STATIC,244,204,70,8
-    LTEXT           "that are not BMP.",IDC_STATIC,244,213,56,8
     CONTROL         "",IDC_ARASlider,"msctls_trackbar32",TBS_AUTOTICKS | TBS_TOP | WS_TABSTOP,156,247,183,20
     CONTROL         "Enable 3D Stereo",IDC_3D_STEREO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,266,18,70,10
     CONTROL         "Antialias 3D",IDC_3D_STEREO_AA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,266,31,70,10
@@ -291,12 +287,12 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,218,280,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,277,280,50,14
     LISTBOX         IDC_SIZELIST,14,42,129,122,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_ADAPTIVE_VSYNC,262,152,20,12,ES_RIGHT | ES_AUTOHSCROLL
-    LTEXT           "Hz  (1=auto)",IDC_STATIC,283,154,45,10
+    EDITTEXT        IDC_ADAPTIVE_VSYNC,262,162,20,12,ES_RIGHT | ES_AUTOHSCROLL
+    LTEXT           "Hz  (1=auto)",IDC_STATIC,283,164,45,10
     GROUPBOX        "Video Mode",IDC_STATIC,7,7,142,263
     GROUPBOX        "Ball Rendering",IDC_STATIC,154,7,103,72
     GROUPBOX        "3D Stereo Output",IDC_STATIC,259,7,85,72
-    GROUPBOX        "Performance and Troubleshooting",IDC_STATIC,154,141,190,128
+    GROUPBOX        "Performance and Troubleshooting",IDC_STATIC,154,151,190,118
     GROUPBOX        "Max Texture Dimension (for low-end gfx boards)",IDC_STATIC,159,181,180,54
     LTEXT           "Alpha Ramp Accuracy (decrease = performance)",IDC_STATIC,162,238,156,8
     GROUPBOX        "Ball aspect ratio for stretched Tables",IDC_STATIC,12,200,133,62
