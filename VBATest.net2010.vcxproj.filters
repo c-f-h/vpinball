@@ -123,9 +123,6 @@
     <ClCompile Include="pinbinary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pinimage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="pininput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -297,9 +294,6 @@
     <ClInclude Include="extern.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="exvector.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Media\fileio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -382,9 +376,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pinbinary.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="pinimage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pininput.h">

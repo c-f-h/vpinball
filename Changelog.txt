@@ -16,6 +16,8 @@ VP 9.9.0 Changelog
 - region updates and optimizations settings are not needed anymore due to the new graphics pipeline
 - same goes for alternate render
 
+- technical note: the minimum version to compile VP is now visual studio 2008 (incl. feature pack)
+
 VP 9.2.1 Changelog
 ------------------------
 - this is the final release to be based on DirectX 7
