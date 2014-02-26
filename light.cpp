@@ -616,7 +616,7 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     if (!m_fBackglass)
     {
-        float depthbias = -5e-4f;
+        float depthbias = -BASEDEPTHBIAS;
         pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
     }
 
@@ -729,7 +729,7 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
 
     if (!m_fBackglass)
     {
-        float depthbias = -5e-4f;
+        float depthbias = -BASEDEPTHBIAS;
         pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
     }
 

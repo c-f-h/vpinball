@@ -18,6 +18,8 @@
 #define EDITOR_BG_WIDTH 1000
 #define EDITOR_BG_HEIGHT 750
 
+#define BASEDEPTHBIAS 5e-5f
+
 #define GRAVITYCONST 0.86543f
 
 // Collisions:
