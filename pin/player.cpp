@@ -865,14 +865,6 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	SendMessage(hwndProgress, PBM_SETPOS, 60, 0);
 	SetWindowText(hwndProgressName, "Rendering Table...");
 
-    //----------------------------------------------------------------------------------
-   //#define IS_ATI(DDDEVICEID) (DDDEVICEID.dwVendorId==0x1002)  //BDS
-    //if (m_pin3d.m_pd3dDevice->dwVendorID==0x1002)	//ATI
-	if (g_pvp->m_fAlternateRender)
-		{
-		ReOrder();
-		}
-
 	//----------------------------------------------------------------------------------
     Ball::ballsInUse=0;
 
@@ -959,83 +951,6 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	return S_OK;
 }
 
-void Player::ReOrder() // Reorder playfield objects (for AMD/ATI configurations)
-{
-	bool dirtydraw = false;
-
-	for (int i=0;i<m_ptable->m_vedit.Size();i++) //fix render walls
-		{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemSurface)
-			{
-			const Surface * const psurface = ((Surface *)m_ptable->m_vedit.ElementAt(i));
-			if (psurface->m_d.m_fDroppable)
-				{
-				IEditable * const piedit = m_ptable->m_vedit.ElementAt(i);
-				m_ptable->m_vedit.RemoveElementAt(i);
-				m_ptable->m_vedit.InsertElementAt(piedit,0);
-				dirtydraw = true;
-				}
-			}
-		}
-
-	for (int i=0;i<m_ptable->m_vedit.Size();i++) //fix render bumpers
-		{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemBumper)
-			{
-			IEditable * const piedit = m_ptable->m_vedit.ElementAt(i);
-			m_ptable->m_vedit.RemoveElementAt(i);
-			m_ptable->m_vedit.InsertElementAt(piedit,0);
-			dirtydraw = true;
-			}
-		}
-
-	for (int i=0;i<m_ptable->m_vedit.Size();i++) //fix render gates
-		{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemGate)
-			{
-			IEditable * const piedit = m_ptable->m_vedit.ElementAt(i);
-			m_ptable->m_vedit.RemoveElementAt(i);
-			m_ptable->m_vedit.InsertElementAt(piedit,0);
-			dirtydraw = true;
-			}
-		}
-
-	for (int i=0;i<m_ptable->m_vedit.Size();i++) //fix render spinners
-		{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemSpinner)
-			{
-			IEditable * const piedit = m_ptable->m_vedit.ElementAt(i);
-			m_ptable->m_vedit.RemoveElementAt(i);
-			m_ptable->m_vedit.InsertElementAt(piedit,0);
-			dirtydraw = true;
-			}
-		}
-
-	for (int i=0;i<m_ptable->m_vedit.Size();i++) //fix render flippers
-		{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemFlipper)
-			{
-			IEditable * const piedit = m_ptable->m_vedit.ElementAt(i);
-			m_ptable->m_vedit.RemoveElementAt(i);
-			m_ptable->m_vedit.InsertElementAt(piedit,0);
-			dirtydraw = true;
-			}
-		}
-
-	for (int i=0;i<m_ptable->m_vedit.Size();i++) //fix render lights
-		{
-		if (m_ptable->m_vedit.ElementAt(i)->GetItemType() == eItemLight)
-			{
-			IEditable * const piedit = m_ptable->m_vedit.ElementAt(i);
-			m_ptable->m_vedit.RemoveElementAt(i);
-			m_ptable->m_vedit.InsertElementAt(piedit,0);
-			dirtydraw = true;
-			}
-		}
-
-	if(dirtydraw)
-		m_ptable->SetDirtyDraw();
-}
 
 void Player::InitStatic(HWND hwndProgress)
 {

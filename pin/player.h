@@ -43,7 +43,6 @@ public:
 
 	virtual IEditable *GetIEditable() { return (IEditable*)this; }
 
-	void ReOrder();
 	void InitStatic(HWND hwndProgress);
 
     void UpdatePhysics();

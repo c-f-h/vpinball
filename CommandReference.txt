@@ -60,7 +60,6 @@ BallBackDecal(string) - image of the ball back decal
 *RenderShadows(bool) - default=true
 *RenderEMReels(bool) - default=true						
 *RenderDecals(bool) - default=true
-*AlternateRender(bool) - reorder playfield objects (for ATI/AMD gfx) default=false
 *TableAdaptiveVSync(int) - sets adaptive vsync option for this table (-1=use global setting, 0=off, 1=automatic, any other number is refresh rate in Hz)
 *BallReflection - enable ball reflection on table. depending on the global video setting 'Reflect Ball on Playfield' this is on or off. Or it is defined specific for this table.
 *ReflectionStrength(int) - defines the reflection strength of the ball reflection (0-255)

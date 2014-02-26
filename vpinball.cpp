@@ -437,7 +437,7 @@ void VPinball::InitTools()
 ///<summary>
 ///Initializes Default Values of many variables (from Registry if keys are present). 
 ///<para>Registry Values under HKEY-CURRENT-USER/Software/Visual Pinball</para>
-///<para>Deadzone, AlternateRender, ShowDragPoints, DrawLightCenters,</para>
+///<para>Deadzone, ShowDragPoints, DrawLightCenters,</para>
 ///<para>AutoSaveOn, AutoSaveTime, SecurityLevel</para>
 ///<para>Gets the last loaded Tables (List under File-Menu)</para>
 ///</summary>
@@ -449,10 +449,6 @@ void VPinball::InitRegValues()
    if (hr != S_OK)
       m_DeadZ = 0; // default value
    SetRegValue("Player", "DeadZone", REG_DWORD, &m_DeadZ, 4);
-
-   hr = GetRegInt("Player", "AlternateRender", &m_fAlternateRender);
-   if (hr != S_OK)
-      g_pvp->m_fAlternateRender=0; // default value
 
    hr = GetRegInt("Editor", "ShowDragPoints", &m_fAlwaysDrawDragPoints);
    if (hr != S_OK)
@@ -3681,13 +3677,6 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             forceAniso = fFalse;
          SendMessage(hwndCheck, BM_SETCHECK, forceAniso ? BST_CHECKED : BST_UNCHECKED, 0);
 
-         hwndCheck = GetDlgItem(hwndDlg, 216); //AlternateRender
-         int altrender;
-         hr = GetRegInt("Player", "AlternateRender", &altrender);
-         if (hr != S_OK)
-            altrender = fFalse;
-         SendMessage(hwndCheck, BM_SETCHECK, altrender ? BST_CHECKED : BST_UNCHECKED, 0);
-
          int widthcur;
          hr = GetRegInt("Player", "Width", &widthcur);
          if (hr != S_OK)
@@ -3858,11 +3847,6 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
                   HWND hwndForceAniso = GetDlgItem(hwndDlg, IDC_FORCE_ANISO);
                   int forceAniso = SendMessage(hwndForceAniso, BM_GETCHECK, 0, 0);
                   SetRegValue("Player", "ForceAnisotropicFiltering", REG_DWORD, &forceAniso, 4);
-
-				  HWND hwndARend = GetDlgItem(hwndDlg, 216);
-                  int altrend = SendMessage(hwndARend, BM_GETCHECK, 0, 0);
-                  SetRegValue("Player", "AlternateRender", REG_DWORD, &altrend, 4);
-                  g_pvp->m_fAlternateRender = (altrend != 0);
 
                   HWND hwndAraSlider = GetDlgItem(hwndDlg, IDC_ARASlider);
                   int alphaRampsAccuracy = SendMessage(hwndAraSlider, TBM_GETPOS, 0, 0);
