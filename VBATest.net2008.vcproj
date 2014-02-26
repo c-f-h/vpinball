@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="VBATest"
 	ProjectGUID="{11B81620-ADF1-46FB-98B0-AF83AB34CAAC}"
 	RootNamespace="VBATest"
@@ -3613,6 +3613,10 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\hash.cpp"
+				>
 			</File>
 			<File
 				RelativePath=".\hid.cpp"
@@ -9444,6 +9448,10 @@
 			</File>
 			<File
 				RelativePath="gate.h"
+				>
+			</File>
+			<File
+				RelativePath=".\hash.h"
 				>
 			</File>
 			<File
