@@ -801,18 +801,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 			ph->GetTimers(&m_vht);
 
-            // add to appropriate vectors
+            // build list of hitables
             m_vhitables.push_back(ph);
-
-            // sort into proper categories
-            if (pe->m_fBackglass)
-                m_vHitBackglass.push_back(ph);      // VP9COMPAT: fixes Homer head on TSPP, remove in VP10
-            else if (pe->GetItemType() == eItemLight)
-                m_vLights.push_back(ph);            // VP9COMPAT: special treatment for lights
-            else if (ph->IsTransparent())
-                m_vHitTrans.push_back(ph);
-            else
-                m_vHitNonTrans.push_back(ph);
 		}
 	}
 
@@ -871,6 +861,24 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	// Pre-render all non-changing elements such as 
 	// static walls, rails, backdrops, etc.
 	InitStatic(hwndProgress);
+
+	for (int i=0; i < m_ptable->m_vedit.Size(); ++i)
+	{
+		IEditable * const pe = m_ptable->m_vedit.ElementAt(i);
+		Hitable * const ph = pe->GetIHitable();
+		if (ph)
+		{
+            // sort into proper categories
+            if (pe->m_fBackglass)
+                m_vHitBackglass.push_back(ph);      // VP9COMPAT: fixes Homer head on TSPP, remove in VP10
+            else if (pe->GetItemType() == eItemLight)
+                m_vLights.push_back(ph);            // VP9COMPAT: special treatment for lights
+            else if (ph->IsTransparent())
+                m_vHitTrans.push_back(ph);
+            else
+                m_vHitNonTrans.push_back(ph);
+		}
+	}
 
     g_viewDir = m_pin3d.m_viewVec;
     std::sort( m_vHitTrans.begin(), m_vHitTrans.end(), CompareHitableDepth );

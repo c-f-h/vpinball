@@ -1463,6 +1463,17 @@ void Primitive::ExportMesh()
    SaveOBJ( ofn.lpstrFile, this );
 }
 
+bool Primitive::IsTransparent()
+{
+    Texture *tex = m_ptable->GetImage(m_d.m_szImage);
+    return tex && tex->m_fTransparent;
+}
+
+float Primitive::GetDepth(const Vertex3Ds& viewDir)
+{
+    return m_d.m_vPosition.Dot( viewDir );
+}
+
 STDMETHODIMP Primitive::get_Sides(int *pVal)
 {
    *pVal = m_d.m_Sides;

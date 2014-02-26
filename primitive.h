@@ -309,6 +309,9 @@ public:
    virtual bool LoadMesh();
    virtual void ExportMesh();
 
+   virtual bool IsTransparent();
+   virtual float GetDepth(const Vertex3Ds& viewDir);
+
    PrimitiveData m_d;
    int numVertices;
    Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
