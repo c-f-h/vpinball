@@ -880,7 +880,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 		}
 	}
 
-    g_viewDir = m_pin3d.m_viewVec;
+    //g_viewDir = m_pin3d.m_viewVec;
+    g_viewDir = Vertex3Ds(0, 0, -1.0f);
     std::sort( m_vHitTrans.begin(), m_vHitTrans.end(), CompareHitableDepth );
 
 	// Direct all renders to the back buffer.
