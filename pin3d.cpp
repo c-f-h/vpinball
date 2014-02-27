@@ -592,8 +592,13 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	m_proj.Multiply(matTrans);
 
     m_proj.Scale( m_scalex != 0.0f ? m_scalex : 1.0f, m_scaley != 0.0f ? m_scaley : 1.0f, 1.0f );
+#ifdef VP10
+	m_proj.Translate(m_xlatex-m_proj.m_vertexcamera.x, m_xlatey-m_proj.m_vertexcamera.y, -m_proj.m_vertexcamera.z);
+	m_proj.Rotate( 0, 0, m_rotation );
+#else
 	m_proj.Rotate( 0, 0, m_rotation );
 	m_proj.Translate(m_xlatex-m_proj.m_vertexcamera.x, m_xlatey-m_proj.m_vertexcamera.y, -m_proj.m_vertexcamera.z);
+#endif
 	m_proj.Rotate( m_inclination, 0, 0 );
 
 	m_pd3dDevice->SetTransform(TRANSFORMSTATE_PROJECTION, &m_proj.m_matProj);
@@ -1139,11 +1144,29 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 	GPINFLOAT maxxintercept = -DBL_MAX;
 	GPINFLOAT minxintercept = DBL_MAX;
 
-	m_rznear = 0;
-	m_rzfar = 0;
+	m_rznear = FLT_MAX;
+	m_rzfar = -FLT_MAX;
 
 	for (int i=0; i<cvert; ++i)
 	{
+#ifdef VP10
+		GPINFLOAT vertexTx = (*pvvertex3D->ElementAt(i)).x;
+		GPINFLOAT vertexTy = (*pvvertex3D->ElementAt(i)).y;
+		GPINFLOAT vertexTz = (*pvvertex3D->ElementAt(i)).z;
+		GPINFLOAT temp;
+
+		// Rotate vertex about x axis according to incoming inclination
+		temp = vertexTy;
+		vertexTy = rinccos*temp - rincsin*vertexTz;
+		vertexTz = rincsin*temp + rinccos*vertexTz;
+
+		// Rotate vertex about z axis according to incoming rotation
+		temp = vertexTx;
+		vertexTx =  rrotcos*temp - rrotsin*vertexTy;
+		vertexTy =  rrotsin*temp + rrotcos*vertexTy;
+
+        // TODO: handle layback if possible
+#else
 		GPINFLOAT vertexTy = (*pvvertex3D->ElementAt(i)).y;
 
 		// Rotate vertex about y axis according to incoming rotation
@@ -1155,6 +1178,7 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 		const GPINFLOAT temp2 = vertexTy;
 		vertexTy = rinccos*temp2 - rincsin*vertexTz;
 		vertexTz = rincsin*temp2 + rinccos*vertexTz;
+#endif
 
 		// Extend z-range if necessary
 		m_rznear = min(m_rznear, -vertexTz);
@@ -1178,8 +1202,7 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 
 	const GPINFLOAT ydist = (maxyintercept - minyintercept) / (slopey*2.0);
 	const GPINFLOAT xdist = (maxxintercept - minxintercept) / (slopex*2.0);
-	m_vertexcamera.z = (float)(max(ydist,xdist));
-	m_vertexcamera.z += xlatez;
+	m_vertexcamera.z = (float)(max(ydist,xdist)) + xlatez;
 	m_vertexcamera.y = (float)((maxyintercept + minyintercept) * 0.5);
 	m_vertexcamera.x = (float)((maxxintercept + minxintercept) * 0.5);
 
@@ -1192,26 +1215,42 @@ void PinProjection::FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, co
 	m_rznear -= delta*0.15; // Allow for roundoff error (and tweak the setting too).
 	m_rzfar += delta*0.01;
 #else
-	m_rznear -= delta*0.01; // Allow for roundoff error
+	m_rznear -= delta*0.05; // Allow for roundoff error
 	m_rzfar += delta*0.01;
 #endif
 }
 
 void PinProjection::SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar)
 {
-	// From the Field Of View and far z clipping plane, determine the front clipping plane size
-	const GPINFLOAT yrange = rznear * tan(ANGTORAD(rFOV*0.5));
-	const GPINFLOAT xrange = yrange * raspect; //width/height
+    ZeroMemory(&m_matProj, sizeof(Matrix3D));
 
-	ZeroMemory(&m_matProj, sizeof(Matrix3D));
+#ifdef VP10
+    if (rFOV < 1.0)     // orthographic? -- disabled, not compatible with old tables
+    {
+        const GPINFLOAT yrange = EDITOR_BG_HEIGHT;
+        const GPINFLOAT xrange = yrange * raspect; //width/height
+        const GPINFLOAT zdist = rzfar - rznear;
 
-	const float Q = (float)(rzfar / ( rzfar - rznear ));
+        m_matProj._11 = (float)(1.0 / xrange);
+        m_matProj._22 = -(float)(1.0 / yrange);
+        m_matProj._33 = (float)(1.0 / zdist);
+        m_matProj._43 = (float)(-rznear / zdist);
+        m_matProj._44 = 1.0f;
+    }
+    else
+#endif
+    {
+        // From the Field Of View and far z clipping plane, determine the front clipping plane size
+        const GPINFLOAT yrange = tan(ANGTORAD(rFOV*0.5));
+        const GPINFLOAT xrange = yrange * raspect; //width/height
+        const GPINFLOAT Q = rzfar / ( rzfar - rznear );
 
-	m_matProj._11 = (float)(rznear / xrange);
-	m_matProj._22 = -(float)(rznear / yrange);
-	m_matProj._33 = Q;
-	m_matProj._34 = 1.0f;
-	m_matProj._43 = -Q*(float)rznear;
+        m_matProj._11 = (float)(1.0 / xrange);
+        m_matProj._22 = -(float)(1.0 / yrange);
+        m_matProj._33 = (float)Q;
+        m_matProj._43 = (float)(-Q*rznear);
+        m_matProj._34 = 1.0f;
+    }
 
     m_matView.SetIdentity();
 	m_matView._33 = -1.0f;

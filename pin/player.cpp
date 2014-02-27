@@ -754,7 +754,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_LightHackHeight[LIGHTHACK_FIREPOWER_P4] = 512;
 #endif
 
-	const float realFOV = (ptable->m_FOV < 0.01f) ? 0.01f : ptable->m_FOV; // Can't have a real zero FOV, but this will look the same
+	const float realFOV = (ptable->m_FOV < 1.0f) ? 1.0f : ptable->m_FOV; // Can't have a real zero FOV, but this will look the same
 
 	m_pin3d.InitLayout(ptable->m_left, ptable->m_top, ptable->m_right,
 					   ptable->m_bottom, ptable->m_inclination, realFOV,
@@ -1760,7 +1760,7 @@ void Player::UpdatePhysics()
 				pball->ringcounter_oldpos = 0;
 		}
 
-		slintf( "PT: %f %f %u %u %u\n", physics_diff_time, physics_to_graphic_diff_time, (U32)(m_curPhysicsFrameTime/1000), (U32)(initial_time_usec/1000), cur_time_msec );
+		//slintf( "PT: %f %f %u %u %u\n", physics_diff_time, physics_to_graphic_diff_time, (U32)(m_curPhysicsFrameTime/1000), (U32)(initial_time_usec/1000), cur_time_msec );
 
 		m_curPhysicsFrameTime = m_nextPhysicsFrameTime;				 // new cycle, on physics frame boundary
 		m_nextPhysicsFrameTime += PHYSICS_STEPTIME;					 // advance physics position

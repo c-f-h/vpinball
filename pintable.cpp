@@ -1470,30 +1470,35 @@ void PinTable::Render3DProjection(Sur * const psur)
 
    const GPINFLOAT aspect = 4.0/3.0;
 
-   const float realFOV = (m_FOV < 0.01f) ? 0.01f : m_FOV; // Can't have a real zero FOV, but this will look almost the same
+   const float realFOV = (m_FOV < 1.0f) ? 1.0f : m_FOV; // Can't have a real zero FOV, but this will look almost the same
 
    pinproj.FitCameraToVertices(&vvertex3D/*rgv*/, vvertex3D.Size(), aspect, rotation, inclination, realFOV, m_xlatez);
    pinproj.SetFieldOfView(realFOV, aspect, pinproj.m_rznear, pinproj.m_rzfar);
 
 
-   const float skew = -tanf(m_layback*(float)(M_PI/360));
+   const float skew = -tanf(0.5f*ANGTORAD(m_layback));
    const float skewX = -sinf(rotation)*skew;
    const float skewY =  cosf(rotation)*skew;
-   Matrix3D matTrans;
-   matTrans.SetIdentity();
    // Skew for FOV of 0 Deg. is not supported. so change it a little bit.
    const float skewFOV = (realFOV < 0.01f) ? 0.01f : realFOV;
    // create skew the z axis to x and y direction.
-   const float skewtan = tanf((180.0f-skewFOV)*(float)(M_PI/360.0))*pinproj.m_vertexcamera.y;
-   matTrans._42 = skewtan*skewY;
+   const float skewtan = tanf(ANGTORAD((180.0f-skewFOV)*0.5f))*pinproj.m_vertexcamera.y;
+   Matrix3D matTrans;
+   matTrans.SetIdentity();
+   matTrans._31 = skewX;
    matTrans._32 = skewY;
    matTrans._41 = skewtan*skewX;
-   matTrans._31 = skewX;
+   matTrans._42 = skewtan*skewY;
    pinproj.Multiply(matTrans);
 
    pinproj.Scale(m_scalex != 0.0f ? m_scalex : 1.0f, m_scaley != 0.0f ? m_scaley : 1.0f, 1.0f);
-   pinproj.Rotate(0,0,rotation);
-   pinproj.Translate(m_xlatex-pinproj.m_vertexcamera.x,m_xlatey-pinproj.m_vertexcamera.y,-pinproj.m_vertexcamera.z);
+#ifdef VP10
+   pinproj.Translate(m_xlatex-pinproj.m_vertexcamera.x, m_xlatey-pinproj.m_vertexcamera.y, -pinproj.m_vertexcamera.z);
+   pinproj.Rotate( 0, 0, rotation );
+#else
+   pinproj.Rotate( 0, 0, rotation );
+   pinproj.Translate(m_xlatex-pinproj.m_vertexcamera.x, m_xlatey-pinproj.m_vertexcamera.y, -pinproj.m_vertexcamera.z);
+#endif
    pinproj.Rotate(inclination, 0, 0);
 
    pinproj.CacheTransform();
