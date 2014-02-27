@@ -1472,7 +1472,7 @@ void PinTable::Render3DProjection(Sur * const psur)
 
    const float realFOV = (m_FOV < 1.0f) ? 1.0f : m_FOV; // Can't have a real zero FOV, but this will look almost the same
 
-   pinproj.FitCameraToVertices(&vvertex3D/*rgv*/, vvertex3D.Size(), aspect, rotation, inclination, realFOV, m_xlatez);
+   pinproj.FitCameraToVertices(&vvertex3D/*rgv*/, aspect, rotation, inclination, realFOV, m_xlatez);
    pinproj.SetFieldOfView(realFOV, aspect, pinproj.m_rznear, pinproj.m_rzfar);
 
 

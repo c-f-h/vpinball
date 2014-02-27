@@ -153,11 +153,14 @@ public:
 	void Multiply(const Matrix3D& mat);
 	void Rotate(const GPINFLOAT x, const GPINFLOAT y, const GPINFLOAT z);
 	void Translate(const float x, const float y, const float z);
-	void FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, const int cvert, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const float xlatez);
+	void FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const float xlatez);
 	void CacheTransform();      // compute m_matrixTotal = m_World * m_View * m_Proj
 	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex3D * const rgvout) const;
 	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex2D * const rgvout) const;
 	void SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar);
+	void SetupProjectionMatrix(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar);
+
+    void ComputeNearFarPlane(const Vector<Vertex3Ds>& verts);
 
 	Matrix3D m_matWorld;
 	Matrix3D m_matView;
