@@ -50,7 +50,7 @@ if(WIN32)
     "C:/DirectX-SDK-2010/Include"
     )
 
-  find_path(DirectX_LIB_DIR "dinput8.lib"
+  find_path(DirectX_LIB_DIR "dinput.lib"
     "$ENV{DXSDK_DIR}/Lib/x86"
     "C:/Program Files/Microsoft DirectX SDK (August 2007)/Lib/x86"
     "C:/Programme/Microsoft DirectX SDK (August 2007)/Lib/x86"
@@ -315,7 +315,7 @@ find_library(LIB_NVAPI nvapi.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 find_library(LIB_DXGUID dxguid.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_FREEIMAGE freeimage.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 find_library(LIB_DSOUND dsound.lib PATHS ${DirectX_LIB_DIR})
-find_library(LIB_DINPUT dinput8.lib PATHS ${DirectX_LIB_DIR})
+find_library(LIB_DINPUT dinput.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_D3DX9 d3dx9.lib PATHS ${DirectX_LIB_DIR})
 find_library(LIB_XAUDIO xaudio.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
 find_library(LIB_HID hid.lib PATHS ${CMAKE_SOURCE_DIR}/lib)
