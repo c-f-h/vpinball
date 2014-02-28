@@ -28,7 +28,11 @@ using namespace MSAPC;
 
 #include <atlctl.h>
 
-#define DIRECTINPUT_VERSION 0x0800
+#ifdef VP10
+ #define DIRECTINPUT_VERSION 0x0800
+#else
+ #define DIRECTINPUT_VERSION 0x0700
+#endif
 #include <dinput.h>
 #include <dsound.h>
 

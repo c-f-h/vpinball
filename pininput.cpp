@@ -406,7 +406,11 @@ void PinInput::GetInputDeviceData(/*const U32 curr_time_msec*/)
 	DIDEVICEOBJECTDATA didod[ INPUT_BUFFER_SIZE ];  // Receives buffered data 
 
 	// keyboard
+#ifdef VP10
 	const LPDIRECTINPUTDEVICE8 pkyb = m_pKeyboard;
+#else
+	const LPDIRECTINPUTDEVICE pkyb = m_pKeyboard;
+#endif
 	if (pkyb)
 		{	
 		HRESULT hr = pkyb->Acquire();				// try to Acquire keyboard input
@@ -481,7 +485,11 @@ void PinInput::GetInputDeviceData(/*const U32 curr_time_msec*/)
     // same for joysticks 
 	for (int k = 0; k < e_JoyCnt; ++k)
 		{
+#ifdef VP10
 		const LPDIRECTINPUTDEVICE8 pjoy = m_pJoystick[k];
+#else
+		const LPDIRECTINPUTDEVICE pjoy = m_pJoystick[k];
+#endif
 		if (pjoy)
 			{				
 			HRESULT hr = pjoy->Acquire();							// try to acquire joystick input
@@ -506,14 +514,18 @@ void PinInput::Init(const HWND hwnd)
 	m_hwnd = hwnd;
 
 	HRESULT hr;
+#ifdef VP10
 	hr = DirectInput8Create(g_hinst, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&m_pDI, NULL);
+#else
+	hr = DirectInputCreate(g_hinst, DIRECTINPUT_VERSION, &m_pDI, NULL);
+#endif
 
 	// Create keyboard device
 	hr = m_pDI->CreateDevice( GUID_SysKeyboard, &m_pKeyboard, NULL); //Standard Keyboard device
 
 	hr = m_pKeyboard->SetDataFormat( &c_dfDIKeyboard );
 
-	hr = m_pKeyboard->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND);
+	hr = m_pKeyboard->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_FOREGROUND); //!! exclusive necessary??
 
    DIPROPDWORD dipdw;
    dipdw.diph.dwSize = sizeof(DIPROPDWORD);
@@ -558,8 +570,11 @@ void PinInput::Init(const HWND hwnd)
 
 	uShockDevice = -1;
 	uShockType = 0;
-
+#ifdef VP10
 	m_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, DIEnumJoystickCallback, this, DIEDFL_ATTACHEDONLY);//enum Joysticks
+#else
+	m_pDI->EnumDevices(DIDEVTYPE_JOYSTICK, DIEnumJoystickCallback, this, DIEDFL_ATTACHEDONLY);//enum Joysticks
+#endif
 
 	//InputControlRun = 1;	//0== stalled, 1==run,  0 < shutting down, 2==terminated
 	//_beginthread( InputControlProcess, 0, NULL );
@@ -1500,8 +1515,11 @@ int PinInput::GetNextKey() // return last valid keyboard key
 		DIDEVICEOBJECTDATA didod[1];  // Receives buffered data
 		DWORD dwElements;
 		HRESULT hr;
+#ifdef VP10
 		LPDIRECTINPUTDEVICE8 pkyb = m_pKeyboard;
-
+#else
+		LPDIRECTINPUTDEVICE pkyb = m_pKeyboard;
+#endif
 		for (int j = 0; j < 2; ++j)
 		{
 			dwElements = 1;
