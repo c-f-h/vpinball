@@ -47,7 +47,7 @@ if(WIN32)
     "C:/Programme/Microsoft DirectX SDK (August 2007)/Include"
     "C:/Program Files/Microsoft DirectX SDK (February 2007)/Include"
     "C:/Program Files (x86)/Microsoft DirectX SDK (August 2007)/Include"
-    "C:/DirectX-SDK-2010/Include"
+    "C:/DirectX-SDK-2007/Include"
     )
 
   find_path(DirectX_LIB_DIR "dinput.lib"
@@ -56,7 +56,7 @@ if(WIN32)
     "C:/Programme/Microsoft DirectX SDK (August 2007)/Lib/x86"
     "C:/Program Files/Microsoft DirectX SDK (February 2007)/Lib/x86"
     "C:/Program Files (x86)/Microsoft DirectX SDK (August 2007)/Lib/x86"
-    "C:/DirectX-SDK-2010/Lib/x86"
+    "C:/DirectX-SDK-2007/Lib/x86"
     )
 
   if(DirectX_INCLUDE_DIR AND DirectX_LIB_DIR)
