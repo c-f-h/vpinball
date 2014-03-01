@@ -373,7 +373,7 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
 {
     TRACE_FUNCTION();
 
-    if (!m_d.m_fVisible)
+    if (!m_d.m_fVisible || !m_phitgate->m_gateanim.m_fVisible)
         return;
 
     RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
