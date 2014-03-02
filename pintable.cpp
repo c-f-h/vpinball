@@ -1689,9 +1689,7 @@ void PinTable::Play()
       m_textureMap.clear();
       for (int i=0;i<m_vimage.Size();i++)
       {
-          std::string name = m_vimage.ElementAt(i)->m_szInternalName;
-          std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-          m_textureMap[ StringHash(name.c_str()) ] = m_vimage.ElementAt(i);
+          m_textureMap[ m_vimage.ElementAt(i)->m_szInternalName ] = m_vimage.ElementAt(i);
       }
 
       g_pplayer = new Player();
@@ -6611,8 +6609,8 @@ Texture *PinTable::GetImage(char *szName)
     // during playback, we use the hashtable for lookup
     if (!m_textureMap.empty())
     {
-        unsigned long hash = StringHash(szName);
-        std::tr1::unordered_map<unsigned long, Texture*>::iterator it = m_textureMap.find(hash);
+        std::tr1::unordered_map<const char*, Texture*, StringHashFunctor, StringComparator>::const_iterator
+            it = m_textureMap.find(szName);
         if (it != m_textureMap.end())
             return it->second;
         else
@@ -6621,7 +6619,7 @@ Texture *PinTable::GetImage(char *szName)
 
    for (int i=0;i<m_vimage.Size();i++)
    {
-      if (!lstrcmp(m_vimage.ElementAt(i)->m_szInternalName, szName)) //!! strcmp calls are actually pretty expensive currently for drawing the acrylics! -> 10-20% overall frame time
+      if (!lstrcmp(m_vimage.ElementAt(i)->m_szInternalName, szName))
       {
          return m_vimage.ElementAt(i);
       }
