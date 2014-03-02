@@ -606,14 +606,14 @@ void BallAnimObject::UpdateVelocities()
 void Ball::UpdateVelocities()
 {
 	const float g = g_pplayer->m_gravity.z;
-	float nx = g_pplayer->m_NudgeX;
+	float nx = g_pplayer->m_NudgeX;     // TODO: depends on STEPTIME
 	float ny = g_pplayer->m_NudgeY;
 	
 	if(g_pplayer->m_NudgeManual >= 0) //joystick control of ball roll
 	{
-		vx *= 0.92f;	//rolling losses high for easy manual control
-		vy *= 0.92f;
-		vz *= 0.92f;	
+		vx *= NUDGE_MANUAL_FRICTION;	//rolling losses high for easy manual control
+		vy *= NUDGE_MANUAL_FRICTION;
+		vz *= NUDGE_MANUAL_FRICTION;
 
 #define JOY_DEADBAND  5.0e-2f
 
@@ -627,13 +627,13 @@ void Ball::UpdateVelocities()
 
 			vx += nx;
 			vy += ny;
-			vz += g; //-c_Gravity;
+			vz += g;
 		}
 	} // manual joystick control
 	else if (!fFrozen)  // Gravity	
 	{
-		vx += g_pplayer->m_gravity.x;	
-		vy += g_pplayer->m_gravity.y;	
+		vx += g_pplayer->m_gravity.x;
+		vy += g_pplayer->m_gravity.y;
 
 		if (z > z_min + 0.05f || g > 0.f) // off the deck??? or gravity postive Z direction	
 			vz += g;

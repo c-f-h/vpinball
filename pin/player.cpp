@@ -1450,6 +1450,13 @@ void Player::mechPlungerIn(const int z)
 	if (++m_movedPlunger == 0x7ffffff) m_movedPlunger = 3; //restart at 3
 }
 
+void Player::SetGravity(float slopeDeg, float strength)
+{
+    m_gravity.x = 0;
+    m_gravity.y =  sinf(ANGTORAD(slopeDeg)) * strength;
+    m_gravity.z = -cosf(ANGTORAD(slopeDeg)) * strength;
+}
+
 //++++++++++++++++++++++++++++++++++++++++
 
 #define STATICCNTS 10

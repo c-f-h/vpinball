@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#define PLUNGERHEIGHT 50.0f
+
 HitPlunger::HitPlunger(const float x, const float y, const float x2, const float pos, const float zheight, Plunger * const pPlunger)
 		{
 		m_plungeranim.m_plunger = pPlunger;

@@ -89,6 +89,8 @@ public:
 	void UltraPlunger_update();
 	void mechPlungerIn( const int z );		
 
+    void SetGravity(float slopeDeg, float strength);
+
 #ifdef PLAYBACK
 	float ParseLog(LARGE_INTEGER *pli1, LARGE_INTEGER *pli2);
 #endif

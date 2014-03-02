@@ -21,7 +21,6 @@ enum
 	eKicker		// this is done to limit to one test
 	};
 
-//extern float c_Gravity;
 extern float c_hardFriction; 
 extern float c_hardScatter; 
 extern float c_maxBallSpeedSqr; 

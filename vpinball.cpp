@@ -6626,47 +6626,47 @@ INT_PTR CALLBACK PhysicsOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 		 sprintf_s(tmp,256,"%f",FlipperPhysicsOblique);
  		 SetDlgItemTextA(hwndDlg, 110, tmp);
 
-		 float TablePhysicsGravityConstant = 1.6774f;
+		 float TablePhysicsGravityConstant = DEFAULT_TABLE_GRAVITY;
 		 sprintf_s(tmp,256,"TablePhysicsGravityConstant%u",physicsselection);
          hr = GetRegStringAsFloat("Player", tmp, &TablePhysicsGravityConstant);
          if (hr != S_OK)
-            TablePhysicsGravityConstant = 1.6774f;
+            TablePhysicsGravityConstant = DEFAULT_TABLE_GRAVITY;
 
 		 sprintf_s(tmp,256,"%f",TablePhysicsGravityConstant);
  		 SetDlgItemTextA(hwndDlg, 1100, tmp);
 
-		 float TablePhysicsContactFriction = 0.0005f;
+		 float TablePhysicsContactFriction = DEFAULT_TABLE_CONTACTFRICTION;
 		 sprintf_s(tmp,256,"TablePhysicsContactFriction%u",physicsselection);
          hr = GetRegStringAsFloat("Player", tmp, &TablePhysicsContactFriction);
          if (hr != S_OK)
-            TablePhysicsContactFriction = 0.0005f;
+            TablePhysicsContactFriction = DEFAULT_TABLE_CONTACTFRICTION;
 
 		 sprintf_s(tmp,256,"%f",TablePhysicsContactFriction);
  		 SetDlgItemTextA(hwndDlg, 1101, tmp);
 
-		 float TablePhysicsContactScatterAngle = 0.5f;
+		 float TablePhysicsContactScatterAngle = DEFAULT_TABLE_SCATTERANGLE;
 		 sprintf_s(tmp,256,"TablePhysicsContactScatterAngle%u",physicsselection);
          hr = GetRegStringAsFloat("Player", tmp, &TablePhysicsContactScatterAngle);
          if (hr != S_OK)
-            TablePhysicsContactScatterAngle = 0.5f;
+            TablePhysicsContactScatterAngle = DEFAULT_TABLE_SCATTERANGLE;
 
 		 sprintf_s(tmp,256,"%f",TablePhysicsContactScatterAngle);
  		 SetDlgItemTextA(hwndDlg, 1102, tmp);
 
-		 float TablePhysicsDampeningSpeed = 65.f;
+		 float TablePhysicsDampeningSpeed = DEFAULT_TABLE_DAMPENINGSPEED;
 		 sprintf_s(tmp,256,"TablePhysicsDampeningSpeed%u",physicsselection);
          hr = GetRegStringAsFloat("Player", tmp, &TablePhysicsDampeningSpeed);
          if (hr != S_OK)
-            TablePhysicsDampeningSpeed = 65.f;
+            TablePhysicsDampeningSpeed = DEFAULT_TABLE_DAMPENINGSPEED;
 
 		 sprintf_s(tmp,256,"%f",TablePhysicsDampeningSpeed);
  		 SetDlgItemTextA(hwndDlg, 1103, tmp);
 
-		 float TablePhysicsDampeningFriction = 0.95f;
+		 float TablePhysicsDampeningFriction = DEFAULT_TABLE_DAMPENINGFRICTION;
 		 sprintf_s(tmp,256,"TablePhysicsDampeningFriction%u",physicsselection);
          hr = GetRegStringAsFloat("Player", tmp, &TablePhysicsDampeningFriction);
          if (hr != S_OK)
-            TablePhysicsDampeningFriction = 0.95f;
+            TablePhysicsDampeningFriction = DEFAULT_TABLE_DAMPENINGFRICTION;
 
 		 sprintf_s(tmp,256,"%f",TablePhysicsDampeningFriction);
  		 SetDlgItemTextA(hwndDlg, 1106, tmp);
