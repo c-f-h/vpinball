@@ -997,9 +997,9 @@ void PinInput::ProcessKeys(PinTable * const ptable/*, const U32 curr_sim_msec*/,
                   vy = -vy2;
                }
                bool ballGrabbed=false;
-               for( int i=0;i<g_pplayer->m_vball.Size();i++ )
+               for( unsigned i=0; i<g_pplayer->m_vball.size(); i++ )
                {
-                  Ball * const pBall = g_pplayer->m_vball.ElementAt(i);
+                  Ball * const pBall = g_pplayer->m_vball[i];
                   const float dx = fabsf(vertex.x - pBall->x);
                   const float dy = fabsf(vertex.y - pBall->y);
                   if ( dx<50.f && dy<50.f )
@@ -1030,9 +1030,9 @@ void PinInput::ProcessKeys(PinTable * const ptable/*, const U32 curr_sim_msec*/,
                ScreenToClient(m_hwnd, &point);
                const Vertex3Ds vertex = g_pplayer->m_pin3d.Get3DPointFrom2D(&point);
 
-               for( int i=0;i<g_pplayer->m_vball.Size();i++ )
+               for( unsigned i=0; i<g_pplayer->m_vball.size(); i++ )
                {
-                  Ball *pBall = g_pplayer->m_vball.ElementAt(i);
+                  Ball *pBall = g_pplayer->m_vball[i];
                   const float dx = fabsf(vertex.x - pBall->x);
                   const float dy = fabsf(vertex.y - pBall->y);
                   if ( dx<50.f && dy<50.f )

@@ -783,11 +783,9 @@ STDMETHODIMP Kicker::BallCntOver(int *pVal)
 
 	if (g_pplayer)
 		{
-		const int vballsize = g_pplayer->m_vball.Size();
-
-		for (int i = 0; i < vballsize; i++)
+		for (unsigned i = 0; i < g_pplayer->m_vball.size(); i++)
 			{
-			Ball * const pball = g_pplayer->m_vball.ElementAt(i);
+			Ball * const pball = g_pplayer->m_vball[i];
 
 			if (pball->m_vpVolObjs->IndexOf(this) >= 0)
 				{

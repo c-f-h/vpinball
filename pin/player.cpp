@@ -316,9 +316,9 @@ Player::~Player()
 
 	// balls get deleted by the hit object vector
 	// not anymore - balls are added to the octree, but not the main list
-	for (int i=0;i<m_vball.Size();i++)
+	for (unsigned i=0; i<m_vball.size(); i++)
 	{
-		Ball * const pball = m_vball.ElementAt(i);
+		Ball * const pball = m_vball[i];
 		if (pball->m_pballex)
 		{
 			pball->m_pballex->m_pball = NULL;
@@ -328,7 +328,7 @@ Player::~Player()
 		delete pball->m_vpVolObjs;
 		delete pball;
 	}
-	m_vball.RemoveAllElements();
+	m_vball.clear();
     if ( Ball::vertexBuffer!=0 )
     {
         Ball::vertexBuffer->release();
@@ -1038,7 +1038,7 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 
 	pball->m_pfedebug = (IFireEvents *)pball->m_pballex;
 
-	m_vball.AddElement(pball);
+	m_vball.push_back(pball);
 	m_vmover.AddElement(&pball->m_ballanim);
 
 	// Add to list of global exception hit-tests for now
@@ -1064,15 +1064,15 @@ void Player::DestroyBall(Ball *pball)
 		pball->m_pballex->Release();
 		}
 
-	m_vball.RemoveElement(pball);
+    RemoveFromVector( m_vball, pball );
 	m_vmover.RemoveElement(&pball->m_ballanim);
 
 	m_hitoctree.m_vho.RemoveElement(pball);
 
-	m_vballDelete.AddElement(pball);
+	m_vballDelete.push_back(pball);
 
 	if (m_pactiveballDebug == pball)
-		m_pactiveballDebug = (m_vball.Size() > 0) ? m_vball.ElementAt(0) : NULL;
+		m_pactiveballDebug = (!m_vball.empty()) ? m_vball.front() : NULL;
 }
 
 #ifdef ULTRAPIN
@@ -1463,8 +1463,6 @@ void Player::SetGravity(float slopeDeg, float strength)
 
 void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this time
 {
-	const int vballsize = m_vball.Size();
-
 	float hittime;
 	int StaticCnts = STATICCNTS;	// maximum number of static counts
 
@@ -1474,9 +1472,9 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 
 		hittime = dtime;	//begin time search from now ...  until delta ends
 
-		for (int i = 0; i < vballsize; i++)
+		for (unsigned i = 0; i < m_vball.size(); i++)
 		{
-			Ball * const pball = m_vball.ElementAt(i);
+			Ball * const pball = m_vball[i];
 
 			if (!pball->fFrozen && pball->m_fDynamic > 0) // don't play with frozen balls
 			{
@@ -1526,9 +1524,9 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 
 		//  find balls that need to be collided and script'ed (generally there will be one, but more are possible)
 
-		for (int i=0; i < m_vball.Size(); i++)					 // use m_vball.Size(), in case script deletes a ball
+		for (unsigned i=0; i < m_vball.size(); i++)					 // use m_vball.size(), in case script deletes a ball
 		{
-			Ball * const pball = m_vball.ElementAt(i);			 // local pointer
+			Ball * const pball = m_vball[i];
 
 			if (pball->m_fDynamic > 0 && pball->m_pho && pball->m_hittime <= hittime) // find balls with hit objects and minimum time			
 			{
@@ -1543,7 +1541,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 
 				// Collide may have changed the velocity of the ball, 
 				// and therefore the bounding box for the next hit cycle
-				if ( m_vball.ElementAt(i) != pball) // Ball still exists? may have been deleted from list
+				if ( m_vball[i] != pball) // Ball still exists? may have been deleted from list
 				{
 					if(i) // collision script deleted the ball, back up one count, if not zero
 						--i;
@@ -1755,9 +1753,9 @@ void Player::UpdatePhysics()
 		PhysicsSimulateCycle(physics_diff_time);	    // main simulator call
 
 		//ball trail, keep old pos of balls
-		for (int i=0; i < m_vball.Size(); i++)
+		for (unsigned i=0; i < m_vball.size(); i++)
 		{
-			Ball * const pball = m_vball.ElementAt(i);
+			Ball * const pball = m_vball[i];
 			pball->oldpos[pball->ringcounter_oldpos].x = pball->x;
 			pball->oldpos[pball->ringcounter_oldpos].y = pball->y;
 			pball->oldpos[pball->ringcounter_oldpos].z = pball->z;
@@ -2078,14 +2076,14 @@ void Player::Render()
         }
     }
 
-    for (int i=0;i<m_vballDelete.Size();i++)
+    for (unsigned i=0; i<m_vballDelete.size(); i++)
     {
-        Ball * const pball = m_vballDelete.ElementAt(i);
+        Ball * const pball = m_vballDelete[i];
         delete pball->m_vpVolObjs;
         delete pball;
     }
 
-    m_vballDelete.RemoveAllElements();
+    m_vballDelete.clear();
 
 	m_firstFrame = false;
 
@@ -2514,9 +2512,9 @@ void Player::DrawBalls()
     const float sn = sinf(m_pin3d.m_inclination);
     const float cs = cosf(m_pin3d.m_inclination);
 
-    for (int i=0; i<m_vball.Size(); i++)
+    for (unsigned i=0; i<m_vball.size(); i++)
     {
-        Ball * const pball = m_vball.ElementAt(i);
+        Ball * const pball = m_vball[i];
         // just calculate the vertices once!
         float zheight = (!pball->fFrozen) ? pball->z : (pball->z - pball->radius);
 

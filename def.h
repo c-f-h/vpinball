@@ -47,6 +47,12 @@ inline unsigned int max(const unsigned int x, const unsigned int y)
    return x < y ? y : x;
 }
 
+template <typename T>
+void RemoveFromVector(std::vector<T>& v, const T& val)
+{
+    v.erase( std::remove( v.begin(), v.end(), val ), v.end() );
+}
+
 #define fTrue 1
 #define fFalse 0
 

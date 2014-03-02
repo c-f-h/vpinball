@@ -111,7 +111,7 @@ public:
 	Ball *m_pactiveball;		// ball the script user can get with ActiveBall
 	Ball *m_pactiveballDebug;	// ball the debugger will use as Activeball when firing events
 
-	Vector<Ball> m_vball;
+    std::vector<Ball*> m_vball;
 	Vector<AnimObject> m_vscreenupdate;
 	Vector<HitTimer> m_vht;
 
@@ -215,7 +215,7 @@ private:
 	Vector<HitObject> m_vho;
 	Vector<AnimObject> m_vmover;// moving objects for physics simulation
 
-	Vector<Ball> m_vballDelete;	// Balls to free at the end of the frame
+    std::vector<Ball*> m_vballDelete;	// Balls to free at the end of the frame
 
 	HitOctree m_hitoctree;
 	HitOctree m_shadowoctree;
