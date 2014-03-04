@@ -722,6 +722,8 @@ PinTable::PinTable()
    m_tilt_amount = 950;
    m_jolt_trigger_time = 1000;
    m_tilt_trigger_time = 10000;
+
+   m_Shake = false;
 }
 
 PinTable::~PinTable()
