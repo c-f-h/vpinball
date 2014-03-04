@@ -641,13 +641,36 @@ void HitFlipper::Collide(CollisionEvent *coll)
    pball->vel.x -= impulse*bnv * phitnormal->x; 							// new velocity for ball after impact
    pball->vel.y -= impulse*bnv * phitnormal->y;
 
+<<<<<<< HEAD
+   float scatter_angle = (m_pflipper->m_d.m_OverridePhysics ? m_pflipper->m_d.m_OverrideScatter : m_pflipper->m_d.m_scatterangle); // object specific roughness
+   if (scatter_angle <= 0.0f)
+      scatter_angle = c_hardScatter;
+   scatter_angle *= g_pplayer->m_ptable->m_globalDifficulty;			// apply difficulty weighting
+
+   if (bnv > -1.0f) scatter_angle = 0.f;								// not for low velocities
+
+   if (obliquecorr != 0.f || scatter_angle > 1.0e-5f)					// trajectory correction to reduce the obliqueness 
+   {
+      float scatter = rand_mt_m11();			    // -1.0f..1.0f
+      scatter *= (1.0f - scatter*scatter) * 2.59808f * scatter_angle;	// shape quadratic distribution and scale
+      scatter_angle = obliquecorr + scatter;
+      const float radsin = sinf(scatter_angle);	//  Green's transform matrix... rotate angle delta 
+      const float radcos = cosf(scatter_angle);	//  rotational transform from current position to position at time t
+      const float vx2 = pball->vel.x;
+      const float vy2 = pball->vel.y;
+      pball->vel.x = vx2 *radcos - vy2 *radsin;  // rotate trajectory more accurately
+      pball->vel.y = vy2 *radcos + vx2 *radsin;
+   }
+
+   pball->vel.x *= 0.985f; pball->vel.y *= 0.985f; pball->vel.z *= 0.96f;	// friction
+=======
    // TODO: reenable scatter if needed
    //float scatter_angle = (m_pflipper->m_d.m_OverridePhysics ? m_pflipper->m_d.m_OverrideScatter : m_pflipper->m_d.m_scatterangle); // object specific roughness
    //if (scatter_angle <= 0.0f)
    //   scatter_angle = c_hardScatter;
    //scatter_angle *= g_pplayer->m_ptable->m_globalDifficulty;			// apply difficulty weighting
 
-   //if (bnv > -1.0f) scatter_angle = 0.f;								// not for low velocities
+   //if (dot > -1.0f) scatter_angle = 0.f;								// not for low velocities
 
    //if (obliquecorr != 0.f || scatter_angle > 1.0e-5f)					// trajectory correction to reduce the obliqueness
    //{
@@ -663,6 +686,7 @@ void HitFlipper::Collide(CollisionEvent *coll)
    //}
 
    //pball->vx *= 0.985f; pball->vy *= 0.985f; pball->vz *= 0.96f;	// friction     // TODO: reenable
+>>>>>>> First step to variable timesteps.
 
    pball->m_fDynamic = C_DYNAMIC;			// reactive ball if quenched
 

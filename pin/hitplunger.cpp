@@ -161,9 +161,10 @@ void PlungerAnimObject::UpdateVelocities()
 	{	
 	if (m_fAcc)
 		{
-		m_speed += (m_force/m_mass);
+		m_speed += PHYS_FACTOR * (m_force/m_mass);
 		}
-	else if (!m_plunger->m_d.m_mechPlunger)	m_mechTimeOut = 0;// disallow mechanical plunger control
+	else if (!m_plunger->m_d.m_mechPlunger)
+        m_mechTimeOut = 0;// disallow mechanical plunger control
 	else {	
 		if(m_posdesired == m_frameEnd) // mechanical plunger position ...make sure button control is idle
 			{	

@@ -1718,15 +1718,15 @@ void Player::UpdatePhysics()
 		// If the frame is the next thing to happen, update physics to that
 		// point next update acceleration, and continue loop
 
-		const float physics_diff_time =       (float)((double)(m_nextPhysicsFrameTime - m_curPhysicsFrameTime)*(1.0/PHYSICS_STEPTIME));
-		const float physics_to_graphic_diff_time = (float)((double)(initial_time_usec - m_curPhysicsFrameTime)*(1.0/PHYSICS_STEPTIME));
+		const float physics_diff_time =       (float)((double)(m_nextPhysicsFrameTime - m_curPhysicsFrameTime)*(1.0/DEFAULT_STEPTIME));
+		const float physics_to_graphic_diff_time = (float)((double)(initial_time_usec - m_curPhysicsFrameTime)*(1.0/DEFAULT_STEPTIME));
 
-		if (physics_to_graphic_diff_time < physics_diff_time)		 // is graphic frame time next???
-		{
-			PhysicsSimulateCycle(physics_to_graphic_diff_time);      // advance physics to this time
-			m_curPhysicsFrameTime = initial_time_usec;				 // now current to the wall clock
-			break;	//this is the common exit from the loop			 // exit skipping accelerate
-		}			// some rare cases will exit from while()
+		//if (physics_to_graphic_diff_time < physics_diff_time)		 // is graphic frame time next???
+		//{
+		//	PhysicsSimulateCycle(physics_to_graphic_diff_time);      // advance physics to this time
+		//	m_curPhysicsFrameTime = initial_time_usec;				 // now current to the wall clock
+		//	break;	//this is the common exit from the loop			 // exit skipping accelerate
+		//}			// some rare cases will exit from while()
 
 		const U64 cur_time_usec = usec();
 		if ((cur_time_usec - initial_time_usec > 200000) || (phys_iterations > ((m_ptable->m_PhysicsMaxLoops == 0) ? 0xFFFFFFFFu : m_ptable->m_PhysicsMaxLoops/*2*/))) // hung in the physics loop over 200 milliseconds or the number of physics iterations to catch up on is high (i.e. very low/unplayable FPS)
