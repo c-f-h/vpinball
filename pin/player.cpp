@@ -2152,11 +2152,11 @@ void Player::Render()
         }
 #endif
 
-#ifdef _DEBUGPHYSICS
 		len = sprintf_s(szFoo, sizeof(szFoo), "period: %.1f ms (%.1f avg %.1f max)      ",
 		  float(1e-3f*period), float(1e-3f*(m_total/m_count)), float(1e-3f*m_max) );
 		TextOut(hdcNull, 10, 120, szFoo, len);
 
+#ifdef _DEBUGPHYSICS
 		len = sprintf_s(szFoo, sizeof(szFoo), "physTimes %10u uS(%12u avg %12u max)    ",
 			   	(U32)phys_period,
 			   	(U32)(m_phys_total / m_count),
