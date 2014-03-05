@@ -91,7 +91,7 @@ static void NormalizeNormals()
    }
 }
 
-bool loadWavefrontObj( char *filename, bool flipTv, bool convertToLeftHanded )
+bool WaveFrontObj_Load( char *filename, bool flipTv, bool convertToLeftHanded )
 {
    FILE *f;
    fopen_s(&f,filename,"r");
@@ -271,9 +271,9 @@ bool loadWavefrontObj( char *filename, bool flipTv, bool convertToLeftHanded )
    return true;
 }
 
-Vertex3D_NoTex2 *GetVertices( int &numVertices ) // clears temporary storage on the way
+void WaveFrontObj_GetVertices( std::vector<Vertex3D_NoTex2>& objMesh ) // clears temporary storage on the way
 {
-   Vertex3D_NoTex2 * const objMesh = new Vertex3D_NoTex2[verts.size()];
+   objMesh.resize( verts.size() );
    for( unsigned int i=0;i<verts.size();i++ )
    {
       objMesh[i].x = verts[i].x;
@@ -285,12 +285,10 @@ Vertex3D_NoTex2 *GetVertices( int &numVertices ) // clears temporary storage on 
       objMesh[i].ny = verts[i].ny;
       objMesh[i].nz = verts[i].nz;
    }
-   numVertices = verts.size();
    verts.clear();
-   return objMesh;
 }
 
-void GetIndexList( std::vector<WORD>& list ) // clears temporary storage on the way
+void WaveFrontObj_GetIndices( std::vector<WORD>& list ) // clears temporary storage on the way
 {
    list.resize( faces.size() );
    for( unsigned int i=0; i<faces.size(); i++ )
@@ -299,7 +297,7 @@ void GetIndexList( std::vector<WORD>& list ) // clears temporary storage on the 
 }
 
 // exporting a mesh to a Wavefront .OBJ file. The mesh is converted into right-handed coordinate system (VP uses left-handed)
-void SaveOBJ( char *filename, Primitive *mesh )
+void WaveFrontObj_Save( char *filename, Primitive *mesh )
 {
    FILE *f;
    fopen_s(&f,filename,"wt");
@@ -311,9 +309,7 @@ void SaveOBJ( char *filename, Primitive *mesh )
    fprintf_s(f,"o %s\n",mesh->m_d.meshFileName );
    for( int i=0; i<mesh->numVertices;i++ )
    {
-      float z = mesh->objMeshOrg[i].z;
-      z*=-1.0f;
-      fprintf_s(f,"v %f %f %f\n", mesh->objMeshOrg[i].x, mesh->objMeshOrg[i].y, z );
+      fprintf_s(f,"v %f %f %f\n", mesh->objMeshOrg[i].x, mesh->objMeshOrg[i].y, -mesh->objMeshOrg[i].z );
    }
    for( int i=0; i<mesh->numVertices;i++ )
    {

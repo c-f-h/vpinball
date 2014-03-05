@@ -2806,8 +2806,8 @@ void Player::DoDebugObjectMenu(int x, int y)
 	// clipping plane (z=0) and the far clipping plane (z=1) to get the whole
 	// range we need to hit test
 	Vertex3Ds v3d, v3d2;
-	mat3D.MultiplyVector(xcoord,ycoord,0,&v3d);
-	mat3D.MultiplyVector(xcoord,ycoord,1,&v3d2);
+	mat3D.MultiplyVector(Vertex3Ds(xcoord,ycoord,0), v3d);
+	mat3D.MultiplyVector(Vertex3Ds(xcoord,ycoord,1), v3d2);
 
 	// Create a ray (ball) that travels in 3D space from the screen pixel at
 	// the near clipping plane to the far clipping plane, and find what

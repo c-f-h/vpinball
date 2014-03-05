@@ -99,20 +99,21 @@ public:
         rot._41 = rot._42 = rot._43 = 0.0f; rot._44 = 1.0f;
     }
 
-    template <class Vec>
-	inline void MultiplyVector(const float x, const float y, const float z, Vec * const pv3DOut) const
-	{
-	// Transform it through the current matrix set
-	const float xp = _11*x + _21*y + _31*z + _41;
-	const float yp = _12*x + _22*y + _32*z + _42;
-	const float zp = _13*x + _23*y + _33*z + _43;
-	const float wp = _14*x + _24*y + _34*z + _44;
+    // generic multiply function for everything that has .x, .y and .z
+    template <class VecIn, class VecOut>
+    void MultiplyVector(const VecIn& vIn, VecOut& vOut) const
+    {
+        // Transform it through the current matrix set
+        const float xp = _11*vIn.x + _21*vIn.y + _31*vIn.z + _41;
+        const float yp = _12*vIn.x + _22*vIn.y + _32*vIn.z + _42;
+        const float zp = _13*vIn.x + _23*vIn.y + _33*vIn.z + _43;
+        const float wp = _14*vIn.x + _24*vIn.y + _34*vIn.z + _44;
 
-	const float inv_wp = 1.0f/wp;
-	pv3DOut->x = xp*inv_wp;
-	pv3DOut->y = yp*inv_wp;
-	pv3DOut->z = zp*inv_wp;
-	}
+        const float inv_wp = 1.0f/wp;
+        vOut.x = xp*inv_wp;
+        vOut.y = yp*inv_wp;
+        vOut.z = zp*inv_wp;
+    }
 
 	inline Vertex3Ds MultiplyVector(const Vertex3Ds &v) const
 	{
@@ -129,6 +130,7 @@ public:
 	pv3DOut.z = zp*inv_wp;
 	return pv3DOut;
 	}
+
 	inline Vertex3Ds MultiplyVectorNoTranslate(const Vertex3Ds &v) const
 	{
 	// Transform it through the current matrix set
@@ -142,6 +144,19 @@ public:
 	pv3DOut.z = zp;
 	return pv3DOut;
 	}
+
+    template <class VecIn, class VecOut>
+    void MultiplyVectorNoTranslate(const VecIn& vIn, VecOut& vOut) const
+    {
+        // Transform it through the current matrix set
+        const float xp = _11*vIn.x + _21*vIn.y + _31*vIn.z;
+        const float yp = _12*vIn.x + _22*vIn.y + _32*vIn.z;
+        const float zp = _13*vIn.x + _23*vIn.y + _33*vIn.z;
+
+        vOut.x = xp;
+        vOut.y = yp;
+        vOut.z = zp;
+    }
 
 	void Invert();
 	};

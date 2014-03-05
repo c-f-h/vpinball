@@ -9,23 +9,16 @@ Primitive::Primitive()
    vertexBuffer = 0;
    vertexBufferRegenerate = true;
    indexBuffer = 0;
-   objMeshOrg=0;
-   objMesh=0;
    m_d.use3DMesh=false;
    m_d.meshFileName[0]=0;
    m_d.useLighting=false;
    m_d.staticRendering=false;
    m_d.sphereMapping=false;
+   indexListSize = 0;
 } 
 
 Primitive::~Primitive() 
 {
-   for( int i=0;i<verticesTop.Size();i++ )
-      delete verticesTop.ElementAt(i);
-
-   for( int i=0;i<verticesBottom.Size();i++ )
-      delete verticesBottom.ElementAt(i);
-
     if(vertexBuffer)
     {
         vertexBuffer->release();
@@ -33,14 +26,6 @@ Primitive::~Primitive()
     }
     if (indexBuffer)
         indexBuffer->release();
-    if( objMeshOrg )
-    {
-        delete[] objMeshOrg;
-    }
-    if( objMesh )
-    {
-        delete[] objMesh;
-    }
 }
 
 HRESULT Primitive::Init(PinTable *ptable, float x, float y, bool fromMouseClick)
@@ -308,9 +293,9 @@ void Primitive::GetHitShapes(Vector<HitObject> * const pvho)
    for( unsigned i=0; i<indexList.size(); i+=3 )
    {
       Vertex3Ds * const rgv3D = new Vertex3Ds[3];
-      rgv3D[0] = *verticesTop.ElementAt( indexList[i  ] );
-      rgv3D[1] = *verticesTop.ElementAt( indexList[i+1] );
-      rgv3D[2] = *verticesTop.ElementAt( indexList[i+2] );
+      rgv3D[0] = verticesTop[ indexList[i  ] ];
+      rgv3D[1] = verticesTop[ indexList[i+1] ];
+      rgv3D[2] = verticesTop[ indexList[i+2] ];
       Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3);
       ph3dpoly->m_elasticity = m_d.m_elasticity;
       ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;
@@ -385,11 +370,7 @@ void Primitive::EndPlay()
         indexBuffer = 0;
     }
 
-	if(objMesh)
-	{
-		delete [] objMesh;
-		objMesh = 0;
-	}
+    objMesh.clear();
 }
 
 //////////////////////////////
@@ -432,60 +413,55 @@ void Primitive::RecalculateMatrices()
    Tmatrix.Multiply(fullMatrix, fullMatrix);        // fullMatrix = Smatrix * RTmatrix * Tmatrix
 }
 
-void Primitive::RecalculateVertices() 
+// recalculate vertices for editor display
+void Primitive::RecalculateVertices()
 {
-   for( int i=0;i<verticesTop.Size();i++ )
-      delete verticesTop.ElementAt(i);
-
-   for( int i=0;i<verticesBottom.Size();i++ )
-      delete verticesBottom.ElementAt(i);
-
-   verticesTop.RemoveAllElements();
-   verticesBottom.RemoveAllElements();
+   verticesTop.clear();
+   verticesBottom.clear();
 
    if( !m_d.use3DMesh )
    {
+      verticesTop.reserve(m_d.m_Sides);
+      verticesBottom.reserve(m_d.m_Sides);
+
       const float outerRadius = -0.5f/cosf((float)M_PI/(float)m_d.m_Sides);
       const float addAngle = (float)(2.0*M_PI)/(float)m_d.m_Sides;
 	  const float offsAngle = (float)M_PI/(float)m_d.m_Sides;
       for (int i = 0; i < m_d.m_Sides; ++i)
       {
-         Vertex3Ds * const topVert = new Vertex3Ds();
-         Vertex3Ds * const bottomVert = new Vertex3Ds();
+         Vertex3Ds topVert, bottomVert;
 
 		 const float currentAngle = addAngle*(float)i + offsAngle;
-         topVert->x = sinf(currentAngle)*outerRadius;
-         topVert->y = cosf(currentAngle)*outerRadius * (1.0f+(m_d.m_vAxisScaleX.y - 1.0f)*(topVert->x+0.5f));
-         topVert->z =                           0.5f * (1.0f+(m_d.m_vAxisScaleX.z - 1.0f)*(topVert->x+0.5f));
+         topVert.x = sinf(currentAngle)*outerRadius;
+         topVert.y = cosf(currentAngle)*outerRadius * (1.0f+(m_d.m_vAxisScaleX.y - 1.0f)*(topVert.x+0.5f));
+         topVert.z =                           0.5f * (1.0f+(m_d.m_vAxisScaleX.z - 1.0f)*(topVert.x+0.5f));
 
-         topVert->x *= 1.0f+(m_d.m_vAxisScaleY.x - 1.0f)*(topVert->y+0.5f);
-         topVert->z *= 1.0f+(m_d.m_vAxisScaleY.z - 1.0f)*(topVert->y+0.5f);
-         bottomVert->z = -topVert->z;
+         topVert.x *= 1.0f+(m_d.m_vAxisScaleY.x - 1.0f)*(topVert.y+0.5f);
+         topVert.z *= 1.0f+(m_d.m_vAxisScaleY.z - 1.0f)*(topVert.y+0.5f);
+         bottomVert.z = -topVert.z;
 
-         const float tmp = topVert->x;
-         topVert->x    = tmp * (1.0f+(m_d.m_vAxisScaleZ.x - 1.0f)*(topVert->z+0.5f));
-         bottomVert->x = tmp * (1.0f+(m_d.m_vAxisScaleZ.x - 1.0f)*(0.5f-topVert->z));
+         const float tmp = topVert.x;
+         topVert.x    = tmp * (1.0f+(m_d.m_vAxisScaleZ.x - 1.0f)*(topVert.z+0.5f));
+         bottomVert.x = tmp * (1.0f+(m_d.m_vAxisScaleZ.x - 1.0f)*(0.5f-topVert.z));
 
-         const float tmp2 = topVert->y;
-         topVert->y    = tmp2 * (1.0f+(m_d.m_vAxisScaleZ.y - 1.0f)*(topVert->z+0.5f));
-         bottomVert->y = tmp2 * (1.0f+(m_d.m_vAxisScaleZ.y - 1.0f)*(0.5f-topVert->z));
+         const float tmp2 = topVert.y;
+         topVert.y    = tmp2 * (1.0f+(m_d.m_vAxisScaleZ.y - 1.0f)*(topVert.z+0.5f));
+         bottomVert.y = tmp2 * (1.0f+(m_d.m_vAxisScaleZ.y - 1.0f)*(0.5f-topVert.z));
 
-         fullMatrix.MultiplyVector(topVert->x, topVert->y, topVert->z, topVert);
-         fullMatrix.MultiplyVector(bottomVert->x, bottomVert->y, bottomVert->z, bottomVert);
-         verticesTop.AddElement(topVert);
-         verticesBottom.AddElement(bottomVert);
+         fullMatrix.MultiplyVector(topVert, topVert);
+         fullMatrix.MultiplyVector(bottomVert, bottomVert);
+         verticesTop.push_back(topVert);
+         verticesBottom.push_back(bottomVert);
       }
    }
    else
    {
-      for( int i=0;i<numVertices;i++ )
+      verticesTop.reserve( objMeshOrg.size() );
+      for( unsigned i=0; i<objMeshOrg.size(); i++ )
       {
-         Vertex3Ds *const vert = new Vertex3Ds();
-         vert->x = objMeshOrg[i].x;
-         vert->y = objMeshOrg[i].y;
-         vert->z = objMeshOrg[i].z;
-         fullMatrix.MultiplyVector(vert->x, vert->y, vert->z, vert);
-         verticesTop.AddElement(vert);
+         Vertex3Ds vert;
+         fullMatrix.MultiplyVector(objMeshOrg[i], vert);
+         verticesTop.push_back(vert);
       }
    }
 }
@@ -521,11 +497,11 @@ void Primitive::Render(Sur * const psur)
       for (int i = 0; i < m_d.m_Sides; i++)
       {
          const int inext = ((i+1) == m_d.m_Sides) ? 0 : i+1;
-         const Vertex3Ds * const topVert = verticesTop.ElementAt(i);
-         const Vertex3Ds * const nextTopVert = verticesTop.ElementAt(inext);
+         const Vertex3Ds * const topVert = &verticesTop[i];
+         const Vertex3Ds * const nextTopVert = &verticesTop[inext];
          psur->Line(topVert->x, topVert->y, nextTopVert->x, nextTopVert->y);
-         const Vertex3Ds * const bottomVert = verticesBottom.ElementAt(i);
-         const Vertex3Ds * const nextBottomVert = verticesBottom.ElementAt(inext);
+         const Vertex3Ds * const bottomVert = &verticesBottom[i];
+         const Vertex3Ds * const nextBottomVert = &verticesBottom[inext];
          psur->Line(bottomVert->x, bottomVert->y, nextBottomVert->x, nextBottomVert->y);
          psur->Line(bottomVert->x, bottomVert->y, topVert->x, topVert->y);
       }
@@ -537,8 +513,8 @@ void Primitive::Render(Sur * const psur)
       //just draw a simple mesh layout not the entire mesh for performance reasons
       for( unsigned i=0;i<indexList.size();i+=3 )
       {
-         const Vertex3Ds * const A = verticesTop.ElementAt(indexList[i]);
-         const Vertex3Ds * const B = verticesTop.ElementAt(indexList[i+1]);
+         const Vertex3Ds * const A = &verticesTop[ indexList[i]  ];
+         const Vertex3Ds * const B = &verticesTop[ indexList[i+1]];
          psur->Line( A->x,A->y,B->x,B->y);
          //psur->Line( B->x,B->y,C->x,C->y);
          //psur->Line( C->x,C->y,A->x,A->y);
@@ -664,7 +640,7 @@ void Primitive::CalculateBuiltinOriginal()
          builtin_indices[12 * (i + m_d.m_Sides) + 11]= m_d.m_Sides*3 + 2 + i;
       }
    } else {
-      // yes: draw everything twice
+      // no: only out-facing polygons
       // restore indices
       for (int i = 0; i < m_d.m_Sides; i++)
       {
@@ -694,7 +670,7 @@ void Primitive::CalculateBuiltinOriginal()
 void Primitive::CalculateBuiltin()
 {
    // 1 copy vertices
-   memcpy(builtin_rgv,builtin_rgvOriginal,(m_d.m_Sides*4 + 2)*sizeof(Vertex3D_NoTex2));
+   memcpy(builtin_rgv, builtin_rgvOriginal, (m_d.m_Sides*4 + 2)*sizeof(Vertex3D_NoTex2));
 
    // 2 apply matrix trafo
    SetNormal( builtin_rgv, builtin_indices,  m_d.m_DrawTexturesInside ? 24*m_d.m_Sides : 12*m_d.m_Sides ,NULL,NULL,0 );
@@ -709,7 +685,7 @@ void Primitive::CalculateBuiltin()
       tempVert->z *= 1.0f+(m_d.m_vAxisScaleY.z - 1.0f)*(tempVert->y+0.5f);
       tempVert->x *= 1.0f+(m_d.m_vAxisScaleZ.x - 1.0f)*(tempVert->z+0.5f);
       tempVert->y *= 1.0f+(m_d.m_vAxisScaleZ.y - 1.0f)*(tempVert->z+0.5f);
-      fullMatrix.MultiplyVector(tempVert->x, tempVert->y, tempVert->z, tempVert);
+      fullMatrix.MultiplyVector(*tempVert, *tempVert);
       tempVert->z *= m_ptable->m_zScale;
    }
 
@@ -818,23 +794,20 @@ void Primitive::CalculateBuiltin()
 
 void Primitive::UpdateMesh()
 {
-   memcpy(objMesh,objMeshOrg,numVertices*sizeof(Vertex3D_NoTex2));
+   objMesh = objMeshOrg;
    if ( m_d.sphereMapping )
    {
       Matrix3D matWorld = g_pplayer->m_pin3d.m_proj.m_matWorld;
       matWorld.Multiply(rotMatrix, rotMatrix);
    }
-   // could be optimized, if not everything is drawn.
-   for (int i = 0; i < numVertices; i++)
+
+   for (unsigned i = 0; i < objMeshOrg.size(); i++)
    {
       Vertex3D_NoTex2 * const tempVert = &objMesh[i];
       if ( m_d.sphereMapping )
       {
          Vertex3Ds norm;
-         norm.x = tempVert->nx;
-         norm.y = tempVert->ny;
-         norm.z = tempVert->nz;
-         norm = rotMatrix.MultiplyVectorNoTranslate(norm);
+         rotMatrix.MultiplyVectorNoTranslate(*tempVert, norm);
          tempVert->tu = 0.5f+ norm.x*0.5f;
          tempVert->tv = 0.5f+ norm.y*0.5f;
       }
@@ -844,13 +817,13 @@ void Primitive::UpdateMesh()
       tempVert->z *= 1.0f+(m_d.m_vAxisScaleY.z - 1.0f)*(tempVert->y+0.5f);
       tempVert->x *= 1.0f+(m_d.m_vAxisScaleZ.x - 1.0f)*(tempVert->z+0.5f);
       tempVert->y *= 1.0f+(m_d.m_vAxisScaleZ.y - 1.0f)*(tempVert->z+0.5f);
-      fullMatrix.MultiplyVector(tempVert->x, tempVert->y, tempVert->z, tempVert);
+      fullMatrix.MultiplyVector(*tempVert, *tempVert);
       tempVert->z *= m_ptable->m_zScale;
    }
 
    Vertex3D_NoTex2 *buf;
    vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
-   memcpy( buf, objMesh, sizeof(Vertex3D_NoTex2)*numVertices );
+   memcpy( buf, &objMesh[0], sizeof(Vertex3D_NoTex2)*objMesh.size() );
    vertexBuffer->unlock();
 }
 
@@ -897,7 +870,7 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       }
       
 	  if( m_d.use3DMesh )
-         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, indexBuffer, 0, indexList.size());
+         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, objMeshOrg.size(), indexBuffer, 0, indexList.size());
       else
          pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, builtin_indices, m_d.m_DrawTexturesInside ? 24*m_d.m_Sides : 12*m_d.m_Sides);
 
@@ -924,20 +897,17 @@ void Primitive::PostRenderStatic(const RenderDevice* _pd3dDevice)
    RenderObject( pd3dDevice );
 }
 
-extern bool loadWavefrontObj( char *filename, bool flipTv, bool convertToLeftHanded );
-extern Vertex3D_NoTex2 *GetVertices( int &numVertices );
-extern void GetIndexList( std::vector<WORD>& list );
-extern void SaveOBJ( char *filename, Primitive *mesh );
+// defined in objloader.cpp
+extern bool WaveFrontObj_Load( char *filename, bool flipTv, bool convertToLeftHanded );
+extern void WaveFrontObj_GetVertices( std::vector<Vertex3D_NoTex2>& objMesh );
+extern void WaveFrontObj_GetIndices( std::vector<WORD>& list );
+extern void WaveFrontObj_Save( char *filename, Primitive *mesh );
+//
 
 void Primitive::RenderSetup( const RenderDevice* _pd3dDevice )
 {
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
-   if( m_d.use3DMesh )
-   {
-	  if( !objMesh )
-          objMesh = new Vertex3D_NoTex2[numVertices];         
-   }
-   else
+   if( !m_d.use3DMesh )
       numVertices = m_d.m_Sides*4+2;
 
    if( !vertexBuffer )
@@ -1044,8 +1014,8 @@ HRESULT Primitive::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcry
    if( m_d.use3DMesh )
    {
       bw.WriteString( FID(M3DN), m_d.meshFileName);
-      bw.WriteInt( FID(M3VN), numVertices );
-      bw.WriteStruct( FID(M3DX), objMeshOrg, sizeof(Vertex3D_NoTex2)*numVertices);
+      bw.WriteInt( FID(M3VN), (int)objMeshOrg.size() );
+      bw.WriteStruct( FID(M3DX), &objMeshOrg[0], sizeof(Vertex3D_NoTex2)*objMeshOrg.size());
       bw.WriteInt( FID(M3FN), indexList.size() );
       bw.WriteStruct( FID(M3DI), &indexList[0], sizeof(WORD)*indexList.size() );
    }
@@ -1229,17 +1199,10 @@ BOOL Primitive::LoadToken(int id, BiffReader *pbr)
    }
    else if( id == FID(M3DX) )
    {
-      if( objMesh )
-      {
-         delete[] objMesh;
-		 objMesh = 0;
-      }
-      if( objMeshOrg )
-      {
-         delete[] objMeshOrg;
-      }
-      objMeshOrg = new Vertex3D_NoTex2[numVertices];
-      pbr->GetStruct( objMeshOrg, sizeof(Vertex3D_NoTex2)*numVertices);
+      objMesh.clear();
+      objMeshOrg.clear();
+      objMeshOrg.resize(numVertices);
+      pbr->GetStruct( &objMeshOrg[0], sizeof(Vertex3D_NoTex2)*numVertices);
    }
    else if( id == FID(M3FN) )
    {
@@ -1312,16 +1275,8 @@ bool Primitive::BrowseFor3DMeshFile()
    {
       return false;
    }
-   if( objMeshOrg )
-   {
-      delete[] objMeshOrg;
-	  objMeshOrg = 0;
-   }
-   if( objMesh )
-   {
-      delete[] objMesh;
-	  objMesh = 0;
-   }
+   objMeshOrg.clear();
+   objMesh.clear();
    numVertices=0;
    indexList.clear();
    m_d.use3DMesh=false;
@@ -1345,11 +1300,12 @@ bool Primitive::BrowseFor3DMeshFile()
          flipTV=true;
       }
    }
-   if ( loadWavefrontObj(ofn.lpstrFile, flipTV, convertToLeftHanded) )
+   if ( WaveFrontObj_Load(ofn.lpstrFile, flipTV, convertToLeftHanded) )
    {
       m_d.use3DMesh=true;
-      objMeshOrg = GetVertices( numVertices );
-      GetIndexList( indexList );
+      WaveFrontObj_GetVertices( objMeshOrg );
+      numVertices = objMeshOrg.size();
+      WaveFrontObj_GetIndices( indexList );
       return true;
    }
    return false;
@@ -1460,7 +1416,7 @@ void Primitive::ExportMesh()
    {
       return;
    }
-   SaveOBJ( ofn.lpstrFile, this );
+   WaveFrontObj_Save( ofn.lpstrFile, this );
 }
 
 bool Primitive::IsTransparent()

@@ -930,10 +930,9 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
          tempMatrix.Multiply(RTmatrix, RTmatrix);
          for( int i=0;i<4;i++ )
          {      
-            Vertex3D_NoLighting * const tempVert = &lvertices[i];
-            T2Matrix.MultiplyVector(tempVert->x, tempVert->y, tempVert->z, tempVert);
-            RTmatrix.MultiplyVector(tempVert->x, tempVert->y, tempVert->z, tempVert);
-            TMatrix.MultiplyVector(tempVert->x, tempVert->y, tempVert->z, tempVert);
+            T2Matrix.MultiplyVector(lvertices[i], lvertices[i]);
+            RTmatrix.MultiplyVector(lvertices[i], lvertices[i]);
+            TMatrix.MultiplyVector(lvertices[i], lvertices[i]);
          }
 
          memcpy( buf, lvertices, sizeof(Vertex3D_NoLighting)*4 );

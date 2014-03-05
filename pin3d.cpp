@@ -616,7 +616,7 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
     m_proj.m_matView.Multiply( m_proj.m_matWorld, temp );   // TODO: use only view matrix once the camera transform is put there
     temp.Invert();
     temp.GetRotationPart( worldViewRot );
-    worldViewRot.MultiplyVector(0, 0, 1, &m_viewVec);
+    worldViewRot.MultiplyVector(Vertex3Ds(0, 0, 1), m_viewVec);
     m_viewVec.Normalize();
 
 	InitLights();

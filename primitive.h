@@ -15,9 +15,9 @@
 //     TraX = 3
 //     TraY = 4
 //     TraZ = 5
-//    ObjRotX=6
-//    ObjRotY=7
-//    ObjRotZ=8
+//  ObjRotX = 6
+//  ObjRotY = 7
+//  ObjRotZ = 8
 
 class PrimitiveData
 {
@@ -230,6 +230,39 @@ public:
 
    PinTable *m_ptable;
 
+   //!! here starts the more general primitive stuff:
+
+   virtual bool LoadMesh();
+   virtual void ExportMesh();
+
+   virtual bool IsTransparent();
+   virtual float GetDepth(const Vertex3Ds& viewDir);
+
+   std::vector<Vertex3D_NoTex2> objMeshOrg;
+   std::vector<Vertex3D_NoTex2> objMesh;
+   std::vector<WORD> indexList;
+   int indexListSize;       // only used during loading
+
+   PrimitiveData m_d;
+   int numVertices;
+
+private:        // private member functions
+
+   void RecalculateMatrices();
+   void RecalculateVertices();
+   void UpdateMesh();
+
+   bool BrowseFor3DMeshFile();
+   void RenderObject( RenderDevice *pd3dDevice);
+   void CheckJoint(Vector<HitObject> * const pvho, const Hit3DPoly * const ph3d1, const Hit3DPoly * const ph3d2);
+
+   void CalculateBuiltinOriginal();
+   void CalculateBuiltin();
+
+private:        // private data members
+
+   Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
+
    //!! outdated(?) information (along with the variable decls) for the old builtin primitive code, kept for reference:
 
    // Vertices for 3d Display
@@ -294,38 +327,11 @@ public:
    // That's why insertion or bubble sort does not work fast here...
    float builtin_depth[Max_Primitive_Sides*4];
 
-   void CalculateBuiltinOriginal();
-   void CalculateBuiltin();
-
-   //!! here starts the more general primitive stuff:
-
-   void RecalculateMatrices();
-   void RecalculateVertices();
-   void UpdateMesh();
-   bool BrowseFor3DMeshFile();
-   void RenderObject( RenderDevice *pd3dDevice);
-   void CheckJoint(Vector<HitObject> * const pvho, const Hit3DPoly * const ph3d1, const Hit3DPoly * const ph3d2);
-
-   virtual bool LoadMesh();
-   virtual void ExportMesh();
-
-   virtual bool IsTransparent();
-   virtual float GetDepth(const Vertex3Ds& viewDir);
-
-   PrimitiveData m_d;
-   int numVertices;
-   Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
-
-   Vertex3D_NoTex2 *objMeshOrg, *objMesh;
-   std::vector<WORD> indexList;
-   int indexListSize;       // only used during loading
-
-private:
    Material material;
 
    // Vertices for editor display
-   Vector<Vertex3Ds> verticesTop;
-   Vector<Vertex3Ds> verticesBottom;
+   std::vector<Vertex3Ds> verticesTop;
+   std::vector<Vertex3Ds> verticesBottom;
 
    Matrix3D fullMatrix, rotMatrix;
 
