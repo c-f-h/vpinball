@@ -1655,6 +1655,16 @@ void PinTable::SetDirtyDraw()
    InvalidateRect(m_hwnd, NULL, fFalse);
 }
 
+
+#include <cmath>
+
+// we want: exp( -1.0 * coeff) == fric
+inline float frictionToCoeff(double fric)
+{
+    return (float)(-std::log(fric));
+}
+
+
 void PinTable::Play()
 {
    if (g_pplayer)
@@ -1755,6 +1765,7 @@ void PinTable::Play()
 		 }
 
          c_hardFriction = 1.0f - (m_fOverridePhysics ? m_fOverrideContactFriction : m_hardFriction);	// convert to reciprocal
+         c_hardFrictionCoeff = frictionToCoeff( pow(c_hardFriction, 3.5f) );    // heuristic: about 3.5 physics cycles per 10 ms
          c_hardScatter = (m_fOverridePhysics ? m_fOverrideContactScatterAngle : m_hardScatter);
          c_maxBallSpeedSqr = (m_fOverridePhysics ? m_fOverrideDampeningSpeed*m_fOverrideDampeningSpeed : m_maxBallSpeed*m_maxBallSpeed);
          c_dampingFriction = (m_fOverridePhysics ? m_fOverrideDampeningFriction : m_dampingFriction);

@@ -505,9 +505,10 @@ void Ball::UpdateDisplacements(const float dtime)
 			pos.z = z_min;								// set rolling point to table surface
 			vel.z *= -0.2f;							    // reflect velocity  ...  dull bounce
 
-			//vel.x *= c_hardFriction;
-			//vel.y *= c_hardFriction;						//friction other axes  // TODO: reenable
-			
+            const double fric = exp(-dtime * c_hardFrictionCoeff);
+            vel.x = (float)(vel.x * fric);
+            vel.y = (float)(vel.y * fric);
+
 			const Vertex3Ds vnormal(0.0f,0.0f,1.0f);
 			AngularAcceleration(vnormal);
 		}

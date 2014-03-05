@@ -23,6 +23,7 @@ enum
 	};
 
 extern float c_hardFriction; 
+extern float c_hardFrictionCoeff;       // for variable timestep
 extern float c_hardScatter; 
 extern float c_maxBallSpeedSqr; 
 extern float c_dampingFriction;
