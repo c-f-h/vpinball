@@ -2269,106 +2269,101 @@ void Player::UnpauseMusic()
 
 void Player::CalcBallShadow(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
 {
-   Vertex3D_NoTex2 * const rgv3DShadow = pball->m_rgv3DShadow;
+    Vertex3D_NoTex2 * const rgv3DShadow = pball->m_rgv3DShadow;
 
-   if ( !vBuffer )
-   {
-      Ball ballT;
-      ballT.x = pball->x;
-      ballT.y = pball->y;
-      ballT.z = pball->z;
-      ballT.vx = 200.0f;
-      ballT.vy = -200.0f;
-      ballT.vz = -200.0f;
-      ballT.radius = 0;
+    Ball ballT;
+    ballT.x = pball->x;
+    ballT.y = pball->y;
+    ballT.z = pball->z;
+    ballT.vx = 200.0f;
+    ballT.vy = -200.0f;
+    ballT.vz = -200.0f;
+    ballT.radius = 0;
 
-      ballT.m_hittime = 1.0f;
+    ballT.m_hittime = 1.0f;
 
-      ballT.CalcBoundingRect();
+    ballT.CalcBoundingRect();
 
-      m_shadowoctree.HitTestBall(&ballT);
+    m_shadowoctree.HitTestBall(&ballT);
 
-      float offsetx;
-      float offsety;
-      float shadowz;
+    float offsetx;
+    float offsety;
+    float shadowz;
 
-      if (ballT.m_hittime < 1.0f) // shadow falls on an object
-      {
-         offsetx = ballT.m_hittime * 200.0f - 12.5f;
-         offsety = ballT.m_hittime * -200.0f + 12.5f;
-         shadowz = pball->z + 0.1f - ballT.m_hittime * 200.0f;				
-      }
-      else // shadow is on the floor
-      {
-         offsetx = pball->z*(m_ptable->m_shadowDirX*0.5f); //0.5f
-         offsety = pball->z*(m_ptable->m_shadowDirY*0.5f); //-0.5f
-         shadowz = 0.1f; //pball->z - pball->radius + 0.1f;
-      }
+    if (ballT.m_hittime < 1.0f) // shadow falls on an object
+    {
+        offsetx = ballT.m_hittime * 200.0f - 12.5f;
+        offsety = ballT.m_hittime * -200.0f + 12.5f;
+        shadowz = pball->z + 0.1f - ballT.m_hittime * 200.0f;
+    }
+    else // shadow is on the floor
+    {
+        offsetx = pball->z*(m_ptable->m_shadowDirX*0.5f); //0.5f
+        offsety = pball->z*(m_ptable->m_shadowDirY*0.5f); //-0.5f
+        shadowz = 0.1f; //pball->z - pball->radius + 0.1f;
+    }
 
-      shadowz *= m_ptable->m_zScale;
-      const float shadowradius = pball->radius*1.2f;
-      const float shadowradiusX = shadowradius * m_BallStretchX;
-      const float shadowradiusY = shadowradius * m_BallStretchY;
-      const float inv_shadowradius = 0.5f/shadowradius;
+    shadowz *= m_ptable->m_zScale;
+    const float shadowradius = pball->radius*1.2f;
+    const float shadowradiusX = shadowradius * m_BallStretchX;
+    const float shadowradiusY = shadowradius * m_BallStretchY;
+    const float inv_shadowradius = 0.5f/shadowradius;
 
-      rgv3DShadow[0].x = pball->x - shadowradiusX + offsetx;
-      rgv3DShadow[0].y = pball->y - shadowradiusY + offsety;
-      rgv3DShadow[0].z = shadowz;
+    rgv3DShadow[0].x = pball->x - shadowradiusX + offsetx;
+    rgv3DShadow[0].y = pball->y - shadowradiusY + offsety;
+    rgv3DShadow[0].z = shadowz;
 
-      rgv3DShadow[1].x = pball->x + shadowradiusX + offsetx;
-      rgv3DShadow[1].y = pball->y - shadowradiusY + offsety;
-      rgv3DShadow[1].z = shadowz;
+    rgv3DShadow[1].x = pball->x + shadowradiusX + offsetx;
+    rgv3DShadow[1].y = pball->y - shadowradiusY + offsety;
+    rgv3DShadow[1].z = shadowz;
 
-      rgv3DShadow[2].x = pball->x + shadowradiusX + offsetx;
-      rgv3DShadow[2].y = pball->y + shadowradiusY + offsety;
-      rgv3DShadow[2].z = shadowz;
+    rgv3DShadow[2].x = pball->x + shadowradiusX + offsetx;
+    rgv3DShadow[2].y = pball->y + shadowradiusY + offsety;
+    rgv3DShadow[2].z = shadowz;
 
-      rgv3DShadow[3].x = pball->x - shadowradiusX + offsetx;
-      rgv3DShadow[3].y = pball->y + shadowradiusY + offsety;
-      rgv3DShadow[3].z = shadowz;
+    rgv3DShadow[3].x = pball->x - shadowradiusX + offsetx;
+    rgv3DShadow[3].y = pball->y + shadowradiusY + offsety;
+    rgv3DShadow[3].z = shadowz;
 
-      if (!pball->fFrozen && rgv3DShadow[0].x <= m_ptable->m_right && rgv3DShadow[2].y >= m_ptable->m_top)
-      {
-         if (rgv3DShadow[2].x > m_ptable->m_right)
-         {
+    if (!pball->fFrozen && rgv3DShadow[0].x <= m_ptable->m_right && rgv3DShadow[2].y >= m_ptable->m_top)
+    {
+        if (rgv3DShadow[2].x > m_ptable->m_right)
+        {
             const float newtu = (rgv3DShadow[2].x - m_ptable->m_right) * inv_shadowradius;
             rgv3DShadow[2].tu = 1.0f-newtu;
             rgv3DShadow[1].tu = 1.0f-newtu;
             rgv3DShadow[2].x = m_ptable->m_right;
             rgv3DShadow[1].x = m_ptable->m_right;
-         }
-         else
-         {
+        }
+        else
+        {
             rgv3DShadow[2].tu = 1.0f;
             rgv3DShadow[1].tu = 1.0f;
-         }
+        }
 
-         if (rgv3DShadow[1].y < m_ptable->m_top)
-         {
+        if (rgv3DShadow[1].y < m_ptable->m_top)
+        {
             const float newtv = (m_ptable->m_top - rgv3DShadow[1].y) * inv_shadowradius;
             rgv3DShadow[1].tv = newtv;
             rgv3DShadow[0].tv = newtv;
             rgv3DShadow[1].tu = m_ptable->m_top;
             rgv3DShadow[0].tu = m_ptable->m_top;
-         }
-         else
-         {
+        }
+        else
+        {
             rgv3DShadow[0].tv = 0;
             rgv3DShadow[1].tv = 0;
             rgv3DShadow[1].tu = 1.0f;
             rgv3DShadow[0].tu = 0;
-         }
+        }
 
-     }
-   }
-   else
-   {
-      if (!pball->fFrozen && rgv3DShadow[0].x <= m_ptable->m_right && rgv3DShadow[2].y >= m_ptable->m_top)
-      {
-         if(vBuffer)
+    }
+
+    if (!pball->fFrozen && rgv3DShadow[0].x <= m_ptable->m_right && rgv3DShadow[2].y >= m_ptable->m_top)
+    {
+        if(vBuffer)
             memcpy( vBuffer, rgv3DShadow, sizeof(Vertex3D_NoTex2)*4);
-      }
-   }
+    }
 }
 
 void Player::DrawBallShadow(Ball * const pball)
@@ -2394,35 +2389,34 @@ void Player::DrawBallShadow(Ball * const pball)
 // gets called from DrawBalls, all render states are handled there
 void Player::CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
 {
-   // Draw the ball logo
-   Vertex3D_NoTex2 *rgv3DArrowTransformed = pball->logoFrontVerts;
-   Vertex3D_NoTex2 *rgv3DArrowTransformed2 = pball->logoBackVerts;
-   if ( !vBuffer )
-   {
-      float zheight = (!pball->fFrozen) ? pball->z : (pball->z - pball->radius);
-      const float maxz = pball->defaultZ+3.0f;
-      const float minz = pball->defaultZ-1.0f;
-      if( (zheight > maxz) || (pball->z < minz) )
-      {
-         // scaling the ball height by the z scale value results in a flying ball over the playfield/ramp
-         // by reducing it with 0.96f (a factor found by trial'n error) the ball is on the ramp again
-         if ( m_ptable->m_zScale!=1.0f )
-         {
+    // Draw the ball logo
+    Vertex3D_NoTex2 *rgv3DArrowTransformed = pball->logoFrontVerts;
+    Vertex3D_NoTex2 *rgv3DArrowTransformed2 = pball->logoBackVerts;
+
+    float zheight = (!pball->fFrozen) ? pball->z : (pball->z - pball->radius);
+    const float maxz = pball->defaultZ+3.0f;
+    const float minz = pball->defaultZ-1.0f;
+    if( (zheight > maxz) || (pball->z < minz) )
+    {
+        // scaling the ball height by the z scale value results in a flying ball over the playfield/ramp
+        // by reducing it with 0.96f (a factor found by trial'n error) the ball is on the ramp again
+        if ( m_ptable->m_zScale!=1.0f )
+        {
             zheight *= (m_ptable->m_zScale*0.96f); 
-         }
-      }
+        }
+    }
 
-      // Scale the orientation for Ball stretching
-      Matrix3 orientation;
-      orientation.Identity();
-      orientation.scaleX(m_BallStretchX);
-      orientation.scaleY(m_BallStretchY);
-      orientation.MultiplyMatrix(&orientation, &pball->m_orientation);
+    // Scale the orientation for Ball stretching
+    Matrix3 orientation;
+    orientation.Identity();
+    orientation.scaleX(m_BallStretchX);
+    orientation.scaleY(m_BallStretchY);
+    orientation.MultiplyMatrix(&orientation, &pball->m_orientation);
 
-      if (pball->m_pinFront)
-      {
-         for (int iPoint=0;iPoint<4;iPoint++)
-         {
+    if (pball->m_pinFront)
+    {
+        for (int iPoint=0;iPoint<4;iPoint++)
+        {
             const Vertex3Ds tmp = orientation.MultiplyVector(pball->logoVertices[iPoint]);
             rgv3DArrowTransformed[iPoint].nx = tmp.x;
             rgv3DArrowTransformed[iPoint].ny = tmp.y;
@@ -2432,17 +2426,17 @@ void Player::CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
             rgv3DArrowTransformed[iPoint].z = zheight - tmp.z*pball->radius;
             rgv3DArrowTransformed[iPoint].tu = pball->logoVertices[iPoint].tu;
             rgv3DArrowTransformed[iPoint].tv = pball->logoVertices[iPoint].tv;
-         }
-      }
+        }
+    }
 
-      orientation.Identity();
-      orientation.scaleX(m_BallStretchX);
-      orientation.scaleY(m_BallStretchY);
-      orientation.MultiplyMatrix(&orientation, &pball->m_orientation);
-      if (pball->m_pinBack)
-      {
-         for (int iPoint=0;iPoint<4;iPoint++)
-         {
+    orientation.Identity();
+    orientation.scaleX(m_BallStretchX);
+    orientation.scaleY(m_BallStretchY);
+    orientation.MultiplyMatrix(&orientation, &pball->m_orientation);
+    if (pball->m_pinBack)
+    {
+        for (int iPoint=0;iPoint<4;iPoint++)
+        {
             pball->logoVertices[iPoint].x = -pball->logoVertices[iPoint].x;
             pball->logoVertices[iPoint].z = -pball->logoVertices[iPoint].z;
             const Vertex3Ds tmp = orientation.MultiplyVector(pball->logoVertices[iPoint]);
@@ -2456,15 +2450,12 @@ void Player::CalcBallLogo(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
             rgv3DArrowTransformed2[iPoint].tv = pball->logoVertices[iPoint].tv;
             pball->logoVertices[iPoint].x = -pball->logoVertices[iPoint].x;
             pball->logoVertices[iPoint].z = -pball->logoVertices[iPoint].z;
-         }
+        }
 
-      }
-   }
-   else
-   {
-      memcpy( vBuffer, pball->logoFrontVerts, sizeof(Vertex3D_NoTex2)*4);
-      memcpy( &vBuffer[4], pball->logoBackVerts, sizeof(Vertex3D_NoTex2)*4);
-   }
+    }
+
+    memcpy( vBuffer, pball->logoFrontVerts, sizeof(Vertex3D_NoTex2)*4);
+    memcpy( &vBuffer[4], pball->logoBackVerts, sizeof(Vertex3D_NoTex2)*4);
 }
 
 // gets called from DrawBalls, all render states are handled there
@@ -2768,27 +2759,24 @@ void Player::DrawBalls()
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
         }
 
-        if (m_fBallShadows)
+        if (m_fBallShadows && !m_fBallAntialias)
         {
-            if (!m_fBallAntialias)
+            if (pball->m_disableLighting)
             {
-                if(pball->m_disableLighting)
-                {
-                    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
-                    m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
-                }
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
+                m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
+            }
 
-                // When not antialiasing, we can get a perf win by
-                // drawing the ball first.  That way, the part of the
-                // shadow that gets obscured doesn't need to do
-                // alpha-blending
-                DrawBallShadow(pball);
+            // When not antialiasing, we can get a perf win by
+            // drawing the ball first.  That way, the part of the
+            // shadow that gets obscured doesn't need to do
+            // alpha-blending
+            DrawBallShadow(pball);
 
-                if(pball->m_disableLighting)
-                {
-                    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
-                    m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-                }
+            if (pball->m_disableLighting)
+            {
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);
+                m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
             }
         }
     }

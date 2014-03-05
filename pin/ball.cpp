@@ -17,7 +17,14 @@ Ball::Ball()
    {
       // VB for normal ball and logo(front+back) and shadow
       g_pplayer->m_pin3d.m_pd3dDevice->CreateVertexBuffer( 5*4, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
-      NumVideoBytes += 5*4*sizeof(Vertex3D_NoTex2);
+      /*
+       * Layout of this vertex buffer:
+       *  0-3:   ball vertices
+       *  4-7:   front decal
+       *  8-11:  back decal
+       *  12-15: shadow
+       *  16-19: reflection
+       */
    }
 
    m_pho = NULL;
