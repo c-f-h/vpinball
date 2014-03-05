@@ -176,43 +176,37 @@ public:
    D3DVALUE tv;
 };
 
-__declspec(align(16))
 class Vertex3D_NoTex2 // for rendering, uses MY_D3DFVF_NOTEX2_VERTEX or MY_D3DTRANSFORMED_NOTEX2_VERTEX
 {
 public:
-   union {
-      struct{
-         // Position
-         D3DVALUE x; 
-         D3DVALUE y; 
-         D3DVALUE z;
+   struct{
+      // Position
+      D3DVALUE x;
+      D3DVALUE y;
+      D3DVALUE z;
 
-         // Normals
-         union
-         {
-            D3DVALUE nx;
-            D3DVALUE rhw;
-         };
-
-         union
-         {
-            D3DVALUE ny;
-            D3DCOLOR color;
-         };
-
-         union
-         {
-            D3DVALUE nz;
-            D3DCOLOR specular;
-         };
-
-         // Texture coordinates
-         D3DVALUE tu;
-         D3DVALUE tv;
+      // Normals
+      union
+      {
+         D3DVALUE nx;
+         D3DVALUE rhw;
       };
-      struct{
-         __m128 v0,v1;
+
+      union
+      {
+         D3DVALUE ny;
+         D3DCOLOR color;
       };
+
+      union
+      {
+         D3DVALUE nz;
+         D3DCOLOR specular;
+      };
+
+      // Texture coordinates
+      D3DVALUE tu;
+      D3DVALUE tv;
    };
 };
 
@@ -252,19 +246,15 @@ public:
    }
 };
 
-__declspec(align(16))
 class Vertex3Ds // for internal calculations that only need xyz
 {
 public:
-   union {
-      struct {
-         float x; 
-         float y; 
-         float z;
-         // dummy value to help with 16-byte alignment of Vertex3Ds objects
-         float _dummy;
-      };
-      __m128 xyz;
+   struct {
+      float x;
+      float y;
+      float z;
+      // dummy value to help with 16-byte alignment of Vertex3Ds objects
+      float _dummy;
    };
 
    inline Vertex3Ds() {}
