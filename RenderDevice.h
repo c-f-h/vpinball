@@ -31,6 +31,10 @@ enum TransformStateType {
     TRANSFORMSTATE_PROJECTION = D3DTS_PROJECTION
 };
 
+enum UsageFlags {
+    USAGE_DYNAMIC   = D3DUSAGE_DYNAMIC      // to be used for vertex/index buffers which are locked every frame
+};
+
 
 class TextureManager
 {

@@ -2550,7 +2550,7 @@ void Player::DrawBalls()
 
         // prepare the vertex buffer for all possible options (ball,logo,shadow)
         Vertex3D_NoTex2 *buf;
-        Ball::vertexBuffer->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY);
+        Ball::vertexBuffer->lock(0, 0, (void**)&buf, VertexBuffer::WRITEONLY | VertexBuffer::DISCARDCONTENTS);
         memcpy( buf, pball->vertices, sizeof(Vertex3D_NoTex2)*4 );
         if ((m_fReflectionForBalls && (m_ptable->m_useReflectionForBalls == -1)) || (m_ptable->m_useReflectionForBalls == 1))
             memcpy( &buf[16], pball->reflectVerts, sizeof(Vertex3D_NoTex2)*4 );
