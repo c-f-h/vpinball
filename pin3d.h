@@ -236,6 +236,9 @@ public:
 
 	void CalcShadowCoordinates(Vertex3D * const pv, const unsigned int count) const;
 
+    const Matrix3D& GetWorldTransform() const   { return m_proj.m_matWorld; }
+    const Matrix3D& GetViewTransform() const    { return m_proj.m_matView; }
+
 private:
     void InitRenderState();
     void InitLights();

@@ -809,14 +809,15 @@ void Primitive::UpdateMeshBuiltin()
 
 void Primitive::TransformVertex(Vertex3D_NoTex2& v) const
 {
+    // NB: most transformations are now handled by the
+    // proper world transform matrix, only shear scaling
+    // stays here for now.
     v.y *= 1.0f + (m_d.m_vAxisScaleX.y - 1.0f)*(v.x+0.5f);
     v.z *= 1.0f + (m_d.m_vAxisScaleX.z - 1.0f)*(v.x+0.5f);
     v.x *= 1.0f + (m_d.m_vAxisScaleY.x - 1.0f)*(v.y+0.5f);
     v.z *= 1.0f + (m_d.m_vAxisScaleY.z - 1.0f)*(v.y+0.5f);
     v.x *= 1.0f + (m_d.m_vAxisScaleZ.x - 1.0f)*(v.z+0.5f);
     v.y *= 1.0f + (m_d.m_vAxisScaleZ.y - 1.0f)*(v.z+0.5f);
-    fullMatrix.MultiplyVector(v, v);
-    v.z *= m_ptable->m_zScale;
 }
 
 void Primitive::UpdateMesh()
@@ -849,6 +850,8 @@ void Primitive::UpdateMesh()
 
 void Primitive::RenderObject( RenderDevice *pd3dDevice )
 {
+   RecalculateMatrices();
+
    if (m_d.m_TopVisible)
    {
       Texture * const pin = m_ptable->GetImage(m_d.m_szImage);
@@ -867,11 +870,10 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       }
 
       pd3dDevice->SetMaterial(material);
+
       if (vertexBufferRegenerate)
       {
          vertexBufferRegenerate = false;
-
-         RecalculateMatrices();
 
          if( m_d.use3DMesh )
             UpdateMesh();
@@ -885,8 +887,20 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
          // it could look odd if you switch lighting on on non mesh primitives
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
       }
+
+      // set transform
+      Matrix3D matOrig, matNew;
+      matOrig = g_pplayer->m_pin3d.GetWorldTransform();
+      //matTemp.SetScaling(1.0f, 1.0f, m_ptable->m_zScale); // TODO: z-scaling? causes distortions
+      //matNew.Multiply(matTemp, matNew);
+      matOrig.Multiply(fullMatrix, matNew);
+      pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matNew);
       
+      // draw the mesh
       pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, objMeshOrg.size(), indexBuffer, 0, indexList.size() );
+
+      // reset transform
+      pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matOrig);
 
       if ( !m_d.useLighting )
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
@@ -1542,28 +1556,6 @@ STDMETHODIMP Primitive::put_DrawTexturesInside(VARIANT_BOOL newVal)
    return S_OK;
 }
 
-STDMETHODIMP Primitive::get_Z(float *pVal)
-{
-   *pVal = m_d.m_vPosition.z;
-
-   return S_OK;
-}
-
-STDMETHODIMP Primitive::put_Z(float newVal)
-{
-   if(m_d.m_vPosition.z != newVal)
-   {
-	   STARTUNDO
-
-	   m_d.m_vPosition.z = newVal;
-	   vertexBufferRegenerate = true;
-
-	   STOPUNDO
-   }
-
-   return S_OK;
-}
-
 STDMETHODIMP Primitive::get_X(float *pVal)
 {
    *pVal = m_d.m_vPosition.x;
@@ -1578,7 +1570,6 @@ STDMETHODIMP Primitive::put_X(float newVal)
 	   STARTUNDO
 
 	   m_d.m_vPosition.x = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -1600,7 +1591,27 @@ STDMETHODIMP Primitive::put_Y(float newVal)
 	   STARTUNDO
 
 	   m_d.m_vPosition.y = newVal;
-	   vertexBufferRegenerate = true;
+
+	   STOPUNDO
+   }
+
+   return S_OK;
+}
+
+STDMETHODIMP Primitive::get_Z(float *pVal)
+{
+   *pVal = m_d.m_vPosition.z;
+
+   return S_OK;
+}
+
+STDMETHODIMP Primitive::put_Z(float newVal)
+{
+   if(m_d.m_vPosition.z != newVal)
+   {
+	   STARTUNDO
+
+	   m_d.m_vPosition.z = newVal;
 
 	   STOPUNDO
    }
@@ -1622,7 +1633,6 @@ STDMETHODIMP Primitive::put_Size_X(float newVal)
 	   STARTUNDO
 
 	   m_d.m_vSize.x = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -1644,7 +1654,6 @@ STDMETHODIMP Primitive::put_Size_Y(float newVal)
 	   STARTUNDO
 
 	   m_d.m_vSize.y = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -1666,7 +1675,6 @@ STDMETHODIMP Primitive::put_Size_Z(float newVal)
 	   STARTUNDO
 
 	   m_d.m_vSize.z = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -1829,7 +1837,6 @@ STDMETHODIMP Primitive::put_RotX(float newVal)
 	   STARTUNDO
 
 	   m_d.m_aRotAndTra[0] = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -1860,7 +1867,6 @@ STDMETHODIMP Primitive::put_RotY(float newVal)
 	   STARTUNDO
 
 	   m_d.m_aRotAndTra[1] = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -1891,7 +1897,6 @@ STDMETHODIMP Primitive::put_RotZ(float newVal)
 	   STARTUNDO
 
 	   m_d.m_aRotAndTra[2] = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -1922,7 +1927,6 @@ STDMETHODIMP Primitive::put_TransX(float newVal)
 	   STARTUNDO
 
 	   m_d.m_aRotAndTra[3] = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -1953,7 +1957,6 @@ STDMETHODIMP Primitive::put_TransY(float newVal)
 	   STARTUNDO
 
 	   m_d.m_aRotAndTra[4] = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -1984,7 +1987,6 @@ STDMETHODIMP Primitive::put_TransZ(float newVal)
 	   STARTUNDO
 
 	   m_d.m_aRotAndTra[5] = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -2015,7 +2017,6 @@ STDMETHODIMP Primitive::put_ObjRotX(float newVal)
 	   STARTUNDO
 
 	   m_d.m_aRotAndTra[6] = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -2046,7 +2047,6 @@ STDMETHODIMP Primitive::put_ObjRotY(float newVal)
 	   STARTUNDO
 
 	   m_d.m_aRotAndTra[7] = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -2077,7 +2077,6 @@ STDMETHODIMP Primitive::put_ObjRotZ(float newVal)
 	   STARTUNDO
 
 	   m_d.m_aRotAndTra[8] = newVal;
-	   vertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
