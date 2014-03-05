@@ -305,23 +305,23 @@ void WaveFrontObj_Save( char *filename, Primitive *mesh )
       return ;
 
    fprintf_s(f,"# Visual Pinball OBJ file\n");
-   fprintf_s(f,"# numVerts: %i numFaces: %i\n", mesh->numVertices, mesh->indexListSize );
+   fprintf_s(f,"# numVerts: %u numFaces: %u\n", mesh->objMeshOrg.size(), mesh->indexList.size() );
    fprintf_s(f,"o %s\n",mesh->m_d.meshFileName );
-   for( int i=0; i<mesh->numVertices;i++ )
+   for( unsigned i=0; i<mesh->objMeshOrg.size(); i++ )
    {
       fprintf_s(f,"v %f %f %f\n", mesh->objMeshOrg[i].x, mesh->objMeshOrg[i].y, -mesh->objMeshOrg[i].z );
    }
-   for( int i=0; i<mesh->numVertices;i++ )
+   for( unsigned i=0; i<mesh->objMeshOrg.size(); i++ )
    {
       fprintf_s(f,"vn %f %f %f\n",mesh->objMeshOrg[i].nx, mesh->objMeshOrg[i].ny, mesh->objMeshOrg[i].nz );
    }
-   for( int i=0; i<mesh->numVertices;i++ )
+   for( unsigned i=0; i<mesh->objMeshOrg.size(); i++ )
    {
       float tv = 1.f-mesh->objMeshOrg[i].tv;
       fprintf_s(f,"vt %f %f\n", mesh->objMeshOrg[i].tu, tv );
    }
 
-   for( int i=0; i<mesh->indexListSize;i+=3 )
+   for( unsigned i=0; i<mesh->indexList.size(); i+=3 )
    {
       fprintf_s(f,"f %i/%i/%i %i/%i/%i %i/%i/%i\n", mesh->indexList[i+2]+1, mesh->indexList[i+2]+1, mesh->indexList[i+2]+1
                                                   , mesh->indexList[i+1]+1, mesh->indexList[i+1]+1, mesh->indexList[i+1]+1

@@ -14,7 +14,8 @@ Primitive::Primitive()
    m_d.useLighting=false;
    m_d.staticRendering=false;
    m_d.sphereMapping=false;
-   indexListSize = 0;
+   numIndices = 0;
+   numVertices = 0;
 } 
 
 Primitive::~Primitive() 
@@ -293,9 +294,9 @@ void Primitive::GetHitShapes(Vector<HitObject> * const pvho)
    for( unsigned i=0; i<indexList.size(); i+=3 )
    {
       Vertex3Ds * const rgv3D = new Vertex3Ds[3];
-      rgv3D[0] = verticesTop[ indexList[i  ] ];
-      rgv3D[1] = verticesTop[ indexList[i+1] ];
-      rgv3D[2] = verticesTop[ indexList[i+2] ];
+      rgv3D[0] = vertices[ indexList[i  ] ];
+      rgv3D[1] = vertices[ indexList[i+1] ];
+      rgv3D[2] = vertices[ indexList[i+2] ];
       Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3);
       ph3dpoly->m_elasticity = m_d.m_elasticity;
       ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;
@@ -416,13 +417,11 @@ void Primitive::RecalculateMatrices()
 // recalculate vertices for editor display
 void Primitive::RecalculateVertices()
 {
-   verticesTop.clear();
-   verticesBottom.clear();
+   vertices.clear();
 
    if( !m_d.use3DMesh )
    {
-      verticesTop.reserve(m_d.m_Sides);
-      verticesBottom.reserve(m_d.m_Sides);
+      vertices.resize(2 * m_d.m_Sides);
 
       const float outerRadius = -0.5f/cosf((float)M_PI/(float)m_d.m_Sides);
       const float addAngle = (float)(2.0*M_PI)/(float)m_d.m_Sides;
@@ -450,18 +449,16 @@ void Primitive::RecalculateVertices()
 
          fullMatrix.MultiplyVector(topVert, topVert);
          fullMatrix.MultiplyVector(bottomVert, bottomVert);
-         verticesTop.push_back(topVert);
-         verticesBottom.push_back(bottomVert);
+         vertices[i] = topVert;
+         vertices[i + m_d.m_Sides] = bottomVert;
       }
    }
    else
    {
-      verticesTop.reserve( objMeshOrg.size() );
+      vertices.resize( objMeshOrg.size() );
       for( unsigned i=0; i<objMeshOrg.size(); i++ )
       {
-         Vertex3Ds vert;
-         fullMatrix.MultiplyVector(objMeshOrg[i], vert);
-         verticesTop.push_back(vert);
+         fullMatrix.MultiplyVector(objMeshOrg[i], vertices[i]);
       }
    }
 }
@@ -497,11 +494,11 @@ void Primitive::Render(Sur * const psur)
       for (int i = 0; i < m_d.m_Sides; i++)
       {
          const int inext = ((i+1) == m_d.m_Sides) ? 0 : i+1;
-         const Vertex3Ds * const topVert = &verticesTop[i];
-         const Vertex3Ds * const nextTopVert = &verticesTop[inext];
+         const Vertex3Ds * const topVert = &vertices[i];
+         const Vertex3Ds * const nextTopVert = &vertices[inext];
          psur->Line(topVert->x, topVert->y, nextTopVert->x, nextTopVert->y);
-         const Vertex3Ds * const bottomVert = &verticesBottom[i];
-         const Vertex3Ds * const nextBottomVert = &verticesBottom[inext];
+         const Vertex3Ds * const bottomVert = &vertices[i + m_d.m_Sides];
+         const Vertex3Ds * const nextBottomVert = &vertices[inext + m_d.m_Sides];
          psur->Line(bottomVert->x, bottomVert->y, nextBottomVert->x, nextBottomVert->y);
          psur->Line(bottomVert->x, bottomVert->y, topVert->x, topVert->y);
       }
@@ -511,10 +508,10 @@ void Primitive::Render(Sur * const psur)
    else
    {
       //just draw a simple mesh layout not the entire mesh for performance reasons
-      for( unsigned i=0;i<indexList.size();i+=3 )
+      for( unsigned i=0; i<indexList.size(); i+=3 )
       {
-         const Vertex3Ds * const A = &verticesTop[ indexList[i]  ];
-         const Vertex3Ds * const B = &verticesTop[ indexList[i+1]];
+         const Vertex3Ds * const A = &vertices[ indexList[i]  ];
+         const Vertex3Ds * const B = &vertices[ indexList[i+1]];
          psur->Line( A->x,A->y,B->x,B->y);
          //psur->Line( B->x,B->y,C->x,C->y);
          //psur->Line( C->x,C->y,A->x,A->y);
@@ -533,33 +530,35 @@ void Primitive::CalculateBuiltinOriginal()
    float maxX = -FLT_MAX;
    float maxY = -FLT_MAX;
 
+   objMeshOrg.resize(4*m_d.m_Sides + 2);
+
    Vertex3D_NoTex2 *middle;
-   middle = &builtin_rgvOriginal[0]; // middle point top
+   middle = &objMeshOrg[0]; // middle point top
    middle->x = 0.0f;
    middle->y = 0.0f;
    middle->z = 0.5f;
-   middle = &builtin_rgvOriginal[m_d.m_Sides+1]; // middle point bottom
+   middle = &objMeshOrg[m_d.m_Sides+1]; // middle point bottom
    middle->x = 0.0f;
    middle->y = 0.0f;
    middle->z = -0.5f;
    for (int i = 0; i < m_d.m_Sides; ++i)
    {
       // calculate Top
-      Vertex3D_NoTex2 * const topVert = &builtin_rgvOriginal[i+1]; // top point at side
+      Vertex3D_NoTex2 * const topVert = &objMeshOrg[i+1]; // top point at side
       const float currentAngle = addAngle*(float)i + offsAngle;
       topVert->x = sinf(currentAngle)*outerRadius;
       topVert->y = cosf(currentAngle)*outerRadius;		
       topVert->z = 0.5f;
 
       // calculate bottom
-      Vertex3D_NoTex2 * const bottomVert = &builtin_rgvOriginal[i+1 + m_d.m_Sides+1]; // bottompoint at side
+      Vertex3D_NoTex2 * const bottomVert = &objMeshOrg[i+1 + m_d.m_Sides+1]; // bottompoint at side
       bottomVert->x = topVert->x;
       bottomVert->y = topVert->y;
       bottomVert->z = -0.5f;
 
       // calculate sides
-      builtin_rgvOriginal[m_d.m_Sides*2 + 2 + i] = *topVert; // sideTopVert
-      builtin_rgvOriginal[m_d.m_Sides*3 + 2 + i] = *bottomVert; // sideBottomVert
+      objMeshOrg[m_d.m_Sides*2 + 2 + i] = *topVert; // sideTopVert
+      objMeshOrg[m_d.m_Sides*3 + 2 + i] = *bottomVert; // sideBottomVert
 
       // calculate bounds for X and Y
       if (topVert->x < minX)
@@ -573,10 +572,10 @@ void Primitive::CalculateBuiltinOriginal()
    }
 
    // these have to be replaced for image mapping
-   middle = &builtin_rgvOriginal[0]; // middle point top
+   middle = &objMeshOrg[0]; // middle point top
    middle->tu = 0.25f;   // /4
    middle->tv = 0.25f;   // /4
-   middle = &builtin_rgvOriginal[m_d.m_Sides+1]; // middle point bottom
+   middle = &objMeshOrg[m_d.m_Sides+1]; // middle point bottom
    middle->tu = (float)(0.25*3.); // /4*3
    middle->tv = 0.25f;   // /4
    const float invx = 0.5f/(maxX-minX);
@@ -584,111 +583,122 @@ void Primitive::CalculateBuiltinOriginal()
    const float invs = 1.0f/(float)m_d.m_Sides;
    for (int i = 0; i < m_d.m_Sides; i++)
    {
-      Vertex3D_NoTex2 * const topVert = &builtin_rgvOriginal[i+1]; // top point at side
+      Vertex3D_NoTex2 * const topVert = &objMeshOrg[i+1]; // top point at side
       topVert->tu = (topVert->x - minX)*invx;
       topVert->tv = (topVert->y - minY)*invy;
 
-      Vertex3D_NoTex2 * const bottomVert = &builtin_rgvOriginal[i+1 + m_d.m_Sides+1]; // bottompoint at side
+      Vertex3D_NoTex2 * const bottomVert = &objMeshOrg[i+1 + m_d.m_Sides+1]; // bottompoint at side
       bottomVert->tu = topVert->tu+0.5f;
       bottomVert->tv = topVert->tv;
 
-      Vertex3D_NoTex2 * const sideTopVert = &builtin_rgvOriginal[m_d.m_Sides*2 + 2 + i];
-      Vertex3D_NoTex2 * const sideBottomVert = &builtin_rgvOriginal[m_d.m_Sides*3 + 2 + i];
+      Vertex3D_NoTex2 * const sideTopVert = &objMeshOrg[m_d.m_Sides*2 + 2 + i];
+      Vertex3D_NoTex2 * const sideBottomVert = &objMeshOrg[m_d.m_Sides*3 + 2 + i];
 
       sideTopVert->tu = (float)i*invs;
       sideTopVert->tv = 0.5f;
       sideBottomVert->tu = sideTopVert->tu;
       sideBottomVert->tv = 1.0f;
    }
+
+   // So how many indices are needed?
+   // 3 per Triangle top - we have m_sides triangles -> 0, 1, 2, 0, 2, 3, 0, 3, 4, ...
+   // 3 per Triangle bottom - we have m_sides triangles
+   // 6 per Side at the side (two triangles form a rectangle) - we have m_sides sides
+   // == 12 * m_sides
+   // * 2 for both cullings (m_DrawTexturesInside == true)
+   // == 24 * m_sides
+   // this will also be the initial sorting, when depths, Vertices and Indices are recreated, because calculateRealTimeOriginal is called.
+
    // 2 restore indices
    //   check if anti culling is enabled:
    if (m_d.m_DrawTexturesInside)
    {
+      indexList.resize(m_d.m_Sides*24);
       // yes: draw everything twice
       // restore indices
       for (int i = 0; i < m_d.m_Sides; i++)
       {
          const int tmp = (i == m_d.m_Sides-1) ? 1 : (i+2); // wrapping around
          // top
-         builtin_indices[i*6  ] = 0;
-         builtin_indices[i*6+1] = i + 1;
-         builtin_indices[i*6+2] = tmp;
-         builtin_indices[i*6+3] = 0;
-         builtin_indices[i*6+4] = tmp;
-         builtin_indices[i*6+5] = i + 1;
+         indexList[i*6  ] = 0;
+         indexList[i*6+1] = i + 1;
+         indexList[i*6+2] = tmp;
+         indexList[i*6+3] = 0;
+         indexList[i*6+4] = tmp;
+         indexList[i*6+5] = i + 1;
 
          const int tmp2 = tmp+1;
          // bottom
-         builtin_indices[6 * (i + m_d.m_Sides)    ] = m_d.m_Sides + 1;
-         builtin_indices[6 * (i + m_d.m_Sides) + 1] = m_d.m_Sides + tmp2;
-         builtin_indices[6 * (i + m_d.m_Sides) + 2] = m_d.m_Sides + 2 + i;
-         builtin_indices[6 * (i + m_d.m_Sides) + 3] = m_d.m_Sides + 1;
-         builtin_indices[6 * (i + m_d.m_Sides) + 4] = m_d.m_Sides + 2 + i;
-         builtin_indices[6 * (i + m_d.m_Sides) + 5] = m_d.m_Sides + tmp2;
+         indexList[6 * (i + m_d.m_Sides)    ] = m_d.m_Sides + 1;
+         indexList[6 * (i + m_d.m_Sides) + 1] = m_d.m_Sides + tmp2;
+         indexList[6 * (i + m_d.m_Sides) + 2] = m_d.m_Sides + 2 + i;
+         indexList[6 * (i + m_d.m_Sides) + 3] = m_d.m_Sides + 1;
+         indexList[6 * (i + m_d.m_Sides) + 4] = m_d.m_Sides + 2 + i;
+         indexList[6 * (i + m_d.m_Sides) + 5] = m_d.m_Sides + tmp2;
          // sides
-         builtin_indices[12 * (i + m_d.m_Sides)    ] = m_d.m_Sides*2 + tmp2;
-         builtin_indices[12 * (i + m_d.m_Sides) + 1] = m_d.m_Sides*2 + 2 + i;
-         builtin_indices[12 * (i + m_d.m_Sides) + 2] = m_d.m_Sides*3 + 2 + i;
-         builtin_indices[12 * (i + m_d.m_Sides) + 3] = m_d.m_Sides*2 + tmp2;
-         builtin_indices[12 * (i + m_d.m_Sides) + 4] = m_d.m_Sides*3 + 2 + i;
-         builtin_indices[12 * (i + m_d.m_Sides) + 5] = m_d.m_Sides*3 + tmp2;
-         builtin_indices[12 * (i + m_d.m_Sides) + 6] = m_d.m_Sides*2 + tmp2;
-         builtin_indices[12 * (i + m_d.m_Sides) + 7] = m_d.m_Sides*3 + 2 + i;
-         builtin_indices[12 * (i + m_d.m_Sides) + 8] = m_d.m_Sides*2 + 2 + i;
-         builtin_indices[12 * (i + m_d.m_Sides) + 9] = m_d.m_Sides*2 + tmp2;
-         builtin_indices[12 * (i + m_d.m_Sides) + 10]= m_d.m_Sides*3 + tmp2;
-         builtin_indices[12 * (i + m_d.m_Sides) + 11]= m_d.m_Sides*3 + 2 + i;
+         indexList[12 * (i + m_d.m_Sides)    ] = m_d.m_Sides*2 + tmp2;
+         indexList[12 * (i + m_d.m_Sides) + 1] = m_d.m_Sides*2 + 2 + i;
+         indexList[12 * (i + m_d.m_Sides) + 2] = m_d.m_Sides*3 + 2 + i;
+         indexList[12 * (i + m_d.m_Sides) + 3] = m_d.m_Sides*2 + tmp2;
+         indexList[12 * (i + m_d.m_Sides) + 4] = m_d.m_Sides*3 + 2 + i;
+         indexList[12 * (i + m_d.m_Sides) + 5] = m_d.m_Sides*3 + tmp2;
+         indexList[12 * (i + m_d.m_Sides) + 6] = m_d.m_Sides*2 + tmp2;
+         indexList[12 * (i + m_d.m_Sides) + 7] = m_d.m_Sides*3 + 2 + i;
+         indexList[12 * (i + m_d.m_Sides) + 8] = m_d.m_Sides*2 + 2 + i;
+         indexList[12 * (i + m_d.m_Sides) + 9] = m_d.m_Sides*2 + tmp2;
+         indexList[12 * (i + m_d.m_Sides) + 10]= m_d.m_Sides*3 + tmp2;
+         indexList[12 * (i + m_d.m_Sides) + 11]= m_d.m_Sides*3 + 2 + i;
       }
    } else {
       // no: only out-facing polygons
       // restore indices
+      indexList.resize(m_d.m_Sides*12);
       for (int i = 0; i < m_d.m_Sides; i++)
       {
          const int tmp = (i == m_d.m_Sides-1) ? 1 : (i+2); // wrapping around
          // top
-         builtin_indices[i*3  ] = 0;
-         builtin_indices[i*3+2] = i + 1;
-         builtin_indices[i*3+1] = tmp;
+         indexList[i*3  ] = 0;
+         indexList[i*3+2] = i + 1;
+         indexList[i*3+1] = tmp;
 
          const int tmp2 = tmp+1;
          // bottom
-         builtin_indices[3 * (i + m_d.m_Sides)    ] = m_d.m_Sides + 1;
-         builtin_indices[3 * (i + m_d.m_Sides) + 1] = m_d.m_Sides + 2 + i;
-         builtin_indices[3 * (i + m_d.m_Sides) + 2] = m_d.m_Sides + tmp2;
+         indexList[3 * (i + m_d.m_Sides)    ] = m_d.m_Sides + 1;
+         indexList[3 * (i + m_d.m_Sides) + 1] = m_d.m_Sides + 2 + i;
+         indexList[3 * (i + m_d.m_Sides) + 2] = m_d.m_Sides + tmp2;
 
          // sides
-         builtin_indices[6 * (i + m_d.m_Sides)    ] = m_d.m_Sides*2 + tmp2;
-         builtin_indices[6 * (i + m_d.m_Sides) + 1] = m_d.m_Sides*3 + 2 + i;
-         builtin_indices[6 * (i + m_d.m_Sides) + 2] = m_d.m_Sides*2 + 2 + i;
-         builtin_indices[6 * (i + m_d.m_Sides) + 3] = m_d.m_Sides*2 + tmp2;
-         builtin_indices[6 * (i + m_d.m_Sides) + 4] = m_d.m_Sides*3 + tmp2;
-         builtin_indices[6 * (i + m_d.m_Sides) + 5] = m_d.m_Sides*3 + 2 + i;
+         indexList[6 * (i + m_d.m_Sides)    ] = m_d.m_Sides*2 + tmp2;
+         indexList[6 * (i + m_d.m_Sides) + 1] = m_d.m_Sides*3 + 2 + i;
+         indexList[6 * (i + m_d.m_Sides) + 2] = m_d.m_Sides*2 + 2 + i;
+         indexList[6 * (i + m_d.m_Sides) + 3] = m_d.m_Sides*2 + tmp2;
+         indexList[6 * (i + m_d.m_Sides) + 4] = m_d.m_Sides*3 + tmp2;
+         indexList[6 * (i + m_d.m_Sides) + 5] = m_d.m_Sides*3 + 2 + i;
       }
    }
 }
 
-void Primitive::CalculateBuiltin()
+void Primitive::UpdateMeshBuiltin()
 {
    // 1 copy vertices
-   memcpy(builtin_rgv, builtin_rgvOriginal, (m_d.m_Sides*4 + 2)*sizeof(Vertex3D_NoTex2));
+   objMesh = objMeshOrg;
 
    // 2 apply matrix trafo
-   SetNormal( builtin_rgv, builtin_indices,  m_d.m_DrawTexturesInside ? 24*m_d.m_Sides : 12*m_d.m_Sides ,NULL,NULL,0 );
+   // BUG: SetNormal only works for plane polygons
+   SetNormal( &objMesh[0], &indexList[0], indexList.size(), NULL, NULL, 0 );
 
-   // could be optimized, if not everything is drawn.
    for (int i = 0; i < (m_d.m_Sides*4 + 2); i++)
    {
-      Vertex3D_NoTex2 * const tempVert = &builtin_rgv[i];
-      tempVert->y *= 1.0f+(m_d.m_vAxisScaleX.y - 1.0f)*(tempVert->x+0.5f);
-      tempVert->z *= 1.0f+(m_d.m_vAxisScaleX.z - 1.0f)*(tempVert->x+0.5f);
-      tempVert->x *= 1.0f+(m_d.m_vAxisScaleY.x - 1.0f)*(tempVert->y+0.5f);
-      tempVert->z *= 1.0f+(m_d.m_vAxisScaleY.z - 1.0f)*(tempVert->y+0.5f);
-      tempVert->x *= 1.0f+(m_d.m_vAxisScaleZ.x - 1.0f)*(tempVert->z+0.5f);
-      tempVert->y *= 1.0f+(m_d.m_vAxisScaleZ.y - 1.0f)*(tempVert->z+0.5f);
-      fullMatrix.MultiplyVector(*tempVert, *tempVert);
-      tempVert->z *= m_ptable->m_zScale;
+      TransformVertex( objMesh[i] );
    }
 
+   // store in vertex buffer
+   Vertex3D_NoTex2 *buf;
+   vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
+   memcpy( buf, &objMesh[0], sizeof(Vertex3D_NoTex2)*objMesh.size() );
+   vertexBuffer->unlock();
+
+#if 0   // depth sorting of polygons: this probably serves no practical purpose, better to keep the index buffer constant
    // 3 depth calculation / sorting
 
    // I need m_sides values at top
@@ -702,6 +712,16 @@ void Primitive::CalculateBuiltin()
    const float zMultiplicator = cosf(ANGTORAD(m_ptable->m_inclination));
    const float yMultiplicator = sinf(ANGTORAD(m_ptable->m_inclination));
 
+   // depth calculation
+   // Since we are compiling with SSE, I'll use Floating points for comparison.
+   // I need m_sides values at top
+   // I need m_sides values at bottom
+   // I need m_sides * 2 values at the side
+   // in the implementation i will use shell sort like implemented at wikipedia.
+   // Other algorithms are better at presorted things, but i will have some reverse sorted elements between the presorted here. 
+   // That's why insertion or bubble sort does not work fast here...
+   std::vector<float> builtin_depth(m_d.m_Sides * 4);
+
    // get depths
    if (!m_d.m_DrawTexturesInside)
    {
@@ -710,12 +730,12 @@ void Primitive::CalculateBuiltin()
       {
          //!! this is wrong!
          builtin_depth[i] = 
-            zMultiplicator*builtin_rgv[builtin_indices[i*3  ]].z+
-            zMultiplicator*builtin_rgv[builtin_indices[i*3+1]].z+
-            zMultiplicator*builtin_rgv[builtin_indices[i*3+2]].z+
-            yMultiplicator*builtin_rgv[builtin_indices[i*3  ]].y+
-            yMultiplicator*builtin_rgv[builtin_indices[i*3+1]].y+
-            yMultiplicator*builtin_rgv[builtin_indices[i*3+2]].y;
+            zMultiplicator*objMesh[indexList[i*3  ]].z+
+            zMultiplicator*objMesh[indexList[i*3+1]].z+
+            zMultiplicator*objMesh[indexList[i*3+2]].z+
+            yMultiplicator*objMesh[indexList[i*3  ]].y+
+            yMultiplicator*objMesh[indexList[i*3+1]].y+
+            yMultiplicator*objMesh[indexList[i*3+2]].y;
       }
    } else {
       const float zM13 = (float)(1.0/3.0) * zMultiplicator;
@@ -724,13 +744,13 @@ void Primitive::CalculateBuiltin()
       for (int i = 0; i < m_d.m_Sides * 2; i++)
       {
          builtin_depth[i] = 
-            (builtin_rgv[builtin_indices[i*6  ]].z+
-             builtin_rgv[builtin_indices[i*6+1]].z+
-             builtin_rgv[builtin_indices[i*6+2]].z) 
+            (objMesh[indexList[i*6  ]].z+
+             objMesh[indexList[i*6+1]].z+
+             objMesh[indexList[i*6+2]].z) 
             * zM13 +
-            (builtin_rgv[builtin_indices[i*6  ]].y+
-             builtin_rgv[builtin_indices[i*6+1]].y+
-             builtin_rgv[builtin_indices[i*6+2]].y) 
+            (objMesh[indexList[i*6  ]].y+
+             objMesh[indexList[i*6+1]].y+
+             objMesh[indexList[i*6+2]].y) 
             * yM13;
       }
 
@@ -740,11 +760,11 @@ void Primitive::CalculateBuiltin()
       {
          builtin_depth[i*2] = 
          builtin_depth[i*2+1] = 
-            (builtin_rgv[builtin_indices[i*12  ]].z+
-             builtin_rgv[builtin_indices[i*12+1]].z)
+            (objMesh[indexList[i*12  ]].z+
+             objMesh[indexList[i*12+1]].z)
             * zM05 +
-            (builtin_rgv[builtin_indices[i*12  ]].y+
-             builtin_rgv[builtin_indices[i*12+1]].y)
+            (objMesh[indexList[i*12  ]].y+
+             objMesh[indexList[i*12+1]].y)
             * yM05;
       }
    }
@@ -761,20 +781,20 @@ void Primitive::CalculateBuiltin()
             const float tempDepth = builtin_depth[i];
             int tempIndices[6];
             for (int tempI = 0; tempI < 6; tempI++)
-               tempIndices[tempI] = builtin_indices[i*6 + tempI];
+               tempIndices[tempI] = indexList[i*6 + tempI];
 
             int j = i;
             while ((j >= inc) && (builtin_depth[j-inc] > tempDepth))
             {
                builtin_depth[j] = builtin_depth[j-inc];
                for (int tempI = 0; tempI < 6; tempI++)
-                  builtin_indices[j*6+tempI] = builtin_indices[(j-inc)*6 + tempI];
+                  indexList[j*6+tempI] = indexList[(j-inc)*6 + tempI];
                j -= inc;
             }
 
             builtin_depth[j] = tempDepth;
             for (int tempI = 0; tempI < 6; tempI++)
-               builtin_indices[j*6+tempI] = tempIndices[tempI];
+               indexList[j*6+tempI] = tempIndices[tempI];
          }
 
          if(inc == 2)
@@ -784,12 +804,19 @@ void Primitive::CalculateBuiltin()
       }
    } //else { //!! this is missing completely!!???
    //}
+#endif
+}
 
-   // 5 store in vertexbuffer
-   Vertex3D_NoTex2 *buf;
-   vertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
-   memcpy( buf, builtin_rgv, sizeof(Vertex3D_NoTex2)*numVertices );
-   vertexBuffer->unlock();
+void Primitive::TransformVertex(Vertex3D_NoTex2& v) const
+{
+    v.y *= 1.0f + (m_d.m_vAxisScaleX.y - 1.0f)*(v.x+0.5f);
+    v.z *= 1.0f + (m_d.m_vAxisScaleX.z - 1.0f)*(v.x+0.5f);
+    v.x *= 1.0f + (m_d.m_vAxisScaleY.x - 1.0f)*(v.y+0.5f);
+    v.z *= 1.0f + (m_d.m_vAxisScaleY.z - 1.0f)*(v.y+0.5f);
+    v.x *= 1.0f + (m_d.m_vAxisScaleZ.x - 1.0f)*(v.z+0.5f);
+    v.y *= 1.0f + (m_d.m_vAxisScaleZ.y - 1.0f)*(v.z+0.5f);
+    fullMatrix.MultiplyVector(v, v);
+    v.z *= m_ptable->m_zScale;
 }
 
 void Primitive::UpdateMesh()
@@ -808,17 +835,10 @@ void Primitive::UpdateMesh()
       {
          Vertex3Ds norm;
          rotMatrix.MultiplyVectorNoTranslate(*tempVert, norm);
-         tempVert->tu = 0.5f+ norm.x*0.5f;
-         tempVert->tv = 0.5f+ norm.y*0.5f;
+         tempVert->tu = 0.5f + norm.x*0.5f;
+         tempVert->tv = 0.5f + norm.y*0.5f;
       }
-      tempVert->y *= 1.0f+(m_d.m_vAxisScaleX.y - 1.0f)*(tempVert->x+0.5f);
-      tempVert->z *= 1.0f+(m_d.m_vAxisScaleX.z - 1.0f)*(tempVert->x+0.5f);
-      tempVert->x *= 1.0f+(m_d.m_vAxisScaleY.x - 1.0f)*(tempVert->y+0.5f);
-      tempVert->z *= 1.0f+(m_d.m_vAxisScaleY.z - 1.0f)*(tempVert->y+0.5f);
-      tempVert->x *= 1.0f+(m_d.m_vAxisScaleZ.x - 1.0f)*(tempVert->z+0.5f);
-      tempVert->y *= 1.0f+(m_d.m_vAxisScaleZ.y - 1.0f)*(tempVert->z+0.5f);
-      fullMatrix.MultiplyVector(*tempVert, *tempVert);
-      tempVert->z *= m_ptable->m_zScale;
+      TransformVertex(*tempVert);
    }
 
    Vertex3D_NoTex2 *buf;
@@ -838,9 +858,6 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
          pin->CreateAlphaChannel();
          pin->Set( ePictureTexture );
          g_pplayer->m_pin3d.EnableAlphaBlend(1, fFalse);
-
-         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-
          g_pplayer->m_pin3d.SetTextureFilter(ePictureTexture, TEXTURE_MODE_TRILINEAR);
       }
       else
@@ -850,7 +867,7 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       }
 
       pd3dDevice->SetMaterial(material);
-      if(vertexBufferRegenerate)
+      if (vertexBufferRegenerate)
       {
          vertexBufferRegenerate = false;
 
@@ -859,7 +876,7 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
          if( m_d.use3DMesh )
             UpdateMesh();
          else
-            CalculateBuiltin();
+            UpdateMeshBuiltin();
       }
 
 	  if ( !m_d.useLighting )
@@ -869,15 +886,12 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
       }
       
-	  if( m_d.use3DMesh )
-         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, objMeshOrg.size(), indexBuffer, 0, indexList.size());
-      else
-         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, numVertices, builtin_indices, m_d.m_DrawTexturesInside ? 24*m_d.m_Sides : 12*m_d.m_Sides);
+      pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, 0, objMeshOrg.size(), indexBuffer, 0, indexList.size() );
 
       if ( !m_d.useLighting )
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
 
-	  pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE); 	
+      g_pplayer->m_pin3d.DisableAlphaBlend();
 
 	  if (pin)
 	  {
@@ -907,20 +921,14 @@ extern void WaveFrontObj_Save( char *filename, Primitive *mesh );
 void Primitive::RenderSetup( const RenderDevice* _pd3dDevice )
 {
    RenderDevice* pd3dDevice=(RenderDevice*)_pd3dDevice;
-   if( !m_d.use3DMesh )
-      numVertices = m_d.m_Sides*4+2;
-
-   if( !vertexBuffer )
-   {
-      pd3dDevice->CreateVertexBuffer( numVertices, 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
-      NumVideoBytes += numVertices*sizeof(Vertex3D_NoTex2); //!! never cleared up again here
-   }
-
-   if (m_d.use3DMesh)
-       indexBuffer = pd3dDevice->CreateAndFillIndexBuffer( indexList );
 
    if( !m_d.use3DMesh )
       CalculateBuiltinOriginal();
+
+   if( !vertexBuffer )
+      pd3dDevice->CreateVertexBuffer( objMeshOrg.size(), 0, MY_D3DFVF_NOTEX2_VERTEX, &vertexBuffer );
+
+   indexBuffer = pd3dDevice->CreateAndFillIndexBuffer( indexList );
 
    // make sure alpha channel is set up
    Texture * const tex = m_ptable->GetImage(m_d.m_szImage);
@@ -1206,12 +1214,12 @@ BOOL Primitive::LoadToken(int id, BiffReader *pbr)
    }
    else if( id == FID(M3FN) )
    {
-      pbr->GetInt( &indexListSize );
+      pbr->GetInt( &numIndices );
    }
    else if( id == FID(M3DI) )
    {
-      indexList.resize( indexListSize );
-      pbr->GetStruct( &indexList[0], sizeof(WORD)*indexListSize);
+      indexList.resize( numIndices );
+      pbr->GetStruct( &indexList[0], sizeof(WORD)*numIndices);
    }
    else
    {
@@ -1277,7 +1285,7 @@ bool Primitive::BrowseFor3DMeshFile()
    }
    objMeshOrg.clear();
    objMesh.clear();
-   numVertices=0;
+   numVertices = numIndices = 0;
    indexList.clear();
    m_d.use3DMesh=false;
    if( vertexBuffer )
@@ -1304,7 +1312,6 @@ bool Primitive::BrowseFor3DMeshFile()
    {
       m_d.use3DMesh=true;
       WaveFrontObj_GetVertices( objMeshOrg );
-      numVertices = objMeshOrg.size();
       WaveFrontObj_GetIndices( indexList );
       return true;
    }

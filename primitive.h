@@ -241,12 +241,13 @@ public:
    std::vector<Vertex3D_NoTex2> objMeshOrg;
    std::vector<Vertex3D_NoTex2> objMesh;
    std::vector<WORD> indexList;
-   int indexListSize;       // only used during loading
 
    PrimitiveData m_d;
-   int numVertices;
 
 private:        // private member functions
+
+   int numIndices;       // only used during loading
+   int numVertices;         // only used during loading
 
    void RecalculateMatrices();
    void RecalculateVertices();
@@ -257,7 +258,9 @@ private:        // private member functions
    void CheckJoint(Vector<HitObject> * const pvho, const Hit3DPoly * const ph3d1, const Hit3DPoly * const ph3d2);
 
    void CalculateBuiltinOriginal();
-   void CalculateBuiltin();
+   void UpdateMeshBuiltin();
+
+   inline void TransformVertex(Vertex3D_NoTex2& v) const;
 
 private:        // private data members
 
@@ -304,34 +307,10 @@ private:        // private data members
    // 13 * float * 2 (additional middle points at top and bottom)
    // = nothing...
 
-   Vertex3D_NoTex2 builtin_rgvOriginal[Max_Primitive_Sides*4+2];
-   Vertex3D_NoTex2 builtin_rgv[Max_Primitive_Sides*4+2];
-
-   // So how many indices are needed?
-   // 3 per Triangle top - we have m_sides triangles -> 0, 1, 2, 0, 2, 3, 0, 3, 4, ...
-   // 3 per Triangle bottom - we have m_sides triangles
-   // 6 per Side at the side (two triangles form a rectangle) - we have m_sides sides
-   // == 12 * m_sides
-   // * 2 for both cullings (m_DrawTexturesInside == true)
-   // == 24 * m_sides
-   // this will also be the initial sorting, when depths, Vertices and Indices are recreated, because calculateRealTimeOriginal is called.
-   WORD builtin_indices[Max_Primitive_Sides*24];
-
-   // depth calculation
-   // Since we are compiling with SSE, I'll use Floating points for comparison.
-   // I need m_sides values at top
-   // I need m_sides values at bottom
-   // I need m_sides * 2 values at the side
-   // in the implementation i will use shell sort like implemented at wikipedia.
-   // Other algorithms are better at presorted things, but i will have some reverse sorted elements between the presorted here. 
-   // That's why insertion or bubble sort does not work fast here...
-   float builtin_depth[Max_Primitive_Sides*4];
-
    Material material;
 
    // Vertices for editor display
-   std::vector<Vertex3Ds> verticesTop;
-   std::vector<Vertex3Ds> verticesBottom;
+   std::vector<Vertex3Ds> vertices;
 
    Matrix3D fullMatrix, rotMatrix;
 
