@@ -1543,8 +1543,9 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 				// and therefore the bounding box for the next hit cycle
 				if ( m_vball[i] != pball) // Ball still exists? may have been deleted from list
 				{
-					if(i) // collision script deleted the ball, back up one count, if not zero
-						--i;
+					// collision script deleted the ball, back up one count
+                    --i;
+                    continue;
 				}
 				else
 				{
