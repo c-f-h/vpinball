@@ -2372,9 +2372,7 @@ void Player::DrawBallShadow(Ball * const pball)
 
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE); //!! actually fails then for shadows on alpha ramps/primitives
 
-   m_pin3d.EnableAlphaTestReference( 0x0000001 );
-   m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
-   m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
+   m_pin3d.EnableAlphaBlend(1);
 
    m_pin3d.SetBaseTexture(ePictureTexture, m_pin3d.ballShadowTexture);
    m_pin3d.m_pd3dDevice->SetTextureAddressMode(0, RenderDevice::TEX_CLAMP);
@@ -2464,9 +2462,7 @@ void Player::DrawBallLogo(Ball * const pball)
    // Draw the ball logo
    m_pin3d.m_pd3dDevice->SetMaterial(pball->logoMaterial);
 
-   m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
-   m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
-   m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
+   m_pin3d.EnableAlphaBlend(1);
 
    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
 
@@ -2496,8 +2492,6 @@ void Player::DrawBalls()
 
     // m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREPERSPECTIVE, FALSE ); // this is always on in DX9
     m_pin3d.m_pd3dDevice->SetTextureAddressMode(0, RenderDevice::TEX_CLAMP);
-
-    m_pin3d.EnableAlphaTestReference( 0x0000001 );
     m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
     m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_TRILINEAR);
 
@@ -2575,7 +2569,7 @@ void Player::DrawBalls()
         m_pin3d.m_pd3dDevice->SetMaterial(pball->material);
 
         // now render the ball with the vertex buffer data
-        if (m_fBallShadows && m_fBallAntialias)
+        if (m_fBallShadows)
             DrawBallShadow(pball);
 
         if( !pball->m_pin )
@@ -2585,17 +2579,13 @@ void Player::DrawBalls()
 
         if (m_fBallAntialias)
         {
-            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, TRUE);
-            if ( !drawReflection )
-            {
-                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::SRCBLEND,   D3DBLEND_SRCALPHA);
-                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND,  D3DBLEND_INVSRCALPHA);
-            }
+            m_pin3d.EnableAlphaBlend(1);
             // m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_LINEAR); // TODO (DX9): disabled for compatibility
         }
         else
         {
-            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+            m_pin3d.DisableAlphaBlend();
+            m_pin3d.EnableAlphaTestReference(1);        // needed to cut out the black border around the ball
             // m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_MIPFILTER, D3DTFP_NONE);   // TODO (DX9): disabled for compatibility
         }
 
@@ -2617,7 +2607,7 @@ void Player::DrawBalls()
 
             m_pin3d.m_pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, pball->vertexBuffer, 16, 4);
 
-            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
             m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::DESTBLEND, D3DBLEND_INVSRCALPHA);
@@ -2625,16 +2615,16 @@ void Player::DrawBalls()
 
         if(pball->m_disableLighting)
         {
-            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, COLORREF_to_D3DCOLOR(pball->m_color));
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
         }
 
-        // normal ball
+        // draw the ball itself
         m_pin3d.m_pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, pball->vertexBuffer, 0, 4);
 
         if(pball->m_disableLighting)
         {
-            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);
             m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
         }
 
@@ -2744,34 +2734,16 @@ void Player::DrawBalls()
             }
         }
 
-        if(pball->m_disableLighting)
-        {
-            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
-            m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
-        }
-
+        // draw ball decals
         if (m_fBallDecals && (pball->m_pinFront || pball->m_pinBack))
-            DrawBallLogo(pball);
-
-        if(pball->m_disableLighting)
-        {
-            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);            
-            m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-        }
-
-        if (m_fBallShadows && !m_fBallAntialias)
         {
             if (pball->m_disableLighting)
             {
-                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, (pball->m_color>>16) | (pball->m_color&0x00FF00) | ((pball->m_color&255)<<16));
+                m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, COLORREF_to_D3DCOLOR(pball->m_color));
                 m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // do not modify tex by diffuse lighting
             }
 
-            // When not antialiasing, we can get a perf win by
-            // drawing the ball first.  That way, the part of the
-            // shadow that gets obscured doesn't need to do
-            // alpha-blending
-            DrawBallShadow(pball);
+            DrawBallLogo(pball);
 
             if (pball->m_disableLighting)
             {
@@ -2782,8 +2754,7 @@ void Player::DrawBalls()
     }
 
     m_pin3d.m_pd3dDevice->SetTexture(0, NULL);
-    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
-    m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+    m_pin3d.DisableAlphaBlend();
 }
 
 

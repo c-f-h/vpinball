@@ -205,6 +205,7 @@ public:
 
 	void EnableAlphaTestReference(DWORD alphaRefValue) const;
     void EnableAlphaBlend( DWORD alphaRefValue, BOOL additiveBlending=fFalse );
+    void DisableAlphaBlend();
 
 	// Handy functions for creating obj frames
 

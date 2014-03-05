@@ -945,6 +945,12 @@ void Pin3D::EnableAlphaBlend( DWORD alphaRefValue, BOOL additiveBlending )
 		m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR); // factor is 1,1,1,1
 }
 
+void Pin3D::DisableAlphaBlend()
+{
+    m_pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
+    m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
+}
+
 void Pin3D::Flip(const int offsetx, const int offsety, bool vsync)
 {
     m_pd3dDevice->Flip(offsetx, offsety, vsync);
