@@ -578,7 +578,7 @@ void Decal::RenderStatic(const RenderDevice* _pd3dDevice)
 
    if (!m_fBackglass)
    {
-       float depthbias = -25 * BASEDEPTHBIAS;
+       float depthbias = -5 * BASEDEPTHBIAS;
        pd3dDevice->SetRenderState(RenderDevice::DEPTHBIAS, *((DWORD*)&depthbias));
    }
 
