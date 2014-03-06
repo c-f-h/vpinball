@@ -139,7 +139,7 @@ void EnumerateDisplayModes(int adapter, std::vector<VideoMode>& modes)
 //#define MY_IDX_BUF_SIZE 8192
 #define MY_IDX_BUF_SIZE 65536
 
-RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate, bool useVSync, bool useAA, bool stereo3DFXAA)
+RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, int screenWidth, int screenHeight, int colordepth, int &refreshrate, int VSync, bool useAA, bool stereo3DFXAA)
     : m_texMan(*this)
 {
     m_adapter = D3DADAPTER_DEFAULT;     // for now, always use the default adapter
@@ -193,11 +193,16 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
         D3DDISPLAYMODE mode;
         CHECKD3D(m_pD3D->GetAdapterDisplayMode(m_adapter, &mode));
         format = mode.Format;
+		refreshrate = mode.RefreshRate;
     }
     else
     {
         format = (colordepth == 16) ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8;
     }
+
+	// limit vsync rate to actual refresh rate, otherwise special handling in renderloop
+	if(VSync > refreshrate)
+		VSync = 0;
 
     D3DPRESENT_PARAMETERS params;
     params.BackBufferWidth = fullscreen ? screenWidth : width;
@@ -216,7 +221,7 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
 #ifdef USE_D3D9EX
     params.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE; //!! or have a special mode to force normal vsync?
 #else
-    params.PresentationInterval = useVSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+    params.PresentationInterval = !!VSync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
 #endif
 
 	// check if auto generation of mipmaps can be used, otherwise will be done via d3dx

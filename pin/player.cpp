@@ -696,8 +696,10 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	InitRegValues();
 
+	int vsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
+
 	// width, height, and colordepth are only defined if fullscreen is true.
-	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, (m_ptable->m_TableAdaptiveVSync == -1) ? !!m_fVSync : !!m_ptable->m_TableAdaptiveVSync, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)));
+	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, vsync, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)));
 
 	if (hr != S_OK)
 	{
@@ -934,7 +936,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	{
 		// Show the window.
 		ShowWindow(m_hwnd, SW_SHOW);
-		SetForegroundWindow(m_hwnd);                      
+		SetForegroundWindow(m_hwnd);
 		SetFocus(m_hwnd);
 	}
 
@@ -1981,6 +1983,8 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void Player::Render()
 {
+	U64 timeforframe = usec();
+
 	if(m_firstFrame)
 	{
 		const HWND hVPMWnd = FindWindow( "MAME", NULL );
@@ -2025,7 +2029,9 @@ void Player::Render()
     // Check if we should turn animate the plunger light.
     hid_set_output ( HID_OUTPUT_PLUNGER, ((m_time_msec - m_LastPlungerHit) < 512) && ((m_time_msec & 512) > 0) );
 
-    const unsigned int localvsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
+    int localvsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
+	if(localvsync > m_refreshrate)
+		localvsync = 0;
 
     bool vsync = false;
     if(localvsync > 0)
@@ -2188,6 +2194,15 @@ void Player::Render()
         RecomputePseudoPauseState();
         SendMessage(m_hwndDebugger, RECOMPUTEBUTTONCHECK, 0, 0);
     }
+
+	// limit framerate if requested by user (vsync Hz higher than refreshrate of gfxcard/monitor)
+	localvsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
+	if(localvsync > m_refreshrate)
+	{
+		timeforframe = usec() - timeforframe;
+		if(timeforframe < 1000000ull/localvsync)
+			uSleep(1000000ull/localvsync-timeforframe);
+	}
 
     if (m_ptable->m_pcv->m_fScriptError)
     {

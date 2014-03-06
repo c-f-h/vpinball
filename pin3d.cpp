@@ -87,7 +87,7 @@ void Pin3D::TransformVertices(const Vertex3D_NoTex2 * rgv, const WORD * rgi, int
 	}
 }
 
-HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool useVSync, const bool useAA, const bool stereo3DFXAA)
+HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const int VSync, const bool useAA, const bool stereo3DFXAA)
 {
     m_hwnd = hwnd;
     //fullscreen = fFullScreen;
@@ -100,7 +100,7 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     m_dwRenderHeight = m_rcScreen.bottom - m_rcScreen.top;
 
     try {
-        m_pd3dDevice = new RenderDevice(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate, useVSync, useAA, stereo3DFXAA);
+        m_pd3dDevice = new RenderDevice(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate, VSync, useAA, stereo3DFXAA);
     } catch (...) {
         return E_FAIL;
     }
