@@ -244,7 +244,6 @@ set(HEADERS
   pin/ball.h
   pin/collide.h
   pin/collideex.h
-  pin/draw.h
   pin/hitable.h
   pin/hitflipper.h
   pin/hitplunger.h
