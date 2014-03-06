@@ -647,6 +647,7 @@ void Player::InitDebugHitStructure()
 	m_debugoctree.m_vcenter.y = (m_hitoctree.m_rectbounds.top + m_hitoctree.m_rectbounds.bottom)*0.5f;
 	m_debugoctree.m_vcenter.z = (m_hitoctree.m_rectbounds.zlow + m_hitoctree.m_rectbounds.zhigh)*0.5f;
 
+	m_debugoctree.InitSseArrays();
 	m_debugoctree.CreateNextLevel();
 }
 
@@ -839,6 +840,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_hitoctree.m_vcenter.y = (m_hitoctree.m_rectbounds.top + m_hitoctree.m_rectbounds.bottom)*0.5f;
 	m_hitoctree.m_vcenter.z = (m_hitoctree.m_rectbounds.zlow + m_hitoctree.m_rectbounds.zhigh)*0.5f;
 
+	m_hitoctree.InitSseArrays();
 	m_hitoctree.CreateNextLevel();
 
 	m_shadowoctree.m_rectbounds.left = m_ptable->m_left;
@@ -852,6 +854,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_shadowoctree.m_vcenter.y = (m_hitoctree.m_rectbounds.top + m_hitoctree.m_rectbounds.bottom)*0.5f;
 	m_shadowoctree.m_vcenter.z = (m_hitoctree.m_rectbounds.zlow + m_hitoctree.m_rectbounds.zhigh)*0.5f;
 
+	m_shadowoctree.InitSseArrays();
 	m_shadowoctree.CreateNextLevel();
 
 	SendMessage(hwndProgress, PBM_SETPOS, 60, 0);

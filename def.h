@@ -311,14 +311,6 @@ public:
    }
 };
 
-inline Vertex2D Calc2DNormal(const Vertex2D &pv1, const Vertex2D &pv2)
-{
-   const Vertex2D vT(pv1.x - pv2.x, pv1.y - pv2.y);
-   // Set up line normal
-   const float inv_length = 1.0f/sqrtf(vT.x * vT.x + vT.y * vT.y);
-   return Vertex2D(vT.y * inv_length, -vT.x * inv_length);
-}
-
 inline void RotateAround(const Vertex3Ds &pvAxis, Vertex3D * const pvPoint, const int count, const float angle)
 {
    const float rsin = sinf(angle);
