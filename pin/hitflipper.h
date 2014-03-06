@@ -23,13 +23,10 @@ public:
 	// New Flipper motion basis, uses Green's transform to rotate these valuse to curAngle
 	Vertex2D m_leftFaceNormal, m_rightFaceNormal, m_leftFaceBase, m_rightFaceBase;
 	Vertex2D m_endRadiusCenter;
-	float m_lengthFace;
 
 	float m_anglespeed;
 	float m_angleCur;
 	float m_angleEnd;
-
-	float m_lastAngspd;
 
 	float m_flipperradius;
 	float m_force;

@@ -120,7 +120,6 @@ DECLARE_REGISTRY_RESOURCEID(IDR_Flipper)
 	PinTable *m_ptable;
 
 	FlipperData m_d;
-   bool setupMode;
     VertexBuffer *vertexBuffer;
     IndexBuffer *indexBuffer;
 

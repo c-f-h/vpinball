@@ -379,7 +379,7 @@ bool LightSeq::RenderAnimation()
 	{
 	    if (g_pplayer->m_time_msec >= m_timeNextUpdate)
 		{
-			if (m_pauseInProgress == false)
+			if (!m_pauseInProgress)
 			{
 	    	    m_timeNextUpdate = g_pplayer->m_time_msec + m_updateRate;
 				// process the head tracers

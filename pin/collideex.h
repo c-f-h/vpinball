@@ -11,7 +11,7 @@ public:
     void UpdateAnimation();
 
 	int m_iframe;
-	int m_TimeReset; // Time at which to turn off light
+	U32 m_TimeReset; // Time at which to turn off light
 	int m_iframedesired;
 	BOOL m_fAutoTurnedOff;
 	BOOL m_fDisabled;
@@ -40,7 +40,7 @@ public:
 	virtual void Reset();
 
 	int m_iframe;
-	int m_TimeReset; // Time at which to pull in slingshot
+	U32 m_TimeReset; // Time at which to pull in slingshot
 	bool m_fAnimations;
 };
 

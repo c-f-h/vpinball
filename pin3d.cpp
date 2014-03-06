@@ -5,8 +5,6 @@ int NumVideoBytes = 0;
 
 Pin3D::Pin3D()
 {
-	m_scalex = m_scaley = 1.0f;
-	m_xlatex = m_xlatey = 0.0f;
 	m_pddsBackBuffer = NULL;
 	m_pdds3DBackBuffer = NULL;
 	m_pddsZBuffer = NULL;
@@ -92,12 +90,13 @@ HRESULT Pin3D::InitPin3D(const HWND hwnd, const bool fFullScreen, const int scre
     m_hwnd = hwnd;
     //fullscreen = fFullScreen;
 
-    // Get the dimensions of the viewport and screen bounds
-    GetClientRect( hwnd, &m_rcScreen );
-    ClientToScreen( hwnd, (POINT*)&m_rcScreen.left );
-    ClientToScreen( hwnd, (POINT*)&m_rcScreen.right );
-    m_dwRenderWidth  = m_rcScreen.right  - m_rcScreen.left;
-    m_dwRenderHeight = m_rcScreen.bottom - m_rcScreen.top;
+    // Get the dimensions of the viewport and screen bounds //!! meh?!
+    RECT rcScreen;
+    GetClientRect( hwnd, &rcScreen );
+    ClientToScreen( hwnd, (POINT*)&rcScreen.left );
+    ClientToScreen( hwnd, (POINT*)&rcScreen.right );
+    m_dwRenderWidth  = rcScreen.right  - rcScreen.left;
+    m_dwRenderHeight = rcScreen.bottom - rcScreen.top;
 
     try {
         m_pd3dDevice = new RenderDevice(m_hwnd, m_dwRenderWidth, m_dwRenderHeight, fFullScreen, screenwidth, screenheight, colordepth, refreshrate, VSync, useAA, stereo3DFXAA);
@@ -278,8 +277,8 @@ void Pin3D::DrawBackground()
 
 void Pin3D::InitLights()
 {
-	const float sn = sinf(m_inclination + (float)(M_PI - (M_PI*3.0/16.0)));
-	const float cs = cosf(m_inclination + (float)(M_PI - (M_PI*3.0/16.0)));
+	const float sn = sinf(ANGTORAD(g_pplayer->m_ptable->m_inclination) + (float)(M_PI - (M_PI*3.0/16.0)));
+	const float cs = cosf(ANGTORAD(g_pplayer->m_ptable->m_inclination) + (float)(M_PI - (M_PI*3.0/16.0)));
 
 	for(unsigned int i = 0; i < MAX_LIGHT_SOURCES; ++i)
     {
@@ -374,40 +373,35 @@ void Pin3D::InitLights()
 //   mat.Multiply( trans, mat );
 //}
 
-void Pin3D::InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD)
+/*const float realFOV = (ptable->m_FOV < 1.0f) ? 1.0f : ptable->m_FOV; // Can't have a real zero FOV, but this will look the same
+
+	m_pin3d.InitLayout(ptable->m_left, ptable->m_top, ptable->m_right,
+					   ptable->m_bottom, ptable->m_inclination, realFOV,
+					   ptable->m_rotation, ptable->m_scalex, ptable->m_scaley,
+					   ptable->m_xlatex, ptable->m_xlatey, ptable->m_xlatez, ptable->m_layback);*/
+//const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback
+void Pin3D::InitLayout()
 {
     TRACE_FUNCTION();
-	m_layback = layback;
-
-	m_maxSeparation = maxSeparation;
-	m_ZPD = ZPD;
-
-	m_scalex = scalex;
-	m_scaley = scaley;
-
-	m_xlatex = xlatex;
-	m_xlatey = xlatey;
-
-	m_rotation = ANGTORAD(rotation);
-	m_inclination = ANGTORAD(inclination);
+	const float rotation = ANGTORAD(g_pplayer->m_ptable->m_rotation);
+	const float inclination = ANGTORAD(g_pplayer->m_ptable->m_inclination);
+	const float FOV = (g_pplayer->m_ptable->m_FOV < 1.0f) ? 1.0f : g_pplayer->m_ptable->m_FOV;
 
 	Vector<Vertex3Ds> vvertex3D;
 	for (int i=0; i<g_pplayer->m_ptable->m_vedit.Size(); ++i)
 		g_pplayer->m_ptable->m_vedit.ElementAt(i)->GetBoundingVertices(&vvertex3D);
 
 	const GPINFLOAT aspect = 4.0/3.0;//((GPINFLOAT)m_dwRenderWidth)/m_dwRenderHeight;
-	m_proj.FitCameraToVertices(&vvertex3D/*rgv*/, aspect, m_rotation, m_inclination, FOV, xlatez);
+	m_proj.FitCameraToVertices(&vvertex3D/*rgv*/, aspect, rotation, inclination, FOV, g_pplayer->m_ptable->m_xlatez);
 
     m_proj.SetFieldOfView(FOV, aspect, m_proj.m_rznear, m_proj.m_rzfar);
 
-	const float skew = -tanf(0.5f*ANGTORAD(m_layback));
+	const float skew = -tanf(0.5f*ANGTORAD(g_pplayer->m_ptable->m_layback));
 	// skew the coordinate system from kartesian to non kartesian.
-	skewX = -sinf(m_rotation)*skew;
-	skewY =  cosf(m_rotation)*skew;
-	// Skew for FOV of 0 Deg. is not supported. so change it a little bit.
-	const float skewFOV = (FOV < 0.01f) ? 0.01f : FOV;
+	skewX = -sinf(rotation)*skew;
+	skewY =  cosf(rotation)*skew;
 	// create skew the z axis to x and y direction.
-	const float skewtan = tanf(ANGTORAD((180.0f-skewFOV)*0.5f))*m_proj.m_vertexcamera.y;
+	const float skewtan = tanf(ANGTORAD((180.0f-FOV)*0.5f))*m_proj.m_vertexcamera.y;
 	Matrix3D matTrans;
 	matTrans.SetIdentity();
 	matTrans._31 = skewX;
@@ -416,15 +410,15 @@ void Pin3D::InitLayout(const float left, const float top, const float right, con
 	matTrans._42 = skewtan*skewY;
 	m_proj.Multiply(matTrans);
 
-    m_proj.Scale( m_scalex != 0.0f ? m_scalex : 1.0f, m_scaley != 0.0f ? m_scaley : 1.0f, 1.0f );
+    m_proj.Scale( g_pplayer->m_ptable->m_scalex != 0.0f ? g_pplayer->m_ptable->m_scalex : 1.0f, g_pplayer->m_ptable->m_scaley != 0.0f ? g_pplayer->m_ptable->m_scaley : 1.0f, 1.0f );
 #ifdef VP10
-	m_proj.Translate(m_xlatex-m_proj.m_vertexcamera.x, m_xlatey-m_proj.m_vertexcamera.y, -m_proj.m_vertexcamera.z);
-	m_proj.Rotate( 0, 0, m_rotation );
+	m_proj.Translate(g_pplayer->m_ptable->m_xlatex-m_proj.m_vertexcamera.x, g_pplayer->m_ptable->m_xlatey-m_proj.m_vertexcamera.y, -m_proj.m_vertexcamera.z);
+	m_proj.Rotate( 0, 0, rotation );
 #else
-	m_proj.Rotate( 0, 0, m_rotation );
-	m_proj.Translate(m_xlatex-m_proj.m_vertexcamera.x, m_xlatey-m_proj.m_vertexcamera.y, -m_proj.m_vertexcamera.z);
+	m_proj.Rotate( 0, 0, rotation );
+	m_proj.Translate(g_pplayer->m_ptable->m_xlatex-m_proj.m_vertexcamera.x, g_pplayer->m_ptable->m_xlatey-m_proj.m_vertexcamera.y, -m_proj.m_vertexcamera.z);
 #endif
-	m_proj.Rotate( m_inclination, 0, 0 );
+	m_proj.Rotate( inclination, 0, 0 );
 
     // recompute near and far plane (workaround for VP9 FitCameraToVertices bugs)
     m_proj.ComputeNearFarPlane(vvertex3D);

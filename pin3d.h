@@ -195,7 +195,7 @@ public:
 
 	HRESULT InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const int VSync, const bool useAA, const bool stereo3DFXAA);
 
-	void InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD);
+	void InitLayout();
 
 	void TransformVertices(const Vertex3D_NoTex2 * rgv,     const WORD * rgi, int count, Vertex2D * rgvout) const;
 
@@ -254,25 +254,16 @@ public:
 
     PinProjection m_proj;
 
-	RECT m_rcScreen;
 	int m_dwRenderWidth;
 	int m_dwRenderHeight;
 
 	float skewX;
 	float skewY;
-
-	int m_width;
-	int m_height;
 	HWND m_hwnd;
-
-	float m_rotation, m_inclination, m_layback;
-	float m_scalex, m_scaley;
-	float m_xlatex, m_xlatey;
 
     Vertex3Ds m_viewVec;        // direction the camera is facing
 
     //bool fullscreen;
-	float m_maxSeparation, m_ZPD;
     ViewPort vp;
 
 private:
