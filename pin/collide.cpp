@@ -416,6 +416,10 @@ HitOctree::~HitOctree()
 		}
 	}
 
+#ifdef _DEBUGPHYSICS
+U64 oct_nextlevels = 0;
+#endif
+
 void HitOctree::CreateNextLevel()
 	{
 	m_fLeaf = false;
@@ -491,14 +495,25 @@ void HitOctree::CreateNextLevel()
 		m_vho.AddElement(vRemain.ElementAt(i));
 		}
 
-	if (m_vcenter.x - m_rectbounds.left > 66.6f) //!! magic
-		{
+	//Vertex3Ds diag;
+	//diag.x = m_rectbounds.right-m_rectbounds.left;
+	//diag.y = m_rectbounds.bottom-m_rectbounds.top;
+	//diag.z = m_rectbounds.zhigh-m_rectbounds.zlow;
+	//if (diag.x*diag.x+diag.y*diag.y+diag.z*diag.z > 66.6f*66.6f) //!! magic
+		//{
 		for (int i=0; i<8; ++i)
 			{
-			if(m_phitoct[i].m_vho.Size() > 1) //!! magic
+			if(((i&1) && (m_vcenter.x - m_rectbounds.left > 66.6f)) ||
+			    ((i&2) && (m_vcenter.y - m_rectbounds.top > 66.6f)) ||
+			    ((i&4) && (m_vcenter.z - m_rectbounds.zlow > 66.6f))) //!! magic (will not subdivide object soups enough)
+			if(m_phitoct[i].m_vho.Size() > 1) { //!! magic (will not favor empty space enough for huge objects)
 			m_phitoct[i].CreateNextLevel();
+#ifdef _DEBUGPHYSICS
+			oct_nextlevels++;
+#endif
+			}
 		    }
-		}
+		//}
 
 	for (int i=0; i<8; ++i)
 		m_phitoct[i].InitSseArrays();

@@ -297,7 +297,7 @@ void Primitive::GetHitShapes(Vector<HitObject> * const pvho)
       rgv3D[0] = vertices[ indexList[i  ] ];
       rgv3D[1] = vertices[ indexList[i+1] ];
       rgv3D[2] = vertices[ indexList[i+2] ];
-      Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3);
+      Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3); //!! this is not efficient at all, use native triangle-soup directly somehow
       ph3dpoly->m_elasticity = m_d.m_elasticity;
       ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;
       ph3dpoly->m_scatter = ANGTORAD(m_d.m_scatter);

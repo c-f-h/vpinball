@@ -1983,6 +1983,10 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 	m_pin3d.m_pd3dDevice->Flip(0, 0, vsync);
 }
 
+#ifdef _DEBUGPHYSICS
+extern U64 oct_nextlevels;
+#endif
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void Player::Render()
 {
@@ -2185,6 +2189,10 @@ void Player::Render()
 		len = sprintf_s(szFoo, sizeof(szFoo), "Hits:%5u Collide:%5u Ctacs:%5u Static:%5u Embed: %5u    ",
 		c_hitcnts, c_collisioncnt, c_contactcnt, c_staticcnt, c_embedcnts);
 		TextOut(hdcNull, 10, 180, szFoo, len);
+
+		len = sprintf_s(szFoo, sizeof(szFoo), "Octree:%5u    ",
+		oct_nextlevels);
+		TextOut(hdcNull, 10, 200, szFoo, len);
 #endif
         ReleaseDC(NULL, hdcNull);
     }
