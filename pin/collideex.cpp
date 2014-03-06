@@ -430,8 +430,6 @@ Hit3DPoly::Hit3DPoly(Vertex3Ds * const rgv, const int count) : m_rgv(rgv),m_cver
 	normal.y *= inv_len;
 	normal.z *= inv_len;
 
-	D = -(normal.x * m_rgv[0].x + normal.y * m_rgv[0].y + normal.z * m_rgv[0].z);
-
 	m_fVisible = fFalse;
 	m_elasticity = 0.3f;
 	m_antifriction = 1.0f;
@@ -458,10 +456,10 @@ float Hit3DPoly::HitTest(Ball * const pball, const float dtime, Vertex3Ds * cons
 	float hity = pball->y - normal.y * bRadius;
 	float hitz = pball->z - normal.z * bRadius;
 
-	const float bnd = normal.x * hitx + normal.y * hity + normal.z * hitz + D; // distance from plane to ball
+	const float bnd = normal.x * (hitx - m_rgv[0].x) + normal.y * (hity - m_rgv[0].y) + normal.z * (hitz - m_rgv[0].z); // distance from plane to ball
 
 	bool bUnHit = (bnv > C_LOWNORMVEL);
-	bool inside = (bnd <= 0);									// in ball inside object volume
+	const bool inside = (bnd <= 0);									// in ball inside object volume
 
 	const bool rigid = (m_ObjType != eTrigger);
 	float hittime;
@@ -657,8 +655,6 @@ HitTriangle::HitTriangle(const Vertex3Ds rgv[3])
 	normal.y *= inv_len;
 	normal.z *= inv_len;
 
-	D = -(normal.x * m_rgv[0].x + normal.y * m_rgv[0].y + normal.z * m_rgv[0].z);
-
 	m_fVisible = fFalse;
 	m_elasticity = 0.3f;
 	m_antifriction = 1.0f;
@@ -680,10 +676,10 @@ float HitTriangle::HitTest(Ball * const pball, const float dtime, Vertex3Ds * co
 	float hity = pball->y - normal.y * bRadius;
 	float hitz = pball->z - normal.z * bRadius;
 
-	const float bnd = normal.x * hitx + normal.y * hity + normal.z * hitz + D; // distance from plane to ball
+	const float bnd = normal.x * (hitx - m_rgv[0].x) + normal.y * (hity - m_rgv[0].y) + normal.z * (hitz - m_rgv[0].z); // distance from plane to ball
 
 	bool bUnHit = (bnv > C_LOWNORMVEL);
-	bool inside = (bnd <= 0);									// in ball inside object volume
+	const bool inside = (bnd <= 0);									// in ball inside object volume
 
 	const bool rigid = (m_ObjType != eTrigger);
 	float hittime;
