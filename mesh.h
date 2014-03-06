@@ -207,6 +207,11 @@ inline float GetAngle(const Vertex2D * const pvEnd1, const Vertex2D * const pvJo
 
 // Computes the normal for a single, plane polygon described by the indices and applies it either
 // to the original vertices or to the vertices indexed by rgiApply.
+//
+// This functions uses Newell's method to compute the normal. However, this is the version for
+// a right-handed coordinate system, and therefore produces wrong results for the VP renderer,
+// which is left-handed. However, the VP physics seem to be right-handed (!!), and therefore
+// in VP10 we will need two versions of this function, left- and right-handed.
 template <class VtxType>
 void SetNormal(VtxType * const rgv, const WORD * const rgi, const int count, void * prgvApply=NULL, const WORD * rgiApply=NULL, int applycount=NULL)
 {
@@ -226,7 +231,7 @@ void SetNormal(VtxType * const rgv, const WORD * const rgi, const int count, voi
 		const int l = rgi[i];
 		const int m = rgi[(i < count-1) ? (i+1) : 0];
 
-		vnormal.x += (rgv[l].y - rgv[m].y) * (rgv[l].z + rgv[m].z); //!! WTF?
+		vnormal.x += (rgv[l].y - rgv[m].y) * (rgv[l].z + rgv[m].z);
 		vnormal.y += (rgv[l].z - rgv[m].z) * (rgv[l].x + rgv[m].x);
 		vnormal.z += (rgv[l].x - rgv[m].x) * (rgv[l].y + rgv[m].y);		
 	}
