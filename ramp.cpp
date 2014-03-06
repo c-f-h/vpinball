@@ -766,7 +766,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
 
 #ifndef RAMPTEST
    {
-      Hit3DPoly *ph3dpolyOld = NULL;
+      HitTriangle *ph3dpolyOld = NULL;
 
       const Vertex2D *pv1;
       const Vertex2D *pv2;
@@ -781,12 +781,12 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
          pv4 = &rgvLocal[i+1];
 
          {
-            Vertex3Ds * const rgv3D = new Vertex3Ds[3];
+            Vertex3Ds rgv3D[3];
             rgv3D[0] = Vertex3Ds(pv2->x,pv2->y,rgheight1[i]);
             rgv3D[1] = Vertex3Ds(pv1->x,pv1->y,rgheight1[i]);
             rgv3D[2] = Vertex3Ds(pv3->x,pv3->y,rgheight1[i+1]);
 
-            Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3);
+            HitTriangle * const ph3dpoly = new HitTriangle(rgv3D); //!! this is not efficient at all, use native triangle-soup directly somehow
             ph3dpoly->m_elasticity = m_d.m_elasticity;
             ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;	//antifriction
             ph3dpoly->m_scatter = ANGTORAD(m_d.m_scatter);
@@ -805,12 +805,12 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
             ph3dpolyOld = ph3dpoly;
          }
 
-         Vertex3Ds * const rgv3D = new Vertex3Ds[3];
+         Vertex3Ds rgv3D[3];
          rgv3D[0] = Vertex3Ds(pv3->x,pv3->y,rgheight1[i+1]);
          rgv3D[1] = Vertex3Ds(pv1->x,pv1->y,rgheight1[i]);
          rgv3D[2] = Vertex3Ds(pv4->x,pv4->y,rgheight1[i+1]);
 
-         Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3);
+         HitTriangle * const ph3dpoly = new HitTriangle(rgv3D);
          ph3dpoly->m_elasticity = m_d.m_elasticity;
          ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;
          ph3dpoly->m_scatter = ANGTORAD(m_d.m_scatter);
@@ -827,11 +827,11 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
          ph3dpolyOld = ph3dpoly;
       }
 
-      Vertex3Ds * const rgv3D = new Vertex3Ds[3];
+      Vertex3Ds rgv3D[3];
       rgv3D[0] = Vertex3Ds(pv4->x,pv4->y,rgheight1[cvertex-1]);
       rgv3D[1] = Vertex3Ds(pv3->x,pv3->y,rgheight1[cvertex-1]);
       rgv3D[2] = Vertex3Ds(pv1->x,pv1->y,rgheight1[cvertex-1]);
-      ph3dpolyOld = new Hit3DPoly(rgv3D,3);
+      ph3dpolyOld = new HitTriangle(rgv3D);
 
       CheckJoint(pvho, ph3dpolyOld, ph3dpolyOld);
       delete ph3dpolyOld;
@@ -851,12 +851,12 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
       const Vertex2D * const pv4 = &rgvLocal[i+1];
 
       {
-         Vertex3Ds * const rgv3D = new Vertex3Ds[3];
+         Vertex3Ds rgv3D[3];
          rgv3D[0] = Vertex3Ds(pv1->x,pv1->y,rgheight1[i]);
          rgv3D[1] = Vertex3Ds(pv2->x,pv2->y,rgheight1[i]);
          rgv3D[2] = Vertex3Ds(pv3->x,pv3->y,rgheight1[i+1]);
 
-         Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3);
+         HitTriangle * const ph3dpoly = new HitTriangle(rgv3D);
          ph3dpoly->m_elasticity = m_d.m_elasticity;
          ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;	//antifriction
          ph3dpoly->m_scatter = ANGTORAD(m_d.m_scatter);
@@ -867,12 +867,12 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
          ph3dpoly->m_fEnabled = m_d.m_fCollidable;
       }
 
-      Vertex3Ds * const rgv3D = new Vertex3Ds[3];
+      Vertex3Ds rgv3D[3];
       rgv3D[0] = Vertex3Ds(pv3->x,pv3->y,rgheight1[i+1]);
       rgv3D[1] = Vertex3Ds(pv4->x,pv4->y,rgheight1[i+1]);
       rgv3D[2] = Vertex3Ds(pv1->x,pv1->y,rgheight1[i]);
 
-      Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3);
+      HitTriangle * const ph3dpoly = new HitTriangle(rgv3D);
       ph3dpoly->m_elasticity = m_d.m_elasticity;
       ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;
       ph3dpoly->m_scatter = ANGTORAD(m_d.m_scatter);
@@ -900,7 +900,7 @@ void Ramp::AddSideWall(Vector<HitObject> * const pvho, const Vertex2D * const pv
    rgv3D[2] = Vertex3Ds(pv2->x + WALLTILT,pv2->y + WALLTILT,height2 + wallheight);
    rgv3D[3] = Vertex3Ds(pv1->x + WALLTILT,pv1->y + WALLTILT,height1 + wallheight);
 
-   Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,4);
+   Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,4); //!!
    ph3dpoly->m_elasticity = m_d.m_elasticity;
    ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;
    ph3dpoly->m_scatter = ANGTORAD(m_d.m_scatter);
@@ -911,7 +911,7 @@ void Ramp::AddSideWall(Vector<HitObject> * const pvho, const Vertex2D * const pv
    ph3dpoly->m_fEnabled = m_d.m_fCollidable;
 }
 
-void Ramp::CheckJoint(Vector<HitObject> * const pvho, const Hit3DPoly * const ph3d1, const Hit3DPoly * const ph3d2)
+void Ramp::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const ph3d1, const HitTriangle * const ph3d2)
 {
    Vertex3Ds vjointnormal = CrossProduct(ph3d1->normal, ph3d2->normal);
    //vjointnormal.x = ph3d1->normal.x + ph3d2->normal.x;

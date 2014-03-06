@@ -458,7 +458,7 @@ void Player::CreateBoundingHitShapes(Vector<HitObject> *pvho)
 	rgv3D[2] = Vertex3Ds(m_ptable->m_right,m_ptable->m_bottom,m_ptable->m_glassheight);
 	rgv3D[3] = Vertex3Ds(m_ptable->m_left,m_ptable->m_bottom,m_ptable->m_glassheight);
 
-	Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,4);
+	Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,4); //!!
 
 	pvho->AddElement(ph3dpoly);
 }
@@ -811,7 +811,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 		m_hitoctree.m_vho.AddElement(m_vho.ElementAt(i));
 
-		if ((m_vho.ElementAt(i)->GetType() == e3DPoly) && ((Hit3DPoly *)m_vho.ElementAt(i))->m_fVisible)
+		if( ((m_vho.ElementAt(i)->GetType() == e3DPoly) && ((Hit3DPoly *)m_vho.ElementAt(i))->m_fVisible) ||
+			((m_vho.ElementAt(i)->GetType() == eTriangle) && ((HitTriangle *)m_vho.ElementAt(i))->m_fVisible) )
 			m_shadowoctree.m_vho.AddElement(m_vho.ElementAt(i));
 
         AnimObject *pao = m_vho.ElementAt(i)->GetAnimObject();
@@ -1902,7 +1903,7 @@ static const float quadVerts[4*5] =
  -1.0f,-1.0f,0.0f,0.0f,1.0f
 };
 
-void Player::FlipVideoBuffers3DFXAA( const bool vsync )
+void Player::FlipVideoBuffers3DFXAA( const bool vsync ) //!! SMAA, luma sharpen, dither
 {
 	const bool stereo = ((m_fStereo3D != 0) && m_fStereo3Denabled);
 	const bool FXAA1 = (((m_fFXAA == 1) && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1));

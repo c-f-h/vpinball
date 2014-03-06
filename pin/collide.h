@@ -11,6 +11,7 @@ enum
 	eSpinner,
 	eBall,
 	e3DPoly,
+	eTriangle,
 	e3DLine,
 	eGate,
 	eTextbox,

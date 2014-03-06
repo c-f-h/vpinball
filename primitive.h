@@ -255,7 +255,7 @@ private:        // private member functions
 
    bool BrowseFor3DMeshFile();
    void RenderObject( RenderDevice *pd3dDevice);
-   void CheckJoint(Vector<HitObject> * const pvho, const Hit3DPoly * const ph3d1, const Hit3DPoly * const ph3d2);
+   void CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const ph3d1, const HitTriangle * const ph3d2);
 
    void CalculateBuiltinOriginal();
    void UpdateMeshBuiltin();

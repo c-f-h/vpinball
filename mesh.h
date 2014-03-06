@@ -226,7 +226,7 @@ void SetNormal(VtxType * const rgv, const WORD * const rgi, const int count, voi
 		const int l = rgi[i];
 		const int m = rgi[(i < count-1) ? (i+1) : 0];
 
-		vnormal.x += (rgv[l].y - rgv[m].y) * (rgv[l].z + rgv[m].z);
+		vnormal.x += (rgv[l].y - rgv[m].y) * (rgv[l].z + rgv[m].z); //!! WTF?
 		vnormal.y += (rgv[l].z - rgv[m].z) * (rgv[l].x + rgv[m].x);
 		vnormal.z += (rgv[l].x - rgv[m].x) * (rgv[l].y + rgv[m].y);		
 	}

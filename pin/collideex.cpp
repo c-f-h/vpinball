@@ -411,7 +411,26 @@ void HitSpinner::CalcHitRect()
 
 Hit3DPoly::Hit3DPoly(Vertex3Ds * const rgv, const int count) : m_rgv(rgv),m_cvertex(count)
 {
-	CalcNormal();
+	normal.x = 0.f;
+	normal.y = 0.f;
+	normal.z = 0.f;
+
+	for (int i=0; i<m_cvertex; ++i)
+	{
+		const int m = (i < m_cvertex-1) ? (i+1) : 0;
+
+		normal.x += (m_rgv[i].y - m_rgv[m].y) * (m_rgv[i].z + m_rgv[m].z); //!! WTF?
+		normal.y += (m_rgv[i].z - m_rgv[m].z) * (m_rgv[i].x + m_rgv[m].x);
+		normal.z += (m_rgv[i].x - m_rgv[m].x) * (m_rgv[i].y + m_rgv[m].y);		
+	}
+
+	const float sqr_len = normal.x * normal.x + normal.y * normal.y + normal.z * normal.z;
+	const float inv_len = (sqr_len > 0.0f) ? -1.0f/sqrtf(sqr_len) : 0.0f;
+	normal.x *= inv_len;
+	normal.y *= inv_len;
+	normal.z *= inv_len;
+
+	D = -(normal.x * m_rgv[0].x + normal.y * m_rgv[0].y + normal.z * m_rgv[0].z);
 
 	m_fVisible = fFalse;
 	m_elasticity = 0.3f;
@@ -426,16 +445,11 @@ Hit3DPoly::~Hit3DPoly()
 
 float Hit3DPoly::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal)
 {
-	return HitTestBasicPolygon(pball, dtime, phitnormal, (m_ObjType != eTrigger), (m_ObjType != eTrigger));
-}
-
-float Hit3DPoly::HitTestBasicPolygon(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal, const bool direction, const bool rigid)
-{
 	if (!m_fEnabled) return -1.0f;
 
 	const float bnv = (normal.x*pball->vx) + (normal.y*pball->vy) + (normal.z*pball->vz);  //speed in Normal-vector direction
 
-	if (direction && bnv >= 0)								// return if clearly ball is receding from object
+	if ((m_ObjType != eTrigger) && (bnv >= 0.f))								// return if clearly ball is receding from object
 		return -1.0f;
 
 	// Point on the ball that will hit the polygon, if it hits at all
@@ -449,6 +463,7 @@ float Hit3DPoly::HitTestBasicPolygon(Ball * const pball, const float dtime, Vert
 	bool bUnHit = (bnv > C_LOWNORMVEL);
 	bool inside = (bnd <= 0);									// in ball inside object volume
 
+	const bool rigid = (m_ObjType != eTrigger);
 	float hittime;
 	if (rigid) //rigid polygon
 	{
@@ -606,40 +621,16 @@ void Hit3DPoly::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 	}
 }
 
-void Hit3DPoly::CalcNormal()
-{
-	normal.x = 0;
-	normal.y = 0;
-	normal.z = 0;
-
-	for (int i=0; i<m_cvertex; ++i)
-	{
-		const int m = (i < m_cvertex-1) ? (i+1) : 0;
-
-		normal.x += (m_rgv[i].y - m_rgv[m].y) * (m_rgv[i].z + m_rgv[m].z);
-		normal.y += (m_rgv[i].z - m_rgv[m].z) * (m_rgv[i].x + m_rgv[m].x);
-		normal.z += (m_rgv[i].x - m_rgv[m].x) * (m_rgv[i].y + m_rgv[m].y);		
-	}
-
-	const float sqr_len = normal.x * normal.x + normal.y * normal.y + normal.z * normal.z;
-	const float inv_len = (sqr_len > 0.0f) ? -1.0f/sqrtf(sqr_len) : 0.0f;
-	normal.x *= inv_len;
-	normal.y *= inv_len;
-	normal.z *= inv_len;
-
-	D = -(normal.x * m_rgv[0].x + normal.y * m_rgv[0].y + normal.z * m_rgv[0].z);
-}
-
 void Hit3DPoly::CalcHitRect()
 {
-	m_rcHitRect.left = FLT_MAX;
-	m_rcHitRect.right = -FLT_MAX;
-	m_rcHitRect.top = FLT_MAX;
-	m_rcHitRect.bottom = -FLT_MAX;
-	m_rcHitRect.zlow = FLT_MAX;
-	m_rcHitRect.zhigh = -FLT_MAX;
+	m_rcHitRect.left = m_rgv[0].x;
+	m_rcHitRect.right = m_rgv[0].x;
+	m_rcHitRect.top = m_rgv[0].y;
+	m_rcHitRect.bottom = m_rgv[0].y;
+	m_rcHitRect.zlow = m_rgv[0].z;
+	m_rcHitRect.zhigh = m_rgv[0].z;
 
-	for (int i=0;i<m_cvertex;i++)
+	for (int i=1;i<m_cvertex;i++)
 	{
 		m_rcHitRect.left = min(m_rgv[i].x, m_rcHitRect.left);
 		m_rcHitRect.right = max(m_rgv[i].x, m_rcHitRect.right);
@@ -648,6 +639,218 @@ void Hit3DPoly::CalcHitRect()
 		m_rcHitRect.zlow = min(m_rgv[i].z, m_rcHitRect.zlow);
 		m_rcHitRect.zhigh = max(m_rgv[i].z, m_rcHitRect.zhigh);
 	}
+}
+
+HitTriangle::HitTriangle(const Vertex3Ds rgv[3])
+{
+	m_rgv[0] = rgv[0];
+	m_rgv[1] = rgv[1];
+	m_rgv[2] = rgv[2];
+
+	const Vertex3Ds e0(m_rgv[2].x-m_rgv[0].x,m_rgv[2].y-m_rgv[0].y,m_rgv[2].z-m_rgv[0].z);
+	const Vertex3Ds e1(m_rgv[1].x-m_rgv[0].x,m_rgv[1].y-m_rgv[0].y,m_rgv[1].z-m_rgv[0].z);
+	normal = CrossProduct(e0,e1);
+
+	const float sqr_len = normal.x * normal.x + normal.y * normal.y + normal.z * normal.z;
+	const float inv_len = (sqr_len > 0.0f) ? 1.0f/sqrtf(sqr_len) : 0.0f;
+	normal.x *= inv_len;
+	normal.y *= inv_len;
+	normal.z *= inv_len;
+
+	D = -(normal.x * m_rgv[0].x + normal.y * m_rgv[0].y + normal.z * m_rgv[0].z);
+
+	m_fVisible = fFalse;
+	m_elasticity = 0.3f;
+	m_antifriction = 1.0f;
+	m_scatter = 0;
+}
+
+float HitTriangle::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) //!! optimize specific for triangle?
+{
+	if (!m_fEnabled) return -1.0f;
+
+	const float bnv = (normal.x*pball->vx) + (normal.y*pball->vy) + (normal.z*pball->vz);  //speed in Normal-vector direction
+
+	if ((m_ObjType != eTrigger) && (bnv >= 0.f))								// return if clearly ball is receding from object
+		return -1.0f;
+
+	// Point on the ball that will hit the polygon, if it hits at all
+	const float bRadius = pball->radius;
+	float hitx = pball->x - normal.x * bRadius; // nearest point on ball ... projected radius along norm
+	float hity = pball->y - normal.y * bRadius;
+	float hitz = pball->z - normal.z * bRadius;
+
+	const float bnd = normal.x * hitx + normal.y * hity + normal.z * hitz + D; // distance from plane to ball
+
+	bool bUnHit = (bnv > C_LOWNORMVEL);
+	bool inside = (bnd <= 0);									// in ball inside object volume
+
+	const bool rigid = (m_ObjType != eTrigger);
+	float hittime;
+	if (rigid) //rigid polygon
+	{
+		if (bnd < (float)(-PHYS_SKIN)) return -1.0f;	// (ball normal distance) excessive pentratration of object skin ... no collision HACK
+			
+		if (bnd <= (float)PHYS_TOUCH)
+		{
+			if (inside || (fabsf(bnv) > C_CONTACTVEL)		// fast velocity, return zero time
+															//zero time for rigid fast bodies
+			|| (bnd <= (float)(-PHYS_TOUCH)))				// slow moving but embedded
+				hittime = 0;
+			else
+				hittime = bnd*(float)(1.0/(2.0*PHYS_TOUCH)) + 0.5f;	// don't compete for fast zero time events
+		}
+		else if (fabsf(bnv) > C_LOWNORMVEL )					// not velocity low ????
+			hittime = bnd/(-bnv);								// rate ok for safe divide 
+		else
+			return -1.0f;										// wait for touching
+	}
+	else //non-rigid polygon
+	{
+		if (bnv * bnd >= 0)										// outside-receding || inside-approaching
+		{
+			if((m_ObjType != eTrigger) ||				// not a trigger
+			   (!pball->m_vpVolObjs) ||					// temporary ball
+			   (fabsf(bnd) >= (float)(PHYS_SKIN/2.0)) ||		// not to close ... nor to far away
+			   (inside != (pball->m_vpVolObjs->IndexOf(m_pObj) < 0)))// ...ball outside and hit set or  ball inside and no hit set
+				return -1.0f;
+
+			hittime = 0;
+			bUnHit = !inside;	// ball on outside is UnHit, otherwise it's a Hit
+		}
+		else
+			hittime = bnd/(-bnv);	
+	}
+
+	if (infNaN(hittime) || hittime < 0 || hittime > dtime) return -1.0f;	// time is outside this frame ... no collision
+
+	hitx += pball->vx*hittime;	// advance hit point to contact
+	hity += pball->vy*hittime;
+	hitz += pball->vz*hittime;
+
+	// Do a point in poly test, using the xy plane, to see if the hit point is inside the polygon
+	//this need to be changed to a point in polygon on 3D plane
+
+	float x2 = m_rgv[0].x;
+	float y2 = m_rgv[0].y;
+	bool hx2 = (hitx >= x2);
+	bool hy2 = (hity <= y2);
+	int crosscount=0;	// count of lines which the hit point is to the left of
+	for (int i=0;i<3;i++)
+	{
+		const float x1 = x2;
+		const float y1 = y2;
+		const bool hx1 = hx2;
+		const bool hy1 = hy2;
+		
+		const int j = (i < 3-1) ? (i+1) : 0;
+		x2 = m_rgv[j].x;
+		y2 = m_rgv[j].y;
+		hx2 = (hitx >= x2);
+		hy2 = (hity <= y2);
+
+		if ((y1==y2) ||
+		    (hy1 && hy2) || (!hy1 && !hy2) || // if out of y range, forget about this segment
+		    (hx1 && hx2)) // Hit point is on the right of the line
+			continue;
+
+		if (!hx1 && !hx2)
+		{
+			crosscount^=1;
+			continue;
+		}
+
+		if (x2 == x1)
+		{
+			if (!hx2)
+				crosscount^=1;
+			continue;
+		}
+
+		// Now the hard part - the hit point is in the line bounding box
+
+		if (x2 - (y2 - hity)*(x1 - x2)/(y1 - y2) > hitx)
+			crosscount^=1;
+	}
+
+	if (crosscount & 1)
+	{
+		phitnormal->x = m_rgv[0].z;
+		phitnormal->y = m_rgv[2].z;
+
+		if (!rigid)								// non rigid body collision? return direction
+			phitnormal[1].x = bUnHit ? 1.0f : 0.0f;	// UnHit signal	is receding from outside target
+			
+		pball->m_HitDist = bnd;					// 3dhit actual contact distance ... 
+		pball->m_HitNormVel = bnv;
+		pball->m_HitRigid = rigid;				// collision type
+
+		return hittime;
+	}
+
+	return -1.0f;
+}
+
+void HitTriangle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+{
+	if (m_ObjType != eTrigger) 
+   {
+      const float dot = phitnormal->x * pball->vx + phitnormal->y * pball->vy;
+
+      pball->Collide3DWall(&normal, m_elasticity, m_antifriction, m_scatter); 
+      if ( m_ObjType == ePrimitive )
+      {
+         if ( m_pfe && m_fEnabled)
+         {
+            if ( dot <= -m_threshold )
+            {
+               const float dx = pball->m_Event_Pos.x - pball->x; // is this the same place as last event????
+               const float dy = pball->m_Event_Pos.y - pball->y; // if same then ignore it
+               const float dz = pball->m_Event_Pos.z - pball->z;
+
+               if (dx*dx + dy*dy + dz*dz > 0.25f) // must be a new place if only by a little
+               {
+                  m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
+               }
+            }
+
+         }
+      }
+   }
+	else		
+	{
+		if (!pball->m_vpVolObjs) return;
+
+		const int i = pball->m_vpVolObjs->IndexOf(m_pObj); // if -1 then not in objects volume set (i.e not already hit)
+
+		if ((phitnormal[1].x < 1.0f) == (i < 0))	// Hit == NotAlreadyHit
+		{			
+			pball->x += pball->vx * STATICTIME; //move ball slightly forward
+			pball->y += pball->vy * STATICTIME;		
+			pball->z += pball->vz * STATICTIME; 	
+				
+			if (i < 0)
+			{	
+				pball->m_vpVolObjs->AddElement(m_pObj);
+				((Trigger*)m_pObj)->FireGroupEvent(DISPID_HitEvents_Hit);				
+			}		
+			else			
+			{
+				pball->m_vpVolObjs->RemoveElementAt(i);
+				((Trigger*)m_pObj)->FireGroupEvent(DISPID_HitEvents_Unhit);				
+			}
+		}	
+	}
+}
+
+void HitTriangle::CalcHitRect()
+{
+	m_rcHitRect.left = min(m_rgv[0].x, min(m_rgv[1].x,m_rgv[2].x));
+	m_rcHitRect.right = max(m_rgv[0].x, max(m_rgv[1].x,m_rgv[2].x));
+	m_rcHitRect.top = min(m_rgv[0].y, min(m_rgv[1].y,m_rgv[2].y));
+	m_rcHitRect.bottom = max(m_rgv[0].y, max(m_rgv[1].y,m_rgv[2].y));
+	m_rcHitRect.zlow = min(m_rgv[0].z, min(m_rgv[1].z,m_rgv[2].z));
+	m_rcHitRect.zhigh = max(m_rgv[0].z, max(m_rgv[1].z,m_rgv[2].z));
 }
 
 Hit3DCylinder::Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2, const Vertex3Ds * const pvnormal)
