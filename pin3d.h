@@ -170,7 +170,6 @@ public:
 	void Translate(const float x, const float y, const float z);
 	void FitCameraToVertices(Vector<Vertex3Ds> * const pvvertex3D, const GPINFLOAT aspect, const GPINFLOAT rotation, const GPINFLOAT inclination, const GPINFLOAT FOV, const float xlatez);
 	void CacheTransform();      // compute m_matrixTotal = m_World * m_View * m_Proj
-	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex3D * const rgvout) const;
 	void TransformVertices(const Vertex3D * const rgv, const WORD * const rgi, const int count, Vertex2D * const rgvout) const;
 	void SetFieldOfView(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar);
 	void SetupProjectionMatrix(const GPINFLOAT rFOV, const GPINFLOAT raspect, const GPINFLOAT rznear, const GPINFLOAT rzfar);
@@ -194,14 +193,10 @@ public:
 	Pin3D();
 	~Pin3D();
 
-	HRESULT InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const bool useVSync, const bool useAA, const bool stereo3DFXAA);
+	HRESULT InitPin3D(const HWND hwnd, const bool fFullScreen, const int screenwidth, const int screenheight, const int colordepth, int &refreshrate, const int VSync, const bool useAA, const bool stereo3DFXAA);
 
-	void InitLayout(const float left, const float top, const float right, const float bottom, const float inclination, const float FOV, const float rotation, const float scalex, const float scaley, const float xlatex, const float xlatey, const float xlatez, const float layback, const float maxSeparation, const float ZPD);
+	void InitLayout();
 
-	void TransformVertices(const Vertex3D * rgv,            const WORD * rgi, int count, Vertex3D * rgvout) const;
-	void TransformVertices(const Vertex3D_NoTex2 * rgv,     const WORD * rgi, int count, Vertex3D_NoTex2 * rgvout) const;
-	void TransformVertices(const Vertex3D_NoLighting * rgv, const WORD * rgi, int count, Vertex3D_NoLighting * rgvout) const;
-	void TransformVertices(const Vertex3D * rgv,            const WORD * rgi, int count, Vertex2D * rgvout) const;
 	void TransformVertices(const Vertex3D_NoTex2 * rgv,     const WORD * rgi, int count, Vertex2D * rgvout) const;
 
    Vertex3Ds Unproject( Vertex3Ds *point );
@@ -221,15 +216,6 @@ public:
 	void EnableAlphaTestReference(DWORD alphaRefValue) const;
     void EnableAlphaBlend( DWORD alphaRefValue, BOOL additiveBlending=fFalse );
     void DisableAlphaBlend();
-
-	// Handy functions for creating obj frames
-
-	void ClearExtents(RECT * const prc, float * const pznear, float * const pzfar);
-	void ExpandExtents(RECT * const prc, Vertex3D* const rgv, float * const pznear, float * const pzfar, const int count, const BOOL fTransformed);
-	void ExpandExtents(RECT * const prc, Vertex3D_NoTex2* const rgv, float * const pznear, float * const pzfar, const int count, const BOOL fTransformed);
-	void ExpandExtents(RECT * const prc, Vertex3D_NoLighting* const rgv, float * const pznear, float * const pzfar, const int count, const BOOL fTransformed);
-
-	void ClipRectToVisibleArea(RECT * const prc) const;
 
     void DrawBackground();
     void RenderPlayfieldGraphics();
@@ -268,25 +254,16 @@ public:
 
     PinProjection m_proj;
 
-	RECT m_rcScreen;
 	int m_dwRenderWidth;
 	int m_dwRenderHeight;
 
 	float skewX;
 	float skewY;
-
-	int m_width;
-	int m_height;
 	HWND m_hwnd;
-
-	float m_rotation, m_inclination, m_layback;
-	float m_scalex, m_scaley;
-	float m_xlatex, m_xlatey;
 
     Vertex3Ds m_viewVec;        // direction the camera is facing
 
     //bool fullscreen;
-	float m_maxSeparation, m_ZPD;
     ViewPort vp;
 
 private:

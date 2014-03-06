@@ -576,11 +576,6 @@ Vertex2D *Ramp::GetRampVertex(int &pcvertex, float ** const ppheight, bool ** co
                const float intersectx = (B*F-E*C)*inv_det;
                const float intersecty = (C*D-A*F)*inv_det;
 
-               //rgvLocal[i].x = intersectx;
-               //rgvLocal[i].y = intersecty;
-
-               //vnormal = Calc2DNormal(pv1, pv2);
-
                vnormal.x = pvmiddle->x - intersectx;
                vnormal.y = pvmiddle->y - intersecty;
             }

@@ -407,52 +407,43 @@ HitOctree::~HitOctree()
 		}
 #endif
 
-	if(lefts != 0)
-	{
-	_aligned_free(lefts);
-	_aligned_free(rights);
-	_aligned_free(tops);
-	_aligned_free(bottoms);
-	_aligned_free(zlows);
-	_aligned_free(zhighs);
-	}
+	if(l_r_t_b_zl_zh != 0)
+	_aligned_free(l_r_t_b_zl_zh);
 
 	if (!m_fLeaf)
 		{
-		for (int i=0;i<8;i++)
-			{
-			delete m_phitoct[i];
-			}
+		delete [] m_phitoct;
 		}
 	}
+
+#ifdef _DEBUGPHYSICS
+U64 oct_nextlevels = 0;
+#endif
 
 void HitOctree::CreateNextLevel()
 	{
 	m_fLeaf = false;
 
-	Vector<HitObject> vRemain; // hit objects which did not go to an octant
-
+	m_phitoct = new HitOctree[8];
 	for (int i=0;i<8;i++)
 		{
-		m_phitoct[i] = new HitOctree();
+		m_phitoct[i].m_rectbounds.left = (i&1) ? m_vcenter.x : m_rectbounds.left;
+		m_phitoct[i].m_rectbounds.top  = (i&2) ? m_vcenter.y : m_rectbounds.top;
+		m_phitoct[i].m_rectbounds.zlow = (i&4) ? m_vcenter.z : m_rectbounds.zlow;
 
-		m_phitoct[i]->m_rectbounds.left = (i&1) ? m_vcenter.x : m_rectbounds.left;
-		m_phitoct[i]->m_rectbounds.top  = (i&2) ? m_vcenter.y : m_rectbounds.top;
-		m_phitoct[i]->m_rectbounds.zlow = (i&4) ? m_vcenter.z : m_rectbounds.zlow;
+		m_phitoct[i].m_rectbounds.right  = (i&1) ? m_rectbounds.right  : m_vcenter.x;
+		m_phitoct[i].m_rectbounds.bottom = (i&2) ? m_rectbounds.bottom : m_vcenter.y;
+		m_phitoct[i].m_rectbounds.zhigh  = (i&4) ? m_rectbounds.zhigh  : m_vcenter.z;
 
-		m_phitoct[i]->m_rectbounds.right  = (i&1) ? m_rectbounds.right  : m_vcenter.x;
-		m_phitoct[i]->m_rectbounds.bottom = (i&2) ? m_rectbounds.bottom : m_vcenter.y;
-		m_phitoct[i]->m_rectbounds.zhigh  = (i&4) ? m_rectbounds.zhigh  : m_vcenter.z;
-
-		m_phitoct[i]->m_vcenter.x = (m_phitoct[i]->m_rectbounds.left + m_phitoct[i]->m_rectbounds.right )*0.5f;
-		m_phitoct[i]->m_vcenter.y = (m_phitoct[i]->m_rectbounds.top  + m_phitoct[i]->m_rectbounds.bottom)*0.5f;
-		m_phitoct[i]->m_vcenter.z = (m_phitoct[i]->m_rectbounds.zlow + m_phitoct[i]->m_rectbounds.zhigh )*0.5f;
-
-		m_phitoct[i]->m_fLeaf = true;
+		m_phitoct[i].m_vcenter.x = (m_phitoct[i].m_rectbounds.left + m_phitoct[i].m_rectbounds.right )*0.5f;
+		m_phitoct[i].m_vcenter.y = (m_phitoct[i].m_rectbounds.top  + m_phitoct[i].m_rectbounds.bottom)*0.5f;
+		m_phitoct[i].m_vcenter.z = (m_phitoct[i].m_rectbounds.zlow + m_phitoct[i].m_rectbounds.zhigh )*0.5f;
 		}
 
 	//int ccross = 0;
 	//int ccrossx = 0, ccrossy = 0;
+
+	Vector<HitObject> vRemain; // hit objects which did not go to an octant
 
 	for (int i=0;i<m_vho.Size();i++)
 		{
@@ -489,7 +480,7 @@ void HitOctree::CreateNextLevel()
 
 		if ((oct & 128) == 0)
 			{
-			m_phitoct[oct]->m_vho.AddElement(pho);
+			m_phitoct[oct].m_vho.AddElement(pho);
 			}
 		else
 			{
@@ -504,59 +495,58 @@ void HitOctree::CreateNextLevel()
 		m_vho.AddElement(vRemain.ElementAt(i));
 		}
 
-	if (m_vcenter.x - m_rectbounds.left > 125.0f)
-		{
+	//Vertex3Ds diag;
+	//diag.x = m_rectbounds.right-m_rectbounds.left;
+	//diag.y = m_rectbounds.bottom-m_rectbounds.top;
+	//diag.z = m_rectbounds.zhigh-m_rectbounds.zlow;
+	//if (diag.x*diag.x+diag.y*diag.y+diag.z*diag.z > 66.6f*66.6f) //!! magic
+		//{
 		for (int i=0; i<8; ++i)
 			{
-			m_phitoct[i]->CreateNextLevel();
+			if(((i&1) && (m_vcenter.x - m_rectbounds.left > 66.6f)) ||
+			    ((i&2) && (m_vcenter.y - m_rectbounds.top > 66.6f)) ||
+			    ((i&4) && (m_vcenter.z - m_rectbounds.zlow > 66.6f))) //!! magic (will not subdivide object soups enough)
+			if(m_phitoct[i].m_vho.Size() > 1) { //!! magic (will not favor empty space enough for huge objects)
+			m_phitoct[i].CreateNextLevel();
+#ifdef _DEBUGPHYSICS
+			oct_nextlevels++;
+#endif
+			}
 		    }
-		}
+		//}
 
-	InitSseArrays();
 	for (int i=0; i<8; ++i)
-		m_phitoct[i]->InitSseArrays();
+		m_phitoct[i].InitSseArrays();
 	}
 
+// build SSE boundary arrays of the local hit-object list
 void HitOctree::InitSseArrays()
 {
-  // build SSE boundary arrays of the local hit-object list
-  // (don't init twice)
-  const int ssebytes = sizeof(float) * ((m_vho.Size()+3)/4)*4;
-  if (ssebytes > 0 && lefts == 0)
+  const int padded = (m_vho.Size()+3)&0xFFFFFFFC;  
+  if (padded > 0)
   {
-    lefts = (float*)_aligned_malloc(ssebytes, 16);
-    rights = (float*)_aligned_malloc(ssebytes, 16);
-    tops = (float*)_aligned_malloc(ssebytes, 16);
-    bottoms = (float*)_aligned_malloc(ssebytes, 16);
-    zlows = (float*)_aligned_malloc(ssebytes, 16);
-    zhighs = (float*)_aligned_malloc(ssebytes, 16);
-
-    //memset(lefts, 0, ssebytes);
-    //memset(rights, 0, ssebytes);
-    //memset(tops, 0, ssebytes);
-    //memset(bottoms, 0, ssebytes);
-    //memset(zlows, 0, ssebytes);
-    //memset(zhighs, 0, ssebytes);
+    const int ssebytes = sizeof(float) * padded;
+    l_r_t_b_zl_zh = (float*)_aligned_malloc(ssebytes*6, 16);
 
     for (int j=0;j<m_vho.Size();j++)
     {
 	const FRect3D r = m_vho.ElementAt(j)->m_rcHitRect;
-      lefts[j] = r.left;
-      rights[j] = r.right;
-      tops[j] = r.top;
-      bottoms[j] = r.bottom;
-      zlows[j] = r.zlow;
-      zhighs[j] = r.zhigh;
+      l_r_t_b_zl_zh[j] = r.left;
+      l_r_t_b_zl_zh[j+padded] = r.right;
+      l_r_t_b_zl_zh[j+padded*2] = r.top;
+      l_r_t_b_zl_zh[j+padded*3] = r.bottom;
+      l_r_t_b_zl_zh[j+padded*4] = r.zlow;
+      l_r_t_b_zl_zh[j+padded*5] = r.zhigh;
     }
 
-	for (int j=m_vho.Size();j<((m_vho.Size()+3)/4)*4;j++)
+	for (int j=m_vho.Size();j<padded;j++)
 	{
-	  lefts[j] = FLT_MAX;
-	  rights[j] = -FLT_MAX;
-	  tops[j] = FLT_MAX;
-	  bottoms[j] = -FLT_MAX;
-	  zlows[j] = FLT_MAX;
-	  zhighs[j] = -FLT_MAX;
+	  l_r_t_b_zl_zh[j] = FLT_MAX;
+	  l_r_t_b_zl_zh[j+padded] = -FLT_MAX;
+	  l_r_t_b_zl_zh[j+padded*2] = FLT_MAX;
+	  l_r_t_b_zl_zh[j+padded*3] = -FLT_MAX;
+	  l_r_t_b_zl_zh[j+padded*4] = FLT_MAX;
+	  l_r_t_b_zl_zh[j+padded*5] = -FLT_MAX;
 	}
   }
 }
@@ -622,16 +612,16 @@ void HitOctree::HitTestBall(Ball * const pball) const
 		if (pball->m_rcHitRect.top <= m_vcenter.y) // Top
 		{
 			if (fLeft)
-				m_phitoct[0]->HitTestBallSse(pball);
+				m_phitoct[0].HitTestBallSse(pball);
 			if (fRight)
-				m_phitoct[1]->HitTestBallSse(pball);
+				m_phitoct[1].HitTestBallSse(pball);
 		}
 		if (pball->m_rcHitRect.bottom >= m_vcenter.y) // Bottom
 		{
 			if (fLeft)
-				m_phitoct[2]->HitTestBallSse(pball);
+				m_phitoct[2].HitTestBallSse(pball);
 			if (fRight)
-				m_phitoct[3]->HitTestBallSse(pball);
+				m_phitoct[3].HitTestBallSse(pball);
 		}
 		}
 	}
@@ -655,8 +645,10 @@ void HitOctree::HitTestBallSseInner(Ball * const pball, const int i) const
 
 void HitOctree::HitTestBallSse(Ball * const pball) const
 {
-  if (lefts != 0)
+  if (l_r_t_b_zl_zh != 0)
   {
+    const int padded = (m_vho.Size()+3)&0xFFFFFFFC;
+
     // init SSE registers with ball bbox
     const __m128 bleft = _mm_set1_ps(pball->m_rcHitRect.left);
     const __m128 bright = _mm_set1_ps(pball->m_rcHitRect.right);
@@ -665,12 +657,12 @@ void HitOctree::HitTestBallSse(Ball * const pball) const
     const __m128 bzlow = _mm_set1_ps(pball->m_rcHitRect.zlow);
     const __m128 bzhigh = _mm_set1_ps(pball->m_rcHitRect.zhigh);
 
-    const __m128* const pL = (__m128*)lefts;
-    const __m128* const pR = (__m128*)rights;
-    const __m128* const pT = (__m128*)tops;
-    const __m128* const pB = (__m128*)bottoms;
-    const __m128* const pZl = (__m128*)zlows;
-    const __m128* const pZh = (__m128*)zhighs;
+    const __m128* __restrict const pL = (__m128*)l_r_t_b_zl_zh;
+    const __m128* __restrict const pR = (__m128*)(l_r_t_b_zl_zh+padded);
+    const __m128* __restrict const pT = (__m128*)(l_r_t_b_zl_zh+padded*2);
+    const __m128* __restrict const pB = (__m128*)(l_r_t_b_zl_zh+padded*3);
+    const __m128* __restrict const pZl = (__m128*)(l_r_t_b_zl_zh+padded*4);
+    const __m128* __restrict const pZh = (__m128*)(l_r_t_b_zl_zh+padded*5);
 
     // loop implements 4 collision checks at once
     // (rc1.right >= rc2.left && rc1.bottom >= rc2.top && rc1.left <= rc2.right && rc1.top <= rc2.bottom && rc1.zlow <= rc2.zhigh && rc1.zhigh >= rc2.zlow)
@@ -719,16 +711,16 @@ void HitOctree::HitTestBallSse(Ball * const pball) const
 		if (pball->m_rcHitRect.top <= m_vcenter.y) // Top
 		{
 			if (fLeft)
-				m_phitoct[0]->HitTestBallSse(pball);
+				m_phitoct[0].HitTestBallSse(pball);
 			if (fRight)
-				m_phitoct[1]->HitTestBallSse(pball);
+				m_phitoct[1].HitTestBallSse(pball);
 		}
 		if (pball->m_rcHitRect.bottom >= m_vcenter.y) // Bottom
 		{
 			if (fLeft)
-				m_phitoct[2]->HitTestBallSse(pball);
+				m_phitoct[2].HitTestBallSse(pball);
 			if (fRight)
-				m_phitoct[3]->HitTestBallSse(pball);
+				m_phitoct[3].HitTestBallSse(pball);
 		}
 		}
 }
@@ -765,16 +757,16 @@ void HitOctree::HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHi
 		if (pball->m_rcHitRect.top <= m_vcenter.y) // Top
 		{
 			if (fLeft)
-				m_phitoct[0]->HitTestXRay(pball, pvhoHit);
+				m_phitoct[0].HitTestXRay(pball, pvhoHit);
 			if (fRight)
-				m_phitoct[1]->HitTestXRay(pball, pvhoHit);
+				m_phitoct[1].HitTestXRay(pball, pvhoHit);
 		}
 		if (pball->m_rcHitRect.bottom >= m_vcenter.y) // Bottom
 		{
 			if (fLeft)
-				m_phitoct[2]->HitTestXRay(pball, pvhoHit);
+				m_phitoct[2].HitTestXRay(pball, pvhoHit);
 			if (fRight)
-				m_phitoct[3]->HitTestXRay(pball, pvhoHit);
+				m_phitoct[3].HitTestXRay(pball, pvhoHit);
 		}
 		}
 	}

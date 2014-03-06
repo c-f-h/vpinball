@@ -672,7 +672,6 @@ void Flipper::RenderSetup(const RenderDevice* _pd3dDevice)
     _ASSERTE(m_phitflipper);
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
 
-    setupMode=true;
     if ( m_d.m_fCompatibility )
     {
         m_d.m_fEnabled = m_d.m_fVisible;

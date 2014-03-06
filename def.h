@@ -311,56 +311,6 @@ public:
    }
 };
 
-inline Vertex2D Calc2DNormal(const Vertex2D &pv1, const Vertex2D &pv2)
-{
-   const Vertex2D vT(pv1.x - pv2.x, pv1.y - pv2.y);
-   // Set up line normal
-   const float inv_length = 1.0f/sqrtf(vT.x * vT.x + vT.y * vT.y);
-   return Vertex2D(vT.y * inv_length, -vT.x * inv_length);
-}
-
-inline void RotateAround(const Vertex3Ds &pvAxis, Vertex3D * const pvPoint, const int count, const float angle)
-{
-   const float rsin = sinf(angle);
-   const float rcos = cosf(angle);
-
-   // Matrix for rotating around an arbitrary vector
-
-   float matrix[3][3];
-   matrix[0][0] = pvAxis.x*pvAxis.x + rcos*(1.0f-pvAxis.x*pvAxis.x);
-   matrix[1][0] = pvAxis.x*pvAxis.y*(1.0f-rcos) - pvAxis.z*rsin;
-   matrix[2][0] = pvAxis.z*pvAxis.x*(1.0f-rcos) + pvAxis.y*rsin;
-
-   matrix[0][1] = pvAxis.x*pvAxis.y*(1.0f-rcos) + pvAxis.z*rsin;
-   matrix[1][1] = pvAxis.y*pvAxis.y + rcos*(1.0f-pvAxis.y*pvAxis.y);
-   matrix[2][1] = pvAxis.y*pvAxis.z*(1.0f-rcos) - pvAxis.x*rsin;
-
-   matrix[0][2] = pvAxis.z*pvAxis.x*(1.0f-rcos) - pvAxis.y*rsin;
-   matrix[1][2] = pvAxis.y*pvAxis.z*(1.0f-rcos) + pvAxis.x*rsin;
-   matrix[2][2] = pvAxis.z*pvAxis.z + rcos*(1.0f-pvAxis.z*pvAxis.z);
-
-   for (int i=0; i<count; ++i)
-   {
-      const float result[3] = {
-         matrix[0][0]*pvPoint[i].x + matrix[0][1]*pvPoint[i].y + matrix[0][2]*pvPoint[i].z,
-         matrix[1][0]*pvPoint[i].x + matrix[1][1]*pvPoint[i].y + matrix[1][2]*pvPoint[i].z,
-         matrix[2][0]*pvPoint[i].x + matrix[2][1]*pvPoint[i].y + matrix[2][2]*pvPoint[i].z};
-
-         pvPoint[i].x = result[0];
-         pvPoint[i].y = result[1];
-         pvPoint[i].z = result[2];
-
-         const float resultn[3] = {
-            matrix[0][0]*pvPoint[i].nx + matrix[0][1]*pvPoint[i].ny + matrix[0][2]*pvPoint[i].nz,
-            matrix[1][0]*pvPoint[i].nx + matrix[1][1]*pvPoint[i].ny + matrix[1][2]*pvPoint[i].nz,
-            matrix[2][0]*pvPoint[i].nx + matrix[2][1]*pvPoint[i].ny + matrix[2][2]*pvPoint[i].nz};
-
-            pvPoint[i].nx = resultn[0];
-            pvPoint[i].ny = resultn[1];
-            pvPoint[i].nz = resultn[2];
-   }
-}
-
 inline void RotateAround(const Vertex3Ds &pvAxis, Vertex3D_NoTex * const pvPoint, const int count, const float angle)
 {
    const float rsin = sinf(angle);
@@ -666,6 +616,48 @@ inline __m128 sseHorizontalAdd(const __m128 &a) // could use dp instruction on S
 }
 
 //
+
+inline int float_as_int(const float x)
+{
+	union {
+		float f;
+		int i;
+	} uc;
+	uc.f = x;
+	return uc.i;
+}
+
+inline float int_as_float(const int i)
+{
+   union {
+      int i;
+      float f;
+   } iaf;
+   iaf.i = i;
+   return iaf.f;
+}
+
+inline bool infNaN(const float a)
+{
+	return ((float_as_int(a)&0x7F800000) == 0x7F800000);
+}
+
+inline bool inf(const float a)
+{
+	return ((float_as_int(a)&0x7FFFFFFF) == 0x7F800000);
+}
+
+inline bool NaN(const float a)
+{
+	return (((float_as_int(a)&0x7F800000) == 0x7F800000) && ((float_as_int(a)&0x007FFFFF) != 0));
+}
+
+inline bool deNorm(const float a)
+{
+    return (((float_as_int(a)&0x7FFFFFFF) < 0x00800000) && (a != 0.0));
+}
+
+//
 // TinyMT64 for random numbers (much better than rand())
 //
 
@@ -694,16 +686,6 @@ inline unsigned long long tinymtu(unsigned long long state[2]) {
 #endif
    x ^= state[0] >> TINYMT64_SH8;
    return x ^ (-((long long)x & 1) & TINYMT64_TMAT);
-}
-
-inline float int_as_float(const int i)
-{
-   union {
-      int i;
-      float f;
-   } iaf;
-   iaf.i = i;
-   return iaf.f;
 }
 
 extern unsigned long long tinymt64state[2];

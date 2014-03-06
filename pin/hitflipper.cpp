@@ -40,7 +40,6 @@ HitFlipper::HitFlipper(const float x, const float y, float baser, float endr, fl
    m_flipperanim.m_angleEnd = angle;
 
    m_flipperanim.m_anglespeed = 0;
-   m_flipperanim.m_lastAngspd = 0;
 
    const float fa = asinf((baser-endr)/flipr); //face to centerline angle (center to center)
 
@@ -597,7 +596,7 @@ void HitFlipper::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
    float impulse = 1.005f + m_elasticity;		// hit on static, immovable flipper ... i.e on the stops
    float obliquecorr = 0.0f;
 
-   if ((dot < -0.25f) && (g_pplayer->m_time_msec - m_last_hittime) > 250) // limit rate to 333 milliseconds per event 
+   if ((dot < -0.25f) && (g_pplayer->m_time_msec - m_last_hittime) > 250) // limit rate to 333 milliseconds per event //!! WTF?
    {
       flipperHit = (distance == 0.0f) ? -1.0f : -dot; // move event processing to end of collision handler...
    }

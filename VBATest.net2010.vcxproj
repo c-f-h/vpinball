@@ -3616,6 +3616,7 @@ copy "$(TargetPath)" "%VPIN_DIR%"
   <ItemGroup>
     <ClInclude Include="flasher.h" />
     <ClInclude Include="Material.h" />
+    <ClInclude Include="physconst.h" />
     <ClInclude Include="Pin\ball.h" />
     <ClInclude Include="ballex.h" />
     <ClInclude Include="bumper.h" />
@@ -3630,7 +3631,6 @@ copy "$(TargetPath)" "%VPIN_DIR%"
     <ClInclude Include="dispreel.h" />
     <ClInclude Include="disputil.h" />
     <ClInclude Include="dragpoint.h" />
-    <ClInclude Include="Pin\draw.h" />
     <ClInclude Include="eventproxy.h" />
     <ClInclude Include="extern.h" />
     <ClInclude Include="Media\fileio.h" />
@@ -3664,7 +3664,6 @@ copy "$(TargetPath)" "%VPIN_DIR%"
     <ClInclude Include="pininput.h" />
     <ClInclude Include="pinsound.h" />
     <ClInclude Include="pintable.h" />
-    <ClInclude Include="pintypes.h" />
     <ClInclude Include="pinundo.h" />
     <ClInclude Include="Pin\player.h" />
     <ClInclude Include="plumb.h" />

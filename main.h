@@ -111,7 +111,6 @@ class PinBinary;
 
 #include "BallEx.h"
 
-#include "pin/draw.h"
 #include "pin/collideex.h"
 #include "pin/ball.h"
 #include "pin/hittimer.h"

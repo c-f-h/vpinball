@@ -2,8 +2,6 @@
 
 #define DEFAULT_PLAYER_WIDTH 1024
 
-class IBlink;
-
 enum EnumAssignKeys
 {
 	eLeftFlipperKey,
@@ -104,7 +102,7 @@ public:
 
 	Pin3D m_pin3d;
 
-	int m_time_msec;
+	U32 m_time_msec;
 
 	int m_DeadZ;
 
@@ -149,7 +147,7 @@ public:
 	Vector<CLSID> m_controlclsidsafe; // ActiveX control types which have already been okayed as being safe
 
 	BOOL m_fCloseDown;			// Whether to shut down the player at the end of this frame
-	int m_fCloseType;			// if 0 exit player and close application if started minimized, if 1 close application always
+	int m_fCloseType;			// if 0 exit player and close application if started minimized, if 1 close application always, 2 is brute force exit
 
 	int m_sleeptime;			// time to sleep during each frame - can helps side threads like vpinmame
 
@@ -157,7 +155,7 @@ public:
 
 	GPINFLOAT m_pixelaspectratio;
 
-	unsigned int m_fVSync; // targeted refresh rate in Hz //!! currently does not work adaptively as it would require IDirect3DDevice9Ex which is not supported on WinXP
+	int m_fVSync; // targeted refresh rate in Hz, if larger refresh rate it will limit FPS by uSleep() //!! currently does not work adaptively as it would require IDirect3DDevice9Ex which is not supported on WinXP
 
 	int m_fFXAA;
     BOOL m_fAA;
@@ -311,7 +309,7 @@ public:
 
 #ifdef STEPPING
 public:
-	int m_PauseTimeTarget;
+	U32 m_PauseTimeTarget;
 	bool m_fPause;
 	bool m_fStep;
 #endif

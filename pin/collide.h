@@ -29,21 +29,6 @@ extern float c_dampingFriction;
 extern float c_plungerNormalize;  //Adjust Mech-Plunger, useful for component change or weak spring etc.
 extern bool c_plungerFilter;
 
-inline bool FQuickLineIntersect(const float x1, const float y1, const float x2, const float y2,
-								const float x3, const float y3, const float x4, const float y4)
-	{
-	const float d123 = (x2 - x1)*(y3 - y1) - (x3 - x1)*(y2 - y1);
-	const float d124 = (x2 - x1)*(y4 - y1) - (x4 - x1)*(y2 - y1);
-
-	if(d123 * d124 > 0.0f)
-	    return false;
-
-    const float d341 = (x3 - x1)*(y4 - y1) - (x4 - x1)*(y3 - y1);
-    const float d342 = d123 - d124 + d341;
-
-	return (d341 * d342 <= 0.0f);
-	}
-
 class Ball;
 class HitObject;
 class AnimObject;
@@ -98,10 +83,6 @@ public:
 class LineSeg : public HitObject
 	{
 public:
-	Vertex2D normal;
-	Vertex2D v1, v2;
-	float length;
-
 	virtual float HitTestBasic(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal, const bool direction, const bool lateral, const bool rigid);
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
 	virtual int GetType() const {return eLineSeg;}
@@ -109,6 +90,10 @@ public:
 	void CalcNormal();
 	void CalcLength();
 	virtual void CalcHitRect();
+
+	Vertex2D normal;
+	Vertex2D v1, v2;
+	float length;
 	};
 
 class HitCircle : public HitObject
@@ -153,16 +138,7 @@ public:
 class HitOctree
 	{
 public:
-	inline HitOctree() : m_fLeaf(true)
-		{
-    lefts = 0;
-    rights = 0;
-    tops = 0;
-    bottoms = 0;
-    zlows = 0;
-    zhighs = 0;
-		}
-		
+	inline HitOctree() { m_phitoct = NULL; l_r_t_b_zl_zh = NULL; m_fLeaf = true; }
 	~HitOctree();
 
 	void HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const;
@@ -173,18 +149,13 @@ public:
 
 	void CreateNextLevel();
 
-	HitOctree * __restrict m_phitoct[8];
+	HitOctree * __restrict m_phitoct;
 
 	Vector<HitObject> m_vho;
 
 	// helper arrays for SSE boundary checks
 	void InitSseArrays();
-	float* __restrict lefts;
-	float* __restrict rights;
-	float* __restrict tops;
-	float* __restrict bottoms;
-	float* __restrict zlows;
-	float* __restrict zhighs;
+	float* __restrict l_r_t_b_zl_zh;
 
 	FRect3D m_rectbounds;
 	Vertex3Ds m_vcenter;

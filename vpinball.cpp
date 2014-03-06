@@ -234,7 +234,9 @@ void VPinball::Init()
 {
    m_NextTableID = 1;
 
+#ifdef VBA
    m_lcidVBA = 1033;											//local ID: english - used when creating VBA APC Host
+#endif
 
    m_ptableActive = NULL;
    m_hwndSideBar = NULL;										//Handle for left Sidebar
@@ -331,7 +333,9 @@ void VPinball::Init()
 
    InitRegValues();									// get default values from registry
 
+#ifdef VBA
    InitVBA();										// Create APC VBA host
+#endif
 
    int DSidx1 = 0, DSidx2 =0;
    GetRegInt("Player", "SoundDevice", &DSidx1);
@@ -1725,11 +1729,10 @@ BOOL VPinball::CloseTable(PinTable *ppt)
    return fTrue;
 }
 
-
-void VPinball::InitVBA()
-{
-   m_fDebugging = false;
 #ifdef VBA
+void VPinball::InitVBA()
+{   
+   m_fDebugging = false;
    m_ptinfoCls       = NULL;
    m_ptinfoInt       = NULL;
 
@@ -1743,8 +1746,8 @@ void VPinball::InitVBA()
       ShowError("Could not create VBA.");
 
    AddMiniBitmaps();
-#endif
 }
+#endif
 
 HRESULT VPinball::AddMiniBitmaps()
 {
@@ -2082,30 +2085,13 @@ HRESULT VPinball::MainMsgLoop()
 #endif
 }
 
-#ifdef VBA
 HRESULT VPinball::ApcHost_OnIdle(BOOL* pfContinue)
 {
 #ifdef VBA
    ApcHost.OnIdle(pfContinue);
-#endif
-
-   if (g_pplayer && !m_fDebugging)
-   {
-      g_pplayer->Render();
-      *pfContinue = TRUE;
-   }
-
-   return S_OK;
-}
-#endif
-
-HRESULT VPinball::ApcHost_OnIdle(BOOL* pfContinue)
-{
-#ifdef VBA
-   ApcHost.OnIdle(pfContinue);
-#endif
 
    if (!m_fDebugging)
+#endif
    {
       g_pplayer->Render();
       *pfContinue = TRUE;
@@ -2114,6 +2100,7 @@ HRESULT VPinball::ApcHost_OnIdle(BOOL* pfContinue)
    return S_OK;
 }
 
+#ifdef VBA
 HRESULT VPinball::ApcHost_BeforePause()
 {
    m_fDebugging = true;
@@ -2130,7 +2117,6 @@ HRESULT VPinball::ApcHost_AfterPause()
 
 HRESULT VPinball::ShowIDE()
 {
-#ifdef VBA
    IApcIde *pIDE = NULL;
    VARIANT_BOOL vbVisible = VARIANT_TRUE;
    HRESULT hr;
@@ -2140,10 +2126,8 @@ HRESULT VPinball::ShowIDE()
       pIDE->Release();
    }
    return hr;
-#else
-   return S_OK;
-#endif
 }
+#endif
 
 STDMETHODIMP VPinball::QueryInterface(REFIID iid, void **ppvObjOut)
 {

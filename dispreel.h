@@ -127,7 +127,7 @@ private:
 
 	float       m_reeldigitwidth;  // size of the individual reel digits (in bitmap form)
     float       m_reeldigitheight;
-    int         m_timenextupdate;
+    U32         m_timenextupdate;
     bool        m_fforceupdate;
     VertexBuffer *vertexBuffer;
 

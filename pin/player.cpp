@@ -647,6 +647,7 @@ void Player::InitDebugHitStructure()
 	m_debugoctree.m_vcenter.y = (m_hitoctree.m_rectbounds.top + m_hitoctree.m_rectbounds.bottom)*0.5f;
 	m_debugoctree.m_vcenter.z = (m_hitoctree.m_rectbounds.zlow + m_hitoctree.m_rectbounds.zhigh)*0.5f;
 
+	m_debugoctree.InitSseArrays();
 	m_debugoctree.CreateNextLevel();
 }
 
@@ -696,8 +697,10 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	InitRegValues();
 
+	int vsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
+
 	// width, height, and colordepth are only defined if fullscreen is true.
-	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, (m_ptable->m_TableAdaptiveVSync == -1) ? !!m_fVSync : !!m_ptable->m_TableAdaptiveVSync, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)));
+	HRESULT hr = m_pin3d.InitPin3D(m_hwnd, m_fFullScreen != 0, m_screenwidth, m_screenheight, m_screendepth, m_refreshrate, vsync, ((m_fAA && (m_ptable->m_useAA == -1)) || (m_ptable->m_useAA == 1)), (!!m_fStereo3D) || ((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)));
 
 	if (hr != S_OK)
 	{
@@ -754,13 +757,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_LightHackHeight[LIGHTHACK_FIREPOWER_P4] = 512;
 #endif
 
-	const float realFOV = (ptable->m_FOV < 1.0f) ? 1.0f : ptable->m_FOV; // Can't have a real zero FOV, but this will look the same
-
-	m_pin3d.InitLayout(ptable->m_left, ptable->m_top, ptable->m_right,
-					   ptable->m_bottom, ptable->m_inclination, realFOV,
-					   ptable->m_rotation, ptable->m_scalex, ptable->m_scaley,
-					   ptable->m_xlatex, ptable->m_xlatey, ptable->m_xlatez, ptable->m_layback,
-					   ptable->m_maxSeparation, ptable->m_ZPD);
+	m_pin3d.InitLayout();
 
 	const float slope = ptable->m_angletiltMin 
 					  + (ptable->m_angletiltMax - ptable->m_angletiltMin) 
@@ -837,6 +834,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_hitoctree.m_vcenter.y = (m_hitoctree.m_rectbounds.top + m_hitoctree.m_rectbounds.bottom)*0.5f;
 	m_hitoctree.m_vcenter.z = (m_hitoctree.m_rectbounds.zlow + m_hitoctree.m_rectbounds.zhigh)*0.5f;
 
+	m_hitoctree.InitSseArrays();
 	m_hitoctree.CreateNextLevel();
 
 	m_shadowoctree.m_rectbounds.left = m_ptable->m_left;
@@ -850,6 +848,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_shadowoctree.m_vcenter.y = (m_hitoctree.m_rectbounds.top + m_hitoctree.m_rectbounds.bottom)*0.5f;
 	m_shadowoctree.m_vcenter.z = (m_hitoctree.m_rectbounds.zlow + m_hitoctree.m_rectbounds.zhigh)*0.5f;
 
+	m_shadowoctree.InitSseArrays();
 	m_shadowoctree.CreateNextLevel();
 
 	SendMessage(hwndProgress, PBM_SETPOS, 60, 0);
@@ -930,11 +929,11 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	// Show if we don't have a front end, or autostart is not enabled.
 	const HWND hFrontEndWnd = FindWindow( NULL, "Ultrapin (plfe)" );
 	if ( (hFrontEndWnd == NULL) || 
-		 (m_ptable->m_tblAutoStartEnabled == false) )
+		 (!m_ptable->m_tblAutoStartEnabled) )
 	{
 		// Show the window.
 		ShowWindow(m_hwnd, SW_SHOW);
-		SetForegroundWindow(m_hwnd);                      
+		SetForegroundWindow(m_hwnd);
 		SetFocus(m_hwnd);
 	}
 
@@ -1631,7 +1630,7 @@ void Player::UpdatePhysics()
 #endif
 
 	// Get time in milliseconds for timers
-	m_time_msec = (int)((initial_time_usec - m_StartTime_usec)/1000);
+	m_time_msec = (U32)((initial_time_usec - m_StartTime_usec)/1000);
 
 	phys_iterations = 0;
 #ifdef FPS
@@ -1886,7 +1885,7 @@ void Player::CheckAndUpdateRegions()
 void Player::FlipVideoBuffersNormal( const bool vsync )
 {
 	if ( m_nudgetime &&			// Table is being nudged.
-		 m_ptable->m_Shake )	// The "EarthShaker" effect is active.
+		 m_ptable->m_Shake )	// The "EarthShaker" effect is active. //!! make configurable (cab vs desktop)
 	{
 		// Draw with an offset to shake the display.
 		m_pin3d.Flip((int)m_NudgeBackX, (int)m_NudgeBackY, vsync);
@@ -1905,10 +1904,13 @@ static const float quadVerts[4*5] =
 
 void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 {
-	m_pin3d.m_pd3dDevice->CreatePixelShader( (((m_fFXAA == 1) && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)) ? FXAAshader1 : (((m_fFXAA == 2) && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 2)) ? FXAAshader2 : stereo3Dshader );
+	const bool stereo = ((m_fStereo3D != 0) && m_fStereo3Denabled);
+	const bool FXAA1 = (((m_fFXAA == 1) && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1));
+
+	m_pin3d.m_pd3dDevice->CreatePixelShader( stereo ? stereo3Dshader : (FXAA1 ? FXAAshader1 : FXAAshader2) );
 
 	m_pin3d.m_pd3dDevice->CopySurface(m_pin3d.m_pdds3DBackBuffer, m_pin3d.m_pddsBackBuffer);
-	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))
+	if(stereo)
 		m_pin3d.m_pd3dDevice->CopyDepth(m_pin3d.m_pdds3DZBuffer, m_pin3d.m_pddsZBuffer);
 
     m_pin3d.m_pd3dDevice->BeginScene();
@@ -1920,7 +1922,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 
 	m_pin3d.m_pd3dDevice->SetTexture(0,m_pin3d.m_pdds3DBackBuffer);
 	m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_BILINEAR);
-	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))
+	if(stereo)
 	{
 		m_pin3d.m_pd3dDevice->SetTexture(1,m_pin3d.m_pdds3DZBuffer);
 		m_pin3d.m_pd3dDevice->SetTextureFilter(1, TEXTURE_MODE_POINT); //!! TEXTURE_MODE_BILINEAR?
@@ -1938,14 +1940,14 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 	m_pin3d.m_pd3dDevice->SetTransform( TRANSFORMSTATE_PROJECTION, &ident );
 
 	//m_pin3d.m_pd3dDevice->SetPixelShader();
-	if((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0))
+	if(!stereo)
 	{
 		const float temp[4] = {(float)(1.0/(double)m_width), (float)(1.0/(double)m_height), 0.f, 0.f};
 		m_pin3d.m_pd3dDevice->SetPixelShaderConstants(temp,1);
 	}
 	else
 	{
-		const float temp[8] = {m_pin3d.m_maxSeparation, m_pin3d.m_maxSeparation*m_pin3d.m_ZPD, m_fStereo3DY ? 1.0f : 0.0f, (m_fStereo3D == 1) ? 1.0f : 0.0f,
+		const float temp[8] = {m_ptable->m_maxSeparation, m_ptable->m_maxSeparation*m_ptable->m_ZPD, m_fStereo3DY ? 1.0f : 0.0f, (m_fStereo3D == 1) ? 1.0f : 0.0f,
 						       (float)(1.0/(double)m_width), (float)(1.0/(double)m_height), (float)m_height, m_fStereo3DAA ? 1.0f : 0.0f /*1.0f+(float)(usec()&0x1FF)*(float)(1.0/0x1FF)*/}; //!!
 		m_pin3d.m_pd3dDevice->SetPixelShaderConstants(temp,2);
 	}
@@ -1959,7 +1961,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 
 	m_pin3d.m_pd3dDevice->SetTexture(0,NULL);
 	m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_TRILINEAR );
-	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))
+	if(stereo)
 	{
 		m_pin3d.m_pd3dDevice->SetTexture(1,NULL);
 		m_pin3d.m_pd3dDevice->SetTextureFilter(1, TEXTURE_MODE_TRILINEAR );
@@ -1975,9 +1977,15 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 	m_pin3d.m_pd3dDevice->Flip(0, 0, vsync);
 }
 
+#ifdef _DEBUGPHYSICS
+extern U64 oct_nextlevels;
+#endif
+
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void Player::Render()
 {
+	U64 timeforframe = usec();
+
 	if(m_firstFrame)
 	{
 		const HWND hVPMWnd = FindWindow( "MAME", NULL );
@@ -2022,7 +2030,9 @@ void Player::Render()
     // Check if we should turn animate the plunger light.
     hid_set_output ( HID_OUTPUT_PLUNGER, ((m_time_msec - m_LastPlungerHit) < 512) && ((m_time_msec & 512) > 0) );
 
-    const unsigned int localvsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
+    int localvsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
+	if(localvsync > m_refreshrate)
+		localvsync = 0;
 
     bool vsync = false;
     if(localvsync > 0)
@@ -2038,7 +2048,7 @@ void Player::Render()
     }
 
 
-    if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))) || (m_pin3d.m_maxSeparation <= 0.0f) || (m_pin3d.m_maxSeparation >= 1.0f) || (m_pin3d.m_ZPD <= 0.0f) || (m_pin3d.m_ZPD >= 1.0f) || !m_pin3d.m_pdds3DBackBuffer || !m_pin3d.m_pdds3DZBuffer)
+    if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))) || (m_ptable->m_maxSeparation <= 0.0f) || (m_ptable->m_maxSeparation >= 1.0f) || (m_ptable->m_ZPD <= 0.0f) || (m_ptable->m_ZPD >= 1.0f) || !m_pin3d.m_pdds3DBackBuffer || !m_pin3d.m_pdds3DZBuffer)
     {
         FlipVideoBuffersNormal( vsync );
     }
@@ -2173,6 +2183,10 @@ void Player::Render()
 		len = sprintf_s(szFoo, sizeof(szFoo), "Hits:%5u Collide:%5u Ctacs:%5u Static:%5u Embed: %5u    ",
 		c_hitcnts, c_collisioncnt, c_contactcnt, c_staticcnt, c_embedcnts);
 		TextOut(hdcNull, 10, 180, szFoo, len);
+
+		len = sprintf_s(szFoo, sizeof(szFoo), "Octree:%5u    ",
+		oct_nextlevels);
+		TextOut(hdcNull, 10, 200, szFoo, len);
 #endif
         ReleaseDC(NULL, hdcNull);
     }
@@ -2185,6 +2199,15 @@ void Player::Render()
         RecomputePseudoPauseState();
         SendMessage(m_hwndDebugger, RECOMPUTEBUTTONCHECK, 0, 0);
     }
+
+	// limit framerate if requested by user (vsync Hz higher than refreshrate of gfxcard/monitor)
+	localvsync = (m_ptable->m_TableAdaptiveVSync == -1) ? m_fVSync : m_ptable->m_TableAdaptiveVSync;
+	if(localvsync > m_refreshrate)
+	{
+		timeforframe = usec() - timeforframe;
+		if(timeforframe < 1000000ull/localvsync)
+			uSleep(1000000ull/localvsync-timeforframe);
+	}
 
     if (m_ptable->m_pcv->m_fScriptError)
     {
@@ -2495,8 +2518,10 @@ void Player::DrawBalls()
     m_pin3d.m_pd3dDevice->SetTextureStageState( 0, D3DTSS_COLOROP, D3DTOP_MODULATE);
     m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_TRILINEAR);
 
-    const float sn = sinf(m_pin3d.m_inclination);
-    const float cs = cosf(m_pin3d.m_inclination);
+    const float inclination = ANGTORAD(g_pplayer->m_ptable->m_inclination);
+
+    const float sn = sinf(inclination);
+    const float cs = cosf(inclination);
 
     for (unsigned i=0; i<m_vball.size(); i++)
     {
