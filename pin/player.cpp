@@ -1905,10 +1905,13 @@ static const float quadVerts[4*5] =
 
 void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 {
-	m_pin3d.m_pd3dDevice->CreatePixelShader( (((m_fFXAA == 1) && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1)) ? FXAAshader1 : (((m_fFXAA == 2) && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 2)) ? FXAAshader2 : stereo3Dshader );
+	const bool stereo = ((m_fStereo3D != 0) && m_fStereo3Denabled);
+	const bool FXAA1 = (((m_fFXAA == 1) && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA == 1));
+
+	m_pin3d.m_pd3dDevice->CreatePixelShader( stereo ? stereo3Dshader : (FXAA1 ? FXAAshader1 : FXAAshader2) );
 
 	m_pin3d.m_pd3dDevice->CopySurface(m_pin3d.m_pdds3DBackBuffer, m_pin3d.m_pddsBackBuffer);
-	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))
+	if(stereo)
 		m_pin3d.m_pd3dDevice->CopyDepth(m_pin3d.m_pdds3DZBuffer, m_pin3d.m_pddsZBuffer);
 
     m_pin3d.m_pd3dDevice->BeginScene();
@@ -1920,7 +1923,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 
 	m_pin3d.m_pd3dDevice->SetTexture(0,m_pin3d.m_pdds3DBackBuffer);
 	m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_BILINEAR);
-	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))
+	if(stereo)
 	{
 		m_pin3d.m_pd3dDevice->SetTexture(1,m_pin3d.m_pdds3DZBuffer);
 		m_pin3d.m_pd3dDevice->SetTextureFilter(1, TEXTURE_MODE_POINT); //!! TEXTURE_MODE_BILINEAR?
@@ -1938,7 +1941,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 	m_pin3d.m_pd3dDevice->SetTransform( TRANSFORMSTATE_PROJECTION, &ident );
 
 	//m_pin3d.m_pd3dDevice->SetPixelShader();
-	if((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0))
+	if(!stereo)
 	{
 		const float temp[4] = {(float)(1.0/(double)m_width), (float)(1.0/(double)m_height), 0.f, 0.f};
 		m_pin3d.m_pd3dDevice->SetPixelShaderConstants(temp,1);
@@ -1959,7 +1962,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync )
 
 	m_pin3d.m_pd3dDevice->SetTexture(0,NULL);
 	m_pin3d.m_pd3dDevice->SetTextureFilter(0, TEXTURE_MODE_TRILINEAR );
-	if(!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))
+	if(stereo)
 	{
 		m_pin3d.m_pd3dDevice->SetTexture(1,NULL);
 		m_pin3d.m_pd3dDevice->SetTextureFilter(1, TEXTURE_MODE_TRILINEAR );
@@ -3497,13 +3500,11 @@ INT_PTR CALLBACK PauseProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 							{
 							case ID_RESUME:
 								{
-								g_pplayer->m_pininput.m_exit_stamp = 0;
 								EndDialog(hwndDlg, ID_RESUME);
 								}
 								break;
 							case ID_DEBUGWINDOW:
 								{
-								g_pplayer->m_pininput.m_exit_stamp = 0;
 								if (g_pplayer->m_ptable->CheckPermissions(DISABLE_DEBUGGER))
 									{
 									EndDialog(hwndDlg, ID_RESUME);
