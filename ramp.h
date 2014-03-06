@@ -150,7 +150,7 @@ private:
 	Vertex2D *GetRampVertex(int &pcvertex, float ** const ppheight, bool ** const ppfCross, float ** const ppratio);
 	void prepareHabitrail(RenderDevice* pd3dDevice);
 	void prepareStatic(RenderDevice* pd3dDevice);
-	void CheckJoint(Vector<HitObject> * const pvho, const Hit3DPoly * const ph3d1, const Hit3DPoly * const ph3d2);
+	void CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const ph3d1, const HitTriangle * const ph3d2);
 
 	void RenderStaticHabitrail(RenderDevice* pd3dDevice);
 	void RenderPolygons(RenderDevice* pd3dDevice, int offset, WORD * const rgicrosssection, const int start, const int stop);

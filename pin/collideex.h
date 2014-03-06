@@ -66,17 +66,31 @@ class Hit3DPoly : public HitObject
 public:
 	Hit3DPoly(Vertex3Ds * const rgv, const int count);
 	virtual ~Hit3DPoly();
-	virtual float HitTestBasicPolygon(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal, const bool direction, const bool rigid);
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
 	virtual int GetType() const {return e3DPoly;}
 	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
-	void CalcNormal();
 	virtual void CalcHitRect();
 
 	Vertex3Ds *m_rgv;
 	Vertex3Ds normal;
 	float D; // D for the plane equation.  A,B, and C are the plane normal (A x' + B y' + C z' = D, normal= x',y'+z'
 	int m_cvertex;
+	BOOL m_fVisible; // for ball shadows
+};
+
+class HitTriangle : public HitObject
+{
+public:
+	HitTriangle(const Vertex3Ds rgv[3]);
+	virtual ~HitTriangle() {}
+	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual int GetType() const {return eTriangle;}
+	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void CalcHitRect();
+
+	Vertex3Ds m_rgv[3];
+	Vertex3Ds normal;
+	float D; // D for the plane equation.  A,B, and C are the plane normal (A x' + B y' + C z' = D, normal= x',y'+z'
 	BOOL m_fVisible; // for ball shadows
 };
 

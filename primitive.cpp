@@ -289,15 +289,15 @@ void Primitive::GetHitShapes(Vector<HitObject> * const pvho)
 
    RecalculateMatrices();
    RecalculateVertices();
-   Hit3DPoly *ph3dpolyOld = NULL;
+   HitTriangle *ph3dpolyOld = NULL;
 
    for( unsigned i=0; i<indexList.size(); i+=3 )
    {
-      Vertex3Ds * const rgv3D = new Vertex3Ds[3];
+      Vertex3Ds rgv3D[3];
       rgv3D[0] = vertices[ indexList[i  ] ];
       rgv3D[1] = vertices[ indexList[i+1] ];
       rgv3D[2] = vertices[ indexList[i+2] ];
-      Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,3); //!! this is not efficient at all, use native triangle-soup directly somehow
+      HitTriangle * const ph3dpoly = new HitTriangle(rgv3D); //!! this is not efficient at all, use native triangle-soup directly somehow
       ph3dpoly->m_elasticity = m_d.m_elasticity;
       ph3dpoly->m_antifriction = 1.0f - m_d.m_friction;
       ph3dpoly->m_scatter = ANGTORAD(m_d.m_scatter);
@@ -322,7 +322,7 @@ void Primitive::GetHitShapesDebug(Vector<HitObject> * const pvho)
 {
 }
 
-void Primitive::CheckJoint(Vector<HitObject> * const pvho, const Hit3DPoly * const ph3d1, const Hit3DPoly * const ph3d2)
+void Primitive::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const ph3d1, const HitTriangle * const ph3d2)
 {
    Vertex3Ds vjointnormal = CrossProduct(ph3d1->normal, ph3d2->normal);
    //vjointnormal.x = ph3d1->normal.x + ph3d2->normal.x;
