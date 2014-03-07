@@ -117,6 +117,7 @@ inline bool fopen_s(FILE** f, const char *fname, const char *attr)
 }
 #endif
 
+
 LRESULT CALLBACK PlayerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #ifdef ULTRAPIN
 LRESULT CALLBACK PlayerDMDHackWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -957,6 +958,10 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	}
 #endif
 	Render();
+
+    // TODO: the limit should be a GUI option; 0 means disable limiting of drawahead queue
+    m_limiter.Init(2);
+
 	return S_OK;
 }
 
@@ -1844,6 +1849,7 @@ void Player::RenderDynamics()
        m_vHitBackglass[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
 
    DrawBalls();
+   m_limiter.Execute(m_pin3d.m_pd3dDevice);
 
    // Draw transparent objects.
    for (unsigned i=0; i < m_vHitTrans.size(); ++i)

@@ -25,6 +25,76 @@ enum EnumAssignKeys
 	eCKeys
 	};
 
+/*
+ * Class to limit the length of the GPU command buffer queue to at most 'numFrames' frames.
+ * Excessive buffering of GPU commands creates high latency and can create stuttery overlong
+ * frames when the CPU stalls due to a full command buffer ring.
+ *
+ * Calling Execute() within a BeginScene() / EndScene() pair creates an artificial pipeline
+ * stall by locking a vertex buffer which was rendered from (numFrames-1) frames ago. This
+ * forces the CPU to wait and let the GPU catch up so that rendering doesn't lag more than
+ * numFrames behind the CPU. It does *NOT* limit the framerate itself, only the drawahead.
+ * Note that VP is currently usually GPU-bound.
+ *
+ * This is similar to Flush() in later DX versions, but doesn't flush the entire command
+ * buffer, only up to a certain previous frame.
+ *
+ * Use of this class has been observed to effectively reduce stutter at least on an NVidia/
+ * Win7 64 bit setup. The queue limiting effect can be clearly seen in GPUView.
+ *
+ * The initial cause for the stutter may be that our command buffers are too big (two
+ * packets per frame on typical tables, instead of one), so with more optimizations to
+ * draw calls/state changes, none of this may be needed anymore.
+ */
+class FrameQueueLimiter
+{
+public:
+    void Init(int numFrames)
+    {
+        m_buffers.resize(numFrames, NULL);
+        m_curIdx = 0;
+    }
+
+    ~FrameQueueLimiter()
+    {
+        for (unsigned i = 0; i < m_buffers.size(); ++i)
+        {
+            if (m_buffers[i])
+                m_buffers[i]->release();
+        }
+    }
+
+    void Execute(RenderDevice *pd3dDevice)
+    {
+        if (m_buffers.empty())
+            return;
+
+        if (m_buffers[m_curIdx])
+            pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, m_buffers[m_curIdx], 0, 3);
+
+        m_curIdx = (m_curIdx + 1) % m_buffers.size();
+
+        if (!m_buffers[m_curIdx])
+            pd3dDevice->CreateVertexBuffer(3, 0, MY_D3DFVF_NOTEX2_VERTEX, &m_buffers[m_curIdx]);
+
+        // idea: locking a static vertex buffer stalls the pipeline if that VB is still
+        // in the GPU render queue. In effect, this lets the GPU catch up.
+        Vertex3D_NoTex2* buf;
+        m_buffers[m_curIdx]->lock(0, 0, (void**)&buf, 0);
+        memset(buf, 0, 3*sizeof(buf[0]));
+        buf[0].z = buf[1].z = buf[2].z = 1e5f;      // single triangle, degenerates to point far off screen
+        m_buffers[m_curIdx]->unlock();
+    }
+
+private:
+    std::vector<VertexBuffer*> m_buffers;
+    unsigned m_curIdx;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 class Player
 {
 public:
@@ -302,6 +372,8 @@ private:
 	U64 m_phys_total_iterations;
 	U64 m_phys_max_iterations;
 	BOOL m_fShowFPS;
+
+    FrameQueueLimiter m_limiter;
 
 public:
 	void ToggleFPS();
