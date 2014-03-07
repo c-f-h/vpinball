@@ -1234,6 +1234,7 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
       if (plinesling->m_slingshotanim.m_iframe != 1)
           continue;
 
+      ppin3d->SetTexture(NULL);
       pd3dDevice->SetMaterial(slingShotMaterial);
 
       pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, slingshotVBuffer, i*24, 24, slingIBuffer, 0, 36);
