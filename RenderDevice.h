@@ -302,6 +302,7 @@ private:
 
    VertexBuffer* m_curVertexBuffer;     // for caching
    IndexBuffer* m_curIndexBuffer;       // for caching
+   D3DTexture* m_curTexture[8];         // for caching
 
    DWORD m_maxaniso;
    bool m_mag_aniso;

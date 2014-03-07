@@ -284,6 +284,7 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
 
     m_curIndexBuffer = 0;
     m_curVertexBuffer = 0;
+    memset(m_curTexture, 0, 8*sizeof(m_curTexture[0]));
 
     // fill state caches with dummy values
     memset( renderStateCache, 0xCC, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
@@ -488,11 +489,16 @@ D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth, int *p
     return tex;
 }
 
-void RenderDevice::SetTexture(DWORD p1, D3DTexture* p2 )
+void RenderDevice::SetTexture(DWORD texUnit, D3DTexture* tex )
 {
-    CHECKD3D(m_pD3DDevice->SetTexture(p1, p2));
+    if (texUnit >= 8 || tex != m_curTexture[texUnit])
+    {
+        CHECKD3D(m_pD3DDevice->SetTexture(texUnit, tex));
+        if (texUnit < 8)
+            m_curTexture[texUnit] = tex;
 
-    m_curTextureChanges++;
+        m_curTextureChanges++;
+    }
 }
 
 void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
