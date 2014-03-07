@@ -139,7 +139,7 @@ public:
 class HitOctree
 	{
 public:
-	inline HitOctree() { m_phitoct = NULL; l_r_t_b_zl_zh = NULL; m_fLeaf = true; }
+	inline HitOctree() { m_phitoct = NULL; l_r_t_b_zl_zh = NULL; m_phitoct = NULL; }
 	~HitOctree();
 
 	void HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const;
@@ -150,16 +150,13 @@ public:
 
 	void CreateNextLevel();
 
-	HitOctree * __restrict m_phitoct;
+	HitOctree * __restrict m_phitoct; // if NULL then this is a leaf, otherwise keeps the 8 children
 
 	Vector<HitObject> m_vho;
 
-	// helper arrays for SSE boundary checks
+	FRect3D m_rectbounds;
+
+	// helper for SSE optimized boundary checks
 	void InitSseArrays();
 	float* __restrict l_r_t_b_zl_zh;
-
-	FRect3D m_rectbounds;
-	Vertex3Ds m_vcenter;
-
-	bool m_fLeaf;
 	};

@@ -410,7 +410,7 @@ HitOctree::~HitOctree()
 	if(l_r_t_b_zl_zh != 0)
 	_aligned_free(l_r_t_b_zl_zh);
 
-	if (!m_fLeaf)
+	if (m_phitoct)
 		{
 		delete [] m_phitoct;
 		}
@@ -422,22 +422,18 @@ U64 oct_nextlevels = 0;
 
 void HitOctree::CreateNextLevel()
 	{
-	m_fLeaf = false;
+	const Vertex3Ds vcenter((m_rectbounds.left+m_rectbounds.right)*0.5f, (m_rectbounds.top+m_rectbounds.bottom)*0.5f, (m_rectbounds.zlow+m_rectbounds.zhigh)*0.5f);
 
 	m_phitoct = new HitOctree[8];
 	for (int i=0;i<8;i++)
 		{
-		m_phitoct[i].m_rectbounds.left = (i&1) ? m_vcenter.x : m_rectbounds.left;
-		m_phitoct[i].m_rectbounds.top  = (i&2) ? m_vcenter.y : m_rectbounds.top;
-		m_phitoct[i].m_rectbounds.zlow = (i&4) ? m_vcenter.z : m_rectbounds.zlow;
+		m_phitoct[i].m_rectbounds.left = (i&1) ? vcenter.x : m_rectbounds.left;
+		m_phitoct[i].m_rectbounds.top  = (i&2) ? vcenter.y : m_rectbounds.top;
+		m_phitoct[i].m_rectbounds.zlow = (i&4) ? vcenter.z : m_rectbounds.zlow;
 
-		m_phitoct[i].m_rectbounds.right  = (i&1) ? m_rectbounds.right  : m_vcenter.x;
-		m_phitoct[i].m_rectbounds.bottom = (i&2) ? m_rectbounds.bottom : m_vcenter.y;
-		m_phitoct[i].m_rectbounds.zhigh  = (i&4) ? m_rectbounds.zhigh  : m_vcenter.z;
-
-		m_phitoct[i].m_vcenter.x = (m_phitoct[i].m_rectbounds.left + m_phitoct[i].m_rectbounds.right )*0.5f;
-		m_phitoct[i].m_vcenter.y = (m_phitoct[i].m_rectbounds.top  + m_phitoct[i].m_rectbounds.bottom)*0.5f;
-		m_phitoct[i].m_vcenter.z = (m_phitoct[i].m_rectbounds.zlow + m_phitoct[i].m_rectbounds.zhigh )*0.5f;
+		m_phitoct[i].m_rectbounds.right  = (i&1) ? m_rectbounds.right  : vcenter.x;
+		m_phitoct[i].m_rectbounds.bottom = (i&2) ? m_rectbounds.bottom : vcenter.y;
+		m_phitoct[i].m_rectbounds.zhigh  = (i&4) ? m_rectbounds.zhigh  : vcenter.z;
 		}
 
 	//int ccross = 0;
@@ -450,11 +446,11 @@ void HitOctree::CreateNextLevel()
 		int oct;
 		HitObject * const pho = m_vho.ElementAt(i);
 
-		if (pho->m_rcHitRect.right < m_vcenter.x)
+		if (pho->m_rcHitRect.right < vcenter.x)
 			{
 			oct = 0;
 			}
-		else if (pho->m_rcHitRect.left > m_vcenter.x)
+		else if (pho->m_rcHitRect.left > vcenter.x)
 			{
 			oct = 1;
 			}
@@ -464,11 +460,11 @@ void HitOctree::CreateNextLevel()
 			//ccrossx++;
 			}
 
-		if (pho->m_rcHitRect.bottom < m_vcenter.y)
+		if (pho->m_rcHitRect.bottom < vcenter.y)
 			{
 			//oct |= 0;
 			}
-		else if (pho->m_rcHitRect.top > m_vcenter.y)
+		else if (pho->m_rcHitRect.top > vcenter.y)
 			{
 			oct |= 2;
 			}
@@ -495,38 +491,29 @@ void HitOctree::CreateNextLevel()
 		m_vho.AddElement(vRemain.ElementAt(i));
 		}
 
-	//Vertex3Ds diag;
-	//diag.x = m_rectbounds.right-m_rectbounds.left;
-	//diag.y = m_rectbounds.bottom-m_rectbounds.top;
-	//diag.z = m_rectbounds.zhigh-m_rectbounds.zlow;
-	//if (diag.x*diag.x+diag.y*diag.y+diag.z*diag.z > 66.6f*66.6f) //!! magic
-		//{
 		for (int i=0; i<8; ++i)
 			{
-			if(((i&1) && (m_vcenter.x - m_rectbounds.left > 66.6f)) ||
-			    ((i&2) && (m_vcenter.y - m_rectbounds.top > 66.6f)) ||
-			    ((i&4) && (m_vcenter.z - m_rectbounds.zlow > 66.6f))) //!! magic (will not subdivide object soups enough)
+			if(((i&1) && (vcenter.x - m_rectbounds.left > 66.6f)) ||
+			    ((i&2) && (vcenter.y - m_rectbounds.top > 66.6f)) ||
+			    ((i&4) && (vcenter.z - m_rectbounds.zlow > 66.6f))) //!! magic (will not subdivide object soups enough)
 			if(m_phitoct[i].m_vho.Size() > 1) { //!! magic (will not favor empty space enough for huge objects)
 			m_phitoct[i].CreateNextLevel();
 #ifdef _DEBUGPHYSICS
 			oct_nextlevels++;
 #endif
 			}
-		    }
-		//}
 
-	for (int i=0; i<8; ++i)
-		m_phitoct[i].InitSseArrays();
+			m_phitoct[i].InitSseArrays();
+		    }
 	}
 
-// build SSE boundary arrays of the local hit-object list
+// build SSE boundary arrays of the local hit-object/m_vho HitRect list
 void HitOctree::InitSseArrays()
 {
   const int padded = (m_vho.Size()+3)&0xFFFFFFFC;  
   if (padded > 0)
   {
-    const int ssebytes = sizeof(float) * padded;
-    l_r_t_b_zl_zh = (float*)_aligned_malloc(ssebytes*6, 16);
+    l_r_t_b_zl_zh = (float*)_aligned_malloc(sizeof(float) * padded * 6, 16);
 
     for (int j=0;j<m_vho.Size();j++)
     {
@@ -601,22 +588,24 @@ void HitOctree::HitTestBall(Ball * const pball) const
 			}
 		}//end for loop
 
-	if (!m_fLeaf)
+	if (m_phitoct) // not a leaf
 		{
-		const bool fLeft = (pball->m_rcHitRect.left <= m_vcenter.x);
-		const bool fRight = (pball->m_rcHitRect.right >= m_vcenter.x);
+		const Vertex3Ds vcenter((m_rectbounds.left+m_rectbounds.right)*0.5f, (m_rectbounds.top+m_rectbounds.bottom)*0.5f, (m_rectbounds.zlow+m_rectbounds.zhigh)*0.5f);
+
+		const bool fLeft = (pball->m_rcHitRect.left <= vcenter.x);
+		const bool fRight = (pball->m_rcHitRect.right >= vcenter.x);
 
 #ifdef LOG
 		cTested++;
 #endif
-		if (pball->m_rcHitRect.top <= m_vcenter.y) // Top
+		if (pball->m_rcHitRect.top <= vcenter.y) // Top
 		{
 			if (fLeft)
 				m_phitoct[0].HitTestBallSse(pball);
 			if (fRight)
 				m_phitoct[1].HitTestBallSse(pball);
 		}
-		if (pball->m_rcHitRect.bottom >= m_vcenter.y) // Bottom
+		if (pball->m_rcHitRect.bottom >= vcenter.y) // Bottom
 		{
 			if (fLeft)
 				m_phitoct[2].HitTestBallSse(pball);
@@ -703,19 +692,21 @@ void HitOctree::HitTestBallSse(Ball * const pball) const
     }
   }
 
-	if (!m_fLeaf)
+	if (m_phitoct) // not a leaf
 		{
-		const bool fLeft = (pball->m_rcHitRect.left <= m_vcenter.x);
-		const bool fRight = (pball->m_rcHitRect.right >= m_vcenter.x);
+		const Vertex3Ds vcenter((m_rectbounds.left+m_rectbounds.right)*0.5f, (m_rectbounds.top+m_rectbounds.bottom)*0.5f, (m_rectbounds.zlow+m_rectbounds.zhigh)*0.5f);
 
-		if (pball->m_rcHitRect.top <= m_vcenter.y) // Top
+		const bool fLeft = (pball->m_rcHitRect.left <= vcenter.x);
+		const bool fRight = (pball->m_rcHitRect.right >= vcenter.x);
+
+		if (pball->m_rcHitRect.top <= vcenter.y) // Top
 		{
 			if (fLeft)
 				m_phitoct[0].HitTestBallSse(pball);
 			if (fRight)
 				m_phitoct[1].HitTestBallSse(pball);
 		}
-		if (pball->m_rcHitRect.bottom >= m_vcenter.y) // Bottom
+		if (pball->m_rcHitRect.bottom >= vcenter.y) // Bottom
 		{
 			if (fLeft)
 				m_phitoct[2].HitTestBallSse(pball);
@@ -745,23 +736,25 @@ void HitOctree::HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHi
 			}
 		}
 
-	if (!m_fLeaf)
+	if (m_phitoct) // not a leaf
 		{
-		const bool fLeft = (pball->m_rcHitRect.left <= m_vcenter.x);
-		const bool fRight = (pball->m_rcHitRect.right >= m_vcenter.x);
+		const Vertex3Ds vcenter((m_rectbounds.left+m_rectbounds.right)*0.5f, (m_rectbounds.top+m_rectbounds.bottom)*0.5f, (m_rectbounds.zlow+m_rectbounds.zhigh)*0.5f);
+
+		const bool fLeft = (pball->m_rcHitRect.left <= vcenter.x);
+		const bool fRight = (pball->m_rcHitRect.right >= vcenter.x);
 
 #ifdef LOG
 		cTested++;
 #endif
 
-		if (pball->m_rcHitRect.top <= m_vcenter.y) // Top
+		if (pball->m_rcHitRect.top <= vcenter.y) // Top
 		{
 			if (fLeft)
 				m_phitoct[0].HitTestXRay(pball, pvhoHit);
 			if (fRight)
 				m_phitoct[1].HitTestXRay(pball, pvhoHit);
 		}
-		if (pball->m_rcHitRect.bottom >= m_vcenter.y) // Bottom
+		if (pball->m_rcHitRect.bottom >= vcenter.y) // Bottom
 		{
 			if (fLeft)
 				m_phitoct[2].HitTestXRay(pball, pvhoHit);
