@@ -272,6 +272,11 @@ public:
 
    void ForceAnisotropicFiltering( const bool enable ) { m_force_aniso = enable; }
 
+   // performance counters
+   unsigned Perf_GetNumDrawCalls()         { return m_frameDrawCalls; }
+   unsigned Perf_GetNumStateChanges()      { return m_frameStateChanges; }
+   unsigned Perf_GetNumTextureChanges()    { return m_frameTextureChanges; }
+
 private:
 #ifdef USE_D3D9EX
    IDirect3D9Ex* m_pD3D;
@@ -304,6 +309,11 @@ private:
    bool m_autogen_mipmap;
 
    bool m_force_aniso;
+
+   // performance counters
+   unsigned m_curDrawCalls, m_frameDrawCalls;
+   unsigned m_curStateChanges, m_frameStateChanges;
+   unsigned m_curTextureChanges, m_frameTextureChanges;
 
 public:
    TextureManager m_texMan;

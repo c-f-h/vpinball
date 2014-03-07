@@ -289,6 +289,11 @@ RenderDevice::RenderDevice(HWND hwnd, int width, int height, bool fullscreen, in
     memset( renderStateCache, 0xCC, sizeof(DWORD)*RENDER_STATE_CACHE_SIZE);
     memset( textureStateCache, 0xCC, sizeof(DWORD)*8*TEXTURE_STATE_CACHE_SIZE);
     memset(&materialStateCache, 0xCC, sizeof(Material));
+
+    // initialize performance counters
+    m_curDrawCalls = m_frameDrawCalls = 0;
+    m_curStateChanges = m_frameStateChanges = 0;
+    m_curTextureChanges = m_frameTextureChanges = 0;
 }
 
 #include <d3dx9.h> //!! meh
@@ -369,6 +374,12 @@ void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
 		m_pD3DDevice->WaitForVBlank(0);
 #endif
     CHECKD3D(m_pD3DDevice->Present(NULL, NULL, NULL, NULL));
+
+    // reset performance counters
+    m_frameDrawCalls = m_curDrawCalls;
+    m_frameStateChanges = m_curStateChanges;
+    m_frameTextureChanges = m_curTextureChanges;
+    m_curDrawCalls = m_curStateChanges = m_curTextureChanges = 0;
 }
 
 RenderTarget* RenderDevice::DuplicateRenderTarget(RenderTarget* src)
@@ -480,6 +491,8 @@ D3DTexture* RenderDevice::UploadTexture(MemTexture* surf, int *pTexWidth, int *p
 void RenderDevice::SetTexture(DWORD p1, D3DTexture* p2 )
 {
     CHECKD3D(m_pD3DDevice->SetTexture(p1, p2));
+
+    m_curTextureChanges++;
 }
 
 void RenderDevice::SetTextureFilter(DWORD texUnit, DWORD mode)
@@ -533,6 +546,8 @@ void RenderDevice::SetTextureStageState( DWORD p1, D3DTEXTURESTAGESTATETYPE p2, 
         textureStateCache[p1][p2] = p3;
     }
     CHECKD3D(m_pD3DDevice->SetTextureStageState(p1, p2, p3));
+
+   m_curStateChanges++;
 }
 
 void RenderDevice::SetMaterial( const BaseMaterial * const _material )
@@ -579,6 +594,8 @@ void RenderDevice::SetRenderState( const RenderStates p1, const DWORD p2 )
       renderStateCache[p1]=p2;
    }
    CHECKD3D(m_pD3DDevice->SetRenderState((D3DRENDERSTATETYPE)p1, p2));
+
+   m_curStateChanges++;
 }
 
 void RenderDevice::SetTextureAddressMode(DWORD texUnit, TextureAddressMode mode)
@@ -640,6 +657,8 @@ void RenderDevice::DrawPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, const void* v
     m_pD3DDevice->SetFVF(fvf);
     CHECKD3D(m_pD3DDevice->DrawPrimitiveUP(type, ComputePrimitiveCount(type, vertexCount), vertices, fvfToSize(fvf)));
     m_curVertexBuffer = 0;      // DrawPrimitiveUP sets the VB to NULL
+
+   m_curDrawCalls++;
 }
 
 void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, const void* vertices, DWORD vertexCount, const WORD* indices, DWORD indexCount)
@@ -649,6 +668,8 @@ void RenderDevice::DrawIndexedPrimitive(D3DPRIMITIVETYPE type, DWORD fvf, const 
                 indices, D3DFMT_INDEX16, vertices, fvfToSize(fvf)));
     m_curVertexBuffer = 0;      // DrawIndexedPrimitiveUP sets the VB to NULL
     m_curIndexBuffer = 0;       // DrawIndexedPrimitiveUP sets the IB to NULL
+
+   m_curDrawCalls++;
 }
 
 void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount)
@@ -667,6 +688,8 @@ void RenderDevice::DrawPrimitiveVB(D3DPRIMITIVETYPE type, VertexBuffer* vb, DWOR
     }
 
     CHECKD3D(m_pD3DDevice->DrawPrimitive(type, startVertex, ComputePrimitiveCount(type, vertexCount)));
+
+   m_curDrawCalls++;
 }
 
 void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, VertexBuffer* vb, DWORD startVertex, DWORD vertexCount, const WORD* indices, DWORD indexCount)
@@ -711,6 +734,8 @@ void RenderDevice::DrawIndexedPrimitiveVB( D3DPRIMITIVETYPE type, VertexBuffer* 
 
     // render
     CHECKD3D(m_pD3DDevice->DrawIndexedPrimitive(type, startVertex, 0, vertexCount, startIndex, ComputePrimitiveCount(type, indexCount)));
+
+   m_curDrawCalls++;
 }
 
 void RenderDevice::SetTransform( TransformStateType p1, D3DMATRIX* p2)
