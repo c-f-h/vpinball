@@ -866,6 +866,7 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
       }
       else
 	  {
+         ppin3d->SetTexture(NULL);
          solidMaterial.setColor(1.0f, m_d.m_color );
 		 pd3dDevice->SetMaterial(solidMaterial);
 	  }
@@ -962,7 +963,5 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
          pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
 	  }
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
-
-      ppin3d->SetTexture(NULL);
       pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE); 	
 }

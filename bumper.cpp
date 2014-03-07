@@ -358,8 +358,6 @@ void Bumper::PostRenderStatic(const RenderDevice* _pd3dDevice)
             ppin3d->DisableLightMap();
         }
     }
-
-    ppin3d->SetTexture(NULL);
 }
 
 void Bumper::RenderSetup(const RenderDevice* _pd3dDevice )

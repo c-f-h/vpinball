@@ -431,10 +431,10 @@ void Spinner::PostRenderStatic(const RenderDevice* _pd3dDevice)
     pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, vtxBuf, 4, 4);
 
     pd3dDevice->SetMaterial(solidMaterial);
-    ppin3d->SetTexture(NULL);
 
     if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
     {
+        ppin3d->SetTexture(NULL);
         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 8, 16, idxBuf, 0, 24);
     }
 

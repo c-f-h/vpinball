@@ -865,6 +865,7 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       }
       else
       {
+         g_pplayer->m_pin3d.SetTexture(NULL);
          if( vertexBufferRegenerate )
             material.setColor( 1.0f, m_d.m_TopColor );
       }
@@ -906,11 +907,6 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
 
       g_pplayer->m_pin3d.DisableAlphaBlend();
-
-	  if (pin)
-	  {
-         pin->Unset(ePictureTexture);
-	  }
    }
 }
 
@@ -956,6 +952,7 @@ void Primitive::RenderStatic(const RenderDevice* _pd3dDevice)
    {
       RenderDevice *pd3dDevice = (RenderDevice*)_pd3dDevice;
       RenderObject(pd3dDevice);
+      g_pplayer->m_pin3d.SetTexture(NULL);
    }
 }
 

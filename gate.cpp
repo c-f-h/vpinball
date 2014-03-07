@@ -485,12 +485,12 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
     pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, vtxBuf, 4, 4);
 
     pd3dDevice->SetMaterial(solidMaterial);
-    ppin3d->SetTexture(NULL);
 
     if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
     {
         // TODO: use index buffer
         static const WORD idx[24] = {0,1,2,0,2,3, 4,5,6,4,6,7, 8,9,10,8,10,11, 12,13,14,12,14,15 };
+        ppin3d->SetTexture(NULL);
         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 8, 16, (LPWORD)idx, 24);
     }
 

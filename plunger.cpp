@@ -316,12 +316,13 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
                 ppin3d->EnableAlphaBlend( 1, fFalse );
                 ppin3d->SetTextureFilter ( ePictureTexture, TEXTURE_MODE_TRILINEAR );
             }
+            else
+                ppin3d->SetTexture(NULL);
 
             pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, frame*(16*PLUNGEPOINTS1), 16*PLUNGEPOINTS1, indexBuffer, 0, 16*6*(PLUNGEPOINTS1-1));
 
             if ( pin )
             {
-                pin->Unset(ePictureTexture);
                 pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE );
             }
         }

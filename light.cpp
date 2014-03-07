@@ -576,6 +576,8 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     Material mtrl;
     const bool isOn = (m_realState == LightStateBlinking) ? (m_rgblinkpattern[m_iblinkframe] == '1') : !!m_realState;
 
+    ppin3d->SetTexture(NULL);
+
     if (!isOn)
     {
         if(!m_d.m_EnableOffLighting)
@@ -628,7 +630,6 @@ void Light::PostRenderStatic(const RenderDevice* _pd3dDevice)
     pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
 
     // reset render states
-    ppin3d->SetTexture(NULL);
     pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
     pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
     if (!isOn)
@@ -745,7 +746,6 @@ void Light::PostRenderStaticCustom(RenderDevice* pd3dDevice)
         pd3dDevice->SetTextureStageState( 1, D3DTSS_COLOROP, D3DTOP_MODULATE );
     }
 
-    ppin3d->SetTexture(NULL);
     pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
     pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
     ppin3d->DisableLightMap();

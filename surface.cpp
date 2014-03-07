@@ -1211,7 +1211,10 @@ void Surface::FreeBuffers()
 void Surface::RenderStatic(const RenderDevice* pd3dDevice)
 {
    if (!m_d.m_fDroppable)
+   {
       RenderWallsAtHeight( (RenderDevice*)pd3dDevice, fFalse);
+      g_pplayer->m_pin3d.SetTexture(NULL);
+   }
 }
 
 
@@ -1269,6 +1272,8 @@ void Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fDrop)
         pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
         g_pplayer->m_pin3d.SetTextureFilter( ePictureTexture, TEXTURE_MODE_TRILINEAR );
     }
+    else
+        g_pplayer->m_pin3d.SetTexture(NULL);
 
     pd3dDevice->SetMaterial(sideMaterial);
     if (m_d.m_fEnableLighting)
@@ -1324,7 +1329,6 @@ void Surface::RenderWallsAtHeight( RenderDevice* pd3dDevice, BOOL fDrop)
         }
     }
 
-    ppin3d->SetTexture(NULL);
     ppin3d->DisableLightMap();
     pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
 

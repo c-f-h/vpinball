@@ -2647,7 +2647,10 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
             pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
       }
       else
+      {
+         ppin3d->SetTexture(NULL);
          pd3dDevice->SetMaterial(solidMaterial);
+      }
 
       if(dynamicVertexBufferRegenerate)
          GenerateVertexBuffer(pd3dDevice);
@@ -2681,8 +2684,6 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
 			pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, dynamicVertexBuffer, offset, m_numVertices*2, dynamicIndexBuffer, 0, (rampVertex-1)*6*2);
         }
 	  }
-
-      ppin3d->SetTexture(NULL);
 
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
       pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
