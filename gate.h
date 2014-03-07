@@ -111,6 +111,7 @@ private:
    float m_posZ;        // z coordinate for rendering
 
    VertexBuffer *vtxBuf;
+   IndexBuffer *idxBuf;
 
    Material staticMaterial;
    Material solidMaterial;

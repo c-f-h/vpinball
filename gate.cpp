@@ -14,6 +14,8 @@ Gate::~Gate()
 {
    if (vtxBuf)
        vtxBuf->release();
+   if (idxBuf)
+       idxBuf->release();
 }
 
 HRESULT Gate::Init(PinTable *ptable, float x, float y, bool fromMouseClick)
@@ -359,6 +361,11 @@ void Gate::EndPlay()
        vtxBuf->release();
        vtxBuf = NULL;
    }
+   if (idxBuf)
+   {
+       idxBuf->release();
+       idxBuf = NULL;
+   }
 }
 
 
@@ -488,10 +495,8 @@ void Gate::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
     if (m_d.m_color != rgbTransparent && m_d.m_color != NOTRANSCOLOR)
     {
-        // TODO: use index buffer
-        static const WORD idx[24] = {0,1,2,0,2,3, 4,5,6,4,6,7, 8,9,10,8,10,11, 12,13,14,12,14,15 };
         ppin3d->SetTexture(NULL);
-        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 8, 16, (LPWORD)idx, 24);
+        pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLELIST, vtxBuf, 8, 16, idxBuf, 0, 24);
     }
 
     pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
@@ -662,6 +667,9 @@ void Gate::RenderSetup(const RenderDevice* _pd3dDevice)
    solidMaterial.setColor( 1.0f, m_d.m_color );
    PrepareStatic((RenderDevice*)_pd3dDevice);
    PrepareMovers((RenderDevice*)_pd3dDevice);
+
+   static const WORD idx[24] = {0,1,2,0,2,3, 4,5,6,4,6,7, 8,9,10,8,10,11, 12,13,14,12,14,15 };
+   idxBuf = ((RenderDevice*)_pd3dDevice)->CreateAndFillIndexBuffer(24, idx);
 }
 
 void Gate::RenderStatic(const RenderDevice* _pd3dDevice) // only the support structures are rendered here
