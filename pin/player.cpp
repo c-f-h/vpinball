@@ -302,6 +302,13 @@ Player::Player()
 
 Player::~Player()
 {
+	if(m_debugoctree.m_hitoct)
+	    delete m_debugoctree.m_hitoct;
+	if(m_hitoctree.m_hitoct)
+	    delete m_hitoctree.m_hitoct;
+	if(m_shadowoctree.m_hitoct)
+	    delete m_shadowoctree.m_hitoct;
+
 	for (unsigned i=0; i < m_vhitables.size(); ++i)
 	{
         m_vhitables[i]->EndPlay();
@@ -315,8 +322,7 @@ Player::~Player()
 		delete m_vdebugho.ElementAt(i);
 	m_vdebugho.RemoveAllElements();
 
-	// balls get deleted by the hit object vector
-	// not anymore - balls are added to the octree, but not the main list
+	// balls are added to the octree, but not the hit object vector
 	for (unsigned i=0; i<m_vball.size(); i++)
 	{
 		Ball * const pball = m_vball[i];
@@ -329,8 +335,10 @@ Player::~Player()
 		delete pball->m_vpVolObjs;
 		delete pball;
 	}
+
 	m_vball.clear();
-    if ( Ball::vertexBuffer!=0 )
+
+	if ( Ball::vertexBuffer!=0 )
     {
         Ball::vertexBuffer->release();
         Ball::vertexBuffer=0;
@@ -626,16 +634,20 @@ void Player::InitDebugHitStructure()
         const int newsize = m_vdebugho.Size();
         // Save the objects the trouble of having the set the idispatch pointer themselves
         for (int hitloop = currentsize;hitloop < newsize;hitloop++)
-        {
             m_vdebugho.ElementAt(hitloop)->m_pfedebug = m_ptable->m_vedit.ElementAt(i)->GetIFireEvents();
-        }
     }
 
-	for (int i=0;i<m_vdebugho.Size();i++)
-		{
+	//!! cleanup octree code
+	m_debugoctree.m_hitoct = new HitOctree(&m_vdebugho,m_vdebugho.Size());
+
+	for(int i = 0; i < m_vdebugho.Size(); ++i)
+	{
 		m_vdebugho.ElementAt(i)->CalcHitRect();
-		m_debugoctree.m_vho.AddElement(m_vdebugho.ElementAt(i));
-		}
+		m_debugoctree.m_hitoct->m_org_idx[i] = i;
+	}
+
+	m_debugoctree.m_start = 0;
+	m_debugoctree.m_items = m_vdebugho.Size();
 
 	m_debugoctree.m_rectbounds.left = m_ptable->m_left;
 	m_debugoctree.m_rectbounds.right = m_ptable->m_right;
@@ -645,7 +657,7 @@ void Player::InitDebugHitStructure()
 	m_debugoctree.m_rectbounds.zhigh = m_ptable->m_glassheight;
 
 	m_debugoctree.CreateNextLevel();
-	m_debugoctree.InitSseArrays();
+	m_debugoctree.m_hitoct->InitSseArrays();
 }
 
 Vertex3Ds g_viewDir;
@@ -802,15 +814,30 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	CreateBoundingHitShapes(&m_vho);
 
-	for (int i=0;i<m_vho.Size();i++)
+
+	// octree construction //!! cleanup!
+	int shadow_items = 0;
+	for (int i = 0; i < m_vho.Size(); ++i)
+    {
+		if( ((m_vho.ElementAt(i)->GetType() == e3DPoly) && ((Hit3DPoly *)m_vho.ElementAt(i))->m_fVisible) ||
+			((m_vho.ElementAt(i)->GetType() == eTriangle) && ((HitTriangle *)m_vho.ElementAt(i))->m_fVisible) )
+			shadow_items++;
+	}
+
+	m_shadowoctree.m_hitoct = new HitOctree(&m_vho,shadow_items);
+	m_hitoctree.m_hitoct = new HitOctree(&m_vho,m_vho.Size());
+
+	shadow_items = 0;
+
+	for (int i = 0; i < m_vho.Size(); ++i)
     {
 		m_vho.ElementAt(i)->CalcHitRect();
 
-		m_hitoctree.m_vho.AddElement(m_vho.ElementAt(i));
+		m_hitoctree.m_hitoct->m_org_idx[i] = i;
 
 		if( ((m_vho.ElementAt(i)->GetType() == e3DPoly) && ((Hit3DPoly *)m_vho.ElementAt(i))->m_fVisible) ||
 			((m_vho.ElementAt(i)->GetType() == eTriangle) && ((HitTriangle *)m_vho.ElementAt(i))->m_fVisible) )
-			m_shadowoctree.m_vho.AddElement(m_vho.ElementAt(i));
+			m_shadowoctree.m_hitoct->m_org_idx[shadow_items++] = i;
 
         AnimObject *pao = m_vho.ElementAt(i)->GetAnimObject();
         if (pao)
@@ -821,6 +848,9 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
         }
     }
 
+	m_hitoctree.m_start = 0;
+	m_hitoctree.m_items = m_vho.Size();
+
 	m_hitoctree.m_rectbounds.left = m_ptable->m_left;
 	m_hitoctree.m_rectbounds.right = m_ptable->m_right;
 	m_hitoctree.m_rectbounds.top = m_ptable->m_top;
@@ -829,8 +859,11 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_hitoctree.m_rectbounds.zhigh = m_ptable->m_glassheight;
 
 	m_hitoctree.CreateNextLevel();
-	m_hitoctree.InitSseArrays();
+	m_hitoctree.m_hitoct->InitSseArrays();
 	
+	m_shadowoctree.m_start = 0;
+	m_shadowoctree.m_items = shadow_items;
+
 	m_shadowoctree.m_rectbounds.left = m_ptable->m_left;
 	m_shadowoctree.m_rectbounds.right = m_ptable->m_right;
 	m_shadowoctree.m_rectbounds.top = m_ptable->m_top;
@@ -839,8 +872,10 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_shadowoctree.m_rectbounds.zhigh = m_ptable->m_glassheight;
 
 	m_shadowoctree.CreateNextLevel();
-	m_shadowoctree.InitSseArrays();
-	
+	m_shadowoctree.m_hitoct->InitSseArrays();
+	//!! end cleanup!
+
+
 	SendMessage(hwndProgress, PBM_SETPOS, 60, 0);
 	SetWindowText(hwndProgressName, "Rendering Table...");
 
@@ -1034,10 +1069,10 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 	m_vball.push_back(pball);
 	m_vmover.AddElement(&pball->m_ballanim);
 
-	// Add to list of global exception hit-tests for now
-	m_hitoctree.m_vho.AddElement(pball);
-
 	pball->CalcBoundingRect();
+
+	// Add to list of global exception hit-tests for now
+	m_hitoctree.m_hitoct->m_dynamic.AddElement(pball);
 
 	if (!m_pactiveballDebug)
 		m_pactiveballDebug = pball;
@@ -1060,7 +1095,7 @@ void Player::DestroyBall(Ball *pball)
     RemoveFromVector( m_vball, pball );
 	m_vmover.RemoveElement(&pball->m_ballanim);
 
-	m_hitoctree.m_vho.RemoveElement(pball);
+	m_hitoctree.m_hitoct->m_dynamic.RemoveElement(pball);
 
 	m_vballDelete.push_back(pball);
 

@@ -285,11 +285,11 @@ private:
 
     std::vector<Ball*> m_vballDelete;	// Balls to free at the end of the frame
 
-	HitOctree m_hitoctree;
-	HitOctree m_shadowoctree;
+	HitOctreeNode m_hitoctree;
+	HitOctreeNode m_shadowoctree;
 
 	Vector<HitObject> m_vdebugho;
-	HitOctree m_debugoctree;
+	HitOctreeNode m_debugoctree;
 
 	U64 m_StartTime_usec;
 	U64 m_curPhysicsFrameTime;	// Time when the last frame was drawn
