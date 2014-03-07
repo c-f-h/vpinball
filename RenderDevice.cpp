@@ -367,6 +367,20 @@ void RenderDevice::RevertPixelShaderToFixedFunction()
     m_pD3DDevice->SetPixelShader( NULL );
 }
 
+static void FlushGPUCommandBuffer(IDirect3DDevice9* pd3dDevice)
+{
+    IDirect3DQuery9* pEventQuery;
+    pd3dDevice->CreateQuery(D3DQUERYTYPE_EVENT, &pEventQuery);
+
+    if (pEventQuery)
+    {
+        pEventQuery->Issue(D3DISSUE_END);
+        while (S_FALSE == pEventQuery->GetData(NULL, 0, D3DGETDATA_FLUSH))
+            ;
+        pEventQuery->Release();
+    }
+}
+
 void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
 {
     // TODO: we can't handle shake here
