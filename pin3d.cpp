@@ -773,9 +773,9 @@ void Pin3D::DisableAlphaBlend()
     m_pd3dDevice->SetRenderState(RenderDevice::ALPHATESTENABLE, FALSE);
 }
 
-void Pin3D::Flip(const int offsetx, const int offsety, bool vsync)
+void Pin3D::Flip(bool vsync)
 {
-    m_pd3dDevice->Flip(offsetx, offsety, vsync);
+    m_pd3dDevice->Flip(vsync);
 }
 
 Vertex3Ds Pin3D::Unproject( Vertex3Ds *point)

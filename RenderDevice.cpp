@@ -381,9 +381,8 @@ static void FlushGPUCommandBuffer(IDirect3DDevice9* pd3dDevice)
     }
 }
 
-void RenderDevice::Flip(int offsetx, int offsety, bool vsync)
+void RenderDevice::Flip(bool vsync)
 {
-    // TODO: we can't handle shake here
 #ifdef USE_D3D9EX
     if(vsync)
 		m_pD3DDevice->WaitForVBlank(0);

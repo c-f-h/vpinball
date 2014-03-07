@@ -218,7 +218,7 @@ public:
    void EndScene();
 
    void Clear(DWORD numRects, D3DRECT* rects, DWORD flags, D3DCOLOR color, D3DVALUE z, DWORD stencil);
-   void Flip(int offsetx, int offsety, bool vsync);
+   void Flip(bool vsync);
 
    RenderTarget* GetBackBuffer() { return m_pBackBuffer; }
    RenderTarget* DuplicateRenderTarget(RenderTarget* src);

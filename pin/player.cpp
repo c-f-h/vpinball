@@ -1883,10 +1883,11 @@ void Player::FlipVideoBuffersNormal( const bool vsync )
 		 m_ptable->m_Shake )	// The "EarthShaker" effect is active. //!! make configurable (cab vs desktop)
 	{
 		// Draw with an offset to shake the display.
-		m_pin3d.Flip((int)m_NudgeBackX, (int)m_NudgeBackY, vsync);
+        // TODO: this doesn't work in DX9, have to handle shake some other way.
+		m_pin3d.Flip( /*(int)m_NudgeBackX, (int)m_NudgeBackY,*/ vsync);
 	}
     else
-        m_pin3d.Flip(0, 0, vsync);
+        m_pin3d.Flip(vsync);
 }
 
 static const float quadVerts[4*5] =
@@ -1969,7 +1970,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync ) //!! SMAA, luma sharpen,
 
 	m_pin3d.m_pd3dDevice->EndScene();
 
-	m_pin3d.m_pd3dDevice->Flip(0, 0, vsync);
+	m_pin3d.m_pd3dDevice->Flip(vsync);
 }
 
 #ifdef _DEBUGPHYSICS
@@ -3081,10 +3082,6 @@ LRESULT CALLBACK PlayerWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 			break;
       }
-
-		case WM_PAINT:
-			//g_pplayer->m_pin3d.Flip(0,0,0);
-			break;
 
 		case WM_KEYDOWN:
 			g_pplayer->m_fDrawCursor = false;

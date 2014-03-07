@@ -202,7 +202,7 @@ public:
    Vertex3Ds Unproject( Vertex3Ds *point );
    Vertex3Ds Get3DPointFrom2D( POINT *p );
 
-    void Flip(const int offsetx, const int offsety, bool vsync);
+    void Flip(bool vsync);
 
 	void SetRenderTarget(RenderTarget* pddsSurface, RenderTarget* pddsZ) const;
 	void SetTextureFilter(const int TextureNum, const int Mode) const;
