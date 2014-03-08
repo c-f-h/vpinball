@@ -176,7 +176,7 @@ public:
 	void HitTestBallSse(Ball * const pball) const;
 	void HitTestBallSseInner(Ball * const pball, const int i) const;
 
-	void CreateNextLevel();
+	void CreateNextLevel(const bool subdivide = true);
 
 	FRect3D m_rectbounds;
 	unsigned int m_start;

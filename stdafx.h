@@ -54,7 +54,6 @@
 
 //#define _DEBUGPHYSICS
 //#define DEBUG_FPS
-//#define ANTI_TEAR	1			// define if you want to have some hacky code to prevent drawing more than one frame per 16ms = ~60fps
 //#define EVENTIME 1
 
 #define GPINFLOAT double

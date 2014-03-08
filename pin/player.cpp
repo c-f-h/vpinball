@@ -1111,7 +1111,7 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 	m_hitoctree_dynamic->m_rectbounds.zlow = m_ptable->m_tableheight;
 	m_hitoctree_dynamic->m_rectbounds.zhigh = m_ptable->m_glassheight;
 
-	m_hitoctree_dynamic->CreateNextLevel();
+	m_hitoctree_dynamic->CreateNextLevel(false); //!! for now do not subdivide, otherwise needs to be rebuild for each ball change!
 	m_hitoctree_dynamic->m_hitoct->InitSseArrays();
 	//
 
@@ -1162,7 +1162,7 @@ void Player::DestroyBall(Ball *pball)
 	m_hitoctree_dynamic->m_rectbounds.zlow = m_ptable->m_tableheight;
 	m_hitoctree_dynamic->m_rectbounds.zhigh = m_ptable->m_glassheight;
 
-	m_hitoctree_dynamic->CreateNextLevel();
+	m_hitoctree_dynamic->CreateNextLevel(false); //!! for now do not subdivide, otherwise needs to be rebuild for each ball change!
 	m_hitoctree_dynamic->m_hitoct->InitSseArrays();
 	//
 
@@ -1578,9 +1578,9 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 				pball->m_hittime = hittime;				// search upto current hittime
 				pball->m_pho = NULL;
 
-				m_hitoctree.HitTestBall(pball);			// find the hit objects and hit times
 				if(m_hitoctree_dynamic)
-					m_hitoctree_dynamic->HitTestBall(pball); // and for dynamic objects
+					m_hitoctree_dynamic->HitTestBall(pball); // dynamic objects
+				m_hitoctree.HitTestBall(pball);			// find the hit objects and hit times
 
 				const float htz = pball->m_hittime;		// this ball's hit time
 				if(htz < 0.f) pball->m_pho = NULL;		// no negative time allowed
@@ -2102,16 +2102,6 @@ void Player::Render()
     {
         Sleep(m_sleeptime - 1);
     }
-
-#ifdef ANTI_TEAR
-    static U64 sync;
-
-    if( sync ) // Spin the CPU to prevent from running graphics faster than necessary
-    {
-        while( usec() - sync < 16666 ) { ; } // ~60 fps
-    }
-    sync = usec();
-#endif
 
 #ifdef _DEBUGPHYSICS
     c_collisioncnt = 0; 
@@ -2967,9 +2957,9 @@ void Player::DoDebugObjectMenu(int x, int y)
 	Vector<HitObject> vhoHit;
 	Vector<IFireEvents> vpfe;
 
-	m_hitoctree.HitTestXRay(&ballT, &vhoHit);
 	if(m_hitoctree_dynamic)
 		m_hitoctree_dynamic->HitTestXRay(&ballT, &vhoHit);
+	m_hitoctree.HitTestXRay(&ballT, &vhoHit);
 	m_debugoctree.HitTestXRay(&ballT, &vhoHit);
 
 	VectorInt<HMENU> vsubmenu;
