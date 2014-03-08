@@ -825,7 +825,7 @@ void Primitive::UpdateMesh()
    objMesh = objMeshOrg;
    if ( m_d.sphereMapping )
    {
-      Matrix3D matWorld = g_pplayer->m_pin3d.m_proj.m_matWorld;
+      Matrix3D matWorld = g_pplayer->m_pin3d.GetWorldTransform();
       matWorld.Multiply(rotMatrix, rotMatrix);
    }
 
@@ -834,8 +834,8 @@ void Primitive::UpdateMesh()
       Vertex3D_NoTex2 * const tempVert = &objMesh[i];
       if ( m_d.sphereMapping )
       {
-         Vertex3Ds norm;
-         rotMatrix.MultiplyVectorNoTranslate(*tempVert, norm);
+         Vertex3Ds norm(tempVert->nx, tempVert->ny, tempVert->nz);
+         rotMatrix.MultiplyVectorNoTranslate(norm, norm);
          tempVert->tu = 0.5f + norm.x*0.5f;
          tempVert->tv = 0.5f + norm.y*0.5f;
       }
