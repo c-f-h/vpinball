@@ -295,6 +295,8 @@ Player::Player()
 	for(unsigned int i = 0; i < 8; ++i)
 		m_touchregion_pressed[i] = false;
 
+	m_hitoctree_dynamic = NULL;
+
 #ifdef DEBUG_FPS
 	ToggleFPS();
 #endif
@@ -306,6 +308,12 @@ Player::~Player()
 	    delete m_debugoctree.m_hitoct;
 	if(m_hitoctree.m_hitoct)
 	    delete m_hitoctree.m_hitoct;
+	if(m_hitoctree_dynamic)
+	{
+		if(m_hitoctree_dynamic->m_hitoct)
+		    delete m_hitoctree_dynamic->m_hitoct;
+		delete m_hitoctree_dynamic;
+	}
 	if(m_shadowoctree.m_hitoct)
 	    delete m_shadowoctree.m_hitoct;
 
@@ -322,6 +330,8 @@ Player::~Player()
 		delete m_vdebugho.ElementAt(i);
 	m_vdebugho.RemoveAllElements();
 
+	//!! cleanup the whole mem management for balls, this is a mess!
+
 	// balls are added to the octree, but not the hit object vector
 	for (unsigned i=0; i<m_vball.size(); i++)
 	{
@@ -335,6 +345,11 @@ Player::~Player()
 		delete pball->m_vpVolObjs;
 		delete pball;
 	}
+
+	//!! see above
+	//for (int i=0;i<m_vho_dynamic.Size();i++)
+	//	delete m_vho_dynamic.ElementAt(i);
+	//m_vho_dynamic.RemoveAllElements();
 
 	m_vball.clear();
 
@@ -1072,7 +1087,35 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 	pball->CalcBoundingRect();
 
 	// Add to list of global exception hit-tests for now
-	m_hitoctree.m_hitoct->m_dynamic.AddElement(pball);
+	m_vho_dynamic.AddElement(pball);
+
+	//!! cleanup octree code
+	if(m_hitoctree_dynamic)
+		delete m_hitoctree_dynamic;
+	m_hitoctree_dynamic = new HitOctreeNode();
+
+	m_hitoctree_dynamic->m_hitoct = new HitOctree(&m_vho_dynamic,m_vho_dynamic.Size());
+
+	for (int i = 0; i < m_vho_dynamic.Size(); ++i)
+    {
+		m_vho_dynamic.ElementAt(i)->CalcHitRect();
+
+		m_hitoctree_dynamic->m_hitoct->m_org_idx[i] = i;
+	}
+
+	m_hitoctree_dynamic->m_start = 0;
+	m_hitoctree_dynamic->m_items = m_vho_dynamic.Size();
+
+	m_hitoctree_dynamic->m_rectbounds.left = m_ptable->m_left;
+	m_hitoctree_dynamic->m_rectbounds.right = m_ptable->m_right;
+	m_hitoctree_dynamic->m_rectbounds.top = m_ptable->m_top;
+	m_hitoctree_dynamic->m_rectbounds.bottom = m_ptable->m_bottom;
+	m_hitoctree_dynamic->m_rectbounds.zlow = m_ptable->m_tableheight;
+	m_hitoctree_dynamic->m_rectbounds.zhigh = m_ptable->m_glassheight;
+
+	m_hitoctree_dynamic->CreateNextLevel();
+	m_hitoctree_dynamic->m_hitoct->InitSseArrays();
+	//
 
 	if (!m_pactiveballDebug)
 		m_pactiveballDebug = pball;
@@ -1095,7 +1138,35 @@ void Player::DestroyBall(Ball *pball)
     RemoveFromVector( m_vball, pball );
 	m_vmover.RemoveElement(&pball->m_ballanim);
 
-	m_hitoctree.m_hitoct->m_dynamic.RemoveElement(pball);
+	m_vho_dynamic.RemoveElement(pball);
+
+	//!! cleanup octree code
+	if(m_hitoctree_dynamic)
+		delete m_hitoctree_dynamic;
+	m_hitoctree_dynamic = new HitOctreeNode();
+
+	m_hitoctree_dynamic->m_hitoct = new HitOctree(&m_vho_dynamic,m_vho_dynamic.Size());
+
+	for (int i = 0; i < m_vho_dynamic.Size(); ++i)
+    {
+		m_vho_dynamic.ElementAt(i)->CalcHitRect();
+
+		m_hitoctree_dynamic->m_hitoct->m_org_idx[i] = i;
+	}
+
+	m_hitoctree_dynamic->m_start = 0;
+	m_hitoctree_dynamic->m_items = m_vho_dynamic.Size();
+
+	m_hitoctree_dynamic->m_rectbounds.left = m_ptable->m_left;
+	m_hitoctree_dynamic->m_rectbounds.right = m_ptable->m_right;
+	m_hitoctree_dynamic->m_rectbounds.top = m_ptable->m_top;
+	m_hitoctree_dynamic->m_rectbounds.bottom = m_ptable->m_bottom;
+	m_hitoctree_dynamic->m_rectbounds.zlow = m_ptable->m_tableheight;
+	m_hitoctree_dynamic->m_rectbounds.zhigh = m_ptable->m_glassheight;
+
+	m_hitoctree_dynamic->CreateNextLevel();
+	m_hitoctree_dynamic->m_hitoct->InitSseArrays();
+	//
 
 	m_vballDelete.push_back(pball);
 
@@ -1510,6 +1581,8 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 				pball->m_pho = NULL;
 
 				m_hitoctree.HitTestBall(pball);			// find the hit objects and hit times
+				if(m_hitoctree_dynamic)
+					m_hitoctree_dynamic->HitTestBall(pball); // and for dynamic objects
 
 				const float htz = pball->m_hittime;		// this ball's hit time
 				if(htz < 0.f) pball->m_pho = NULL;		// no negative time allowed
@@ -2897,6 +2970,8 @@ void Player::DoDebugObjectMenu(int x, int y)
 	Vector<IFireEvents> vpfe;
 
 	m_hitoctree.HitTestXRay(&ballT, &vhoHit);
+	if(m_hitoctree_dynamic)
+		m_hitoctree_dynamic->HitTestXRay(&ballT, &vhoHit);
 	m_debugoctree.HitTestXRay(&ballT, &vhoHit);
 
 	VectorInt<HMENU> vsubmenu;

@@ -291,6 +291,9 @@ private:
 	Vector<HitObject> m_vdebugho;
 	HitOctreeNode m_debugoctree;
 
+	Vector<HitObject> m_vho_dynamic;
+	HitOctreeNode * m_hitoctree_dynamic; // generated from scratch each time something changes
+
 	U64 m_StartTime_usec;
 	U64 m_curPhysicsFrameTime;	// Time when the last frame was drawn
 	U64 m_nextPhysicsFrameTime;	// time at which the next physics update should be

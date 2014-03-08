@@ -162,8 +162,6 @@ public:
 	unsigned int * __restrict tmp;
 	
 	float* __restrict l_r_t_b_zl_zh;
-
-	Vector<HitObject> m_dynamic; //!! brute force intersected
 };
 
 class HitOctreeNode

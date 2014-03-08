@@ -593,39 +593,13 @@ collisions
 
 void HitOctreeNode::HitTestBall(Ball * const pball) const
 {
-	// static hit objects
 	for (int i=m_start; i<m_start+m_items; i++)
 	{
 #ifdef LOG
 		cTested++;
 #endif
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
-		if (/*(pball != pho) // ball can not hit itself //!! not necessary anymore (dynamic list takes care)
-		       &&*/ fRectIntersect3D(pball->m_rcHitRect, pho->m_rcHitRect))
-		{
-#ifdef LOG
-			cDeepTested++;
-#endif
-			const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal); // test for hit
-			if ((newtime >= 0) && (newtime <= pball->m_hittime))
-			{
-				pball->m_pho = pho;
-				pball->m_hittime = newtime;
-				pball->m_hitx = pball->x + pball->vx*newtime;
-				pball->m_hity = pball->y + pball->vy*newtime;
-			}
-		}
-	}
-
-	// dynamic hit objects
-	if(m_start == 0) // root? -> as dynamics only need to be considered once //!!
-	for (int i=0; i<m_hitoct->m_dynamic.Size(); i++)
-	{
-#ifdef LOG
-		cTested++;
-#endif
-		HitObject * const pho = m_hitoct->m_dynamic.ElementAt(i);
-		if ((pball != pho) // ball can not hit itself //!! not necessary anymore (dynamic list takes care)
+		if ((pball != pho) // ball can not hit itself
 		       && fRectIntersect3D(pball->m_rcHitRect, pho->m_rcHitRect))
 		{
 #ifdef LOG
@@ -674,9 +648,9 @@ void HitOctreeNode::HitTestBallSseInner(Ball * const pball, const int i) const
 {
   HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 
-  // ball can not hit itself //!! not necessary here for now, as dynamics are separate
-  /*if (pball == pho)
-    return;*/
+  // ball can not hit itself
+  if (pball == pho)
+    return;
 
   const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal); // test for hit
   if ((newtime >= 0) && (newtime <= pball->m_hittime))
@@ -771,34 +745,14 @@ void HitOctreeNode::HitTestBallSse(Ball * const pball) const
 
 void HitOctreeNode::HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const
 {
-	//static hit objects
 	for (int i=m_start; i<m_start+m_items; i++)
 	{
 #ifdef LOG
 		cTested++;
 #endif
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
-		if (/*(pball != pho) &&*/ //!! not necessary here anymore
+		if ((pball != pho) && // ball cannot hit itself
 			fRectIntersect3D(pball->m_rcHitRect,pho->m_rcHitRect))
-		{
-#ifdef LOG
-			cDeepTested++;
-#endif
-			const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal);
-			if (newtime >= 0)
-				pvhoHit->AddElement(pho);
-		}
-	}
-
-	// dynamic hit objects
-	if(m_start == 0) // root? -> as dynamics only need to be considered once //!!
-	for (int i=0; i<m_hitoct->m_dynamic.Size(); i++)
-	{
-#ifdef LOG
-		cTested++;
-#endif
-		HitObject * const pho = m_hitoct->m_dynamic.ElementAt(m_hitoct->m_org_idx[i]);
-		if ((pball != pho) && fRectIntersect3D(pball->m_rcHitRect,pho->m_rcHitRect))
 		{
 #ifdef LOG
 			cDeepTested++;
