@@ -1595,16 +1595,12 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
          pin->CreateAlphaChannel();
          pin->Set( ePictureTexture );
 
+         ppin3d->EnableAlphaBlend( 1, m_d.m_fAddBlend );
+
          if (pin->m_fTransparent)
-         {				
-            pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE);
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_NONE);
-         }
          else
-         {	
             pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
-            ppin3d->EnableAlphaBlend( 1, m_d.m_fAddBlend );
-         }
 
 		 pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, m_d.m_fModify3DStereo || (g_pplayer->m_fStereo3D == 0) || !g_pplayer->m_fStereo3Denabled); // do not update z if just a fake ramp (f.e. flasher fakes, etc)
 
@@ -1663,7 +1659,7 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
 
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
       pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-      pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE); 	
+      ppin3d->DisableAlphaBlend();
 
       if ( !m_d.m_enableLightingImage && pin!=NULL )
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
@@ -2632,10 +2628,6 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
       {
          pin->CreateAlphaChannel();
          pin->Set( ePictureTexture );
-
-         // In RenderStatic(), we set cull mode depending on texture transparency...?
-         // Doesn't seem to make sense.
-         pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
          ppin3d->EnableAlphaBlend( 1, m_d.m_fAddBlend );
 
          pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, m_d.m_fAddBlend ? FALSE : ((m_d.m_fModify3DStereo || (g_pplayer->m_fStereo3D == 0) || !g_pplayer->m_fStereo3Denabled))); // do not update z if just a fake ramp (f.e. flasher fakes, etc) or additive blend
@@ -2687,7 +2679,7 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
 
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, TRUE);
       pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-      pd3dDevice->SetRenderState(RenderDevice::ALPHABLENDENABLE, FALSE); 	
+      ppin3d->DisableAlphaBlend();
 
       if ( !m_d.m_enableLightingImage && pin!=NULL )
          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
