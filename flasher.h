@@ -22,7 +22,7 @@ public:
 	long m_fAlpha;
 	bool m_IsVisible;
 	bool m_fAddBlend;
-    bool m_fDisplayTexture;
+    BOOL m_fDisplayTexture;
 };
 
 /////////////////////////////////////////////////////////////////////////////
