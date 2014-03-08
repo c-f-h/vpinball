@@ -556,8 +556,11 @@ float HitFlipper::HitTestFlipperFace(Ball * const pball, const float dtime, Vert
 }
 
 
-void HitFlipper::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void HitFlipper::Collide(CollisionEvent *coll)
 {
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
    const float vx = pball->vx;
    const float vy = pball->vy;
    const float distance = phitnormal[2].x;				// moment .... and the flipper response

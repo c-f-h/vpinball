@@ -73,7 +73,7 @@ public:
 	
 	virtual int GetType() const {return eFlipper;}
 
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent *coll);
 
 	virtual AnimObject *GetAnimObject() {return &m_flipperanim;}
 

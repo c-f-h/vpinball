@@ -510,7 +510,7 @@ STDMETHODIMP Kicker::CreateSizedBall(/*[in]*/float radius, /*out, retval]*/ IBal
 		pball->m_pballex->AddRef();
 
 		pball->m_coll.normal[1].x = 1.0f;           // HACK: avoid capture leaving kicker
-		m_phitkickercircle->Collide(pball, NULL); //
+		m_phitkickercircle->DoCollide(pball, NULL); //
 		}
 
 	return S_OK;
@@ -530,7 +530,7 @@ STDMETHODIMP Kicker::CreateBall(IBall **pBallEx)
 		pball->m_pballex->AddRef();
 
 		pball->m_coll.normal[1].x = 1.0f;           // HACK: avoid capture leaving kicker
-		m_phitkickercircle->Collide(pball, NULL); //
+		m_phitkickercircle->DoCollide(pball, NULL); //
 		}
 
 	return S_OK;
@@ -805,7 +805,7 @@ KickerHitCircle::KickerHitCircle()
 	m_pball = NULL;
 	}
 
-void KickerHitCircle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void KickerHitCircle::DoCollide(Ball * const pball, Vertex3Ds * const phitnormal)
 	{
 	if (m_pball) return;								// a previous ball already in kicker
 

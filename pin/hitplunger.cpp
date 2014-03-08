@@ -332,8 +332,11 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 	return fHit ? hittime : -1.0f;
 	}
 
-void HitPlunger::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void HitPlunger::Collide(CollisionEvent *coll)
 	{
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	float dot = (pball->vx - phitnormal[1].x)* phitnormal->x + (pball->vy - phitnormal[1].y) * phitnormal->y;
 
 	if (dot >= -C_LOWNORMVEL )								// nearly receding ... make sure of conditions

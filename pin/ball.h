@@ -33,7 +33,7 @@ public:
 	// From HitObject
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);	
 	virtual int GetType() const {return eBall;}
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent *coll);
 	virtual void CalcHitRect();
 	virtual AnimObject *GetAnimObject() {return &m_ballanim;}
 

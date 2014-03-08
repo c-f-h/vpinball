@@ -66,8 +66,7 @@ public:
 
 	virtual int GetType() const = 0;
 
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) = 0;
-    virtual void Collide(CollisionEvent *hit)   { Collide(hit->ball, hit->normal); }
+    virtual void Collide(CollisionEvent *hit) = 0;
 
 	virtual void CalcHitRect() = 0;
 	
@@ -107,7 +106,7 @@ public:
 	virtual float HitTestBasic(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal, const bool direction, const bool lateral, const bool rigid);
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
 	virtual int GetType() const {return eLineSeg;}
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent *coll);
 	void CalcNormal();
 	void CalcLength();
 	virtual void CalcHitRect();
@@ -129,7 +128,7 @@ public:
 
 	virtual int GetType() const {return eCircle;}
 
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent *coll);
 
 	virtual void CalcHitRect();
 
@@ -148,7 +147,7 @@ public:
 
 	virtual int GetType() const {return eJoint;}
 
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent *coll);
 
 	virtual void CalcHitRect();
 

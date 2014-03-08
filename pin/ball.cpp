@@ -375,8 +375,11 @@ float Ball::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phi
 	return hittime;	
 }
 
-void Ball::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void Ball::Collide(CollisionEvent *coll)
 {
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	if (pball->fFrozen) 
 		return;
 

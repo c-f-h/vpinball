@@ -57,7 +57,7 @@ public:
 
 	virtual int GetType() const {return ePlunger;}
 
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent *coll);
 
 	virtual void CalcHitRect();
 

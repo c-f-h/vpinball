@@ -12,8 +12,11 @@ BumperHitCircle::BumperHitCircle()
 	m_bumperanim.m_fVisible = fTrue;
 }
 
-void BumperHitCircle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void BumperHitCircle::Collide(CollisionEvent* coll)
 {
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	const float dot = phitnormal->x * pball->vx + phitnormal->y * pball->vy;
 
 	pball->CollideWall(phitnormal, m_elasticity, m_antifriction, m_scatter);	//reflect ball from wall
@@ -79,8 +82,11 @@ float LineSegSlingshot::HitTest(Ball * const pball, const float dtime, Vertex3Ds
 	return this->HitTestBasic(pball, dtime, phitnormal, true, true, true);	
 }
 
-void LineSegSlingshot::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
-{	
+void LineSegSlingshot::Collide(CollisionEvent* coll)
+{
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	const float dot = pball->vx*phitnormal->x  + pball->vy*phitnormal->y; // normal velocity to slingshot
 
 	const bool threshold = (dot <= -m_psurface->m_d.m_slingshot_threshold);  // normal greater than threshold?
@@ -180,8 +186,11 @@ float HitGate::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const 
 	return HitTestBasic(pball, dtime, phitnormal, true, true, false); // normal face, lateral, non-rigid
 }
 
-void HitGate::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void HitGate::Collide(CollisionEvent* coll)
 {
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	const float dot = pball->vx * phitnormal->x + pball->vy * phitnormal->y;
 	if (dot > 0.0f) return;	//hit from back doesn't count
 
@@ -315,8 +324,11 @@ float HitSpinner::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 	return hittime;
 }
 
-void HitSpinner::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void HitSpinner::Collide(CollisionEvent* coll)
 {
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	const float dot = pball->vx * phitnormal->x + pball->vy * phitnormal->y;
 	if (dot < 0) return;	//hit from back doesn't count
 	
@@ -567,9 +579,12 @@ float Hit3DPoly::HitTest(Ball * const pball, const float dtime, Vertex3Ds * cons
 	return -1.0f;
 }
 
-void Hit3DPoly::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void Hit3DPoly::Collide(CollisionEvent *coll)
 {
-	if (m_ObjType != eTrigger) 
+   Ball *pball = coll->ball;
+   Vertex3Ds *phitnormal = coll->normal;
+
+   if (m_ObjType != eTrigger)
    {
       const float dot = phitnormal->x * pball->vx + phitnormal->y * pball->vy;
 
@@ -787,8 +802,11 @@ float HitTriangle::HitTest(Ball * const pball, const float dtime, Vertex3Ds * co
 	return -1.0f;
 }
 
-void HitTriangle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void HitTriangle::Collide(CollisionEvent* coll)
 {
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	if (m_ObjType != eTrigger) 
    {
       const float dot = phitnormal->x * pball->vx + phitnormal->y * pball->vy;
@@ -914,8 +932,11 @@ float Hit3DCylinder::HitTest(Ball * const pball, const float dtime, Vertex3Ds * 
 	return hittime;
 }
 
-void Hit3DCylinder::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void Hit3DCylinder::Collide(CollisionEvent* coll)
 {
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
    const float dot = phitnormal->x * pball->vx + phitnormal->y * pball->vy;
 	pball->Collide3DWall(phitnormal, m_elasticity, m_antifriction, m_scatter);
    if ( m_ObjType == ePrimitive )
@@ -995,8 +1016,11 @@ float TriggerLineSeg::HitTest(Ball * const pball, const float dtime, Vertex3Ds *
 	return this->HitTestBasic(pball, dtime, phitnormal, false,false, false); 	
 }
 
-void TriggerLineSeg::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void TriggerLineSeg::Collide(CollisionEvent* coll)
 {
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	if((m_ObjType != eTrigger) ||
 	   (!pball->m_vpVolObjs)) return;
 
@@ -1031,8 +1055,11 @@ float TriggerHitCircle::HitTest(Ball * const pball, const float dtime, Vertex3Ds
 	return HitTestBasicRadius(pball, dtime, phitnormal, false, false, false); //any face, not-lateral, non-rigid
 }
 
-void TriggerHitCircle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void TriggerHitCircle::Collide(CollisionEvent* coll)
 {
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	if((m_ObjType < eTrigger) || // triggers and kickers
 	   (!pball->m_vpVolObjs)) return;
 

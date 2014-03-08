@@ -23,7 +23,7 @@ class BumperHitCircle : public HitCircle
 public:
 	BumperHitCircle();
 
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent* coll);
 
 	virtual AnimObject *GetAnimObject() {return &m_bumperanim;}
 
@@ -50,7 +50,7 @@ public:
 	LineSegSlingshot();
 
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent* coll);
 
 	virtual AnimObject *GetAnimObject() {return &m_slingshotanim;}
 
@@ -68,7 +68,7 @@ public:
 	virtual ~Hit3DPoly();
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
 	virtual int GetType() const {return e3DPoly;}
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent *coll);
 	virtual void CalcHitRect();
 
 	Vertex3Ds *m_rgv;
@@ -84,7 +84,7 @@ public:
 	virtual ~HitTriangle() {}
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
 	virtual int GetType() const {return eTriangle;}
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent* coll);
 	virtual void CalcHitRect();
 
 	Vertex3Ds m_rgv[3];
@@ -124,7 +124,7 @@ public:
 
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
 
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent* coll);
 
 	virtual void CalcHitRect();
 
@@ -166,7 +166,7 @@ public:
 
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
 
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent* coll);
 
 	virtual AnimObject *GetAnimObject() {return &m_gateanim;}
 
@@ -181,7 +181,7 @@ public:
 	TriggerLineSeg();
 
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent* coll);
 
 	virtual int GetType() const {return eTrigger;}
 
@@ -194,7 +194,7 @@ public:
 	TriggerHitCircle();
 
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent* coll);
 
 	virtual int GetType() const {return eTrigger;}
 
@@ -207,7 +207,7 @@ public:
 	Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2, const Vertex3Ds * const pvnormal);
 
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal);
+	virtual void Collide(CollisionEvent* coll);
 
 	virtual void CalcHitRect();
 
@@ -243,7 +243,6 @@ public:
 
 	// Bogus methods
 	virtual void Collide(CollisionEvent* coll) {}
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) {}   // TODO: remove
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) {return -1;}
 	virtual void CalcHitRect() {}
 
@@ -272,7 +271,6 @@ public:
 
 	// Bogus methods
 	virtual void Collide(CollisionEvent* coll) {}
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) {}   // TODO: remove
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) {return -1;}
 	virtual void CalcHitRect() {}
 
@@ -300,7 +298,6 @@ public:
 
 	// Bogus methods
 	virtual void Collide(CollisionEvent* coll) {}
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) {}   // TODO: remove
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) {return -1;}
 	virtual void CalcHitRect() {}
 

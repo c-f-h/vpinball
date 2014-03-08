@@ -288,8 +288,11 @@ float HitCircle::HitTestRadius(Ball *pball, float dtime, Vertex3Ds *phitnormal)
 	return HitTestBasicRadius(pball, dtime, phitnormal, true, true, true);		
 	}	
 
-void LineSeg::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void LineSeg::Collide(CollisionEvent *coll)
 	{
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	const float dot = phitnormal->x * pball->vx + phitnormal->y * pball->vy;
 
 	pball->CollideWall(phitnormal, m_elasticity, m_antifriction, m_scatter);
@@ -350,8 +353,11 @@ float Joint::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const ph
 	return HitTestRadius(pball, dtime, phitnormal);	
 	}
 
-void Joint::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
+void Joint::Collide(CollisionEvent *coll)
 	{
+    Ball *pball = coll->ball;
+    Vertex3Ds *phitnormal = coll->normal;
+
 	const float dot = phitnormal->x * pball->vx + phitnormal->y * pball->vy;
 
 	pball->CollideWall(phitnormal, m_elasticity, m_antifriction, m_scatter);
@@ -392,10 +398,10 @@ float HitCircle::HitTest(Ball * const pball, const float dtime, Vertex3Ds * cons
 	return HitTestRadius(pball, dtime, phitnormal);
 	}
 
-void HitCircle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
-	{
-	pball->CollideWall(phitnormal, m_elasticity, m_antifriction, m_scatter);
-	}
+void HitCircle::Collide(CollisionEvent *coll)
+{
+    coll->ball->CollideWall(coll->normal, m_elasticity, m_antifriction, m_scatter);
+}
 
 
 void DoHitTest(Ball *pball, HitObject *pho)
