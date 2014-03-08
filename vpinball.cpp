@@ -3656,6 +3656,21 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
             stereo3DY = fFalse;
          SendMessage(hwndCheck, BM_SETCHECK, stereo3DY ? BST_CHECKED : BST_UNCHECKED, 0);
 
+		 char tmp[256];
+         float stereo3DMS;
+         hr = GetRegStringAsFloat("Player", "Stereo3DMaxSeparation", &stereo3DMS);
+         if (hr != S_OK)
+            stereo3DMS = 0.03f;
+		 sprintf_s(tmp,256,"%f",stereo3DMS);
+ 		 SetDlgItemTextA(hwndDlg, IDC_3D_STEREO_MS, tmp);
+
+         float stereo3DZPD;
+         hr = GetRegStringAsFloat("Player", "Stereo3DZPD", &stereo3DZPD);
+         if (hr != S_OK)
+            stereo3DZPD = 0.5f;
+		 sprintf_s(tmp,256,"%f",stereo3DZPD);
+ 		 SetDlgItemTextA(hwndDlg, IDC_3D_STEREO_ZPD, tmp);
+
          hwndCheck = GetDlgItem(hwndDlg, IDC_FORCE_ANISO);
 		 int forceAniso;
          hr = GetRegInt("Player", "ForceAnisotropicFiltering", &forceAniso);
@@ -3838,7 +3853,14 @@ INT_PTR CALLBACK VideoOptionsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
                   int alphaRampsAccuracy = SendMessage(hwndAraSlider, TBM_GETPOS, 0, 0);
                   SetRegValue("Player", "AlphaRampAccuracy", REG_DWORD, &alphaRampsAccuracy, 4);
 
-                  //HWND hwndBallStretchNo = GetDlgItem(hwndDlg, IDC_StretchNo);
+				  char strTmp[256];
+				  GetDlgItemTextA(hwndDlg, IDC_3D_STEREO_MS, strTmp, 256);
+				  SetRegValue("Player", "Stereo3DMaxSeparation", REG_SZ, &strTmp,strlen(strTmp));
+
+				  GetDlgItemTextA(hwndDlg, IDC_3D_STEREO_ZPD, strTmp, 256);
+				  SetRegValue("Player", "Stereo3DZPD", REG_SZ, &strTmp,strlen(strTmp));
+
+				  //HWND hwndBallStretchNo = GetDlgItem(hwndDlg, IDC_StretchNo);
                   HWND hwndBallStretchYes = GetDlgItem(hwndDlg, IDC_StretchYes);
                   HWND hwndBallStretchMonitor = GetDlgItem(hwndDlg, IDC_StretchMonitor);
                   int ballStretchMode = 0;

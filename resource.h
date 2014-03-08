@@ -609,6 +609,9 @@
 #define IDC_LIST3                       424
 #define IDC_FORCE_ANISO					425
 #define IDC_QFXAA                       426
+#define IDC_GLOBAL_3DSTEREO				427
+#define IDC_3D_STEREO_MS                428
+#define IDC_3D_STEREO_ZPD               429
 #define IDC_JOYLFLIPCOMBO               501
 #define IDC_JOYRFLIPCOMBO               502
 #define IDC_JOYPLUNGERCOMBO             503

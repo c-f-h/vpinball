@@ -285,6 +285,9 @@ public:
     STDMETHOD(get_GlobalAlphaAcc)(/*[out, retval]*/ VARIANT_BOOL *pVal);
     STDMETHOD(put_GlobalAlphaAcc)(/*[in]*/ VARIANT_BOOL newVal);
 
+    STDMETHOD(get_GlobalStereo3D)(/*[out, retval]*/ VARIANT_BOOL *pVal);
+    STDMETHOD(put_GlobalStereo3D)(/*[in]*/ VARIANT_BOOL newVal);
+
     STDMETHOD(Version)(/*[out, retval]*/ int *pVal);
 
 	STDMETHOD(get_GridSize)(float *pgs);
@@ -500,6 +503,8 @@ public:
     void MoveCollectionDown(CComObject<Collection> *pcol );
 
     int GetAlphaRampsAccuracy();
+    int GetZPD();
+    int GetMaxSeparation();
 
 BEGIN_COM_MAP(PinTable)
 	COM_INTERFACE_ENTRY(ITable)
@@ -545,11 +550,16 @@ END_CONNECTION_POINT_MAP()
 	float m_inclination;
 	float m_layback;
 	float m_FOV;
+	
 	float m_maxSeparation;
+	float m_globalMaxSeparation;
 	float m_ZPD;
+	float m_globalZPD;
+    BOOL m_overwriteGlobalStereo3D;
+
 	float m_xlatex;
 	float m_xlatey;
-   float m_xlatez;
+    float m_xlatez;
 	float m_scalex;
 	float m_scaley;
 	float m_angletiltMax;
@@ -669,7 +679,6 @@ END_CONNECTION_POINT_MAP()
 
     int m_globalAlphaRampsAccuracy;
     int m_userAlphaRampsAccuracy;
-	//int m_alphaRampsAccuracy;
     BOOL m_overwriteGlobalAlphaRampsAccuracy;
 
 	LightSource m_Light[MAX_LIGHT_SOURCES];

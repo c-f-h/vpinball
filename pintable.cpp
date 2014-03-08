@@ -566,9 +566,6 @@ PinTable::PinTable()
    m_rotation = 0;
    m_layback = 0;
 
-   m_maxSeparation = 0.015f;
-   m_ZPD = 0.1f; // 0.5f for X?
-
    m_glassheight = 210;
    m_tableheight = 0;
 
@@ -714,9 +711,21 @@ PinTable::PinTable()
    if ( FAILED(GetRegInt("Player", "AlphaRampAccuracy", &m_globalAlphaRampsAccuracy) ) )
    {
       m_globalAlphaRampsAccuracy = 5;
-      m_userAlphaRampsAccuracy=5;
    }
+   m_userAlphaRampsAccuracy=5;
    m_overwriteGlobalAlphaRampsAccuracy = fFalse;
+
+   if ( FAILED(GetRegStringAsFloat("Player", "Stereo3DZPD", &m_globalZPD) ) )
+   {
+      m_globalZPD = 0.5f;
+   }
+   m_ZPD = 0.5f;
+   if ( FAILED(GetRegStringAsFloat("Player", "Stereo3DMaxSeparation", &m_globalMaxSeparation) ) )
+   {
+      m_globalMaxSeparation = 0.03f;
+   }
+   m_maxSeparation = 0.03f;
+   m_overwriteGlobalStereo3D = fFalse;
 
    m_jolt_amount = 500;
    m_tilt_amount = 950;
@@ -1157,8 +1166,8 @@ void PinTable::Init(VPinball *pvp)
    m_layback = 0;
    m_FOV = 45;
 
-   m_maxSeparation = 0.015f;
-   m_ZPD = 0.1f; // 0.5f for X?
+   m_maxSeparation = 0.03f;
+   m_ZPD = 0.5f;
 
    SetDefaultView();
 
@@ -2664,6 +2673,7 @@ HRESULT PinTable::SaveData(IStream* pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryp
 
    bw.WriteFloat(FID(MAXSEP), m_maxSeparation);
    bw.WriteFloat(FID(ZPD), m_ZPD);
+   bw.WriteBool(FID(OGST), m_overwriteGlobalStereo3D );
 
    bw.WriteString(FID(IMAG), m_szImage);
    bw.WriteString(FID(BIMG), m_szImageBackdrop);
@@ -3461,6 +3471,10 @@ BOOL PinTable::LoadToken(int id, BiffReader *pbr)
    {
       pbr->GetFloat(&m_ZPD);
    }
+   else if ( id == FID(OGST))
+   {
+       pbr->GetBool(&m_overwriteGlobalStereo3D);
+   }
    else if (id == FID(SLPX))
    {
       pbr->GetFloat(&m_angletiltMax);
@@ -4055,6 +4069,22 @@ int PinTable::GetAlphaRampsAccuracy()
         return m_userAlphaRampsAccuracy;
     else
         return m_globalAlphaRampsAccuracy;
+}
+
+int PinTable::GetZPD()
+{
+    if( m_overwriteGlobalStereo3D )
+        return m_ZPD;
+    else
+        return m_globalZPD;
+}
+
+int PinTable::GetMaxSeparation()
+{
+    if( m_overwriteGlobalStereo3D )
+        return m_maxSeparation;
+    else
+        return m_globalMaxSeparation;
 }
 
 void PinTable::MoveCollectionDown(CComObject<Collection> *pcol )
@@ -6395,7 +6425,10 @@ STDMETHODIMP PinTable::put_Layback(float newVal)
 
 STDMETHODIMP PinTable::get_MaxSeparation(float *pVal)
 {
-   *pVal = m_maxSeparation;
+   if( m_overwriteGlobalStereo3D )
+	   *pVal = m_maxSeparation;
+   else
+	   *pVal = m_globalMaxSeparation;
 
    return S_OK;
 }
@@ -6404,16 +6437,20 @@ STDMETHODIMP PinTable::put_MaxSeparation(float newVal)
 {
    STARTUNDO
 
-      m_maxSeparation = newVal;
+   if( m_overwriteGlobalStereo3D )
+	   m_maxSeparation = newVal;
 
    STOPUNDO
 
-      return S_OK;
+   return S_OK;
 }
 
 STDMETHODIMP PinTable::get_ZPD(float *pVal)
 {
-   *pVal = m_ZPD;
+   if( m_overwriteGlobalStereo3D )
+	   *pVal = m_ZPD;
+   else
+	   *pVal = m_globalZPD;
 
    return S_OK;
 }
@@ -6422,11 +6459,12 @@ STDMETHODIMP PinTable::put_ZPD(float newVal)
 {
    STARTUNDO
 
-      m_ZPD = newVal;
+   if( m_overwriteGlobalStereo3D )
+	   m_ZPD = newVal;
 
    STOPUNDO
 
-      return S_OK;
+   return S_OK;
 }
 
 STDMETHODIMP PinTable::get_FieldOfView(float *pVal)
@@ -8071,16 +8109,39 @@ STDMETHODIMP PinTable::put_GlobalAlphaAcc(VARIANT_BOOL newVal )
 {
     STARTUNDO
 
-        m_overwriteGlobalAlphaRampsAccuracy = VBTOF(newVal);
-        if ( !m_overwriteGlobalAlphaRampsAccuracy )
-        {
-            m_userAlphaRampsAccuracy = m_globalAlphaRampsAccuracy;
-        }
-    STOPUNDO
+    m_overwriteGlobalAlphaRampsAccuracy = VBTOF(newVal);
+    if ( !m_overwriteGlobalAlphaRampsAccuracy )
+    {
+        m_userAlphaRampsAccuracy = m_globalAlphaRampsAccuracy;
+    }
 
-        return S_OK;
+	STOPUNDO
+
+    return S_OK;
 }
 
+STDMETHODIMP PinTable::get_GlobalStereo3D(VARIANT_BOOL *pVal)
+{
+    *pVal = (VARIANT_BOOL)FTOVB(m_overwriteGlobalStereo3D);
+
+    return S_OK;
+}
+
+STDMETHODIMP PinTable::put_GlobalStereo3D(VARIANT_BOOL newVal )
+{
+    STARTUNDO
+
+    m_overwriteGlobalStereo3D = VBTOF(newVal);
+    if ( !m_overwriteGlobalStereo3D )
+    {
+		m_maxSeparation = m_globalMaxSeparation;
+		m_ZPD = m_globalZPD;
+    }
+
+	STOPUNDO
+
+    return S_OK;
+}
 
 STDMETHODIMP PinTable::get_TableMusicVolume(int *pVal)
 {

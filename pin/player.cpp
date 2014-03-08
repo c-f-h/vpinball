@@ -2049,7 +2049,7 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync ) //!! SMAA, luma sharpen,
 	}
 	else
 	{
-		const float temp[8] = {m_ptable->m_maxSeparation, m_ptable->m_maxSeparation*m_ptable->m_ZPD, m_fStereo3DY ? 1.0f : 0.0f, (m_fStereo3D == 1) ? 1.0f : 0.0f,
+		const float temp[8] = {m_ptable->GetMaxSeparation(), m_ptable->GetMaxSeparation()*m_ptable->GetZPD(), m_fStereo3DY ? 1.0f : 0.0f, (m_fStereo3D == 1) ? 1.0f : 0.0f,
 						       (float)(1.0/(double)m_width), (float)(1.0/(double)m_height), (float)m_height, m_fStereo3DAA ? 1.0f : 0.0f /*1.0f+(float)(usec()&0x1FF)*(float)(1.0/0x1FF)*/}; //!!
 		m_pin3d.m_pd3dDevice->SetPixelShaderConstants(temp,2);
 	}
@@ -2150,7 +2150,7 @@ void Player::Render()
     }
 
 
-    if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))) || (m_ptable->m_maxSeparation <= 0.0f) || (m_ptable->m_maxSeparation >= 1.0f) || (m_ptable->m_ZPD <= 0.0f) || (m_ptable->m_ZPD >= 1.0f) || !m_pin3d.m_pdds3DBackBuffer || !m_pin3d.m_pdds3DZBuffer)
+    if((((m_fStereo3D == 0) || !m_fStereo3Denabled) && (!((m_fFXAA && (m_ptable->m_useFXAA == -1)) || (m_ptable->m_useFXAA > 0)))) || (m_ptable->GetMaxSeparation() <= 0.0f) || (m_ptable->GetMaxSeparation() >= 1.0f) || (m_ptable->GetZPD() <= 0.0f) || (m_ptable->GetZPD() >= 1.0f) || !m_pin3d.m_pdds3DBackBuffer || !m_pin3d.m_pdds3DZBuffer)
     {
         FlipVideoBuffersNormal( vsync );
     }
