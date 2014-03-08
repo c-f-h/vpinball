@@ -428,11 +428,14 @@ HitOctreeNode::~HitOctreeNode()
 U64 oct_nextlevels = 0;
 #endif
 
-void HitOctreeNode::CreateNextLevel()
+void HitOctreeNode::CreateNextLevel(const bool subdivide)
 {
+	if(!subdivide) //!!
+		return;
+
 	const Vertex3Ds vcenter((m_rectbounds.left+m_rectbounds.right)*0.5f, (m_rectbounds.top+m_rectbounds.bottom)*0.5f, (m_rectbounds.zlow+m_rectbounds.zhigh)*0.5f);
 
-	m_children = new HitOctreeNode[8]; //!! global list instead?!
+	m_children = new HitOctreeNode[8]; //!! global list instead?! //!! also currently all subdivisions only happen in x/y direction, same for traversal code! -> change to really use all 8 octants
 	for(unsigned int i = 0; i < 8; ++i)
 	{
 		m_children[i].m_rectbounds.left = (i&1) ? vcenter.x : m_rectbounds.left;
