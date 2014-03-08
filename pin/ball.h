@@ -43,8 +43,6 @@ public:
 
 	void AngularAcceleration(const Vertex3Ds& hitnormal);
 
-	void CalcBoundingRect();
-
 	void EnsureOMObject();
 
 	Vertex3D_NoTex2 m_rgv3DShadow[4];			// Last vertices of the ball shadow
@@ -87,7 +85,7 @@ public:
 	float x;
 	float y;
 	float z;
-	float defaultZ;   //normal height of the ball
+	float defaultZ;   //normal height of the ball //!! remove
 
 	Vertex3Ds oldpos[10]; // for the optional ball trails
 	unsigned int ringcounter_oldpos;

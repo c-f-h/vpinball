@@ -212,25 +212,6 @@ void Ball::EnsureOMObject()
 	m_pballex->m_pball = this;
 }
  
-void Ball::CalcBoundingRect()
-{
-	const float dx = fabsf(vx);
-	const float dy = fabsf(vy);
-
-	m_rcHitRect.left   = x - (radius + 0.1f + dx); //!! make more accurate ????
-	m_rcHitRect.right  = x + (radius + 0.1f + dx);
-	m_rcHitRect.top    = y - (radius + 0.1f + dy);
-	m_rcHitRect.bottom = y + (radius + 0.1f + dy);
-
-	m_rcHitRect.zlow  = min(z, z+vz) - radius;
-	m_rcHitRect.zhigh = max(z, z+vz) + (radius + 0.1f);
-   // update defaultZ for ball reflection
-   // if the ball was created by a kicker which is higher than the playfield 
-   // the defaultZ must be updated if the ball falls onto the playfield that means the Z value is equal to the radius
-   if ( z==radius )
-      defaultZ = z;
-}
-
 void Ball::CollideWall(const Vertex3Ds * const phitnormal, const float elasticity, float antifriction, float scatter_angle, bool collide3D)
 {
     //speed normal to wall
@@ -543,6 +524,21 @@ void Ball::AngularAcceleration(const Vertex3Ds& hitnormal)
 
 void Ball::CalcHitRect()
 {
+	const float dx = fabsf(vx);
+	const float dy = fabsf(vy);
+
+	m_rcHitRect.left   = x - (radius + 0.1f + dx); //!! make more accurate ????
+	m_rcHitRect.right  = x + (radius + 0.1f + dx);
+	m_rcHitRect.top    = y - (radius + 0.1f + dy);
+	m_rcHitRect.bottom = y + (radius + 0.1f + dy);
+
+	m_rcHitRect.zlow  = min(z, z+vz) - radius;
+	m_rcHitRect.zhigh = max(z, z+vz) + (radius + 0.1f);
+   // update defaultZ for ball reflection
+   // if the ball was created by a kicker which is higher than the playfield 
+   // the defaultZ must be updated if the ball falls onto the playfield that means the Z value is equal to the radius
+   if ( z==radius )
+      defaultZ = z;
 }
 
 void BallAnimObject::UpdateDisplacements(const float dtime)
@@ -582,7 +578,7 @@ void Ball::UpdateDisplacements(const float dtime)
 
         // side walls are handled via actual collision objects set up in Player::CreateBoundingHitShapes
 
-		CalcBoundingRect();
+		CalcHitRect();
 		
 		Matrix3 mat3;
 		mat3.CreateSkewSymmetric(m_angularvelocity);
@@ -660,5 +656,5 @@ void Ball::UpdateVelocities()
 
 	m_fDynamic = C_DYNAMIC; // always set .. after adding velocity
 
-	CalcBoundingRect();
+	CalcHitRect();
 }

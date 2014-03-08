@@ -79,7 +79,7 @@ STDMETHODIMP BallEx::put_VelX(float newVal)
 
 	m_pball->vx = newVal;
 
-	m_pball->CalcBoundingRect();
+	m_pball->CalcHitRect();
 
 	return S_OK;
 }
@@ -99,7 +99,7 @@ STDMETHODIMP BallEx::put_VelY(float newVal)
 
 	m_pball->vy = newVal;
 
-	m_pball->CalcBoundingRect();
+	m_pball->CalcHitRect();
 
 	return S_OK;
 }
@@ -137,7 +137,7 @@ STDMETHODIMP BallEx::put_VelZ(float newVal)
 
 	m_pball->vz = newVal;
 
-	m_pball->CalcBoundingRect();
+	m_pball->CalcHitRect();
 
 	return S_OK;
 }
@@ -293,7 +293,7 @@ STDMETHODIMP BallEx::put_Radius(float newVal)
 
 	m_pball->radius = newVal;
 
-	m_pball->CalcBoundingRect();
+	m_pball->CalcHitRect();
 
 	return S_OK;
 }

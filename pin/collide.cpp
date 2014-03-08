@@ -38,7 +38,8 @@ void LineSeg::CalcHitRect()
 	m_rcHitRect.right = max(v1.x, v2.x);
 	m_rcHitRect.top = min(v1.y, v2.y);
 	m_rcHitRect.bottom = max(v1.y, v2.y);
-	//m_rcHitRect.zlow = 0;
+
+	//m_rcHitRect.zlow = 0; //!!?
 	//m_rcHitRect.zhigh = 50;
 	}
 
@@ -337,7 +338,7 @@ void Joint::CalcHitRect()
 	m_rcHitRect.top = center.y;
 	m_rcHitRect.bottom = center.y;
 	
-	zlow = m_rcHitRect.zlow;
+	zlow = m_rcHitRect.zlow; //!!?
 	zhigh = m_rcHitRect.zhigh;
 	}
 

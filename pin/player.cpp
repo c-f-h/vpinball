@@ -1084,8 +1084,6 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 	m_vball.push_back(pball);
 	m_vmover.AddElement(&pball->m_ballanim);
 
-	pball->CalcBoundingRect();
-
 	// Add to list of global exception hit-tests for now
 	m_vho_dynamic.AddElement(pball);
 
@@ -1650,7 +1648,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 				}
 				else
 				{
-					pball->CalcBoundingRect();		// do new boundings 
+					pball->CalcHitRect();		// do new boundings 
 
 					// is this ball static? .. set static and quench	
 					if (pball->m_HitRigid && pball->m_HitDist < (float)PHYS_TOUCH) //rigid and close distance contacts
@@ -2417,7 +2415,7 @@ void Player::CalcBallShadow(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
 
     ballT.m_hittime = 1.0f;
 
-    ballT.CalcBoundingRect();
+    ballT.CalcHitRect();
 
     m_shadowoctree.HitTestBall(&ballT);
 
@@ -2958,7 +2956,7 @@ void Player::DoDebugObjectMenu(int x, int y)
 	ballT.vz = v3d2.z - v3d.z;
 	ballT.radius = 0;
 	ballT.m_hittime = 1.0f;
-	ballT.CalcBoundingRect();
+	ballT.CalcHitRect();
 
 	//const float slope = (v3d2.y - v3d.y)/(v3d2.z - v3d.z);
 	//const float yhit = v3d.y - (v3d.z*slope);
