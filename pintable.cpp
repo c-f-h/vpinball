@@ -4071,7 +4071,7 @@ int PinTable::GetAlphaRampsAccuracy()
         return m_globalAlphaRampsAccuracy;
 }
 
-int PinTable::GetZPD()
+float PinTable::GetZPD()
 {
     if( m_overwriteGlobalStereo3D )
         return m_ZPD;
@@ -4079,7 +4079,7 @@ int PinTable::GetZPD()
         return m_globalZPD;
 }
 
-int PinTable::GetMaxSeparation()
+float PinTable::GetMaxSeparation()
 {
     if( m_overwriteGlobalStereo3D )
         return m_maxSeparation;

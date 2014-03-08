@@ -503,8 +503,8 @@ public:
     void MoveCollectionDown(CComObject<Collection> *pcol );
 
     int GetAlphaRampsAccuracy();
-    int GetZPD();
-    int GetMaxSeparation();
+    float GetZPD();
+    float GetMaxSeparation();
 
 BEGIN_COM_MAP(PinTable)
 	COM_INTERFACE_ENTRY(ITable)
