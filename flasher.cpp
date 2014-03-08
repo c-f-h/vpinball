@@ -740,7 +740,6 @@ STDMETHODIMP Flasher::put_Image(BSTR newVal)
 	   STARTUNDO
 
 	   strcpy_s(m_d.m_szImage, MAXTOKEN, m_szImage);
-	   dynamicVertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -761,7 +760,6 @@ STDMETHODIMP Flasher::put_Alpha(long newVal)
    m_d.m_fAlpha = newVal;
    if (m_d.m_fAlpha>255 ) m_d.m_fAlpha=255;
    if (m_d.m_fAlpha<0 ) m_d.m_fAlpha=0;
-   dynamicVertexBufferRegenerate = true;
    
    STOPUNDO
 
@@ -783,7 +781,6 @@ STDMETHODIMP Flasher::put_IsVisible(VARIANT_BOOL newVal)
       STARTUNDO
 
       m_d.m_IsVisible = VBTOF(newVal);			// set visibility
-      dynamicVertexBufferRegenerate=true;
       STOPUNDO
    }
 
@@ -966,8 +963,7 @@ void Flasher::PostRenderStatic(const RenderDevice* _pd3dDevice)
       pd3dDevice->SetRenderState(RenderDevice::ZWRITEENABLE, FALSE);
       pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
 
-      static const WORD indices[4] = {0,1,3,2};
-      pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLESTRIP, dynamicVertexBuffer, 0, 4, (LPWORD)indices, 4 );
+      pd3dDevice->DrawPrimitiveVB( D3DPT_TRIANGLEFAN, dynamicVertexBuffer, 0, 4 );
 
       pd3dDevice->SetRenderState(RenderDevice::CULLMODE, D3DCULL_CCW);
       pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
