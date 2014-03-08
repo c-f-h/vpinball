@@ -509,7 +509,7 @@ STDMETHODIMP Kicker::CreateSizedBall(/*[in]*/float radius, /*out, retval]*/ IBal
 		*pBallEx = pball->m_pballex;
 		pball->m_pballex->AddRef();
 
-		pball->m_hitnormal[1].x = 1.0f;			//avoid capture leaving kicker
+		pball->m_coll.normal[1].x = 1.0f;           // HACK: avoid capture leaving kicker
 		m_phitkickercircle->Collide(pball, NULL); //
 		}
 
@@ -529,7 +529,7 @@ STDMETHODIMP Kicker::CreateBall(IBall **pBallEx)
 		*pBallEx = pball->m_pballex;
 		pball->m_pballex->AddRef();
 
-		pball->m_hitnormal[1].x = 1.0f;			//avoid capture leaving kicker
+		pball->m_coll.normal[1].x = 1.0f;           // HACK: avoid capture leaving kicker
 		m_phitkickercircle->Collide(pball, NULL); //
 		}
 
@@ -811,7 +811,7 @@ void KickerHitCircle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 
 	const int i = pball->m_vpVolObjs->IndexOf(m_pObj);	// check if kicker in ball's volume set
 
-	if (!phitnormal || ((phitnormal && phitnormal[1].x < 1) == (i < 0))) // New or (Hit && !Vol || UnHit && Vol)
+	if (!phitnormal || ((phitnormal[1].x < 1) == (i < 0))) // New or (Hit && !Vol || UnHit && Vol)
 		{		
 		pball->x += pball->vx * STATICTIME; //move ball slightly forward
 		pball->y += pball->vy * STATICTIME;

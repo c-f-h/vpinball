@@ -506,7 +506,7 @@ void HitKDNode::HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHi
 #ifdef _DEBUGPHYSICS
 			g_pplayer->c_deepTested++;
 #endif
-			const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal);
+			const float newtime = pho->HitTest(pball, pball->m_coll.hittime, pball->m_coll.normal);
 			if (newtime >= 0)
 				pvhoHit->AddElement(pho);
 		}

@@ -255,8 +255,8 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 		hittime = newtimeb;
 
 		phitnormal[0] = hitnormal;	
-		pball->m_HitDist = BallT.m_HitDist;
-		pball->m_HitNormVel = BallT.m_HitNormVel;
+		pball->m_coll.distance = BallT.m_coll.distance;
+		pball->m_coll.normVel = BallT.m_coll.normVel;
 		pball->m_HitRigid = true;
 		phitnormal[1].x = 0;
 		phitnormal[1].y = 0;
@@ -271,8 +271,8 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 			hittime = newtimes;
 
 			phitnormal[0] = hitnormal;
-			pball->m_HitDist = BallT.m_HitDist;
-			pball->m_HitNormVel = BallT.m_HitNormVel;
+			pball->m_coll.distance = BallT.m_coll.distance;
+			pball->m_coll.normVel = BallT.m_coll.normVel;
 			pball->m_HitRigid = true;
 
 			phitnormal[1].x = 0;
@@ -286,8 +286,8 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 			hittime = newtimej;
 
 			phitnormal[0] = hitnormal;
-			pball->m_HitDist = BallT.m_HitDist;
-			pball->m_HitNormVel = BallT.m_HitNormVel;
+			pball->m_coll.distance = BallT.m_coll.distance;
+			pball->m_coll.normVel = BallT.m_coll.normVel;
 			pball->m_HitRigid = true;
 			phitnormal[1].x = 0;
 			phitnormal[1].y = 0;
@@ -305,8 +305,8 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 		hittime = newtimee;
 
 		phitnormal[0] = hitnormal;
-		pball->m_HitDist = BallT.m_HitDist;
-		pball->m_HitNormVel = BallT.m_HitNormVel;
+		pball->m_coll.distance = BallT.m_coll.distance;
+		pball->m_coll.normVel = BallT.m_coll.normVel;
 		pball->m_HitRigid = true;
 		phitnormal[1].x = 0;
 		phitnormal[1].y = deltay;	 //m_speed;		//>>> changed by chris
@@ -321,8 +321,8 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 			hittime = newtimej;
 
 			phitnormal[0] = hitnormal;
-			pball->m_HitDist = BallT.m_HitDist;
-			pball->m_HitNormVel = BallT.m_HitNormVel;
+			pball->m_coll.distance = BallT.m_coll.distance;
+			pball->m_coll.normVel = BallT.m_coll.normVel;
 			pball->m_HitRigid = true;
 			phitnormal[1].x = 0;
 			phitnormal[1].y = deltay;	 //m_speed;		//>>> changed by chris
@@ -340,7 +340,7 @@ void HitPlunger::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 		{													// otherwise if clearly approaching .. process the collision
 		if (dot > C_LOWNORMVEL) return;						// is this velocity clearly receding (i.e must > a minimum)		
 #ifdef C_EMBEDDED
-		if (pball->m_HitDist < -C_EMBEDDED)
+		if (pball->m_coll.distance < -C_EMBEDDED)
 			dot = -C_EMBEDSHOT;		// has ball become embedded???, give it a kick
 		else return;
 #endif
@@ -348,7 +348,7 @@ void HitPlunger::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 		
 #ifdef C_DISP_GAIN 
 		// correct displacements, mostly from low velocity blidness, an alternative to true acceleration processing	
-		float hdist = -C_DISP_GAIN * pball->m_HitDist;				// distance found in hit detection
+		float hdist = -C_DISP_GAIN * pball->m_coll.distance;				// distance found in hit detection
 		if (hdist > 1.0e-4f)
 			{													// maginitude of jump
 			if (hdist > C_DISP_LIMIT) 

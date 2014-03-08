@@ -127,8 +127,8 @@ float LineSeg::HitTestBasic(Ball * const pball, const float dtime, Vertex3Ds * c
 	phitnormal->x = normal.x;				// hit normal is same as line segment normal
 	phitnormal->y = normal.y;
 		
-	pball->m_HitDist = bnd;					// actual contact distance ... 
-	pball->m_HitNormVel = bnv;
+	pball->m_coll.distance = bnd;					// actual contact distance ... 
+	pball->m_coll.normVel = bnv;
 	pball->m_HitRigid = rigid;				// collision type
 
 	return hittime;
@@ -275,8 +275,8 @@ float HitCircle::HitTestBasicRadius(Ball * const pball, const float dtime, Verte
 	if (!rigid)											// non rigid body collision? return direction
 		phitnormal[1].x = fUnhit ? 1.0f : 0.0f;			// UnHit signal	is receding from target
 
-	pball->m_HitDist = bnd;					//actual contact distance ... 
-	pball->m_HitNormVel = bnv;
+	pball->m_coll.distance = bnd;					//actual contact distance ... 
+	pball->m_coll.normVel = bnv;
 	pball->m_HitRigid = rigid;				// collision type
 
 	return hittime;
@@ -403,13 +403,13 @@ void DoHitTest(Ball *pball, HitObject *pho)
 #ifdef _DEBUGPHYSICS
     g_pplayer->c_deepTested++;
 #endif
-    const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal);
-    if ((newtime >= 0) && (newtime <= pball->m_hittime))
+    const float newtime = pho->HitTest(pball, pball->m_coll.hittime, pball->m_coll.normal);
+    if ((newtime >= 0) && (newtime <= pball->m_coll.hittime))
     {
-        pball->m_pho = pho;
-        pball->m_hittime = newtime;
-        pball->m_hitx = pball->x + pball->vx*newtime;
-        pball->m_hity = pball->y + pball->vy*newtime;
+        pball->m_coll.obj = pho;
+        pball->m_coll.hittime = newtime;
+        pball->m_coll.hitx = pball->x + pball->vx*newtime;
+        pball->m_coll.hity = pball->y + pball->vy*newtime;
     }
 }
 

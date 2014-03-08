@@ -1479,21 +1479,21 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 
 			if (!pball->fFrozen && pball->m_fDynamic > 0) // don't play with frozen balls
 			{
-				pball->m_hittime = hittime;				// search upto current hittime
-				pball->m_pho = NULL;
+				pball->m_coll.hittime = hittime;		// search upto current hittime
+				pball->m_coll.obj = NULL;
 
                 m_hitoctree_dynamic.HitTestBall(pball); // dynamic objects
 				m_hitoctree.HitTestBall(pball);			// find the hit objects and hit times
 
-				const float htz = pball->m_hittime;		// this ball's hit time
-				if(htz < 0.f) pball->m_pho = NULL;		// no negative time allowed
+				const float htz = pball->m_coll.hittime;// this ball's hit time
+				if(htz < 0.f) pball->m_coll.obj = NULL;	// no negative time allowed
 
-				if (pball->m_pho)						// hit object
+				if (pball->m_coll.obj)					// hit object
 				{
 #ifdef _DEBUGPHYSICS
 					++c_hitcnts;						// stats for display
 
-					if (pball->m_HitRigid && pball->m_HitDist < -0.0875f) //rigid and embedded
+					if (pball->m_HitRigid && pball->m_coll.distance < -0.0875f) //rigid and embedded
 						++c_embedcnts;
 #endif
 					///////////////////////////////////////////////////////////////////////////
@@ -1530,16 +1530,16 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 		{
 			Ball * const pball = m_vball[i];
 
-			if (pball->m_fDynamic > 0 && pball->m_pho && pball->m_hittime <= hittime) // find balls with hit objects and minimum time			
+			if (pball->m_fDynamic > 0 && pball->m_coll.obj && pball->m_coll.hittime <= hittime) // find balls with hit objects and minimum time			
 			{
 				// now collision, contact and script reactions on active ball (object)+++++++++
-				HitObject * const pho = pball->m_pho;// object that ball hit in trials
-				pball->m_pho = NULL;				 // remove trial hit object pointer
+				HitObject * const pho = pball->m_coll.obj;// object that ball hit in trials
 				m_pactiveball = pball;				 // For script that wants the ball doing the collision
 #ifdef _DEBUGPHYSICS
 				c_collisioncnt++;
 #endif
-				pho->Collide(pball, pball->m_hitnormal);	//!!!!! 3) collision on active ball
+				pho->Collide(&pball->m_coll);        //!!!!! 3) collision on active ball
+				pball->m_coll.obj = NULL;			 // remove trial hit object pointer
 
 				// Collide may have changed the velocity of the ball, 
 				// and therefore the bounding box for the next hit cycle
@@ -1554,7 +1554,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 					pball->CalcHitRect();		// do new boundings 
 
 					// is this ball static? .. set static and quench	
-					if (pball->m_HitRigid && pball->m_HitDist < (float)PHYS_TOUCH) //rigid and close distance contacts
+					if (pball->m_HitRigid && pball->m_coll.distance < (float)PHYS_TOUCH) //rigid and close distance contacts
 					{
 #ifdef _DEBUGPHYSICS
 						c_contactcnt++;
@@ -2309,7 +2309,7 @@ void Player::CalcBallShadow(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
     ballT.vz = -200.0f;
     ballT.radius = 0;
 
-    ballT.m_hittime = 1.0f;
+    ballT.m_coll.hittime = 1.0f;
 
     ballT.CalcHitRect();
 
@@ -2319,11 +2319,11 @@ void Player::CalcBallShadow(Ball * const pball, Vertex3D_NoTex2 *vBuffer)
     float offsety;
     float shadowz;
 
-    if (ballT.m_hittime < 1.0f) // shadow falls on an object
+    if (ballT.m_coll.hittime < 1.0f) // shadow falls on an object
     {
-        offsetx = ballT.m_hittime * 200.0f - 12.5f;
-        offsety = ballT.m_hittime * -200.0f + 12.5f;
-        shadowz = pball->z + 0.1f - ballT.m_hittime * 200.0f;
+        offsetx = ballT.m_coll.hittime * 200.0f - 12.5f;
+        offsety = ballT.m_coll.hittime * -200.0f + 12.5f;
+        shadowz = pball->z + 0.1f - ballT.m_coll.hittime * 200.0f;
     }
     else // shadow is on the floor
     {
@@ -2843,7 +2843,7 @@ void Player::DoDebugObjectMenu(int x, int y)
 	ballT.vy = v3d2.y - v3d.y;
 	ballT.vz = v3d2.z - v3d.z;
 	ballT.radius = 0;
-	ballT.m_hittime = 1.0f;
+	ballT.m_coll.hittime = 1.0f;
 	ballT.CalcHitRect();
 
 	//const float slope = (v3d2.y - v3d.y)/(v3d2.z - v3d.z);

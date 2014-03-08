@@ -557,8 +557,8 @@ float Hit3DPoly::HitTest(Ball * const pball, const float dtime, Vertex3Ds * cons
 		if (!rigid)								// non rigid body collision? return direction
 			phitnormal[1].x = bUnHit ? 1.0f : 0.0f;	// UnHit signal	is receding from outside target
 			
-		pball->m_HitDist = bnd;					// 3dhit actual contact distance ... 
-		pball->m_HitNormVel = bnv;
+		pball->m_coll.distance = bnd;					// 3dhit actual contact distance ... 
+		pball->m_coll.normVel = bnv;
 		pball->m_HitRigid = rigid;				// collision type
 
 		return hittime;
@@ -777,8 +777,8 @@ float HitTriangle::HitTest(Ball * const pball, const float dtime, Vertex3Ds * co
 		if (!rigid)								// non rigid body collision? return direction
 			phitnormal[1].x = bUnHit ? 1.0f : 0.0f;	// UnHit signal	is receding from outside target
 			
-		pball->m_HitDist = bnd;					// 3dhit actual contact distance ... 
-		pball->m_HitNormVel = bnv;
+		pball->m_coll.distance = bnd;					// 3dhit actual contact distance ... 
+		pball->m_coll.normVel = bnv;
 		pball->m_HitRigid = rigid;				// collision type
 
 		return hittime;

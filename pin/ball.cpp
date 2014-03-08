@@ -27,7 +27,8 @@ Ball::Ball()
        */
    }
 
-   m_pho = NULL;
+   m_coll.ball = this;      // TODO: this needs to move somewhere else
+   m_coll.obj = NULL;
    m_pballex = NULL;
    m_vpVolObjs = NULL; // should be NULL ... only real balls have this value
    m_pin=NULL;
@@ -153,7 +154,7 @@ void Ball::Init()
    z_min = g_pplayer->m_ptable->m_tableheight + radius;
    z_max = (g_pplayer->m_ptable->m_glassheight - radius);
 
-   m_pho = NULL;
+   m_coll.obj = NULL;
    m_fDynamic = C_DYNAMIC; // assume dynamic
 
    m_pballex = NULL;
@@ -224,7 +225,7 @@ void Ball::CollideWall(const Vertex3Ds * const phitnormal, const float elasticit
 		if (dot > C_LOWNORMVEL) return;					//is this velocity clearly receding (i.e must > a minimum)
 
 #ifdef C_EMBEDDED
-		if (m_HitDist < -C_EMBEDDED)
+		if (m_coll.distance < -C_EMBEDDED)
 			dot = -C_EMBEDSHOT;							// has ball become embedded???, give it a kick
 		else return;
 #endif
@@ -232,7 +233,7 @@ void Ball::CollideWall(const Vertex3Ds * const phitnormal, const float elasticit
 		
 #ifdef C_DISP_GAIN 
 	// correct displacements, mostly from low velocity, alternative to acceleration processing
-	float hdist = -C_DISP_GAIN * m_HitDist;	// limit delta noise crossing ramps,
+	float hdist = -C_DISP_GAIN * m_coll.distance;	// limit delta noise crossing ramps,
 	if (hdist > 1.0e-4f)					// when hit detection checked it what was the displacement
 	{
 		if (hdist > C_DISP_LIMIT) 
@@ -367,8 +368,8 @@ float Ball::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phi
 	phitnormal->z = hitz - z;
     phitnormal->Normalize();
 
-	m_HitDist = bnd;					//actual contact distance 
-	m_HitNormVel = bnv;
+	m_coll.distance = bnd;					//actual contact distance 
+	m_coll.normVel = bnv;
 	m_HitRigid = true;					//rigid collision type
 
 	return hittime;	
@@ -394,14 +395,14 @@ void Ball::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 	{														// otherwise if clearly approaching .. process the collision
 		if (dot > C_LOWNORMVEL) return;						//is this velocity clearly receding (i.e must > a minimum)		
 #ifdef C_EMBEDDED
-		if (pball->m_HitDist < -C_EMBEDDED)
+		if (pball->m_coll.distance < -C_EMBEDDED)
 			dot = -C_EMBEDSHOT;		// has ball become embedded???, give it a kick
 		else return;
 #endif
 	}
 			
 #ifdef C_DISP_GAIN 		
-	float edist = -C_DISP_GAIN * pball->m_HitDist; // 
+	float edist = -C_DISP_GAIN * pball->m_coll.distance; // 
 	if (edist > 1.0e-4f)
 	{										
 		if (edist > C_DISP_LIMIT) 
@@ -412,7 +413,7 @@ void Ball::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 		pball->z += edist * vnormal.z;	// 
 	}
 
-	edist = -C_DISP_GAIN * m_HitDist;	// noisy value .... needs investigation
+	edist = -C_DISP_GAIN * m_coll.distance;	// noisy value .... needs investigation
 	if (!fFrozen && edist > 1.0e-4f)
 	{ 
 		if (edist > C_DISP_LIMIT) 

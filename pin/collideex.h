@@ -242,7 +242,8 @@ public:
 	virtual int GetType() const {return eTextbox;}
 
 	// Bogus methods
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) {}
+	virtual void Collide(CollisionEvent* coll) {}
+	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) {}   // TODO: remove
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) {return -1;}
 	virtual void CalcHitRect() {}
 
@@ -270,7 +271,8 @@ public:
 	virtual int GetType() const {return eDispReel;}
 
 	// Bogus methods
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) {}
+	virtual void Collide(CollisionEvent* coll) {}
+	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) {}   // TODO: remove
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) {return -1;}
 	virtual void CalcHitRect() {}
 
@@ -297,7 +299,8 @@ public:
 	virtual int GetType() const {return eLightSeq;}
 
 	// Bogus methods
-	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) {}
+	virtual void Collide(CollisionEvent* coll) {}
+	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) {}   // TODO: remove
 	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) {return -1;}
 	virtual void CalcHitRect() {}
 

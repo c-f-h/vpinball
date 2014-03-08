@@ -30,9 +30,28 @@ extern float c_dampingFriction;
 extern float c_plungerNormalize;  //Adjust Mech-Plunger, useful for component change or weak spring etc.
 extern bool c_plungerFilter;
 
+// forward declarations
 class Ball;
 class HitObject;
 class AnimObject;
+
+
+struct CollisionEvent
+{
+    Ball* ball;         // the ball that collided with smth
+    HitObject* obj;     // what the ball collided with
+
+    float hittime;      // when the collision happens (relative to current physics state, units: 10 ms)
+    float distance;     // hit distance 
+    float normVel;      // hit normal velocity
+
+    // additional collision information; typical use (not always the same):
+    // 0: hit normal, 1: hit object velocity, 2: monent and angular rate, 4: contact distance
+    Vertex3Ds normal[5];
+
+    float hitx, hity;   // position of the ball at hit time (saved to avoid floating point errors with multiple time slices)
+};
+
 
 HitObject *CreateCircularHitPoly(const float x, const float y, const float z, const float r, const int sections);
 
@@ -48,6 +67,7 @@ public:
 	virtual int GetType() const = 0;
 
 	virtual void Collide(Ball * const pball, Vertex3Ds * const phitnormal) = 0;
+    virtual void Collide(CollisionEvent *hit)   { Collide(hit->ball, hit->normal); }
 
 	virtual void CalcHitRect() = 0;
 	

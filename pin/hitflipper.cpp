@@ -394,8 +394,8 @@ float HitFlipper::HitTestFlipperEnd(Ball * const pball, const float dtime, Verte
    if (bnv >= 0) 
       return -1.0f; // not hit ... ball is receding from face already, must have been embedded or shallow angled
 
-   pball->m_HitDist = bfend;				//actual contact distance ..
-   pball->m_HitNormVel = bnv;
+   pball->m_coll.distance = bfend;				//actual contact distance ..
+   pball->m_coll.normVel = bnv;
    pball->m_HitRigid = true;				// collision type
 
    return t;
@@ -548,8 +548,8 @@ float HitFlipper::HitTestFlipperFace(Ball * const pball, const float dtime, Vert
    if (bnv >= C_LOWNORMVEL) 
       return -1.0f; // not hit ... ball is receding from endradius already, must have been embedded
 
-   pball->m_HitDist = bffnd;				//normal ...actual contact distance ... 
-   pball->m_HitNormVel = bnv;
+   pball->m_coll.distance = bffnd;				//normal ...actual contact distance ... 
+   pball->m_coll.normVel = bnv;
    pball->m_HitRigid = true;				// collision type
 
    return t;
@@ -575,7 +575,7 @@ void HitFlipper::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
    {												 // otherwise if clearly approaching .. process the collision
       if (dot > C_LOWNORMVEL) return;					 //is this velocity clearly receding (i.e must > a minimum)		
 #ifdef C_EMBEDDED
-      if (pball->m_HitDist < -C_EMBEDDED)
+      if (pball->m_coll.distance < -C_EMBEDDED)
          dot = -C_EMBEDSHOT;							 // has ball become embedded???, give it a kick
       else return;
 #endif		
@@ -583,7 +583,7 @@ void HitFlipper::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 
 #ifdef C_DISP_GAIN 
    // correct displacements, mostly from low velocity blindness, an alternative to true acceleration processing
-   float hdist = -C_DISP_GAIN * pball->m_HitDist;				// distance found in hit detection
+   float hdist = -C_DISP_GAIN * pball->m_coll.distance;				// distance found in hit detection
    if (hdist > 1.0e-4f)
    {
       if (hdist > C_DISP_LIMIT) 

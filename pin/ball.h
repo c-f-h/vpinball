@@ -1,7 +1,7 @@
 #pragma once
 
-class HitObject;
-class Ball;
+#include "pin/collide.h"
+
 
 class BallAnimObject : public AnimObject
 {
@@ -61,14 +61,11 @@ public:
 	Texture *m_pinFront;
 	Texture *m_pinBack;
 
-	HitObject *m_pho;		//pointer to hit object trial, may not be a actual hit if something else happens first
 	VectorVoid* m_vpVolObjs;// vector of triggers we are now inside
-	float m_hittime;		// time at which this ball will hit something
-	float m_hitx, m_hity;	// position of the ball at hit time (saved to avoid floating point errors with multiple time slices)
-	float m_HitDist;		// hit distance 
-	float m_HitNormVel;		// hit normal Velocity
+
+    CollisionEvent m_coll;  // collision information, may not be a actual hit if something else happens first
+
 	int m_fDynamic;			// used to determine static ball conditions and velocity quenching, 
-	Vertex3Ds m_hitnormal[5];// 0: hit normal, 1: hit object velocity, 2: monent and angular rate, 4: contact distance
 
     Vertex3D_NoTex2 vertices[4];
     Vertex3D_NoTex2 logoVertices[4];
