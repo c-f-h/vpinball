@@ -405,8 +405,10 @@ HitOctree::~HitOctree()
 	if(m_org_idx != 0)
 	    free(m_org_idx);
 
+#ifdef SSE_LEAFTEST
 	if(l_r_t_b_zl_zh != 0)
 	    _aligned_free(l_r_t_b_zl_zh);
+#endif
 }
 
 HitOctreeNode::~HitOctreeNode()
@@ -423,10 +425,6 @@ HitOctreeNode::~HitOctreeNode()
 	if (m_children)
 		delete [] m_children;
 }
-
-#ifdef _DEBUGPHYSICS
-U64 oct_nextlevels = 0;
-#endif
 
 void HitOctreeNode::CreateNextLevel(const bool subdivide)
 {
@@ -532,18 +530,19 @@ void HitOctreeNode::CreateNextLevel(const bool subdivide)
 			if(m_children[i].m_items > 1) { //!! magic (will not favor empty space enough for huge objects)
 				m_children[i].CreateNextLevel();
 #ifdef _DEBUGPHYSICS
-				oct_nextlevels++;
+				g_pplayer->c_octNextlevels++;
 #endif
 			}
 	}
 }
 
 // build SSE boundary arrays of the local hit-object/m_vho HitRect list, generated for -full- list completely in the end!
-void HitOctree::InitSseArrays() //!! get rid of SSE madness completely nowadays?! -> rather reduce number of elements per node/leaf
+void HitOctree::InitSseArrays()
 {
 	free(tmp);
 	tmp = 0;
 
+#ifdef SSE_LEAFTEST
 	const unsigned int padded = (m_all_items+3)&0xFFFFFFFC;
 	l_r_t_b_zl_zh = (float*)_aligned_malloc(sizeof(float) * padded * 6, 16);
 
@@ -567,13 +566,8 @@ void HitOctree::InitSseArrays() //!! get rid of SSE madness completely nowadays?
 		l_r_t_b_zl_zh[j+padded*4] = FLT_MAX;
 		l_r_t_b_zl_zh[j+padded*5] = -FLT_MAX;
 	}
-}
-
-#ifdef LOG
-extern int cTested;
-extern int cDeepTested;
 #endif
-
+}
 
 /*  RLC
 
@@ -599,15 +593,15 @@ void HitOctreeNode::HitTestBall(Ball * const pball) const
 {
 	for (int i=m_start; i<m_start+m_items; i++)
 	{
-#ifdef LOG
-		cTested++;
+#ifdef _DEBUGPHYSICS
+		g_pplayer->c_tested++;
 #endif
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 		if ((pball != pho) // ball can not hit itself
 		       && fRectIntersect3D(pball->m_rcHitRect, pho->m_rcHitRect))
 		{
-#ifdef LOG
-			cDeepTested++;
+#ifdef _DEBUGPHYSICS
+			g_pplayer->c_deepTested++;
 #endif
 			const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal); // test for hit
 			if ((newtime >= 0) && (newtime <= pball->m_hittime))
@@ -627,8 +621,8 @@ void HitOctreeNode::HitTestBall(Ball * const pball) const
 		const bool fLeft = (pball->m_rcHitRect.left <= vcenter.x);
 		const bool fRight = (pball->m_rcHitRect.right >= vcenter.x);
 
-#ifdef LOG
-		cTested++;
+#ifdef _DEBUGPHYSICS
+		g_pplayer->c_traversed++;
 #endif
 		if (pball->m_rcHitRect.top <= vcenter.y) // Top
 		{
@@ -647,7 +641,7 @@ void HitOctreeNode::HitTestBall(Ball * const pball) const
 	}
 }
 
-
+#ifdef SSE_LEAFTEST
 void HitOctreeNode::HitTestBallSseInner(Ball * const pball, const int i) const
 {
   HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
@@ -690,6 +684,9 @@ void HitOctreeNode::HitTestBallSse(Ball * const pball) const
     const unsigned int size = (m_start+m_items+3)/4;
     for (unsigned int i = m_start/4; i < size; ++i) //!! are double hits possible because of the 'overlap' to next items??
     {
+#ifdef _DEBUGPHYSICS
+		g_pplayer->c_tested++; //!! +=4? or is this more fair?
+#endif
       // comparisons set bits if bounds miss. if all bits are set, there is no collision. otherwise continue comparisons
       // bits set, there is a bounding box collision
       __m128 cmp = _mm_cmpge_ps(bright, pL[i]);
@@ -730,6 +727,9 @@ void HitOctreeNode::HitTestBallSse(Ball * const pball) const
 		const bool fLeft = (pball->m_rcHitRect.left <= vcenter.x);
 		const bool fRight = (pball->m_rcHitRect.right >= vcenter.x);
 
+#ifdef _DEBUGPHYSICS
+		g_pplayer->c_traversed++;
+#endif
 		if (pball->m_rcHitRect.top <= vcenter.y) // Top
 		{
 			if (fLeft)
@@ -746,20 +746,21 @@ void HitOctreeNode::HitTestBallSse(Ball * const pball) const
 		}
 	}
 }
+#endif
 
 void HitOctreeNode::HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const
 {
 	for (int i=m_start; i<m_start+m_items; i++)
 	{
-#ifdef LOG
-		cTested++;
+#ifdef _DEBUGPHYSICS
+		g_pplayer->c_tested++;
 #endif
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 		if ((pball != pho) && // ball cannot hit itself
 			fRectIntersect3D(pball->m_rcHitRect,pho->m_rcHitRect))
 		{
-#ifdef LOG
-			cDeepTested++;
+#ifdef _DEBUGPHYSICS
+			g_pplayer->c_deepTested++;
 #endif
 			const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal);
 			if (newtime >= 0)
@@ -774,8 +775,8 @@ void HitOctreeNode::HitTestXRay(Ball * const pball, Vector<HitObject> * const pv
 		const bool fLeft = (pball->m_rcHitRect.left <= vcenter.x);
 		const bool fRight = (pball->m_rcHitRect.right >= vcenter.x);
 
-#ifdef LOG
-		cTested++;
+#ifdef _DEBUGPHYSICS
+		g_pplayer->c_traversed++;
 #endif
 
 		if (pball->m_rcHitRect.top <= vcenter.y) // Top

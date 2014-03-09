@@ -136,15 +136,17 @@ public:
 	Vertex2D normal;
 	};
 
+#define SSE_LEAFTEST
+
 class HitOctree
 {
 public:
 	HitOctree(Vector<HitObject> *vho, const unsigned int num_items)
 	{
 		m_all_items = num_items;
-		
+#ifdef SSE_LEAFTEST
 		l_r_t_b_zl_zh = NULL;
-		
+#endif		
 		m_org_idx = (unsigned int*)malloc(num_items*4);
 		tmp = (unsigned int*)malloc(num_items*4);
 
@@ -160,8 +162,10 @@ public:
 
 	unsigned int m_all_items;
 	unsigned int * __restrict tmp;
-	
+
+#ifdef SSE_LEAFTEST
 	float* __restrict l_r_t_b_zl_zh;
+#endif
 };
 
 class HitOctreeNode
@@ -173,8 +177,12 @@ public:
 	void HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const;
 
 	void HitTestBall(Ball * const pball) const;
+#ifdef SSE_LEAFTEST
 	void HitTestBallSse(Ball * const pball) const;
 	void HitTestBallSseInner(Ball * const pball, const int i) const;
+#else
+#define HitTestBallSse HitTestBall
+#endif
 
 	void CreateNextLevel(const bool subdivide = true);
 

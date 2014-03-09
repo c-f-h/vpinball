@@ -145,10 +145,6 @@ Player::Player()
 		_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON); // only flush denorms to zero
 	}
 
-#ifdef _DEBUGPHYSICS
-	c_embedcnts = 0;
-#endif
-
 	m_fPause = false;
 	m_fStep = false;
 	m_fPseudoPause = false;
@@ -286,6 +282,11 @@ Player::Player()
 	c_contactcnt = 0;
 	c_staticcnt = 0;
 	c_embedcnts = 0;
+
+	c_octNextlevels = 0;
+	c_traversed = 0;
+	c_tested = 0;
+    c_deepTested = 0;
 #endif
 
 	m_movedPlunger = 0;
@@ -2079,10 +2080,6 @@ void Player::FlipVideoBuffers3DFXAA( const bool vsync ) //!! SMAA, luma sharpen,
 	m_pin3d.m_pd3dDevice->Flip(vsync);
 }
 
-#ifdef _DEBUGPHYSICS
-extern U64 oct_nextlevels;
-#endif
-
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void Player::Render()
 {
@@ -2104,10 +2101,15 @@ void Player::Render()
     }
 
 #ifdef _DEBUGPHYSICS
-    c_collisioncnt = 0; 
-    c_hitcnts = 0;
-    c_contactcnt = 0;
-    c_staticcnt = 0;
+	c_hitcnts = 0;
+	c_collisioncnt = 0;
+	c_contactcnt = 0;
+	c_staticcnt = 0;
+	c_embedcnts = 0;
+
+	c_traversed = 0;
+    c_tested = 0;
+    c_deepTested = 0;
 #endif
 
     ///+++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -2284,8 +2286,8 @@ void Player::Render()
 		c_hitcnts, c_collisioncnt, c_contactcnt, c_staticcnt, c_embedcnts);
 		TextOut(hdcNull, 10, 180, szFoo, len);
 
-		len = sprintf_s(szFoo, sizeof(szFoo), "Octree:%5u    ",
-		oct_nextlevels);
+		len = sprintf_s(szFoo, sizeof(szFoo), "Octree:%5u Traversed:%5u Tested:%5u DeepTested:%5u  ",
+		c_octNextlevels,c_traversed,c_tested,c_deepTested);
 		TextOut(hdcNull, 10, 200, szFoo, len);
 #endif
         ReleaseDC(NULL, hdcNull);
@@ -2881,14 +2883,6 @@ void Player::DrawBalls()
     m_pin3d.m_pd3dDevice->SetTexture(0, NULL);
     m_pin3d.DisableAlphaBlend();
 }
-
-
-#ifdef LOG
-int cTested;
-int cDeepTested;
-int cTotalTested = 0;
-int cNumUpdates = 0;
-#endif
 
 struct DebugMenuItem
 {
