@@ -397,7 +397,7 @@ void HitCircle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 	pball->CollideWall(phitnormal, m_elasticity, m_antifriction, m_scatter);
 	}
 
-HitOctree::~HitOctree()
+HitKD::~HitKD()
 {
 	if(tmp != 0)
 	    free(tmp);
@@ -411,7 +411,7 @@ HitOctree::~HitOctree()
 #endif
 }
 
-HitOctreeNode::~HitOctreeNode()
+HitKDNode::~HitKDNode()
 {
 #ifdef HITLOG
 	if (g_fWriteHitDeleteLog)
@@ -426,52 +426,56 @@ HitOctreeNode::~HitOctreeNode()
 		delete [] m_children;
 }
 
-void HitOctreeNode::CreateNextLevel(const bool subdivide)
+void HitKDNode::CreateNextLevel(const bool subdivide)
 {
 	if(!subdivide) //!!
 		return;
 
-	if(m_items <= 1) //!! magic (will not favor empty space enough for huge objects)
+	const unsigned int org_items = (m_items&0x3FFFFFFF);
+
+	if(org_items <= 1) //!! magic (will not favor empty space enough for huge objects)
 		return;
 
 	const Vertex3Ds vdiag(m_rectbounds.right-m_rectbounds.left, m_rectbounds.bottom-m_rectbounds.top, m_rectbounds.zhigh-m_rectbounds.zlow);
 
+	unsigned int axis;
 	if((vdiag.x > vdiag.y) && (vdiag.x > vdiag.z))
 	{
 		if(vdiag.x < 66.6f) //!! magic (will not subdivide object soups enough)
 			return;
-		m_axis = 0;
+		axis = 0;
 	}
 	else if(vdiag.y > vdiag.z)
 	{
 		if(vdiag.y < 66.6f)
 			return;
-		m_axis = 1;
+		axis = 1;
 	}
 	else
 	{
 		if(vdiag.z < 66.6f)
 			return;
-		m_axis = 2;
+		axis = 2;
 	}
 
 #ifdef _DEBUGPHYSICS
 	g_pplayer->c_octNextlevels++;
 #endif
 
-	m_children = new HitOctreeNode[2]; //!! global list instead?!
+	// create children, calc bboxes
+	m_children = new HitKDNode[2]; //!! global list instead?!
 	m_children[0].m_rectbounds = m_rectbounds;
 	m_children[1].m_rectbounds = m_rectbounds;
 
 	const Vertex3Ds vcenter((m_rectbounds.left+m_rectbounds.right)*0.5f, (m_rectbounds.top+m_rectbounds.bottom)*0.5f, (m_rectbounds.zlow+m_rectbounds.zhigh)*0.5f);
-	if(m_axis == 0)
+	if(axis == 0)
 	{
 		m_children[0].m_rectbounds.left = m_rectbounds.left;
 		m_children[0].m_rectbounds.right = vcenter.x;
 		m_children[1].m_rectbounds.left = vcenter.x;
 		m_children[1].m_rectbounds.right = m_rectbounds.right;
 	}
-	else if (m_axis == 1)
+	else if (axis == 1)
 	{
 		m_children[0].m_rectbounds.top = m_rectbounds.top;
 		m_children[0].m_rectbounds.bottom = vcenter.y;
@@ -491,11 +495,11 @@ void HitOctreeNode::CreateNextLevel(const bool subdivide)
 	m_children[1].m_hitoct = m_hitoct; //!! meh
 	m_children[1].m_items = 0;
 
+	// determine amount of items that cross splitplane, or are passed on to the children
 	unsigned int items = 0;
-
-	if(m_axis == 0)
+	if(axis == 0)
 	{
-	for(unsigned int i = m_start; i < m_start+m_items; ++i)
+	for(unsigned int i = m_start; i < m_start+org_items; ++i)
 	{
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 
@@ -507,9 +511,9 @@ void HitOctreeNode::CreateNextLevel(const bool subdivide)
 			items++;
 	}
 	} 
-	else if (m_axis==1)
+	else if (axis==1)
 	{
-	for(unsigned int i = m_start; i < m_start+m_items; ++i)
+	for(unsigned int i = m_start; i < m_start+org_items; ++i)
 	{
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 
@@ -522,7 +526,7 @@ void HitOctreeNode::CreateNextLevel(const bool subdivide)
 	}
 	}
 	else
-	for(unsigned int i = m_start; i < m_start+m_items; ++i)
+	for(unsigned int i = m_start; i < m_start+org_items; ++i)
 	{
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 
@@ -541,9 +545,10 @@ void HitOctreeNode::CreateNextLevel(const bool subdivide)
     m_children[0].m_items = 0;
     m_children[1].m_items = 0;
 
-	if(m_axis == 0)
+	// sort items that cross splitplane in-place, the others are sorted into a temporary
+	if(axis == 0)
 	{
-	for(unsigned int i = m_start; i < m_start+m_items; ++i)
+	for(unsigned int i = m_start; i < m_start+org_items; ++i)
 	{
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 
@@ -555,14 +560,14 @@ void HitOctreeNode::CreateNextLevel(const bool subdivide)
 			m_hitoct->tmp[m_children[1].m_start+m_children[1].m_items] = m_hitoct->m_org_idx[i];
 			m_children[1].m_items++;
 		} else {
-			m_hitoct->tmp[m_start+items] = m_hitoct->m_org_idx[i];
+			m_hitoct->m_org_idx[m_start+items] = m_hitoct->m_org_idx[i];
 			items++;
 		}			
 	}
 	} 
-	else if (m_axis==1)
+	else if (axis==1)
 	{
-	for(unsigned int i = m_start; i < m_start+m_items; ++i)
+	for(unsigned int i = m_start; i < m_start+org_items; ++i)
 	{
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 
@@ -574,13 +579,13 @@ void HitOctreeNode::CreateNextLevel(const bool subdivide)
 			m_hitoct->tmp[m_children[1].m_start+m_children[1].m_items] = m_hitoct->m_org_idx[i];
 			m_children[1].m_items++;
 		} else {
-			m_hitoct->tmp[m_start+items] = m_hitoct->m_org_idx[i];
+			m_hitoct->m_org_idx[m_start+items] = m_hitoct->m_org_idx[i];
 			items++;
 		}			
 	}
 	}
 	else
-	for(unsigned int i = m_start; i < m_start+m_items; ++i)
+	for(unsigned int i = m_start; i < m_start+org_items; ++i)
 	{
 		HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 
@@ -592,16 +597,15 @@ void HitOctreeNode::CreateNextLevel(const bool subdivide)
 			m_hitoct->tmp[m_children[1].m_start+m_children[1].m_items] = m_hitoct->m_org_idx[i];
 			m_children[1].m_items++;
 		} else {
-			m_hitoct->tmp[m_start+items] = m_hitoct->m_org_idx[i];
+			m_hitoct->m_org_idx[m_start+items] = m_hitoct->m_org_idx[i];
 			items++;
 		}			
 	}
 	
-	m_items = items;
+	m_items = items|(axis<<30);
 
-	//!! opt. no need for doublepass above and this copy here
-	memcpy(m_hitoct->m_org_idx+m_start, m_hitoct->tmp+m_start, m_items*4);
-    memcpy(m_hitoct->m_org_idx+m_children[0].m_start, m_hitoct->tmp+m_children[0].m_start, m_children[0].m_items*4);
+	// copy temporary back //!! could omit this by doing everything inplace
+	memcpy(m_hitoct->m_org_idx+m_children[0].m_start, m_hitoct->tmp+m_children[0].m_start, m_children[0].m_items*4);
     memcpy(m_hitoct->m_org_idx+m_children[1].m_start, m_hitoct->tmp+m_children[1].m_start, m_children[1].m_items*4);
 
 	m_children[0].CreateNextLevel();
@@ -609,7 +613,7 @@ void HitOctreeNode::CreateNextLevel(const bool subdivide)
 }
 
 // build SSE boundary arrays of the local hit-object/m_vho HitRect list, generated for -full- list completely in the end!
-void HitOctree::InitSseArrays()
+void HitKD::InitSseArrays()
 {
 	free(tmp);
 	tmp = 0;
@@ -661,9 +665,12 @@ collisions
 
 */
 
-void HitOctreeNode::HitTestBall(Ball * const pball) const
+void HitKDNode::HitTestBall(Ball * const pball) const
 {
-	for (int i=m_start; i<m_start+m_items; i++)
+	const unsigned int org_items = (m_items&0x3FFFFFFF);
+	const unsigned int axis = (m_items>>30);
+
+	for (int i=m_start; i<m_start+org_items; i++)
 	{
 #ifdef _DEBUGPHYSICS
 		g_pplayer->c_tested++;
@@ -691,7 +698,7 @@ void HitOctreeNode::HitTestBall(Ball * const pball) const
 #ifdef _DEBUGPHYSICS
 		g_pplayer->c_traversed++;
 #endif
-		if(m_axis == 0)
+		if(axis == 0)
 		{
 			const float vcenter = (m_rectbounds.left+m_rectbounds.right)*0.5f;
 			if(pball->m_rcHitRect.left <= vcenter)
@@ -700,7 +707,7 @@ void HitOctreeNode::HitTestBall(Ball * const pball) const
 				m_children[1].HitTestBallSse(pball);
 		}
 		else
-		if(m_axis == 1)
+		if(axis == 1)
 		{
 			const float vcenter = (m_rectbounds.top+m_rectbounds.bottom)*0.5f;
 			if (pball->m_rcHitRect.top <= vcenter)
@@ -721,7 +728,7 @@ void HitOctreeNode::HitTestBall(Ball * const pball) const
 }
 
 #ifdef SSE_LEAFTEST
-void HitOctreeNode::HitTestBallSseInner(Ball * const pball, const int i) const
+void HitKDNode::HitTestBallSseInner(Ball * const pball, const int i) const
 {
   HitObject * const pho = m_hitoct->m_org_vho->ElementAt(m_hitoct->m_org_idx[i]);
 
@@ -739,8 +746,11 @@ void HitOctreeNode::HitTestBallSseInner(Ball * const pball, const int i) const
   }
 }
 
-void HitOctreeNode::HitTestBallSse(Ball * const pball) const
+void HitKDNode::HitTestBallSse(Ball * const pball) const
 {
+	const unsigned int org_items = (m_items&0x3FFFFFFF);
+	const unsigned int axis = (m_items>>30);
+
     const unsigned int padded = (m_hitoct->m_all_items+3)&0xFFFFFFFC;
 
     // init SSE registers with ball bbox
@@ -760,7 +770,7 @@ void HitOctreeNode::HitTestBallSse(Ball * const pball) const
 
     // loop implements 4 collision checks at once
     // (rc1.right >= rc2.left && rc1.bottom >= rc2.top && rc1.left <= rc2.right && rc1.top <= rc2.bottom && rc1.zlow <= rc2.zhigh && rc1.zhigh >= rc2.zlow)
-    const unsigned int size = (m_start+m_items+3)/4;
+    const unsigned int size = (m_start+org_items+3)/4;
     for (unsigned int i = m_start/4; i < size; ++i) //!! are double hits possible because of the 'overlap' to next items??
     {
 #ifdef _DEBUGPHYSICS
@@ -804,7 +814,7 @@ void HitOctreeNode::HitTestBallSse(Ball * const pball) const
 #ifdef _DEBUGPHYSICS
 		g_pplayer->c_traversed++;
 #endif
-		if(m_axis == 0)
+		if(axis == 0)
 		{
 			const float vcenter = (m_rectbounds.left+m_rectbounds.right)*0.5f;
 			if(pball->m_rcHitRect.left <= vcenter)
@@ -813,7 +823,7 @@ void HitOctreeNode::HitTestBallSse(Ball * const pball) const
 				m_children[1].HitTestBallSse(pball);
 		}
 		else
-		if(m_axis == 1)
+		if(axis == 1)
 		{
 			const float vcenter = (m_rectbounds.top+m_rectbounds.bottom)*0.5f;
 			if (pball->m_rcHitRect.top <= vcenter)
@@ -834,9 +844,12 @@ void HitOctreeNode::HitTestBallSse(Ball * const pball) const
 }
 #endif
 
-void HitOctreeNode::HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const
+void HitKDNode::HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const
 {
-	for (int i=m_start; i<m_start+m_items; i++)
+	const unsigned int org_items = (m_items&0x3FFFFFFF);
+	const unsigned int axis = (m_items>>30);
+
+	for (int i=m_start; i<m_start+org_items; i++)
 	{
 #ifdef _DEBUGPHYSICS
 		g_pplayer->c_tested++;
@@ -859,7 +872,7 @@ void HitOctreeNode::HitTestXRay(Ball * const pball, Vector<HitObject> * const pv
 #ifdef _DEBUGPHYSICS
 		g_pplayer->c_traversed++;
 #endif
-		if(m_axis == 0)
+		if(axis == 0)
 		{
 			const float vcenter = (m_rectbounds.left+m_rectbounds.right)*0.5f;
 			if(pball->m_rcHitRect.left <= vcenter)
@@ -868,7 +881,7 @@ void HitOctreeNode::HitTestXRay(Ball * const pball, Vector<HitObject> * const pv
 				m_children[1].HitTestXRay(pball,pvhoHit);
 		}
 		else
-		if(m_axis == 1)
+		if(axis == 1)
 		{
 			const float vcenter = (m_rectbounds.top+m_rectbounds.bottom)*0.5f;
 			if (pball->m_rcHitRect.top <= vcenter)

@@ -654,7 +654,7 @@ void Player::InitDebugHitStructure()
     }
 
 	//!! cleanup octree code
-	m_debugoctree.m_hitoct = new HitOctree(&m_vdebugho,m_vdebugho.Size());
+	m_debugoctree.m_hitoct = new HitKD(&m_vdebugho,m_vdebugho.Size());
 
 	for(int i = 0; i < m_vdebugho.Size(); ++i)
 	{
@@ -840,8 +840,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 			shadow_items++;
 	}
 
-	m_shadowoctree.m_hitoct = new HitOctree(&m_vho,shadow_items);
-	m_hitoctree.m_hitoct = new HitOctree(&m_vho,m_vho.Size());
+	m_shadowoctree.m_hitoct = new HitKD(&m_vho,shadow_items);
+	m_hitoctree.m_hitoct = new HitKD(&m_vho,m_vho.Size());
 
 	shadow_items = 0;
 
@@ -1091,9 +1091,9 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 	//!! cleanup octree code
 	if(m_hitoctree_dynamic)
 		delete m_hitoctree_dynamic;
-	m_hitoctree_dynamic = new HitOctreeNode();
+	m_hitoctree_dynamic = new HitKDNode();
 
-	m_hitoctree_dynamic->m_hitoct = new HitOctree(&m_vho_dynamic,m_vho_dynamic.Size());
+	m_hitoctree_dynamic->m_hitoct = new HitKD(&m_vho_dynamic,m_vho_dynamic.Size());
 
 	for (int i = 0; i < m_vho_dynamic.Size(); ++i)
     {
@@ -1142,9 +1142,9 @@ void Player::DestroyBall(Ball *pball)
 	//!! cleanup octree code
 	if(m_hitoctree_dynamic)
 		delete m_hitoctree_dynamic;
-	m_hitoctree_dynamic = new HitOctreeNode();
+	m_hitoctree_dynamic = new HitKDNode();
 
-	m_hitoctree_dynamic->m_hitoct = new HitOctree(&m_vho_dynamic,m_vho_dynamic.Size());
+	m_hitoctree_dynamic->m_hitoct = new HitKD(&m_vho_dynamic,m_vho_dynamic.Size());
 
 	for (int i = 0; i < m_vho_dynamic.Size(); ++i)
     {

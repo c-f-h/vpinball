@@ -290,14 +290,14 @@ private:
 
     std::vector<Ball*> m_vballDelete;	// Balls to free at the end of the frame
 
-	HitOctreeNode m_hitoctree;
-	HitOctreeNode m_shadowoctree;
+	HitKDNode m_hitoctree;
+	HitKDNode m_shadowoctree;
 
 	Vector<HitObject> m_vdebugho;
-	HitOctreeNode m_debugoctree;
+	HitKDNode m_debugoctree;
 
 	Vector<HitObject> m_vho_dynamic;
-	HitOctreeNode * m_hitoctree_dynamic; // generated from scratch each time something changes
+	HitKDNode * m_hitoctree_dynamic; //!! should be generated from scratch each time something changes
 
 	U64 m_StartTime_usec;
 	U64 m_curPhysicsFrameTime;	// Time when the last frame was drawn

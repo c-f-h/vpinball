@@ -138,10 +138,10 @@ public:
 
 #define SSE_LEAFTEST
 
-class HitOctree //!! nowadays a kD, rename
+class HitKD
 {
 public:
-	HitOctree(Vector<HitObject> *vho, const unsigned int num_items)
+	HitKD(Vector<HitObject> *vho, const unsigned int num_items)
 	{
 		m_all_items = num_items;
 #ifdef SSE_LEAFTEST
@@ -152,7 +152,7 @@ public:
 
 		m_org_vho = vho;
 	}
-	~HitOctree();
+	~HitKD();
 
 	void InitSseArrays();
 
@@ -168,11 +168,11 @@ public:
 #endif
 };
 
-class HitOctreeNode //!! nowadays a kD, rename
+class HitKDNode
 {
 public:
-	HitOctreeNode() { m_children = NULL; m_hitoct = NULL; }
-	~HitOctreeNode();
+	HitKDNode() { m_children = NULL; m_hitoct = NULL; }
+	~HitKDNode();
 
 	void HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const;
 
@@ -188,10 +188,9 @@ public:
 
 	FRect3D m_rectbounds;
 	unsigned int m_start;
-	unsigned int m_items;
-	unsigned int m_axis; //!! stuff the 2 bits into m_items
+	unsigned int m_items; // contains the 2 bits for axis (bits 30/31)
 
-	HitOctreeNode * __restrict m_children; // if NULL then this is a leaf, otherwise keeps the 2 children
+	HitKDNode * __restrict m_children; // if NULL then this is a leaf, otherwise keeps the 2 children
 
-	HitOctree * __restrict m_hitoct; //!! meh, stupid
+	HitKD * __restrict m_hitoct; //!! meh, stupid
 };
