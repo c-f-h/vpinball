@@ -138,7 +138,7 @@ public:
 
 #define SSE_LEAFTEST
 
-class HitOctree
+class HitOctree //!! nowadays a kD, rename
 {
 public:
 	HitOctree(Vector<HitObject> *vho, const unsigned int num_items)
@@ -168,7 +168,7 @@ public:
 #endif
 };
 
-class HitOctreeNode
+class HitOctreeNode //!! nowadays a kD, rename
 {
 public:
 	HitOctreeNode() { m_children = NULL; m_hitoct = NULL; }
@@ -189,8 +189,9 @@ public:
 	FRect3D m_rectbounds;
 	unsigned int m_start;
 	unsigned int m_items;
+	unsigned int m_axis; //!! stuff the 2 bits into m_items
 
-	HitOctreeNode * __restrict m_children; // if NULL then this is a leaf, otherwise keeps the 8 children
+	HitOctreeNode * __restrict m_children; // if NULL then this is a leaf, otherwise keeps the 2 children
 
 	HitOctree * __restrict m_hitoct; //!! meh, stupid
 };
