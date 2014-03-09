@@ -136,36 +136,85 @@ public:
 	Vertex2D normal;
 	};
 
+
 #define SSE_LEAFTEST
 
 class HitKD
 {
 public:
-	HitKD(Vector<HitObject> *vho, const unsigned int num_items)
+	HitKD(Vector<HitObject> *vho, const unsigned int num_items, const bool dynamic = false)
 	{
-		m_all_items = num_items;
+		m_org_vho = vho;
+		m_num_items = num_items;
+
+		m_num_nodes = 0;
+
+		m_dynamic = dynamic;
+
+		m_max_items = num_items;
+
 #ifdef SSE_LEAFTEST
 		l_r_t_b_zl_zh = NULL;
-#endif		
-		m_org_idx = (unsigned int*)malloc(num_items*4);
-		tmp = (unsigned int*)malloc(num_items*4);
-
-		m_org_vho = vho;
+#endif
+		if(num_items > 0)
+		{
+			m_org_idx = (unsigned int*)malloc(m_max_items*4);
+			tmp = (unsigned int*)malloc(m_max_items*4);
+			m_nodes = malloc(m_max_items*12*4 * 4); //!!
+		}
+		else
+		{
+			m_org_idx = NULL;
+			tmp = NULL;
+			m_nodes = NULL;
+		}
 	}
 	~HitKD();
 
+	void Update(Vector<HitObject> *vho, const unsigned int num_items)
+	{
+		m_org_vho = vho;
+		m_num_items = num_items;
+
+		m_num_nodes = 0;
+
+		if(num_items > m_max_items)
+		{
+			if(m_max_items > 0)
+			{
+#ifdef SSE_LEAFTEST
+				_aligned_free(l_r_t_b_zl_zh);
+#endif
+				free(m_org_idx);
+				free(tmp);
+				free(m_nodes);
+			}
+			m_max_items = num_items;
+
+			l_r_t_b_zl_zh = (float*)_aligned_malloc(sizeof(float) * ((m_max_items+3)&0xFFFFFFFC) * 6, 16);
+			m_org_idx = (unsigned int*)malloc(m_max_items*4);
+			tmp = (unsigned int*)malloc(m_max_items*4);
+			m_nodes = malloc(m_max_items*12*4 * 4); //!!
+		}
+	}
+
 	void InitSseArrays();
+
+	unsigned int m_num_items;
+	unsigned int m_max_items;
 
 	Vector<HitObject> *m_org_vho;
 
 	unsigned int * __restrict m_org_idx;
-
-	unsigned int m_all_items;
 	unsigned int * __restrict tmp;
-
 #ifdef SSE_LEAFTEST
-	float* __restrict l_r_t_b_zl_zh;
+	float * __restrict l_r_t_b_zl_zh;
 #endif
+
+	void* __restrict m_nodes;
+	unsigned int m_num_nodes;
+
+	bool m_dynamic;
 };
 
 class HitKDNode
@@ -184,7 +233,7 @@ public:
 #define HitTestBallSse HitTestBall
 #endif
 
-	void CreateNextLevel(const bool subdivide = true);
+	void CreateNextLevel();
 
 	FRect3D m_rectbounds;
 	unsigned int m_start;

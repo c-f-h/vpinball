@@ -409,6 +409,9 @@ HitKD::~HitKD()
 	if(l_r_t_b_zl_zh != 0)
 	    _aligned_free(l_r_t_b_zl_zh);
 #endif
+
+	if(m_nodes != 0)
+		free(m_nodes);
 }
 
 HitKDNode::~HitKDNode()
@@ -421,19 +424,13 @@ HitKDNode::~HitKDNode()
 		fclose(file);
 		}
 #endif
-
-	if (m_children)
-		delete [] m_children;
 }
 
-void HitKDNode::CreateNextLevel(const bool subdivide)
+void HitKDNode::CreateNextLevel()
 {
-	if(!subdivide) //!!
-		return;
-
 	const unsigned int org_items = (m_items&0x3FFFFFFF);
 
-	if(org_items <= 1) //!! magic (will not favor empty space enough for huge objects)
+	if(org_items <= 4) //!! magic (will not favor empty space enough for huge objects)
 		return;
 
 	const Vertex3Ds vdiag(m_rectbounds.right-m_rectbounds.left, m_rectbounds.bottom-m_rectbounds.top, m_rectbounds.zhigh-m_rectbounds.zlow);
@@ -441,19 +438,19 @@ void HitKDNode::CreateNextLevel(const bool subdivide)
 	unsigned int axis;
 	if((vdiag.x > vdiag.y) && (vdiag.x > vdiag.z))
 	{
-		if(vdiag.x < 66.6f) //!! magic (will not subdivide object soups enough)
+		if(vdiag.x < 6.66f) //!! magic (will not subdivide object soups enough)
 			return;
 		axis = 0;
 	}
 	else if(vdiag.y > vdiag.z)
 	{
-		if(vdiag.y < 66.6f)
+		if(vdiag.y < 6.66f)
 			return;
 		axis = 1;
 	}
 	else
 	{
-		if(vdiag.z < 66.6f)
+		if(vdiag.z < 6.66f)
 			return;
 		axis = 2;
 	}
@@ -463,7 +460,8 @@ void HitKDNode::CreateNextLevel(const bool subdivide)
 #endif
 
 	// create children, calc bboxes
-	m_children = new HitKDNode[2]; //!! global list instead?!
+	m_children = (HitKDNode*)(m_hitoct->m_nodes) + m_hitoct->m_num_nodes;
+	m_hitoct->m_num_nodes += 2;
 	m_children[0].m_rectbounds = m_rectbounds;
 	m_children[1].m_rectbounds = m_rectbounds;
 
@@ -492,11 +490,12 @@ void HitKDNode::CreateNextLevel(const bool subdivide)
 
 	m_children[0].m_hitoct = m_hitoct; //!! meh
 	m_children[0].m_items = 0;
+	m_children[0].m_children = NULL;
 	m_children[1].m_hitoct = m_hitoct; //!! meh
 	m_children[1].m_items = 0;
+	m_children[1].m_children = NULL;
 
 	// determine amount of items that cross splitplane, or are passed on to the children
-	unsigned int items = 0;
 	if(axis == 0)
 	{
 	for(unsigned int i = m_start; i < m_start+org_items; ++i)
@@ -507,8 +506,6 @@ void HitKDNode::CreateNextLevel(const bool subdivide)
 			m_children[0].m_items++;
 		else if (pho->m_rcHitRect.left > vcenter.x)
 			m_children[1].m_items++;
-		else
-			items++;
 	}
 	} 
 	else if (axis==1)
@@ -521,8 +518,6 @@ void HitKDNode::CreateNextLevel(const bool subdivide)
 			m_children[0].m_items++;
 		else if (pho->m_rcHitRect.top > vcenter.y)
 			m_children[1].m_items++;
-		else
-			items++;
 	}
 	}
 	else
@@ -534,14 +529,12 @@ void HitKDNode::CreateNextLevel(const bool subdivide)
 			m_children[0].m_items++;
 		else if (pho->m_rcHitRect.zlow > vcenter.z)
 			m_children[1].m_items++;
-		else
-			items++;
 	}
 
-	m_children[0].m_start = m_start+items;
+	m_children[0].m_start = m_start + org_items-m_children[0].m_items-m_children[1].m_items;
 	m_children[1].m_start = m_children[0].m_start + m_children[0].m_items;
 
-	items = 0;
+	unsigned int items = 0;
     m_children[0].m_items = 0;
     m_children[1].m_items = 0;
 
@@ -615,14 +608,18 @@ void HitKDNode::CreateNextLevel(const bool subdivide)
 // build SSE boundary arrays of the local hit-object/m_vho HitRect list, generated for -full- list completely in the end!
 void HitKD::InitSseArrays()
 {
-	free(tmp);
-	tmp = 0;
+	if(!m_dynamic)
+	{
+		free(tmp);
+		tmp = 0;
+	}
 
 #ifdef SSE_LEAFTEST
-	const unsigned int padded = (m_all_items+3)&0xFFFFFFFC;
-	l_r_t_b_zl_zh = (float*)_aligned_malloc(sizeof(float) * padded * 6, 16);
+	const unsigned int padded = (m_num_items+3)&0xFFFFFFFC;
+	if(!l_r_t_b_zl_zh)
+		l_r_t_b_zl_zh = (float*)_aligned_malloc(sizeof(float) * padded * 6, 16);
 
-    for(unsigned int j = 0; j < m_all_items; ++j)
+    for(unsigned int j = 0; j < m_num_items; ++j)
     {
 		const FRect3D r = m_org_vho->ElementAt(m_org_idx[j])->m_rcHitRect;
 		l_r_t_b_zl_zh[j] = r.left;
@@ -633,7 +630,7 @@ void HitKD::InitSseArrays()
 		l_r_t_b_zl_zh[j+padded*5] = r.zhigh;
     }
 
-	for(unsigned int j = m_all_items; j < padded; ++j)
+	for(unsigned int j = m_num_items; j < padded; ++j)
 	{
 		l_r_t_b_zl_zh[j] = FLT_MAX;
 		l_r_t_b_zl_zh[j+padded] = -FLT_MAX;
@@ -751,7 +748,7 @@ void HitKDNode::HitTestBallSse(Ball * const pball) const
 	const unsigned int org_items = (m_items&0x3FFFFFFF);
 	const unsigned int axis = (m_items>>30);
 
-    const unsigned int padded = (m_hitoct->m_all_items+3)&0xFFFFFFFC;
+    const unsigned int padded = (m_hitoct->m_num_items+3)&0xFFFFFFFC;
 
     // init SSE registers with ball bbox
     const __m128 bleft = _mm_set1_ps(pball->m_rcHitRect.left);
@@ -771,10 +768,10 @@ void HitKDNode::HitTestBallSse(Ball * const pball) const
     // loop implements 4 collision checks at once
     // (rc1.right >= rc2.left && rc1.bottom >= rc2.top && rc1.left <= rc2.right && rc1.top <= rc2.bottom && rc1.zlow <= rc2.zhigh && rc1.zhigh >= rc2.zlow)
     const unsigned int size = (m_start+org_items+3)/4;
-    for (unsigned int i = m_start/4; i < size; ++i) //!! are double hits possible because of the 'overlap' to next items??
+    for (unsigned int i = m_start/4; i < size; ++i)
     {
 #ifdef _DEBUGPHYSICS
-		g_pplayer->c_tested++; //!! +=4? or is this more fair?
+	  g_pplayer->c_tested++; //!! +=4? or is this more fair?
 #endif
       // comparisons set bits if bounds miss. if all bits are set, there is no collision. otherwise continue comparisons
       // bits set, there is a bounding box collision

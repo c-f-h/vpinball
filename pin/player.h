@@ -259,6 +259,7 @@ public:
 	U32 c_contactcnt;
 	U32 c_staticcnt;
 	U32 c_embedcnts;
+	U32 c_timesearch;
 
 	U32 c_octNextlevels;
 	U32 c_traversed;

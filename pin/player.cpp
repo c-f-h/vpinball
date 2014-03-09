@@ -282,6 +282,7 @@ Player::Player()
 	c_contactcnt = 0;
 	c_staticcnt = 0;
 	c_embedcnts = 0;
+	c_timesearch = 0;
 
 	c_octNextlevels = 0;
 	c_traversed = 0;
@@ -1085,36 +1086,9 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 	m_vball.push_back(pball);
 	m_vmover.AddElement(&pball->m_ballanim);
 
-	// Add to list of global exception hit-tests for now
+	pball->CalcHitRect();
+
 	m_vho_dynamic.AddElement(pball);
-
-	//!! cleanup octree code
-	if(m_hitoctree_dynamic)
-		delete m_hitoctree_dynamic;
-	m_hitoctree_dynamic = new HitKDNode();
-
-	m_hitoctree_dynamic->m_hitoct = new HitKD(&m_vho_dynamic,m_vho_dynamic.Size());
-
-	for (int i = 0; i < m_vho_dynamic.Size(); ++i)
-    {
-		m_vho_dynamic.ElementAt(i)->CalcHitRect();
-
-		m_hitoctree_dynamic->m_hitoct->m_org_idx[i] = i;
-	}
-
-	m_hitoctree_dynamic->m_start = 0;
-	m_hitoctree_dynamic->m_items = m_vho_dynamic.Size();
-
-	m_hitoctree_dynamic->m_rectbounds.left = m_ptable->m_left;
-	m_hitoctree_dynamic->m_rectbounds.right = m_ptable->m_right;
-	m_hitoctree_dynamic->m_rectbounds.top = m_ptable->m_top;
-	m_hitoctree_dynamic->m_rectbounds.bottom = m_ptable->m_bottom;
-	m_hitoctree_dynamic->m_rectbounds.zlow = m_ptable->m_tableheight;
-	m_hitoctree_dynamic->m_rectbounds.zhigh = m_ptable->m_glassheight;
-
-	m_hitoctree_dynamic->CreateNextLevel(false); //!! for now do not subdivide, otherwise needs to be rebuild for each ball change!
-	m_hitoctree_dynamic->m_hitoct->InitSseArrays();
-	//
 
 	if (!m_pactiveballDebug)
 		m_pactiveballDebug = pball;
@@ -1138,34 +1112,6 @@ void Player::DestroyBall(Ball *pball)
 	m_vmover.RemoveElement(&pball->m_ballanim);
 
 	m_vho_dynamic.RemoveElement(pball);
-
-	//!! cleanup octree code
-	if(m_hitoctree_dynamic)
-		delete m_hitoctree_dynamic;
-	m_hitoctree_dynamic = new HitKDNode();
-
-	m_hitoctree_dynamic->m_hitoct = new HitKD(&m_vho_dynamic,m_vho_dynamic.Size());
-
-	for (int i = 0; i < m_vho_dynamic.Size(); ++i)
-    {
-		m_vho_dynamic.ElementAt(i)->CalcHitRect();
-
-		m_hitoctree_dynamic->m_hitoct->m_org_idx[i] = i;
-	}
-
-	m_hitoctree_dynamic->m_start = 0;
-	m_hitoctree_dynamic->m_items = m_vho_dynamic.Size();
-
-	m_hitoctree_dynamic->m_rectbounds.left = m_ptable->m_left;
-	m_hitoctree_dynamic->m_rectbounds.right = m_ptable->m_right;
-	m_hitoctree_dynamic->m_rectbounds.top = m_ptable->m_top;
-	m_hitoctree_dynamic->m_rectbounds.bottom = m_ptable->m_bottom;
-	m_hitoctree_dynamic->m_rectbounds.zlow = m_ptable->m_tableheight;
-	m_hitoctree_dynamic->m_rectbounds.zhigh = m_ptable->m_glassheight;
-
-	m_hitoctree_dynamic->CreateNextLevel(false); //!! for now do not subdivide, otherwise needs to be rebuild for each ball change!
-	m_hitoctree_dynamic->m_hitoct->InitSseArrays();
-	//
 
 	m_vballDelete.push_back(pball);
 
@@ -1564,10 +1510,51 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 	float hittime;
 	int StaticCnts = STATICCNTS;	// maximum number of static counts
 
+	// it's okay to have this code outside of the inner loop, as the ball hitrects already include the maximum distance they can travel in that timespan
+	//!! cleanup octree code
+	if(!m_hitoctree_dynamic)
+	{
+		m_hitoctree_dynamic = new HitKDNode();
+		m_hitoctree_dynamic->m_hitoct = new HitKD(&m_vho_dynamic,m_vho_dynamic.Size(),true);
+	}
+	else
+		m_hitoctree_dynamic->m_hitoct->Update(&m_vho_dynamic,m_vho_dynamic.Size());
+
+	m_hitoctree_dynamic->m_rectbounds.left = FLT_MAX;
+	m_hitoctree_dynamic->m_rectbounds.right = -FLT_MAX;
+	m_hitoctree_dynamic->m_rectbounds.top = FLT_MAX;
+	m_hitoctree_dynamic->m_rectbounds.bottom = -FLT_MAX;
+	m_hitoctree_dynamic->m_rectbounds.zlow = FLT_MAX;
+	m_hitoctree_dynamic->m_rectbounds.zhigh = -FLT_MAX;
+
+	m_hitoctree_dynamic->m_start = 0;
+	m_hitoctree_dynamic->m_items = m_vho_dynamic.Size();
+
+	for (int i = 0; i < m_hitoctree_dynamic->m_items; ++i)
+	{
+		HitObject * const pho = m_vho_dynamic.ElementAt(i);
+		pho->CalcHitRect(); //!! omit, as already calced?!
+
+		m_hitoctree_dynamic->m_hitoct->m_org_idx[i] = i;
+
+		m_hitoctree_dynamic->m_rectbounds.left = min(m_hitoctree_dynamic->m_rectbounds.left, pho->m_rcHitRect.left);
+		m_hitoctree_dynamic->m_rectbounds.right = max(m_hitoctree_dynamic->m_rectbounds.right, pho->m_rcHitRect.right);
+		m_hitoctree_dynamic->m_rectbounds.top = min(m_hitoctree_dynamic->m_rectbounds.top, pho->m_rcHitRect.top);
+		m_hitoctree_dynamic->m_rectbounds.bottom = max(m_hitoctree_dynamic->m_rectbounds.bottom, pho->m_rcHitRect.bottom);
+		m_hitoctree_dynamic->m_rectbounds.zlow = min(m_hitoctree_dynamic->m_rectbounds.zlow, pho->m_rcHitRect.zlow);
+		m_hitoctree_dynamic->m_rectbounds.zhigh = max(m_hitoctree_dynamic->m_rectbounds.zhigh, pho->m_rcHitRect.zhigh);
+	}
+
+	m_hitoctree_dynamic->CreateNextLevel();
+	m_hitoctree_dynamic->m_hitoct->InitSseArrays();
+	//
+
 	while (dtime > 0.f)
 	{
 		// first find hits, if any +++++++++++++++++++++ 
-
+#ifdef _DEBUGPHYSICS
+		c_timesearch++;
+#endif
 		hittime = dtime;	//begin time search from now ...  until delta ends
 
 		for (unsigned i = 0; i < m_vball.size(); i++)
@@ -2106,6 +2093,7 @@ void Player::Render()
 	c_contactcnt = 0;
 	c_staticcnt = 0;
 	c_embedcnts = 0;
+	c_timesearch = 0;
 
 	c_traversed = 0;
     c_tested = 0;
@@ -2282,8 +2270,8 @@ void Player::Render()
 				(U32)m_phys_max_iterations );
 		TextOut(hdcNull, 10, 160, szFoo, len);
 
-		len = sprintf_s(szFoo, sizeof(szFoo), "Hits:%5u Collide:%5u Ctacs:%5u Static:%5u Embed: %5u    ",
-		c_hitcnts, c_collisioncnt, c_contactcnt, c_staticcnt, c_embedcnts);
+		len = sprintf_s(szFoo, sizeof(szFoo), "Hits:%5u Collide:%5u Ctacs:%5u Static:%5u Embed:%5u TimeSearch:%5u    ",
+		c_hitcnts, c_collisioncnt, c_contactcnt, c_staticcnt, c_embedcnts, c_timesearch);
 		TextOut(hdcNull, 10, 180, szFoo, len);
 
 		len = sprintf_s(szFoo, sizeof(szFoo), "Octree:%5u Traversed:%5u Tested:%5u DeepTested:%5u  ",
