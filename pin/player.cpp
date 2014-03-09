@@ -996,10 +996,11 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 		ExitApp();
 	}
 #endif
-	Render();
 
     // TODO: the limit should be a GUI option; 0 means disable limiting of drawahead queue
     m_limiter.Init(2);
+
+	Render();
 
 	return S_OK;
 }
@@ -1944,6 +1945,7 @@ void Player::RenderDynamics()
        m_vHitBackglass[i]->PostRenderStatic(m_pin3d.m_pd3dDevice);
 
    DrawBalls();
+
    m_limiter.Execute(m_pin3d.m_pd3dDevice);
 
    // Draw transparent objects.
