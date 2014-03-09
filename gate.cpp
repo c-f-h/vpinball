@@ -8,6 +8,7 @@ Gate::Gate()
    staticMaterial.setAmbient(0.0f, 0.6f, 0.6f, 0.6f );
    staticMaterial.setDiffuse(0.0f, 0.6f, 0.6f, 0.6f );
    vtxBuf = NULL;
+   idxBuf = NULL;
 }
 
 Gate::~Gate()
