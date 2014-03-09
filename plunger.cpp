@@ -285,16 +285,15 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
         return;
 
     Pin3D * const ppin3d = &g_pplayer->m_pin3d;
-    Texture *pin = NULL;
 
     pd3dDevice->SetMaterial(material);
 
     if (m_d.m_type == PlungerTypeModern)
     {
+        Texture *pin = m_ptable->GetImage(m_d.m_szImage);
         if ( renderNewPlunger )
         {
             //render a simple rectangle as an embedded alpha ramp plunger ;)
-            pin = m_ptable->GetImage(m_d.m_szImage);
             pin->CreateAlphaChannel();
             pin->Set(ePictureTexture);
             pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE );
@@ -307,7 +306,6 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
         }
         else
         {
-            pin = m_ptable->GetImage(m_d.m_szImage);
             if ( pin )
             {
                 pin->CreateAlphaChannel();
@@ -329,6 +327,8 @@ void Plunger::PostRenderStatic(const RenderDevice* _pd3dDevice)
     }
     else if (m_d.m_type == PlungerTypeOrig)
     {
+        ppin3d->SetTexture(NULL);
+        ppin3d->DisableAlphaBlend();
         pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, vertexBuffer, frame*(16*PLUNGEPOINTS0), 16*PLUNGEPOINTS0, indexBuffer, 0, 16*6*(PLUNGEPOINTS0-1));
     }
 }
