@@ -191,7 +191,9 @@ public:
 			}
 			m_max_items = num_items;
 
+#ifdef SSE_LEAFTEST
 			l_r_t_b_zl_zh = (float*)_aligned_malloc(sizeof(float) * ((m_max_items+3)&0xFFFFFFFC) * 6, 16);
+#endif
 			m_org_idx = (unsigned int*)malloc(m_max_items*4);
 			tmp = (unsigned int*)malloc(m_max_items*4);
 			m_nodes = malloc(m_max_items*12*4 * 4); //!!
