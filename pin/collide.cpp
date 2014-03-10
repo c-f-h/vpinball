@@ -397,6 +397,23 @@ void HitCircle::Collide(Ball * const pball, Vertex3Ds * const phitnormal)
 	pball->CollideWall(phitnormal, m_elasticity, m_antifriction, m_scatter);
 	}
 
+
+// Perform the actual hittest between ball and hit object and update
+// collision information if a hit occurred.
+static void DoHitTest(Ball *pball, HitObject *pho)
+{
+    const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal); // test for hit
+    if ((newtime >= 0) && (newtime <= pball->m_hittime))
+    {
+        pball->m_pho = pho;
+        pball->m_hittime = newtime;
+        pball->m_hitx = pball->x + pball->vx*newtime;
+        pball->m_hity = pball->y + pball->vy*newtime;
+    }
+}
+
+
+
 HitKD::~HitKD()
 {
 	if(tmp != 0)
@@ -679,14 +696,7 @@ void HitKDNode::HitTestBall(Ball * const pball) const
 #ifdef _DEBUGPHYSICS
 			g_pplayer->c_deepTested++;
 #endif
-			const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal); // test for hit
-			if ((newtime >= 0) && (newtime <= pball->m_hittime))
-			{
-				pball->m_pho = pho;
-				pball->m_hittime = newtime;
-				pball->m_hitx = pball->x + pball->vx*newtime;
-				pball->m_hity = pball->y + pball->vy*newtime;
-			}
+            DoHitTest(pball, pho);
 		}
 	}
 
@@ -733,14 +743,7 @@ void HitKDNode::HitTestBallSseInner(Ball * const pball, const int i) const
   if (pball == pho)
     return;
 
-  const float newtime = pho->HitTest(pball, pball->m_hittime, pball->m_hitnormal); // test for hit
-  if ((newtime >= 0) && (newtime <= pball->m_hittime))
-  {
-  	pball->m_pho = pho;
-  	pball->m_hittime = newtime;
-  	pball->m_hitx = pball->x + pball->vx*newtime;
-  	pball->m_hity = pball->y + pball->vy*newtime;
-  }
+  DoHitTest(pball, pho);
 }
 
 void HitKDNode::HitTestBallSse(Ball * const pball) const
