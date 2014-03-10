@@ -861,7 +861,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
         {
             m_vscreenupdate.AddElement(pao);
             if (pao->FMover())
-                m_vmover.AddElement(pao);
+                m_vmover.push_back(pao);
         }
     }
 
@@ -1085,7 +1085,7 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 	pball->m_pfedebug = (IFireEvents *)pball->m_pballex;
 
 	m_vball.push_back(pball);
-	m_vmover.AddElement(&pball->m_ballanim);
+	m_vmover.push_back(&pball->m_ballanim);
 
 	pball->CalcHitRect();
 
@@ -1110,7 +1110,7 @@ void Player::DestroyBall(Ball *pball)
 		}
 
     RemoveFromVector( m_vball, pball );
-	m_vmover.RemoveElement(&pball->m_ballanim);
+    RemoveFromVector<AnimObject*>( m_vmover, &pball->m_ballanim );
 
 	m_vho_dynamic.RemoveElement(pball);
 
@@ -1607,8 +1607,8 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 
 		if (hittime > STATICTIME) StaticCnts = STATICCNTS;		 // allow more zeros next round
 
-		for (int i=0;i<m_vmover.Size();i++)
-			m_vmover.ElementAt(i)->UpdateDisplacements(hittime); //step 2:  move the objects about according to velocities
+		for (unsigned i=0; i<m_vmover.size(); i++)
+			m_vmover[i]->UpdateDisplacements(hittime); //step 2:  move the objects about according to velocities
 
 		//  find balls that need to be collided and script'ed (generally there will be one, but more are possible)
 
@@ -1835,8 +1835,8 @@ void Player::UpdatePhysics()
 			}
 		}
 
-		for (int i=0;i<m_vmover.Size();i++)
-			m_vmover.ElementAt(i)->UpdateVelocities();	// always on integral physics frame boundary
+		for (unsigned i=0; i<m_vmover.size(); i++)
+			m_vmover[i]->UpdateVelocities();	// always on integral physics frame boundary
 
 		//primary physics loop
 		PhysicsSimulateCycle(physics_diff_time);	    // main simulator call

@@ -287,7 +287,7 @@ public:
 
 private:
 	Vector<HitObject> m_vho;
-	Vector<AnimObject> m_vmover;// moving objects for physics simulation
+    std::vector< AnimObject* > m_vmover;    // moving objects for physics simulation
 
     std::vector<Ball*> m_vballDelete;	// Balls to free at the end of the frame
 
