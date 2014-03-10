@@ -743,6 +743,9 @@ void HitKDNode::HitTestBallSseInner(Ball * const pball, const int i) const
   if (pball == pho)
     return;
 
+#ifdef _DEBUGPHYSICS
+  g_pplayer->c_deepTested++;
+#endif
   DoHitTest(pball, pho);
 }
 
