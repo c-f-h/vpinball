@@ -801,9 +801,9 @@ void HitKDNode::HitTestBallSse(Ball * const pball) const
 
       // now there is at least one bbox collision
       if ((mask & 1) != 0) HitTestBallSseInner(pball, i*4);
-      if ((mask & 2) != 0 /*&& (i*4+1)<m_vho.Size()*/) HitTestBallSseInner(pball, i*4+1); // boundary checks not necessary
-      if ((mask & 4) != 0 /*&& (i*4+2)<m_vho.Size()*/) HitTestBallSseInner(pball, i*4+2); //  anymore as non-valid entries were
-      if ((mask & 8) != 0 /*&& (i*4+3)<m_vho.Size()*/) HitTestBallSseInner(pball, i*4+3); //  initialized to keep these maskbits 0
+      if ((mask & 2) != 0 && (i*4+1)<m_hitoct->m_num_items) HitTestBallSseInner(pball, i*4+1); // boundary checks not necessary (in theory, //!! strange bug with TOM mirror mod, cmp shows correct value, mask although not)
+      if ((mask & 4) != 0 && (i*4+2)<m_hitoct->m_num_items) HitTestBallSseInner(pball, i*4+2); //  anymore as non-valid entries were
+      if ((mask & 8) != 0 && (i*4+3)<m_hitoct->m_num_items) HitTestBallSseInner(pball, i*4+3); //  initialized to keep these maskbits 0
     }
 
 	if (m_children) // not a leaf
