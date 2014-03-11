@@ -1036,6 +1036,7 @@ Ball *Player::CreateBall(const float x, const float y, const float z, const floa
 	pball->CalcHitRect();
 
 	m_vho_dynamic.AddElement(pball);
+    m_hitoctree_dynamic.FillFromVector(m_vho_dynamic);
 
 	if (!m_pactiveballDebug)
 		m_pactiveballDebug = pball;
@@ -1059,6 +1060,7 @@ void Player::DestroyBall(Ball *pball)
     RemoveFromVector<AnimObject*>( m_vmover, &pball->m_ballanim );
 
 	m_vho_dynamic.RemoveElement(pball);
+    m_hitoctree_dynamic.FillFromVector(m_vho_dynamic);
 
 	m_vballDelete.push_back(pball);
 
@@ -1458,7 +1460,6 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 	int StaticCnts = STATICCNTS;	// maximum number of static counts
 
 	// it's okay to have this code outside of the inner loop, as the ball hitrects already include the maximum distance they can travel in that timespan
-    // TODO/BUG: new items might get added/deleted in events during the physics loop
     m_hitoctree_dynamic.FillFromVector(m_vho_dynamic);
 
 	while (dtime > 0.f)
