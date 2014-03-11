@@ -51,6 +51,9 @@ public:
     void FillFromVector(Vector<HitObject>& vho);
     void FillFromIndices();
 
+    // call when the bounding boxes of the HitObjects have changed to update the tree
+    void Update();
+
 	void HitTestBall(Ball * const pball) const
       { m_rootNode.HitTestBallSse(pball); }
 

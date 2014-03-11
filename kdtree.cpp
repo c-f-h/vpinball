@@ -67,9 +67,6 @@ HitKDNode* HitKD::AllocTwoNodes()
 // build SSE boundary arrays of the local hit-object/m_vho HitRect list, generated for -full- list completely in the end!
 void HitKD::InitSseArrays()
 {
-	//if(!m_dynamic)
-    //    tmp.clear();
-
 #ifdef SSE_LEAFTEST
 	const unsigned int padded = (m_num_items+3)&0xFFFFFFFC;
 	if(!l_r_t_b_zl_zh)
@@ -136,6 +133,11 @@ void HitKD::FillFromIndices()
 
     m_rootNode.CreateNextLevel();
     InitSseArrays();
+}
+
+void HitKD::Update()
+{
+    FillFromVector(*m_org_vho);
 }
 
 
@@ -288,10 +290,11 @@ void HitKDNode::CreateNextLevel()
                 m_hitoct->m_org_idx[m_start + (items++)] = m_hitoct->m_org_idx[i];
         }
     }
-    assert( m_start + items == m_children[0].m_start );
-    assert( m_children[0].m_start + m_children[0].m_items == m_children[1].m_start );
-    assert( m_children[1].m_start + m_children[1].m_items == m_start + org_items );
-    assert( m_start + org_items <= m_hitoct->tmp.size() );
+    // The following assertions hold after this step:
+    //assert( m_start + items == m_children[0].m_start );
+    //assert( m_children[0].m_start + m_children[0].m_items == m_children[1].m_start );
+    //assert( m_children[1].m_start + m_children[1].m_items == m_start + org_items );
+    //assert( m_start + org_items <= m_hitoct->tmp.size() );
 
     m_items = items | (axis<<30);
 

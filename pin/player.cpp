@@ -838,6 +838,9 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_hitoctree.FillFromIndices();
     m_shadowoctree.FillFromIndices();
 
+    // initialize hit structure for dynamic objects
+    m_hitoctree_dynamic.FillFromVector( m_vho_dynamic );
+
     Ball::ballsInUse=0;
 
 	//----------------------------------------------------------------------------------
@@ -1460,7 +1463,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 	int StaticCnts = STATICCNTS;	// maximum number of static counts
 
 	// it's okay to have this code outside of the inner loop, as the ball hitrects already include the maximum distance they can travel in that timespan
-    m_hitoctree_dynamic.FillFromVector(m_vho_dynamic);
+    m_hitoctree_dynamic.Update();
 
 	while (dtime > 0.f)
 	{
