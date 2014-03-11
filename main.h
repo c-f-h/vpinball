@@ -143,6 +143,8 @@ class PinBinary;
 #include "hid.h"
 #include "plumb.h"
 
+#include "kdtree.h"
+
 #include "wintimer.h"
 
 #include "slintf.h"

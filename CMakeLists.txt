@@ -123,6 +123,7 @@ set(SOURCES
   hitsur.cpp
   ieditable.cpp
   iselect.cpp
+  kdtree.cpp
   kicker.cpp
   light.cpp
   lightseq.cpp
@@ -201,6 +202,7 @@ set(HEADERS
   idebug.h
   ieditable.h
   iselect.h
+  kdtree.h
   kicker.h
   light.h
   lightseq.h

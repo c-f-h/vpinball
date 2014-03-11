@@ -297,8 +297,6 @@ Player::Player()
 	for(unsigned int i = 0; i < 8; ++i)
 		m_touchregion_pressed[i] = false;
 
-	m_hitoctree_dynamic = NULL;
-
 #ifdef DEBUG_FPS
 	ToggleFPS();
 #endif
@@ -306,19 +304,6 @@ Player::Player()
 
 Player::~Player()
 {
-	if(m_debugoctree.m_hitoct)
-	    delete m_debugoctree.m_hitoct;
-	if(m_hitoctree.m_hitoct)
-	    delete m_hitoctree.m_hitoct;
-	if(m_hitoctree_dynamic)
-	{
-		if(m_hitoctree_dynamic->m_hitoct)
-		    delete m_hitoctree_dynamic->m_hitoct;
-		delete m_hitoctree_dynamic;
-	}
-	if(m_shadowoctree.m_hitoct)
-	    delete m_shadowoctree.m_hitoct;
-
 	for (unsigned i=0; i < m_vhitables.size(); ++i)
 	{
         m_vhitables[i]->EndPlay();
@@ -654,27 +639,14 @@ void Player::InitDebugHitStructure()
             m_vdebugho.ElementAt(hitloop)->m_pfedebug = m_ptable->m_vedit.ElementAt(i)->GetIFireEvents();
     }
 
-	//!! cleanup octree code
-	m_debugoctree.m_hitoct = new HitKD(&m_vdebugho,m_vdebugho.Size());
+	m_debugoctree.Init(&m_vdebugho, m_vdebugho.Size());
 
 	for(int i = 0; i < m_vdebugho.Size(); ++i)
 	{
 		m_vdebugho.ElementAt(i)->CalcHitRect();
-		m_debugoctree.m_hitoct->m_org_idx[i] = i;
+		m_debugoctree.AddElementByIndex( i );
 	}
-
-	m_debugoctree.m_start = 0;
-	m_debugoctree.m_items = m_vdebugho.Size();
-
-	m_debugoctree.m_rectbounds.left = m_ptable->m_left;
-	m_debugoctree.m_rectbounds.right = m_ptable->m_right;
-	m_debugoctree.m_rectbounds.top = m_ptable->m_top;
-	m_debugoctree.m_rectbounds.bottom = m_ptable->m_bottom;
-	m_debugoctree.m_rectbounds.zlow = m_ptable->m_tableheight;
-	m_debugoctree.m_rectbounds.zhigh = m_ptable->m_glassheight;
-
-	m_debugoctree.CreateNextLevel();
-	m_debugoctree.m_hitoct->InitSseArrays();
+    m_debugoctree.FillFromIndices();
 }
 
 Vertex3Ds g_viewDir;
@@ -832,7 +804,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	CreateBoundingHitShapes(&m_vho);
 
 
-	// octree construction //!! cleanup!
+	// set up hit and shadow collision structures
 	int shadow_items = 0;
 	for (int i = 0; i < m_vho.Size(); ++i)
     {
@@ -841,20 +813,18 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 			shadow_items++;
 	}
 
-	m_shadowoctree.m_hitoct = new HitKD(&m_vho,shadow_items);
-	m_hitoctree.m_hitoct = new HitKD(&m_vho,m_vho.Size());
-
-	shadow_items = 0;
+	m_shadowoctree.Init(&m_vho, shadow_items);
+	m_hitoctree.Init(&m_vho, m_vho.Size());
 
 	for (int i = 0; i < m_vho.Size(); ++i)
     {
 		m_vho.ElementAt(i)->CalcHitRect();
 
-		m_hitoctree.m_hitoct->m_org_idx[i] = i;
+        m_hitoctree.AddElementByIndex( i );
 
 		if( ((m_vho.ElementAt(i)->GetType() == e3DPoly) && ((Hit3DPoly *)m_vho.ElementAt(i))->m_fVisible) ||
 			((m_vho.ElementAt(i)->GetType() == eTriangle) && ((HitTriangle *)m_vho.ElementAt(i))->m_fVisible) )
-			m_shadowoctree.m_hitoct->m_org_idx[shadow_items++] = i;
+			m_shadowoctree.AddElementByIndex( i );
 
         AnimObject *pao = m_vho.ElementAt(i)->GetAnimObject();
         if (pao)
@@ -865,39 +835,15 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
         }
     }
 
-	m_hitoctree.m_start = 0;
-	m_hitoctree.m_items = m_vho.Size();
+	m_hitoctree.FillFromIndices();
+    m_shadowoctree.FillFromIndices();
 
-	m_hitoctree.m_rectbounds.left = m_ptable->m_left;
-	m_hitoctree.m_rectbounds.right = m_ptable->m_right;
-	m_hitoctree.m_rectbounds.top = m_ptable->m_top;
-	m_hitoctree.m_rectbounds.bottom = m_ptable->m_bottom;
-	m_hitoctree.m_rectbounds.zlow = m_ptable->m_tableheight;
-	m_hitoctree.m_rectbounds.zhigh = m_ptable->m_glassheight;
+    Ball::ballsInUse=0;
 
-	m_hitoctree.CreateNextLevel();
-	m_hitoctree.m_hitoct->InitSseArrays();
-	
-	m_shadowoctree.m_start = 0;
-	m_shadowoctree.m_items = shadow_items;
-
-	m_shadowoctree.m_rectbounds.left = m_ptable->m_left;
-	m_shadowoctree.m_rectbounds.right = m_ptable->m_right;
-	m_shadowoctree.m_rectbounds.top = m_ptable->m_top;
-	m_shadowoctree.m_rectbounds.bottom = m_ptable->m_bottom;
-	m_shadowoctree.m_rectbounds.zlow = m_ptable->m_tableheight;
-	m_shadowoctree.m_rectbounds.zhigh = m_ptable->m_glassheight;
-
-	m_shadowoctree.CreateNextLevel();
-	m_shadowoctree.m_hitoct->InitSseArrays();
-	//!! end cleanup!
-
+	//----------------------------------------------------------------------------------
 
 	SendMessage(hwndProgress, PBM_SETPOS, 60, 0);
 	SetWindowText(hwndProgressName, "Rendering Table...");
-
-	//----------------------------------------------------------------------------------
-    Ball::ballsInUse=0;
 
 	// Pre-render all non-changing elements such as 
 	// static walls, rails, backdrops, etc.
@@ -1512,43 +1458,8 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 	int StaticCnts = STATICCNTS;	// maximum number of static counts
 
 	// it's okay to have this code outside of the inner loop, as the ball hitrects already include the maximum distance they can travel in that timespan
-	//!! cleanup octree code
-	if(!m_hitoctree_dynamic)
-	{
-		m_hitoctree_dynamic = new HitKDNode();
-		m_hitoctree_dynamic->m_hitoct = new HitKD(&m_vho_dynamic,m_vho_dynamic.Size(),true);
-	}
-	else
-		m_hitoctree_dynamic->m_hitoct->Update(&m_vho_dynamic,m_vho_dynamic.Size());
-
-	m_hitoctree_dynamic->m_rectbounds.left = FLT_MAX;
-	m_hitoctree_dynamic->m_rectbounds.right = -FLT_MAX;
-	m_hitoctree_dynamic->m_rectbounds.top = FLT_MAX;
-	m_hitoctree_dynamic->m_rectbounds.bottom = -FLT_MAX;
-	m_hitoctree_dynamic->m_rectbounds.zlow = FLT_MAX;
-	m_hitoctree_dynamic->m_rectbounds.zhigh = -FLT_MAX;
-
-	m_hitoctree_dynamic->m_start = 0;
-	m_hitoctree_dynamic->m_items = m_vho_dynamic.Size();
-
-	for (int i = 0; i < m_hitoctree_dynamic->m_items; ++i)
-	{
-		HitObject * const pho = m_vho_dynamic.ElementAt(i);
-		pho->CalcHitRect(); //!! omit, as already calced?!
-
-		m_hitoctree_dynamic->m_hitoct->m_org_idx[i] = i;
-
-		m_hitoctree_dynamic->m_rectbounds.left = min(m_hitoctree_dynamic->m_rectbounds.left, pho->m_rcHitRect.left);
-		m_hitoctree_dynamic->m_rectbounds.right = max(m_hitoctree_dynamic->m_rectbounds.right, pho->m_rcHitRect.right);
-		m_hitoctree_dynamic->m_rectbounds.top = min(m_hitoctree_dynamic->m_rectbounds.top, pho->m_rcHitRect.top);
-		m_hitoctree_dynamic->m_rectbounds.bottom = max(m_hitoctree_dynamic->m_rectbounds.bottom, pho->m_rcHitRect.bottom);
-		m_hitoctree_dynamic->m_rectbounds.zlow = min(m_hitoctree_dynamic->m_rectbounds.zlow, pho->m_rcHitRect.zlow);
-		m_hitoctree_dynamic->m_rectbounds.zhigh = max(m_hitoctree_dynamic->m_rectbounds.zhigh, pho->m_rcHitRect.zhigh);
-	}
-
-	m_hitoctree_dynamic->CreateNextLevel();
-	m_hitoctree_dynamic->m_hitoct->InitSseArrays();
-	//
+    // TODO/BUG: new items might get added/deleted in events during the physics loop
+    m_hitoctree_dynamic.FillFromVector(m_vho_dynamic);
 
 	while (dtime > 0.f)
 	{
@@ -1567,8 +1478,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 				pball->m_hittime = hittime;				// search upto current hittime
 				pball->m_pho = NULL;
 
-				if(m_hitoctree_dynamic)
-					m_hitoctree_dynamic->HitTestBall(pball); // dynamic objects
+                m_hitoctree_dynamic.HitTestBall(pball); // dynamic objects
 				m_hitoctree.HitTestBall(pball);			// find the hit objects and hit times
 
 				const float htz = pball->m_hittime;		// this ball's hit time
@@ -2941,8 +2851,7 @@ void Player::DoDebugObjectMenu(int x, int y)
 	Vector<HitObject> vhoHit;
 	Vector<IFireEvents> vpfe;
 
-	if(m_hitoctree_dynamic)
-		m_hitoctree_dynamic->HitTestXRay(&ballT, &vhoHit);
+    m_hitoctree_dynamic.HitTestXRay(&ballT, &vhoHit);
 	m_hitoctree.HitTestXRay(&ballT, &vhoHit);
 	m_debugoctree.HitTestXRay(&ballT, &vhoHit);
 

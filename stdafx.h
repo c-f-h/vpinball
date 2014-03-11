@@ -50,7 +50,6 @@
 //#define PLAYBACK
 
 //#define LOG
-//#define HITLOG
 
 //#define _DEBUGPHYSICS
 //#define DEBUG_FPS

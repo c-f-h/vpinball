@@ -1,5 +1,7 @@
 #pragma once
 
+#include "kdtree.h"
+
 #define DEFAULT_PLAYER_WIDTH 1024
 
 enum EnumAssignKeys
@@ -291,14 +293,14 @@ private:
 
     std::vector<Ball*> m_vballDelete;	// Balls to free at the end of the frame
 
-	HitKDNode m_hitoctree;
-	HitKDNode m_shadowoctree;
+	HitKD m_hitoctree;
+	HitKD m_shadowoctree;
 
 	Vector<HitObject> m_vdebugho;
-	HitKDNode m_debugoctree;
+	HitKD m_debugoctree;
 
 	Vector<HitObject> m_vho_dynamic;
-	HitKDNode * m_hitoctree_dynamic; //!! should be generated from scratch each time something changes
+    HitKD m_hitoctree_dynamic; // should be generated from scratch each time something changes
 
 	U64 m_StartTime_usec;
 	U64 m_curPhysicsFrameTime;	// Time when the last frame was drawn
