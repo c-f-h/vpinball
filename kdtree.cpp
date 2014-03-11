@@ -48,6 +48,7 @@ void HitKD::Init(Vector<HitObject> *vho, const unsigned int num_items)
     m_nodes.resize( m_num_items );
     m_num_nodes = 0;
 
+    m_rootNode.Reset();
     m_rootNode.m_hitoct = this;
 }
 

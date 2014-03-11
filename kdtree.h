@@ -10,10 +10,9 @@ class HitKD;
 
 class HitKDNode
 {
-public:
-	HitKDNode() { m_children = NULL; m_hitoct = NULL; m_start = 0; m_items = 0; }
-
 private:
+	void Reset() { m_children = NULL; m_hitoct = NULL; m_start = 0; m_items = 0; }
+
 	void HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const;
 
 	void HitTestBall(Ball * const pball) const;
