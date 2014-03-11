@@ -1,3 +1,4 @@
+#include "stdafx.h"
 #include "kdtree.h"
 
 HitKD::HitKD()
