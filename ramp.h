@@ -138,7 +138,7 @@ private:
     Material solidMaterial;
     Material textureMaterial;
 
-	Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
+    std::vector<HitObject*> m_vhoCollidable; // Objects to that may be collide selectable
 
 	VertexBuffer *staticVertexBuffer;
 	VertexBuffer *dynamicVertexBuffer;

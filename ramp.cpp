@@ -594,8 +594,8 @@ Vertex2D *Ramp::GetRampVertex(int &pcvertex, float ** const ppheight, bool ** co
 
       if (ppheight)
       {
-         const float percentage = 1.0f-(currentlength/totallength); // ramps have no ends ... a line joint is needed
-         const float heightcur = (1.0f - percentage) * (m_d.m_heighttop - m_d.m_heightbottom) + m_d.m_heightbottom;
+         const float percentage = currentlength / totallength; // ramps have no ends ... a line joint is needed
+         const float heightcur = percentage * (m_d.m_heighttop - m_d.m_heightbottom) + m_d.m_heightbottom;
          (*ppheight)[i] = heightcur;
       }
 
@@ -796,7 +796,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
 
             pvho->AddElement(ph3dpoly);
 
-            m_vhoCollidable.AddElement(ph3dpoly);	//remember hit components of ramp
+            m_vhoCollidable.push_back(ph3dpoly);	//remember hit components of ramp
             ph3dpoly->m_fEnabled = m_d.m_fCollidable;
 
             if (ph3dpolyOld)
@@ -820,7 +820,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
 
          pvho->AddElement(ph3dpoly);
 
-         m_vhoCollidable.AddElement(ph3dpoly);	//remember hit components of ramp
+         m_vhoCollidable.push_back(ph3dpoly);	//remember hit components of ramp
          ph3dpoly->m_fEnabled = m_d.m_fCollidable;
 
          CheckJoint(pvho, ph3dpolyOld, ph3dpoly);
@@ -863,7 +863,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
 
          pvho->AddElement(ph3dpoly);
 
-         m_vhoCollidable.AddElement(ph3dpoly);	//remember hit components of ramp
+         m_vhoCollidable.push_back(ph3dpoly);	//remember hit components of ramp
          ph3dpoly->m_fEnabled = m_d.m_fCollidable;
       }
 
@@ -879,7 +879,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
 
       pvho->AddElement(ph3dpoly);
 
-      m_vhoCollidable.AddElement(ph3dpoly);	//remember hit components of ramp
+      m_vhoCollidable.push_back(ph3dpoly);	//remember hit components of ramp
       ph3dpoly->m_fEnabled = m_d.m_fCollidable;
    }
 #endif
@@ -907,7 +907,7 @@ void Ramp::AddSideWall(Vector<HitObject> * const pvho, const Vertex2D * const pv
 
    pvho->AddElement(ph3dpoly);
 
-   m_vhoCollidable.AddElement(ph3dpoly);	//remember hit components of ramp
+   m_vhoCollidable.push_back(ph3dpoly);	//remember hit components of ramp
    ph3dpoly->m_fEnabled = m_d.m_fCollidable;
 }
 
@@ -935,7 +935,7 @@ void Ramp::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const 
    ph3dc->m_scatter = ANGTORAD(m_d.m_scatter);
    pvho->AddElement(ph3dc);
 
-   m_vhoCollidable.AddElement(ph3dc);	//remember hit components of ramp
+   m_vhoCollidable.push_back(ph3dc);	//remember hit components of ramp
    ph3dc->m_fEnabled = m_d.m_fCollidable;
 }
 
@@ -957,7 +957,7 @@ void Ramp::AddLine(Vector<HitObject> * const pvho, const Vertex2D * const pv1, c
 
    pvho->AddElement(plineseg);
 
-   m_vhoCollidable.AddElement(plineseg);	//remember hit components of ramp
+   m_vhoCollidable.push_back(plineseg);	//remember hit components of ramp
    plineseg->m_fEnabled = m_d.m_fCollidable;
 
    plineseg->CalcNormal();
@@ -985,7 +985,7 @@ void Ramp::AddLine(Vector<HitObject> * const pvho, const Vertex2D * const pv1, c
          pjoint->center = *pv1;
          pvho->AddElement(pjoint);
 
-         m_vhoCollidable.AddElement(pjoint);	//remember hit components of ramp
+         m_vhoCollidable.push_back(pjoint);	//remember hit components of ramp
          pjoint->m_fEnabled = m_d.m_fCollidable;
 
          // Set up line normal
@@ -1004,7 +1004,7 @@ void Ramp::AddLine(Vector<HitObject> * const pvho, const Vertex2D * const pv1, c
 void Ramp::EndPlay()
 {
     IEditable::EndPlay();
-    m_vhoCollidable.RemoveAllElements();
+    m_vhoCollidable.clear();
 
    	if(staticVertexBuffer) {
 		staticVertexBuffer->release();
@@ -1720,7 +1720,7 @@ HRESULT Ramp::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryptkey
    bw.WriteFloat(FID(RFCT), m_d.m_friction);
    bw.WriteFloat(FID(RSCT), m_d.m_scatter);
    bw.WriteBool(FID(CLDRP), m_d.m_fCollidable);
-   bw.WriteBool(FID(RVIS), m_d.m_IsVisible);	
+   bw.WriteBool(FID(RVIS), m_d.m_IsVisible);
    bw.WriteBool(FID(MSTE), m_d.m_fModify3DStereo);
    bw.WriteBool(FID(ADDB), m_d.m_fAddBlend);
    bw.WriteBool(FID(ERLI), m_d.m_enableLightingImage);
@@ -2120,7 +2120,6 @@ STDMETHODIMP Ramp::put_Color(OLE_COLOR newVal)
 	   STARTUNDO
 
 	   m_d.m_color = newVal;
-	   dynamicVertexBufferRegenerate = true;
 
 	   STOPUNDO
    }
@@ -2271,7 +2270,6 @@ STDMETHODIMP Ramp::put_Acrylic(VARIANT_BOOL newVal)
    
    m_d.m_fAcrylic = VBTOF(newVal);
    m_d.m_fAlpha = false;
-   dynamicVertexBufferRegenerate = true;
    
    STOPUNDO
 
@@ -2289,7 +2287,6 @@ STDMETHODIMP Ramp::put_Alpha(VARIANT_BOOL newVal)
    STARTUNDO
 
    m_d.m_fAlpha = VBTOF(newVal);
-   dynamicVertexBufferRegenerate = true;
    
    STOPUNDO
 
@@ -2310,7 +2307,6 @@ STDMETHODIMP Ramp::put_Solid(VARIANT_BOOL newVal)
    if (VBTOF(newVal)) {
       m_d.m_fAlpha = false;
       m_d.m_fAcrylic = false;
-      dynamicVertexBufferRegenerate = true;
    }
    
    STOPUNDO
@@ -2473,7 +2469,7 @@ STDMETHODIMP Ramp::put_Scatter(float newVal)
 
 STDMETHODIMP Ramp::get_Collidable(VARIANT_BOOL *pVal)
 {
-   *pVal = (VARIANT_BOOL)FTOVB((!g_pplayer) ? m_d.m_fCollidable : m_vhoCollidable.ElementAt(0)->m_fEnabled);
+   *pVal = (VARIANT_BOOL)FTOVB((!g_pplayer) ? m_d.m_fCollidable : m_vhoCollidable[0]->m_fEnabled);
 
    return S_OK;
 }
@@ -2490,8 +2486,8 @@ STDMETHODIMP Ramp::put_Collidable(VARIANT_BOOL newVal)
       STOPUNDO
    }
    else
-	   for (int i=0;i < m_vhoCollidable.Size();i++)
-	      m_vhoCollidable.ElementAt(i)->m_fEnabled = fNewVal;	//copy to hit checking on enities composing the object 
+	   for (unsigned i=0; i < m_vhoCollidable.size(); i++)
+	      m_vhoCollidable[i]->m_fEnabled = fNewVal;	//copy to hit checking on enities composing the object
 
    return S_OK;
 }
@@ -2504,7 +2500,7 @@ STDMETHODIMP Ramp::get_IsVisible(VARIANT_BOOL *pVal) //temporary value of object
 }
 
 STDMETHODIMP Ramp::put_IsVisible(VARIANT_BOOL newVal)
-{	
+{
    if (!g_pplayer )
    {
       STARTUNDO
@@ -2644,7 +2640,7 @@ void Ramp::PostRenderStatic(const RenderDevice* _pd3dDevice)
          pd3dDevice->SetMaterial(solidMaterial);
       }
 
-      if(dynamicVertexBufferRegenerate)
+      if (!dynamicVertexBuffer || dynamicVertexBufferRegenerate)
          GenerateVertexBuffer(pd3dDevice);
 
       unsigned int offset=0;
@@ -2798,7 +2794,7 @@ void Ramp::GenerateVertexBuffer(RenderDevice* pd3dDevice)
     for (unsigned i = 0; i < rgibuf.size(); ++i)
         maxidx = std::max(maxidx, rgibuf[i]);
 
-    for (int i=0;i<(rampVertex-1);i++)
+    for (int i=0; i<(rampVertex-1); i++)
     {
         Vertex3D_NoTex2 * const rgv3D = &rgvbuf[0]+i*4;
         rgv3D[2].x = rgvLocal[i+1].x;
@@ -2833,7 +2829,7 @@ void Ramp::GenerateVertexBuffer(RenderDevice* pd3dDevice)
         }
 
         // 2-Sided polygon
-        SetNormal(rgv3D, rgi0123, 4, NULL, NULL, NULL);
+        SetNormal(rgv3D, rgi0123, 4);
     }
     memcpy( &buf[offset], &rgvbuf[0], sizeof(Vertex3D_NoTex2)*m_numVertices );
     offset+=m_numVertices;
