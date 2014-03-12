@@ -879,6 +879,33 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	SendMessage(hwndProgress, PBM_SETPOS, 90, 0);
 
+#ifdef _DEBUGPHYSICS
+    {
+        std::vector< Vertex3D_NoLighting > ballDbgVtx;
+        for (int j = -1; j <= 1; ++j)
+        {
+            const int numPts = (j==0) ? 6 : 3;
+            const float theta = (float)(j * M_PI / 4.0f);
+            for (int i = 0; i < numPts; ++i)
+            {
+                const float phi = (float)(i * 2 * M_PI / numPts);
+                Vertex3D_NoLighting vtx;
+                vtx.x = 25.0f * cosf(theta) * cosf(phi);
+                vtx.y = 25.0f * cosf(theta) * sinf(phi);
+                vtx.z = 25.0f * sinf(theta);
+                vtx.color = 0xFF00FF00;
+                ballDbgVtx.push_back(vtx);
+            }
+        }
+
+        m_pin3d.m_pd3dDevice->CreateVertexBuffer( ballDbgVtx.size(), 0, MY_D3DFVF_NOLIGHTING_VERTEX, &m_ballDebugPoints );
+        void *buf;
+        m_ballDebugPoints->lock(0, 0, &buf, 0);
+        memcpy(buf, &ballDbgVtx[0], ballDbgVtx.size() * sizeof(ballDbgVtx[0]));
+        m_ballDebugPoints->unlock();
+    }
+#endif
+
 	m_ptable->m_pcv->Start(); // Hook up to events and start cranking script
 
 	SetWindowText(hwndProgressName, "Starting Game Scripts...");
@@ -2782,7 +2809,36 @@ void Player::DrawBalls()
                 m_pin3d.m_pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
             }
         }
-    }
+
+#ifdef _DEBUGPHYSICS        // draw debug points for visualizing ball rotation
+        if (m_fShowFPS)
+        {
+            // set transform
+            Matrix3D matOrig, matNew, matRot;
+            matOrig = m_pin3d.GetWorldTransform();
+            matNew.SetTranslation(pball->x, pball->y, pball->z);
+            matOrig.Multiply(matNew, matNew);
+            matRot.SetIdentity();
+            for (int j = 0; j < 3; ++j)
+                for (int k = 0; k < 3; ++k)
+                    matRot.m[j][k] = pball->m_orientation.m_d[k][j];
+            matNew.Multiply(matRot, matNew);
+            m_pin3d.m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matNew);
+
+            // draw points
+            m_pin3d.SetTexture(NULL);
+            float ptsize = 5.0f;
+            m_pin3d.m_pd3dDevice->SetRenderState((RenderDevice::RenderStates)D3DRS_POINTSIZE, *((DWORD*)&ptsize));
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, FALSE);
+            m_pin3d.m_pd3dDevice->DrawPrimitiveVB( D3DPT_POINTLIST, m_ballDebugPoints, 0, 12 );
+            m_pin3d.m_pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
+
+            // reset transform
+            m_pin3d.m_pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matOrig);
+        }
+#endif
+
+    }   // end loop over all balls
 
     m_pin3d.m_pd3dDevice->SetTexture(0, NULL);
     m_pin3d.DisableAlphaBlend();

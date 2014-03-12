@@ -265,6 +265,8 @@ public:
 	U32 c_traversed;
 	U32 c_tested;
 	U32 c_deepTested;
+
+    VertexBuffer * m_ballDebugPoints;
 #endif
 	int m_movedPlunger;			// has plunger moved, must have moved at least three times
 	U32 m_LastPlungerHit;		// The last time the plunger was in contact (at least the vicinity) of the ball.
