@@ -284,8 +284,10 @@ void Ball::CollideWall(const Vertex3Ds * const phitnormal, const float elasticit
     }
 }
 
-float Ball::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal)
+float Ball::HitTest(const Ball * pball_, float dtime, CollisionEvent& coll)
 {	
+    Ball * pball = const_cast<Ball*>(pball_);   // HACK; needed below
+
 	const float dvx = vx - pball->vx;		// delta velocity 
 	const float dvy = vy - pball->vy;
 	float       dvz = vz - pball->vz;
@@ -363,14 +365,14 @@ float Ball::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phi
 	const float hitz = pball->z + dvz * hittime;
 
     //calc unit normal of collision
-	phitnormal->x = hitx - x;
-	phitnormal->y = hity - y;
-	phitnormal->z = hitz - z;
-    phitnormal->Normalize();
+	coll.normal->x = hitx - x;
+	coll.normal->y = hity - y;
+	coll.normal->z = hitz - z;
+    coll.normal->Normalize();
 
-	m_coll.distance = bnd;					//actual contact distance 
-	m_coll.normVel = bnv;
-	m_coll.hitRigid = true;					//rigid collision type
+	coll.distance = bnd;					//actual contact distance
+	coll.normVel = bnv;
+	coll.hitRigid = true;					//rigid collision type
 
 	return hittime;	
 }
@@ -398,14 +400,14 @@ void Ball::Collide(CollisionEvent *coll)
 	{														// otherwise if clearly approaching .. process the collision
 		if (dot > C_LOWNORMVEL) return;						//is this velocity clearly receding (i.e must > a minimum)		
 #ifdef C_EMBEDDED
-		if (pball->m_coll.distance < -C_EMBEDDED)
+		if (coll->distance < -C_EMBEDDED)
 			dot = -C_EMBEDSHOT;		// has ball become embedded???, give it a kick
 		else return;
 #endif
 	}
 			
 #ifdef C_DISP_GAIN 		
-	float edist = -C_DISP_GAIN * pball->m_coll.distance; // 
+	float edist = -C_DISP_GAIN * coll->distance;
 	if (edist > 1.0e-4f)
 	{										
 		if (edist > C_DISP_LIMIT) 

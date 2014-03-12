@@ -65,11 +65,11 @@ public:
 		       const float zlow, const float zhigh, float strength, const float mass);
 	~HitFlipper();
 
-	virtual float HitTestFlipperFace(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal, const bool face1);
+	virtual float HitTestFlipperFace(const Ball * pball, const float dtime, CollisionEvent& coll, const bool face1);
 
-	virtual float HitTestFlipperEnd(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTestFlipperEnd(const Ball * pball, const float dtime, CollisionEvent& coll);
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	
 	virtual int GetType() const {return eFlipper;}
 

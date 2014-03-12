@@ -53,7 +53,7 @@ public:
 	HitPlunger(const float x, const float y, const float x2, const float pos, const float zheight, Plunger * const pPlunger);
 	~HitPlunger() {}
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 
 	virtual int GetType() const {return ePlunger;}
 

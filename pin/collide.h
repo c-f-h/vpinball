@@ -64,7 +64,7 @@ public:
 	HitObject();
 	virtual ~HitObject() {}
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) = 0;
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll) = 0;
 
 	virtual int GetType() const = 0;
 
@@ -105,8 +105,8 @@ public:
 class LineSeg : public HitObject
 	{
 public:
-	virtual float HitTestBasic(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal, const bool direction, const bool lateral, const bool rigid);
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTestBasic(const Ball * pball, const float dtime, CollisionEvent& coll, const bool direction, const bool lateral, const bool rigid);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual int GetType() const {return eLineSeg;}
 	virtual void Collide(CollisionEvent *coll);
 	void CalcNormal();
@@ -121,12 +121,12 @@ public:
 class HitCircle : public HitObject
 	{
 public:
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 
-	float HitTestBasicRadius(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal,
+	float HitTestBasicRadius(const Ball * pball, const float dtime, CollisionEvent& coll,
 									const bool direction, const bool lateral, const bool rigid);
 
-	float HitTestRadius(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	float HitTestRadius(const Ball * pball, const float dtime, CollisionEvent& coll);
 
 	virtual int GetType() const {return eCircle;}
 
@@ -145,7 +145,7 @@ class Joint : public HitCircle
 public:
 	Joint();
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 
 	virtual int GetType() const {return eJoint;}
 

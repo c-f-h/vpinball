@@ -49,7 +49,7 @@ class LineSegSlingshot : public LineSeg
 public:
 	LineSegSlingshot();
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual void Collide(CollisionEvent* coll);
 
 	virtual AnimObject *GetAnimObject() {return &m_slingshotanim;}
@@ -66,7 +66,7 @@ class Hit3DPoly : public HitObject
 public:
 	Hit3DPoly(Vertex3Ds * const rgv, const int count);
 	virtual ~Hit3DPoly();
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual int GetType() const {return e3DPoly;}
 	virtual void Collide(CollisionEvent *coll);
 	virtual void CalcHitRect();
@@ -82,7 +82,7 @@ class HitTriangle : public HitObject
 public:
 	HitTriangle(const Vertex3Ds rgv[3]);
 	virtual ~HitTriangle() {}
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual int GetType() const {return eTriangle;}
 	virtual void Collide(CollisionEvent* coll);
 	virtual void CalcHitRect();
@@ -122,7 +122,7 @@ public:
 
 	virtual int GetType() const {return eSpinner;}
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 
 	virtual void Collide(CollisionEvent* coll);
 
@@ -164,7 +164,7 @@ public:
 
 	virtual int GetType() const {return eGate;}
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 
 	virtual void Collide(CollisionEvent* coll);
 
@@ -180,7 +180,7 @@ class TriggerLineSeg : public LineSeg
 public:
 	TriggerLineSeg();
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual void Collide(CollisionEvent* coll);
 
 	virtual int GetType() const {return eTrigger;}
@@ -193,7 +193,7 @@ class TriggerHitCircle : public HitCircle
 public:
 	TriggerHitCircle();
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual void Collide(CollisionEvent* coll);
 
 	virtual int GetType() const {return eTrigger;}
@@ -206,7 +206,7 @@ class Hit3DCylinder : public HitCircle
 public:
 	Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2, const Vertex3Ds * const pvnormal);
 
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal);
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual void Collide(CollisionEvent* coll);
 
 	virtual void CalcHitRect();
@@ -243,7 +243,7 @@ public:
 
 	// Bogus methods
 	virtual void Collide(CollisionEvent* coll) {}
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) {return -1;}
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll) {return -1;}
 	virtual void CalcHitRect() {}
 
 	virtual AnimObject *GetAnimObject() {return &m_textboxanim;}
@@ -271,7 +271,7 @@ public:
 
 	// Bogus methods
 	virtual void Collide(CollisionEvent* coll) {}
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) {return -1;}
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll) {return -1;}
 	virtual void CalcHitRect() {}
 
 	virtual AnimObject *GetAnimObject() {return &m_dispreelanim;}
@@ -298,7 +298,7 @@ public:
 
 	// Bogus methods
 	virtual void Collide(CollisionEvent* coll) {}
-	virtual float HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) {return -1;}
+	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll) {return -1;}
 	virtual void CalcHitRect() {}
 
 	virtual AnimObject *GetAnimObject() {return &m_lightseqanim;}

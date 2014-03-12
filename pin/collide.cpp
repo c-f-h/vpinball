@@ -43,7 +43,7 @@ void LineSeg::CalcHitRect()
 	//m_rcHitRect.zhigh = 50;
 	}
 
-float LineSeg::HitTestBasic(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal, const bool direction, const bool lateral, const bool rigid)
+float LineSeg::HitTestBasic(const Ball * pball, const float dtime, CollisionEvent& coll, const bool direction, const bool lateral, const bool rigid)
 	{
 	if (!m_fEnabled || pball->fFrozen) return -1.0f;	
 
@@ -115,7 +115,7 @@ float LineSeg::HitTestBasic(Ball * const pball, const float dtime, Vertex3Ds * c
 		return -1.0f;
 
 	if (!rigid)												  // non rigid body collision? return direction
-		phitnormal[1].x = bUnHit ? 1.0f : 0.0f;				  // UnHit signal is receding from outside target
+		coll.normal[1].x = bUnHit ? 1.0f : 0.0f;				  // UnHit signal is receding from outside target
 	
 	const float ballr = pball->radius;
 	const float hitz = pball->z - ballr + pball->vz*hittime;  // check too high or low relative to ball rolling point at hittime
@@ -124,22 +124,22 @@ float LineSeg::HitTestBasic(Ball * const pball, const float dtime, Vertex3Ds * c
 		|| hitz + ballr * 0.5f > m_rcHitRect.zhigh)
 		return -1.0f;
 
-	phitnormal->x = normal.x;				// hit normal is same as line segment normal
-	phitnormal->y = normal.y;
+	coll.normal->x = normal.x;				// hit normal is same as line segment normal
+	coll.normal->y = normal.y;
 		
-	pball->m_coll.distance = bnd;					// actual contact distance ... 
-	pball->m_coll.normVel = bnv;
-	pball->m_coll.hitRigid = rigid;				// collision type
+	coll.distance = bnd;					// actual contact distance ...
+	coll.normVel = bnv;
+	coll.hitRigid = rigid;				// collision type
 
 	return hittime;
-	}	
-
-float LineSeg::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal) 
-	{															// normal face, lateral, rigid
-	return HitTestBasic(pball, dtime, phitnormal, true, true, true);
 	}
 
-float HitCircle::HitTestBasicRadius(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal,
+float LineSeg::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
+	{															// normal face, lateral, rigid
+	return HitTestBasic(pball, dtime, coll, true, true, true);
+	}
+
+float HitCircle::HitTestBasicRadius(const Ball * pball, const float dtime, CollisionEvent& coll,
 									const bool direction, const bool lateral, const bool rigid)
 	{
 	if (!m_fEnabled || pball->fFrozen) return -1.0f;	
@@ -263,29 +263,29 @@ float HitCircle::HitTestBasicRadius(Ball * const pball, const float dtime, Verte
 	 if (sqrlen > 1.0e-8f) // over center???
 		{//no
 		const float inv_len = 1.0f/sqrtf(sqrlen);
-		phitnormal->x = (hitx - x)*inv_len;
-		phitnormal->y = (hity - y)*inv_len;
+		coll.normal->x = (hitx - x)*inv_len;
+		coll.normal->y = (hity - y)*inv_len;
 		}
 	 else 
 		{//yes over center
-		phitnormal->x = 0; // make up a value, any direction is ok
-		phitnormal->y = 1.0f;
+		coll.normal->x = 0; // make up a value, any direction is ok
+		coll.normal->y = 1.0f;
 		}
 	
 	if (!rigid)											// non rigid body collision? return direction
-		phitnormal[1].x = fUnhit ? 1.0f : 0.0f;			// UnHit signal	is receding from target
+		coll.normal[1].x = fUnhit ? 1.0f : 0.0f;			// UnHit signal	is receding from target
 
-	pball->m_coll.distance = bnd;					//actual contact distance ... 
-	pball->m_coll.normVel = bnv;
-	pball->m_coll.hitRigid = rigid;				// collision type
+	coll.distance = bnd;					//actual contact distance ... 
+	coll.normVel = bnv;
+	coll.hitRigid = rigid;				// collision type
 
 	return hittime;
 	}
 
-float HitCircle::HitTestRadius(Ball *pball, float dtime, Vertex3Ds *phitnormal)
+float HitCircle::HitTestRadius(const Ball *pball, float dtime, CollisionEvent& coll)
 	{	
 													//normal face, lateral, rigid
-	return HitTestBasicRadius(pball, dtime, phitnormal, true, true, true);		
+	return HitTestBasicRadius(pball, dtime, coll, true, true, true);
 	}	
 
 void LineSeg::Collide(CollisionEvent *coll)
@@ -345,12 +345,12 @@ void Joint::CalcHitRect()
 	zhigh = m_rcHitRect.zhigh;
 	}
 
-float Joint::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal)
+float Joint::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 	{
 	if (!m_fEnabled)
 		return -1.0f;
 
-	return HitTestRadius(pball, dtime, phitnormal);	
+	return HitTestRadius(pball, dtime, coll);
 	}
 
 void Joint::Collide(CollisionEvent *coll)
@@ -393,9 +393,9 @@ void HitCircle::CalcHitRect()
 	m_rcHitRect.zhigh = zhigh;
 	}
 
-float HitCircle::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phitnormal)
+float HitCircle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 	{
-	return HitTestRadius(pball, dtime, phitnormal);
+	return HitTestRadius(pball, dtime, coll);
 	}
 
 void HitCircle::Collide(CollisionEvent *coll)
@@ -409,7 +409,7 @@ void DoHitTest(Ball *pball, HitObject *pho)
 #ifdef _DEBUGPHYSICS
     g_pplayer->c_deepTested++;
 #endif
-    const float newtime = pho->HitTest(pball, pball->m_coll.hittime, pball->m_coll.normal);
+    const float newtime = pho->HitTest(pball, pball->m_coll.hittime, pball->m_coll);
     if ((newtime >= 0) && (newtime <= pball->m_coll.hittime))
     {
         pball->m_coll.obj = pho;
