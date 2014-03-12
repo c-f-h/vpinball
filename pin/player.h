@@ -128,8 +128,6 @@ public:
     void FlipVideoBuffersNormal( const bool vsync );
     void FlipVideoBuffers3DFXAA( const bool vsync );
 
-	void DrawAlphas();
-
 	void PhysicsSimulateCycle(float dtime);
 #ifdef ULTRAPIN
 	void DrawLightHack();

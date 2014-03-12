@@ -3626,11 +3626,6 @@ float Player::ParseLog(LARGE_INTEGER *pli1, LARGE_INTEGER *pli2)
 
 #endif
 
-// Draws all transparent ramps and primitives.
-void Player::DrawAlphas()
-{
-}
-
 #ifdef DONGLE_SUPPORT
 int get_dongle_status()
 {
