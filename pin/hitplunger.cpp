@@ -257,7 +257,7 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 		phitnormal[0] = hitnormal;	
 		pball->m_coll.distance = BallT.m_coll.distance;
 		pball->m_coll.normVel = BallT.m_coll.normVel;
-		pball->m_HitRigid = true;
+		pball->m_coll.hitRigid = true;
 		phitnormal[1].x = 0;
 		phitnormal[1].y = 0;
 		}
@@ -273,7 +273,7 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 			phitnormal[0] = hitnormal;
 			pball->m_coll.distance = BallT.m_coll.distance;
 			pball->m_coll.normVel = BallT.m_coll.normVel;
-			pball->m_HitRigid = true;
+			pball->m_coll.hitRigid = true;
 
 			phitnormal[1].x = 0;
 			phitnormal[1].y = 0;
@@ -288,7 +288,7 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 			phitnormal[0] = hitnormal;
 			pball->m_coll.distance = BallT.m_coll.distance;
 			pball->m_coll.normVel = BallT.m_coll.normVel;
-			pball->m_HitRigid = true;
+			pball->m_coll.hitRigid = true;
 			phitnormal[1].x = 0;
 			phitnormal[1].y = 0;
 			}
@@ -307,7 +307,7 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 		phitnormal[0] = hitnormal;
 		pball->m_coll.distance = BallT.m_coll.distance;
 		pball->m_coll.normVel = BallT.m_coll.normVel;
-		pball->m_HitRigid = true;
+		pball->m_coll.hitRigid = true;
 		phitnormal[1].x = 0;
 		phitnormal[1].y = deltay;	 //m_speed;		//>>> changed by chris
 		}
@@ -323,7 +323,7 @@ float HitPlunger::HitTest(Ball * const pball, const float dtime, Vertex3Ds * con
 			phitnormal[0] = hitnormal;
 			pball->m_coll.distance = BallT.m_coll.distance;
 			pball->m_coll.normVel = BallT.m_coll.normVel;
-			pball->m_HitRigid = true;
+			pball->m_coll.hitRigid = true;
 			phitnormal[1].x = 0;
 			phitnormal[1].y = deltay;	 //m_speed;		//>>> changed by chris
 			}

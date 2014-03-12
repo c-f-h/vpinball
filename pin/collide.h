@@ -50,6 +50,8 @@ struct CollisionEvent
     Vertex3Ds normal[5];
 
     float hitx, hity;   // position of the ball at hit time (saved to avoid floating point errors with multiple time slices)
+
+    bool hitRigid;      // rigid body collision?
 };
 
 

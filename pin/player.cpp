@@ -1493,7 +1493,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 #ifdef _DEBUGPHYSICS
 					++c_hitcnts;						// stats for display
 
-					if (pball->m_HitRigid && pball->m_coll.distance < -0.0875f) //rigid and embedded
+					if (pball->m_coll.hitRigid && pball->m_coll.distance < -0.0875f) //rigid and embedded
 						++c_embedcnts;
 #endif
 					///////////////////////////////////////////////////////////////////////////
@@ -1503,7 +1503,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 
 						if (htz < STATICTIME)			// less than static time interval
 						{ 
-							if(!pball->m_HitRigid) hittime = STATICTIME; // non-rigid ... set Static time
+							if(!pball->m_coll.hitRigid) hittime = STATICTIME; // non-rigid ... set Static time
 							else if (--StaticCnts < 0)		
 							{
 								StaticCnts = 0;			// keep from wrapping
@@ -1554,7 +1554,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 					pball->CalcHitRect();		// do new boundings 
 
 					// is this ball static? .. set static and quench	
-					if (pball->m_HitRigid && pball->m_coll.distance < (float)PHYS_TOUCH) //rigid and close distance contacts
+					if (pball->m_coll.hitRigid && pball->m_coll.distance < (float)PHYS_TOUCH) //rigid and close distance contacts
 					{
 #ifdef _DEBUGPHYSICS
 						c_contactcnt++;

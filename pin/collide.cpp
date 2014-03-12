@@ -129,7 +129,7 @@ float LineSeg::HitTestBasic(Ball * const pball, const float dtime, Vertex3Ds * c
 		
 	pball->m_coll.distance = bnd;					// actual contact distance ... 
 	pball->m_coll.normVel = bnv;
-	pball->m_HitRigid = rigid;				// collision type
+	pball->m_coll.hitRigid = rigid;				// collision type
 
 	return hittime;
 	}	
@@ -277,7 +277,7 @@ float HitCircle::HitTestBasicRadius(Ball * const pball, const float dtime, Verte
 
 	pball->m_coll.distance = bnd;					//actual contact distance ... 
 	pball->m_coll.normVel = bnv;
-	pball->m_HitRigid = rigid;				// collision type
+	pball->m_coll.hitRigid = rigid;				// collision type
 
 	return hittime;
 	}

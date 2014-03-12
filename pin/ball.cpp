@@ -370,7 +370,7 @@ float Ball::HitTest(Ball * const pball, const float dtime, Vertex3Ds * const phi
 
 	m_coll.distance = bnd;					//actual contact distance 
 	m_coll.normVel = bnv;
-	m_HitRigid = true;					//rigid collision type
+	m_coll.hitRigid = true;					//rigid collision type
 
 	return hittime;	
 }

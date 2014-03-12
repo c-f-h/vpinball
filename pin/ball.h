@@ -109,8 +109,6 @@ public:
 	Matrix3 m_inverseworldinertiatensor;
 	Matrix3 m_inversebodyinertiatensor;
 
-	bool m_HitRigid;	// Rigid = 1, Non-Rigid = 0
-
 	bool fFrozen;
 
 	bool m_disableLighting;

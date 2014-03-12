@@ -396,7 +396,7 @@ float HitFlipper::HitTestFlipperEnd(Ball * const pball, const float dtime, Verte
 
    pball->m_coll.distance = bfend;				//actual contact distance ..
    pball->m_coll.normVel = bnv;
-   pball->m_HitRigid = true;				// collision type
+   pball->m_coll.hitRigid = true;				// collision type
 
    return t;
 }
@@ -550,7 +550,7 @@ float HitFlipper::HitTestFlipperFace(Ball * const pball, const float dtime, Vert
 
    pball->m_coll.distance = bffnd;				//normal ...actual contact distance ... 
    pball->m_coll.normVel = bnv;
-   pball->m_HitRigid = true;				// collision type
+   pball->m_coll.hitRigid = true;				// collision type
 
    return t;
 }
