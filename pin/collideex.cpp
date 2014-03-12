@@ -241,7 +241,7 @@ void GateAnimObject::UpdateVelocities()
 	{
 		if (m_angle == m_angleMin)
 			m_anglespeed = 0.0f;
-		else
+		else        // TODO: depends on STEPTIME
 			m_anglespeed = (m_anglespeed - sinf(m_angle) * 0.0025f) * (1.0f - m_friction); // Center of gravity towards bottom of object, makes it stop vertical
 		//else m_anglespeed = (m_anglespeed-sinf((m_angle - m_angleMin)*0.5f) * 0.02f)*(1.0f - m_friction); // Center of gravity towards bottom of object, makes it stop vertical
 	}
@@ -402,7 +402,7 @@ void SpinnerAnimObject::UpdateVelocities()
 {
 	m_anglespeed -= sinf(m_angle) * 0.0025f; // Center of gravity towards bottom of object, makes it stop vertical
 
-	m_anglespeed *= m_pspinner->m_d.m_antifriction;
+	m_anglespeed *= m_pspinner->m_d.m_antifriction;     // TODO: depends on STEPTIME
 }
 
 void SpinnerAnimObject::Reset()
