@@ -28,7 +28,7 @@ void HitKD::Init(Vector<HitObject> *vho, const unsigned int num_items)
     if (m_num_items > m_max_items)
     {
 #ifdef SSE_LEAFTEST
-        if(m_max_items > 0)
+        if (l_r_t_b_zl_zh)
             _aligned_free(l_r_t_b_zl_zh);
         l_r_t_b_zl_zh = (float*)_aligned_malloc(sizeof(float) * ((m_num_items+3)&0xFFFFFFFC) * 6, 16);
 #endif
