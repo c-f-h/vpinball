@@ -1092,7 +1092,7 @@ void Ramp::RenderStaticHabitrail(RenderDevice* pd3dDevice)
    pd3dDevice->SetMaterial(habitrailMaterial);
 
    int offset=0;
-   for (int i=0;i<rampVertex;i++,offset+=32)
+   for (int i=0; i<rampVertex-1; i++,offset+=32)
    {
       RenderPolygons(pd3dDevice, offset, (WORD*)rgicrosssection, 0, 16);
       if (m_d.m_type == RampType4Wire || m_d.m_type == RampType3WireRight)
@@ -1113,12 +1113,10 @@ void Ramp::RenderPolygons(RenderDevice* pd3dDevice, int offset, WORD * const rgi
       pd3dDevice->DrawIndexedPrimitiveVB( D3DPT_TRIANGLELIST, staticVertexBuffer, offset, 32, rgi+start*3, 3*(stop-start));
 }
 
-static const WORD rgiRampStatic1[4] = {0,3,2,1};
 void Ramp::prepareHabitrail(RenderDevice* pd3dDevice )
 {
-   const int numVertices = rampVertex*32;
+   const int numVertices = (rampVertex - 1)*32;
    pd3dDevice->CreateVertexBuffer(numVertices, 0, MY_D3DFVF_NOTEX_VERTEX, &staticVertexBuffer);
-   NumVideoBytes += numVertices*sizeof(Vertex3D_NoTex);
 
    Vertex3D_NoTex *buf;
    staticVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
@@ -1273,16 +1271,18 @@ void Ramp::prepareHabitrail(RenderDevice* pd3dDevice )
    }
 
    staticVertexBuffer->unlock();  
+   assert(offset == numVertices);
 }
+
+static const WORD rgiRampStatic1[4] = {0,3,2,1};
 
 void Ramp::prepareStatic(RenderDevice* pd3dDevice)
 {
 //   float *rgheight,*rgratio;
 //   Vertex2D *rgv = GetRampVertex(rampVertex, &rgheight, NULL, &rgratio);
 
-   int numVertices=rampVertex*4*5;
+   const int numVertices = (rampVertex-1)*4*5;
    pd3dDevice->CreateVertexBuffer( numVertices, 0, MY_D3DFVF_NOTEX2_VERTEX, &staticVertexBuffer);
-   NumVideoBytes += numVertices*sizeof(Vertex3D_NoTex2);
 
    Pin3D *const ppin3d = &g_pplayer->m_pin3d;
 
@@ -1304,7 +1304,7 @@ void Ramp::prepareStatic(RenderDevice* pd3dDevice)
    staticVertexBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
 
    int offset=0;
-   for (int i=0;i<(rampVertex-1);i++)
+   for (int i=0; i<(rampVertex-1); i++)
    {
       Vertex3D_NoTex2 rgv3D[4];
       rgv3D[0].x = rgvInit[i].x;
@@ -1531,6 +1531,7 @@ void Ramp::prepareStatic(RenderDevice* pd3dDevice)
    }
    
    staticVertexBuffer->unlock();  
+   assert(offset == numVertices);
 }
 
 
@@ -1643,7 +1644,7 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
       {
          pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, staticVertexBuffer, offset, 4);
          offset+=4;
-         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLEFAN, staticVertexBuffer, offset, 4, (LPWORD)rgiRampStatic1, 4);
+         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLEFAN, staticVertexBuffer, offset, 4, rgiRampStatic1, 4);
          offset+=4;
       }
       //render second wall
@@ -1651,7 +1652,7 @@ void Ramp::RenderStatic(const RenderDevice* _pd3dDevice)
       {
          pd3dDevice->DrawPrimitiveVB(D3DPT_TRIANGLEFAN, staticVertexBuffer, offset, 4);
          offset+=4;
-         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLEFAN, staticVertexBuffer, offset, 4, (LPWORD)rgiRampStatic1, 4);
+         pd3dDevice->DrawIndexedPrimitiveVB(D3DPT_TRIANGLEFAN, staticVertexBuffer, offset, 4, rgiRampStatic1, 4);
          offset+=4;
       }
 
