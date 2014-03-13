@@ -46,7 +46,7 @@ void HitKD::Init(Vector<HitObject> *vho, const unsigned int num_items)
      * Unfortunately, there is no a priori bound on the number of nodes in the tree. We just make
      * an educated guess on the maximum and truncate the subdivision if we run out of nodes.
      */
-    m_nodes.resize( m_num_items );
+    m_nodes.resize( (m_num_items + 1) & ~1u );      // always allocate an even number of nodes, rounded up
     m_num_nodes = 0;
 
     m_rootNode.Reset();
@@ -55,7 +55,7 @@ void HitKD::Init(Vector<HitObject> *vho, const unsigned int num_items)
 
 HitKDNode* HitKD::AllocTwoNodes()
 {
-    if (m_num_nodes >= m_nodes.size())
+    if ((m_num_nodes + 1) >= m_nodes.size())        // space for two more nodes?
         return NULL;
     else
     {
