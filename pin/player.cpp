@@ -835,8 +835,16 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
         }
     }
 
-	m_hitoctree.FillFromIndices();
-    m_shadowoctree.FillFromIndices();
+    FRect3D tableRect;
+    tableRect.left = m_ptable->m_left;
+    tableRect.right = m_ptable->m_right;
+    tableRect.top = m_ptable->m_top;
+    tableRect.bottom = m_ptable->m_bottom;
+    tableRect.zlow = m_ptable->m_tableheight;
+    tableRect.zhigh = m_ptable->m_glassheight;
+
+    m_hitoctree.FillFromIndices(tableRect);
+    m_shadowoctree.FillFromIndices(tableRect);
 
     // initialize hit structure for dynamic objects
     m_hitoctree_dynamic.FillFromVector( m_vho_dynamic );

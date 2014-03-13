@@ -50,6 +50,7 @@ public:
 
     void FillFromVector(Vector<HitObject>& vho);
     void FillFromIndices();
+    void FillFromIndices(const FRect3D& initialBounds);
 
     // call when the bounding boxes of the HitObjects have changed to update the tree
     void Update();

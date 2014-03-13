@@ -136,6 +136,19 @@ void HitKD::FillFromIndices()
     InitSseArrays();
 }
 
+void HitKD::FillFromIndices(const FRect3D& initialBounds)
+{
+    m_rootNode.m_rectbounds = initialBounds;
+
+    m_rootNode.m_start = 0;
+    m_rootNode.m_items = m_org_idx.size();
+
+    // assume that CalcHitRect() was already called on the hit objects
+
+    m_rootNode.CreateNextLevel();
+    InitSseArrays();
+}
+
 void HitKD::Update()
 {
     FillFromVector(*m_org_vho);
