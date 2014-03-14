@@ -858,6 +858,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
     m_hitoctree.m_rectbounds = tableRect;
     m_hitoctree.CreateNextLevel();
     m_hitoctree.m_hitoct->InitSseArrays();
+    m_hitoctree.DumpTree(0);
 
     m_shadowoctree.m_start = 0;
     m_shadowoctree.m_items = shadow_items;
