@@ -131,7 +131,6 @@ set(SOURCES
   mesh.cpp
   mixer.cpp
   objloader.cpp
-  octree.cpp
   paintsur.cpp
   pin3d.cpp
   pinbinary.cpp
@@ -213,7 +212,6 @@ set(HEADERS
   mesh.h
   mixer.h
   msscript.h
-  octree.h
   paintsur.h
   pin3d.h
   pinbinary.h

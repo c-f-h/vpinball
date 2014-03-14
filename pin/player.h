@@ -1,7 +1,6 @@
 #pragma once
 
 #include "kdtree.h"
-#include "octree.h"
 #include "quadtree.h"
 
 #define DEFAULT_PLAYER_WIDTH 1024
