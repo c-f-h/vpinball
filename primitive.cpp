@@ -827,6 +827,8 @@ void Primitive::UpdateMesh()
    {
       Matrix3D matWorld = g_pplayer->m_pin3d.GetWorldTransform();
       matWorld.Multiply(rotMatrix, rotMatrix);
+      // TODO/BUG: this should get the entire world-view matrix and then compute
+      // the inverse transpose of the rotational part
    }
 
    for (unsigned i = 0; i < objMeshOrg.size(); i++)
@@ -840,6 +842,17 @@ void Primitive::UpdateMesh()
          tempVert->tv = 0.5f + norm.y*0.5f;
       }
       TransformVertex(*tempVert);
+
+      /* HACK/VP9COMPAT:
+       * In VP9, all the normals are the wrong way around, so we also
+       * have to flip them on imported meshes for now.
+       */
+      if (!m_d.sphereMapping)
+      {
+          tempVert->nx *= -1.0f;
+          tempVert->ny *= -1.0f;
+          tempVert->nz *= -1.0f;
+      }
    }
 
    Vertex3D_NoTex2 *buf;
@@ -882,11 +895,14 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
             UpdateMeshBuiltin();
       }
 
-	  if ( !m_d.useLighting )
+      if ( !m_d.useLighting )
       {
-         // disable lighting is a default setting
-         // it could look odd if you switch lighting on on non mesh primitives
-         pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
+          // disable lighting is a default setting
+          // it could look odd if you switch lighting on on non mesh primitives
+          pd3dDevice->SetRenderState( RenderDevice::LIGHTING, FALSE );
+          // VP9COMPAT: in VP10, the following should be enabled
+          //pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_TFACTOR);
+          //pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, COLORREF_to_D3DCOLOR(m_d.m_TopColor));
       }
 
       // set transform
@@ -903,8 +919,13 @@ void Primitive::RenderObject( RenderDevice *pd3dDevice )
       // reset transform
       pd3dDevice->SetTransform(TRANSFORMSTATE_WORLD, &matOrig);
 
+      // reset render states
       if ( !m_d.useLighting )
-         pd3dDevice->SetRenderState( RenderDevice::LIGHTING, TRUE );
+      {
+          pd3dDevice->SetRenderState(RenderDevice::LIGHTING, TRUE);
+          pd3dDevice->SetTextureStageState(ePictureTexture, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+          pd3dDevice->SetRenderState(RenderDevice::TEXTUREFACTOR, 0xffffffff);
+      }
 
       g_pplayer->m_pin3d.DisableAlphaBlend();
    }
