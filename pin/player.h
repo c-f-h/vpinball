@@ -1,6 +1,7 @@
 #pragma once
 
 #include "kdtree.h"
+#include "octree.h"
 
 #define DEFAULT_PLAYER_WIDTH 1024
 
@@ -293,8 +294,8 @@ private:
 
     std::vector<Ball*> m_vballDelete;	// Balls to free at the end of the frame
 
-	HitKD m_hitoctree;
-	HitKD m_shadowoctree;
+	HitOctreeNode m_hitoctree;
+	HitOctreeNode m_shadowoctree;
 
 	Vector<HitObject> m_vdebugho;
 	HitKD m_debugoctree;

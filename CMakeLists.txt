@@ -131,6 +131,7 @@ set(SOURCES
   mesh.cpp
   mixer.cpp
   objloader.cpp
+  octree.cpp
   paintsur.cpp
   pin3d.cpp
   pinbinary.cpp
