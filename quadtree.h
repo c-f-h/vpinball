@@ -18,20 +18,23 @@ public:
 
     ~HitQuadtree();
 
-    void HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const;
+    void AddElement(HitObject *pho)         { m_vho.push_back(pho); }
+    void Initialize();
+    void Initialize(const FRect3D& bounds)  { CreateNextLevel(bounds); }
 
     void HitTestBall(Ball * const pball) const;
-    void HitTestBallSse(Ball * const pball) const;
-    void HitTestBallSseInner(Ball * const pball, const int i) const;
-
-    void CreateNextLevel();
-
-    Vector<HitObject> m_vho;
-    FRect3D m_rectbounds;
+    void HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const;
 
 private:
 
+    void CreateNextLevel(const FRect3D& bounds);
+    void HitTestBallSse(Ball * const pball) const;
+    void HitTestBallSseInner(Ball * const pball, const int i) const;
+
+    std::vector<HitObject*> m_vho;
     HitQuadtree * __restrict m_children[4];
+    Vertex3Ds m_vcenter;
+    bool m_fLeaf;
 
     // helper arrays for SSE boundary checks
     void InitSseArrays();
@@ -42,10 +45,6 @@ private:
     float* __restrict zlows;
     float* __restrict zhighs;
 
-    Vertex3Ds m_vcenter;
-
-    bool m_fLeaf;
-
 #ifndef NDEBUG
 public:
     void DumpTree(int indentLevel)
@@ -54,7 +53,7 @@ public:
         for (int i = 0; i <= indentLevel; ++i)
             indent[i] = (i==indentLevel) ? 0 : ' ';
         char msg[256];
-        sprintf(msg, "[%f %f %f %f %f %f], items=%u", m_rectbounds.left, m_rectbounds.right, m_rectbounds.top, m_rectbounds.bottom, m_rectbounds.zlow, m_rectbounds.zhigh, m_vho.Size());
+        sprintf(msg, "[%f %f], items=%u", m_vcenter.x, m_vcenter.y, m_vho.size());
         strcat(indent, msg);
         OutputDebugString(indent);
         if (!m_fLeaf)

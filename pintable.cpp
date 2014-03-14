@@ -4087,6 +4087,18 @@ float PinTable::GetMaxSeparation()
         return m_globalMaxSeparation;
 }
 
+FRect3D PinTable::GetBoundingBox()
+{
+    FRect3D bbox;
+    bbox.left = m_left;
+    bbox.right = m_right;
+    bbox.top = m_top;
+    bbox.bottom = m_bottom;
+    bbox.zlow = m_tableheight;
+    bbox.zhigh = m_glassheight;
+    return bbox;
+}
+
 void PinTable::MoveCollectionDown(CComObject<Collection> *pcol )
 {
     int idx = m_vcollection.IndexOf(pcol);

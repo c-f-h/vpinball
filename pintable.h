@@ -506,6 +506,8 @@ public:
     float GetZPD();
     float GetMaxSeparation();
 
+    FRect3D GetBoundingBox();
+
 BEGIN_COM_MAP(PinTable)
 	COM_INTERFACE_ENTRY(ITable)
 	COM_INTERFACE_ENTRY(IDispatch)

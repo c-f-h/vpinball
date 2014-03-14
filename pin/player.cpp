@@ -642,19 +642,10 @@ void Player::InitDebugHitStructure()
     for(int i = 0; i < m_vdebugho.Size(); ++i)
     {
         m_vdebugho.ElementAt(i)->CalcHitRect();
-        m_debugoctree.m_vho.AddElement( m_vdebugho.ElementAt(i) );
+        m_debugoctree.AddElement( m_vdebugho.ElementAt(i) );
     }
 
-    FRect3D tableRect;
-    tableRect.left = m_ptable->m_left;
-    tableRect.right = m_ptable->m_right;
-    tableRect.top = m_ptable->m_top;
-    tableRect.bottom = m_ptable->m_bottom;
-    tableRect.zlow = m_ptable->m_tableheight;
-    tableRect.zhigh = m_ptable->m_glassheight;
-
-    m_hitoctree.m_rectbounds = tableRect;
-    m_hitoctree.CreateNextLevel();
+    m_debugoctree.Initialize(m_ptable->GetBoundingBox());
 }
 
 Vertex3Ds g_viewDir;
@@ -811,37 +802,17 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	CreateBoundingHitShapes(&m_vho);
 
-
-    //// set up hit and shadow collision structures
-    //int shadow_items = 0;
-    //for (int i = 0; i < m_vho.Size(); ++i)
-    //{
-    //    HitObject *pho = m_vho.ElementAt(i);
-    //    if (((pho->GetType() == e3DPoly) && ((Hit3DPoly *)pho)->m_fVisible) ||
-    //        ((pho->GetType() == eTriangle) && ((HitTriangle *)pho)->m_fVisible))
-    //        shadow_items++;
-    //}
-
-	//m_shadowoctree.m_hitoct = new HitOctree(&m_vho, shadow_items);
-	//m_hitoctree.m_hitoct = new HitOctree(&m_vho, m_vho.Size());
-
-    //shadow_items = 0;
-
 	for (int i = 0; i < m_vho.Size(); ++i)
     {
         HitObject *pho = m_vho.ElementAt(i);
 
         pho->CalcHitRect();
 
-        //m_hitoctree.AddElementByIndex( i );
-        //m_hitoctree.m_hitoct->m_org_idx[i] = i;
-        m_hitoctree.m_vho.AddElement(pho);
+        m_hitoctree.AddElement(pho);
 
         if (((pho->GetType() == e3DPoly) && ((Hit3DPoly *)pho)->m_fVisible) ||
             ((pho->GetType() == eTriangle) && ((HitTriangle *)pho)->m_fVisible) )
-            m_shadowoctree.m_vho.AddElement(pho);
-            //m_shadowoctree.m_hitoct->m_org_idx[shadow_items++] = i;
-            //m_shadowoctree.AddElementByIndex( i );
+            m_shadowoctree.AddElement(pho);
 
         AnimObject *pao = pho->GetAnimObject();
         if (pao)
@@ -852,25 +823,13 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
         }
     }
 
-    FRect3D tableRect;
-    tableRect.left = m_ptable->m_left;
-    tableRect.right = m_ptable->m_right;
-    tableRect.top = m_ptable->m_top;
-    tableRect.bottom = m_ptable->m_bottom;
-    tableRect.zlow = m_ptable->m_tableheight;
-    tableRect.zhigh = m_ptable->m_glassheight;
-
-//    m_hitoctree.FillFromIndices(tableRect);
-//    m_shadowoctree.FillFromIndices(tableRect);
-
-    m_hitoctree.m_rectbounds = tableRect;
-    m_hitoctree.CreateNextLevel();
-    //m_hitoctree.m_hitoct->InitSseArrays();
+    FRect3D tableBounds = m_ptable->GetBoundingBox();
+    m_hitoctree.Initialize(tableBounds);
+#ifndef NDEBUG
     m_hitoctree.DumpTree(0);
+#endif
 
-    m_shadowoctree.m_rectbounds = tableRect;
-    m_shadowoctree.CreateNextLevel();
-    //m_shadowoctree.m_hitoct->InitSseArrays();
+    m_shadowoctree.Initialize(tableBounds);
 
     // initialize hit structure for dynamic objects
     m_hitoctree_dynamic.FillFromVector( m_vho_dynamic );
