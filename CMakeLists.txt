@@ -143,6 +143,7 @@ set(SOURCES
   plunger.cpp
   primitive.cpp
   propbrowser.cpp
+  quadtree.cpp
   ramp.cpp
   regutil.cpp
   RenderDevice.cpp
@@ -212,6 +213,7 @@ set(HEADERS
   mesh.h
   mixer.h
   msscript.h
+  octree.h
   paintsur.h
   pin3d.h
   pinbinary.h
@@ -223,6 +225,7 @@ set(HEADERS
   plunger.h
   primitive.h
   propbrowser.h
+  quadtree.h
   ramp.h
   regutil.h
   resource.h

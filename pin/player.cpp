@@ -628,7 +628,7 @@ void Player::InitRegValues()
 
 void Player::InitDebugHitStructure()
 {
-	for (unsigned i=0; i < m_vhitables.size(); ++i)
+    for (unsigned i=0; i < m_vhitables.size(); ++i)
     {
         Hitable * const ph = m_vhitables[i];
         const int currentsize = m_vdebugho.Size();
@@ -639,14 +639,22 @@ void Player::InitDebugHitStructure()
             m_vdebugho.ElementAt(hitloop)->m_pfedebug = m_ptable->m_vedit.ElementAt(i)->GetIFireEvents();
     }
 
-	m_debugoctree.Init(&m_vdebugho, m_vdebugho.Size());
+    for(int i = 0; i < m_vdebugho.Size(); ++i)
+    {
+        m_vdebugho.ElementAt(i)->CalcHitRect();
+        m_debugoctree.m_vho.AddElement( m_vdebugho.ElementAt(i) );
+    }
 
-	for(int i = 0; i < m_vdebugho.Size(); ++i)
-	{
-		m_vdebugho.ElementAt(i)->CalcHitRect();
-		m_debugoctree.AddElementByIndex( i );
-	}
-    m_debugoctree.FillFromIndices();
+    FRect3D tableRect;
+    tableRect.left = m_ptable->m_left;
+    tableRect.right = m_ptable->m_right;
+    tableRect.top = m_ptable->m_top;
+    tableRect.bottom = m_ptable->m_bottom;
+    tableRect.zlow = m_ptable->m_tableheight;
+    tableRect.zhigh = m_ptable->m_glassheight;
+
+    m_hitoctree.m_rectbounds = tableRect;
+    m_hitoctree.CreateNextLevel();
 }
 
 Vertex3Ds g_viewDir;
@@ -804,20 +812,20 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	CreateBoundingHitShapes(&m_vho);
 
 
-	// set up hit and shadow collision structures
-	int shadow_items = 0;
-	for (int i = 0; i < m_vho.Size(); ++i)
-    {
-        HitObject *pho = m_vho.ElementAt(i);
-        if (((pho->GetType() == e3DPoly) && ((Hit3DPoly *)pho)->m_fVisible) ||
-            ((pho->GetType() == eTriangle) && ((HitTriangle *)pho)->m_fVisible))
-            shadow_items++;
-    }
+    //// set up hit and shadow collision structures
+    //int shadow_items = 0;
+    //for (int i = 0; i < m_vho.Size(); ++i)
+    //{
+    //    HitObject *pho = m_vho.ElementAt(i);
+    //    if (((pho->GetType() == e3DPoly) && ((Hit3DPoly *)pho)->m_fVisible) ||
+    //        ((pho->GetType() == eTriangle) && ((HitTriangle *)pho)->m_fVisible))
+    //        shadow_items++;
+    //}
 
-	m_shadowoctree.m_hitoct = new HitOctree(&m_vho, shadow_items);
-	m_hitoctree.m_hitoct = new HitOctree(&m_vho, m_vho.Size());
+	//m_shadowoctree.m_hitoct = new HitOctree(&m_vho, shadow_items);
+	//m_hitoctree.m_hitoct = new HitOctree(&m_vho, m_vho.Size());
 
-    shadow_items = 0;
+    //shadow_items = 0;
 
 	for (int i = 0; i < m_vho.Size(); ++i)
     {
@@ -826,11 +834,13 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
         pho->CalcHitRect();
 
         //m_hitoctree.AddElementByIndex( i );
-        m_hitoctree.m_hitoct->m_org_idx[i] = i;
+        //m_hitoctree.m_hitoct->m_org_idx[i] = i;
+        m_hitoctree.m_vho.AddElement(pho);
 
         if (((pho->GetType() == e3DPoly) && ((Hit3DPoly *)pho)->m_fVisible) ||
             ((pho->GetType() == eTriangle) && ((HitTriangle *)pho)->m_fVisible) )
-            m_shadowoctree.m_hitoct->m_org_idx[shadow_items++] = i;
+            m_shadowoctree.m_vho.AddElement(pho);
+            //m_shadowoctree.m_hitoct->m_org_idx[shadow_items++] = i;
             //m_shadowoctree.AddElementByIndex( i );
 
         AnimObject *pao = pho->GetAnimObject();
@@ -853,18 +863,14 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 //    m_hitoctree.FillFromIndices(tableRect);
 //    m_shadowoctree.FillFromIndices(tableRect);
 
-    m_hitoctree.m_start = 0;
-    m_hitoctree.m_items = m_vho.Size();
     m_hitoctree.m_rectbounds = tableRect;
     m_hitoctree.CreateNextLevel();
-    m_hitoctree.m_hitoct->InitSseArrays();
+    //m_hitoctree.m_hitoct->InitSseArrays();
     m_hitoctree.DumpTree(0);
 
-    m_shadowoctree.m_start = 0;
-    m_shadowoctree.m_items = shadow_items;
     m_shadowoctree.m_rectbounds = tableRect;
     m_shadowoctree.CreateNextLevel();
-    m_shadowoctree.m_hitoct->InitSseArrays();
+    //m_shadowoctree.m_hitoct->InitSseArrays();
 
     // initialize hit structure for dynamic objects
     m_hitoctree_dynamic.FillFromVector( m_vho_dynamic );

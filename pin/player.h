@@ -2,6 +2,7 @@
 
 #include "kdtree.h"
 #include "octree.h"
+#include "quadtree.h"
 
 #define DEFAULT_PLAYER_WIDTH 1024
 
@@ -294,11 +295,11 @@ private:
 
     std::vector<Ball*> m_vballDelete;	// Balls to free at the end of the frame
 
-	HitOctreeNode m_hitoctree;
-	HitOctreeNode m_shadowoctree;
+	HitQuadtree m_hitoctree;
+	HitQuadtree m_shadowoctree;
 
 	Vector<HitObject> m_vdebugho;
-	HitKD m_debugoctree;
+	HitQuadtree m_debugoctree;
 
 	Vector<HitObject> m_vho_dynamic;
     HitKD m_hitoctree_dynamic; // should be generated from scratch each time something changes
