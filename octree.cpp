@@ -118,7 +118,7 @@ void HitOctreeNode::CreateNextLevel()
 
 	for(unsigned int i = 0; i < 8; ++i)
 	{
-		if(((i&1) && (vcenter.x - m_rectbounds.left > 66.6f)) ||
+		if(((i&1) && (vcenter.x - m_rectbounds.left > 66.6f)) ||        // BUG: will never subdivide lower left quadrant
 		    ((i&2) && (vcenter.y - m_rectbounds.top > 66.6f)) ||
 		    ((i&4) && (vcenter.z - m_rectbounds.zlow > 66.6f))) //!! magic (will not subdivide object soups enough)
 			if(m_children[i].m_items > 1) { //!! magic (will not favor empty space enough for huge objects)
@@ -189,7 +189,7 @@ collisions
 
 void HitOctreeNode::HitTestBall(Ball * const pball) const
 {
-	for (int i=m_start; i<m_start+m_items; i++)
+	for (unsigned i=m_start; i<m_start+m_items; i++)
 	{
 #ifdef LOG
 		cTested++;
@@ -324,7 +324,7 @@ void HitOctreeNode::HitTestBallSse(Ball * const pball) const
 
 void HitOctreeNode::HitTestXRay(Ball * const pball, Vector<HitObject> * const pvhoHit) const
 {
-	for (int i=m_start; i<m_start+m_items; i++)
+	for (unsigned i=m_start; i<m_start+m_items; i++)
 	{
 #ifdef LOG
 		cTested++;
