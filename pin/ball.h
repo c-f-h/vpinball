@@ -96,7 +96,9 @@ public:
 	float drsq;	// square of distance moved
 
 	float radius;
-	float collisionMass;
+	float collisionMass;        // TODO: unify with m_mass
+    float m_mass;
+    float m_invMass;
 
 //	float x_min, x_max;	// world limits on ball displacements
 //	float y_min, y_max;

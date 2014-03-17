@@ -137,8 +137,11 @@ void Ball::Init()
 {
    // Only called by real balls, not temporary objects created for physics/rendering
    collisionMass = 1.0f;
+   m_mass = 1.0f;
+   m_invMass = 1.0f / m_mass;
+
    m_orientation.Identity();
-   m_inversebodyinertiatensor.Identity((float)(5.0/2.0)/(radius*radius));
+   m_inversebodyinertiatensor.Identity((float)(5.0/2.0)/(radius*radius*m_mass));
    m_angularvelocity.Set(0,0,0);
    m_angularmomentum.Set(0,0,0);
 
@@ -506,10 +509,9 @@ void Ball::SurfaceVelocity(const Vertex3Ds& surfP, Vertex3Ds& svel) const
 
 void Ball::ApplySurfaceImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse)
 {
-    // TODO: use linear momentum/mass
-    vx += impulse.x;
-    vy += impulse.y;
-    vz += impulse.z;
+    vx += m_invMass * impulse.x;
+    vy += m_invMass * impulse.y;
+    vz += m_invMass * impulse.z;
 
     const Vertex3Ds rotI = CrossProduct(surfP, impulse);
     m_angularmomentum += rotI;
