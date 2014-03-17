@@ -502,16 +502,12 @@ void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
 void Ball::SurfaceVelocity(const Vertex3Ds& surfP, Vertex3Ds& svel) const
 {
     svel = CrossProduct(m_angularvelocity, surfP);      // tangential velocity due to rotation
-    svel.x += vx;
-    svel.y += vy;       // linear velocity
-    svel.z += vz;
+    svel += vel;       // linear velocity
 }
 
 void Ball::ApplySurfaceImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse)
 {
-    vx += m_invMass * impulse.x;
-    vy += m_invMass * impulse.y;
-    vz += m_invMass * impulse.z;
+    vel += m_invMass * impulse;
 
     const Vertex3Ds rotI = CrossProduct(surfP, impulse);
     m_angularmomentum += rotI;
