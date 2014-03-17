@@ -417,6 +417,7 @@ void Ball::Collide(CollisionEvent *coll)
 
 void Ball::AngularAcceleration(const Vertex3Ds& hitnormal)
 {
+/*
 	const Vertex3Ds bccpd = -radius * hitnormal;    // vector ball center to contact point displacement
 
 	const float bnv = vel.Dot(hitnormal);       // ball normal velocity to hit face
@@ -465,6 +466,54 @@ void Ball::AngularAcceleration(const Vertex3Ds& hitnormal)
 	//m_angularmomentum *= 0.99f;       // TODO: reenable
 	m_angularmomentum += vResult; // add delta
 	m_angularvelocity = m_inverseworldinertiatensor.MultiplyVector(m_angularmomentum);
+*/
+}
+
+void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
+{
+    const Vertex3Ds surfP = -radius * hitnormal;    // surface contact point relative to center of mass
+
+    Vertex3Ds surfVel;
+    SurfaceVelocity(surfP, surfVel);
+
+    const float bnv = surfVel.Dot(hitnormal);   // ball normal velocity to hit face
+    const Vertex3Ds bvn = bnv * hitnormal;      // project the normal velocity along normal
+    const Vertex3Ds slip = surfVel - bvn;       // calc the tangential slip velocity
+
+    // TODO: compute proper friction force
+
+    const float slipspeed = slip.Length();
+    //if (slipspeed > 1e-6f)
+    {
+        //Vertex3Ds slipDir = slip / slipspeed;
+        Vertex3Ds friction = -slip;
+
+        float fricamount = std::min(slipspeed, 0.01f) / 0.01f;
+        fricamount *= 0.1f * dtime;
+        friction *= fricamount;
+
+        ApplySurfaceImpulse(surfP, friction);
+    }
+}
+
+void Ball::SurfaceVelocity(const Vertex3Ds& surfP, Vertex3Ds& svel) const
+{
+    svel = CrossProduct(m_angularvelocity, surfP);      // tangential velocity due to rotation
+    svel.x += vx;
+    svel.y += vy;       // linear velocity
+    svel.z += vz;
+}
+
+void Ball::ApplySurfaceImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse)
+{
+    // TODO: use linear momentum/mass
+    vx += impulse.x;
+    vy += impulse.y;
+    vz += impulse.z;
+
+    const Vertex3Ds rotI = CrossProduct(surfP, impulse);
+    m_angularmomentum += rotI;
+    m_angularvelocity = m_inverseworldinertiatensor.MultiplyVector(m_angularmomentum);
 }
 
 void Ball::CalcHitRect()
@@ -510,7 +559,7 @@ void Ball::UpdateDisplacements(const float dtime)
             vel.y = (float)(vel.y * fric);
 
 			const Vertex3Ds vnormal(0.0f,0.0f,1.0f);
-			AngularAcceleration(vnormal);
+			ApplyFriction(vnormal, dtime);
 		}
 		else if (vel.z > 0.f && pos.z >= z_max)			//top glass ...contact and going higher
 		{

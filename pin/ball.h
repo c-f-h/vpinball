@@ -44,6 +44,10 @@ public:
     void Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, float antifriction, float scatter_angle);
 
 	void AngularAcceleration(const Vertex3Ds& hitnormal);
+	void ApplyFriction(const Vertex3Ds& hitnormal, float dtime);
+
+    void SurfaceVelocity(const Vertex3Ds& surfP, Vertex3Ds& svel) const;
+    void ApplySurfaceImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse);
 
 	void EnsureOMObject();
 
