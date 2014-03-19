@@ -486,6 +486,7 @@ void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
     // TODO: compute proper friction force
 
     const float slipspeed = slip.Length();
+    //slintf("Velocity: %.2f Angular velocity: %.2f Surface velocity: %.2f Slippage: %.2f\n", vel.Length(), m_angularvelocity.Length(), surfVel.Length(), slipspeed);
     //if (slipspeed > 1e-6f)
     {
         //Vertex3Ds slipDir = slip / slipspeed;
