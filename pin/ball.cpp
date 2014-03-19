@@ -244,14 +244,40 @@ void Ball::Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, flo
 	}
 #endif
 
-	dot *= -1.005f - elasticity; //!! some small minimum
-	vel += dot * hitNormal;
+    // magnitude of the impulse which is just sufficient to keep the ball from
+    // penetrating the wall (needed for friction computations)
+    const float reactionImpulse = m_mass * fabs(dot);
 
-	if (antifriction >= 1.0f || antifriction <= 0.0f) 
-		antifriction = c_hardFriction; // use global
+    dot *= -(1.0f + elasticity);
+    vel += dot * hitNormal;     // apply collision impulse (along normal, so no torque)
 
-	//friction all axes
-	//vel *= antifriction;       // TODO: reenable
+    // compute friction impulse
+
+    const Vertex3Ds surfP = -radius * hitNormal;    // surface contact point relative to center of mass
+
+    Vertex3Ds surfVel;
+    SurfaceVelocity(surfP, surfVel);            // velocity at impact point
+
+    Vertex3Ds tangent = surfVel - surfVel.Dot(hitNormal) * hitNormal;       // calc the tangential velocity
+
+    static const float frictionCoeff = 0.3f;
+
+    const float tangentSpSq = tangent.LengthSquared();
+    if (tangent.LengthSquared() > 1e-6f)
+    {
+        tangent /= sqrt(tangentSpSq);            // normalize to get tangent direction
+        const float vt = surfVel.Dot(tangent);   // get speed in tangential direction
+
+        // compute friction impulse
+        const Vertex3Ds cross = CrossProduct(surfP, tangent);
+        const float kt = m_invMass + tangent.Dot( CrossProduct(m_inverseworldinertiatensor * cross, surfP));
+
+        // friction impulse can't be greather than coefficient of friction times collision impulse (Coulomb friction cone)
+        const float maxFric = frictionCoeff * reactionImpulse;
+        const float jt = clamp(-vt / kt, -maxFric, maxFric);
+
+        ApplySurfaceImpulse(surfP, jt * tangent);
+    }
 
     // TODO: reenable scatter if needed
 	//if (scatter_angle <= 0.0f) scatter_angle = c_hardScatter;			// if <= 0 use global value
@@ -268,9 +294,6 @@ void Ball::Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, flo
 	//	vel.x = vxt *radcos - vyt *radsin;  // rotate to random scatter angle
 	//	vel.y = vyt *radcos + vxt *radsin;
 	//}
-
-    //calc new rolling dynamics
-    AngularAcceleration(hitNormal);
 }
 
 float Ball::HitTest(const Ball * pball_, float dtime, CollisionEvent& coll)
@@ -493,7 +516,7 @@ void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
         Vertex3Ds friction = -slip;
 
         float fricamount = std::min(slipspeed, 0.01f) / 0.01f;
-        fricamount *= 0.1f * dtime;
+        fricamount *= 0.2f * dtime;
         friction *= fricamount;
 
         ApplySurfaceImpulse(surfP, friction);
