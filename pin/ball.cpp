@@ -487,6 +487,22 @@ void Ball::AngularAcceleration(const Vertex3Ds& hitnormal)
 */
 }
 
+void Ball::HandleStaticContact(const Vertex3Ds& normal, float origNormVel, float dtime)
+{
+    const Vertex3Ds fe = g_pplayer->m_gravity;      // external forces (only gravity for now)
+    const float dot = fe.Dot(normal);
+    const float normVel = vel.Dot(normal);   // this should be zero, but only up to +/- C_CONTACTVEL
+
+    // If some collision has changed the ball's velocity, we may not have to do anything.
+    if (normVel <= C_CONTACTVEL)
+    {
+        // Add just enough to kill original normal velocity and counteract the external forces.
+        vel -= (dot*dtime + origNormVel) * normal;
+
+        ApplyFriction(normal, dtime);
+    }
+}
+
 void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
 {
     const Vertex3Ds surfP = -radius * hitnormal;    // surface contact point relative to center of mass

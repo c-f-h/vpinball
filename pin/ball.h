@@ -45,6 +45,7 @@ public:
 
 	void AngularAcceleration(const Vertex3Ds& hitnormal);
 	void ApplyFriction(const Vertex3Ds& hitnormal, float dtime);
+    void HandleStaticContact(const Vertex3Ds& normal, float origNormVel, float dtime);
 
     void SurfaceVelocity(const Vertex3Ds& surfP, Vertex3Ds& svel) const;
     void ApplySurfaceImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse);

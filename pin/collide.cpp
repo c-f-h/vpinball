@@ -54,10 +54,8 @@ float LineSeg::HitTestBasic(const Ball * pball, const float dtime, CollisionEven
 	const float bnv = ballvx*normal.x + ballvy*normal.y;	// ball velocity normal to segment, positive if receding, zero=parallel
 	bool bUnHit = (bnv > C_LOWNORMVEL);
 
-	if (direction && bUnHit)								// direction true and clearly receding from normal face
-		{
+	if (direction && (bnv > C_CONTACTVEL))								// direction true and clearly receding from normal face
 		return -1.0f;
-		}
 
 	const float ballx = pball->pos.x;							// ball position
 	const float bally = pball->pos.y;
@@ -70,11 +68,10 @@ float LineSeg::HitTestBasic(const Ball * pball, const float dtime, CollisionEven
 
 	const bool inside = (bnd <= 0.f);									  // in ball inside object volume
 	
-	//HitTestBasic
 	float hittime;
 	if (rigid)
 		{
-		if (bnv > C_LOWNORMVEL || bnd < (float)(-PHYS_SKIN) || (lateral && bcpd < 0)) return -1.0f;	// (ball normal distance) excessive pentratration of object skin ... no collision HACK
+		if (bnd < (float)(-PHYS_SKIN) || (lateral && bcpd < 0)) return -1.0f;	// (ball normal distance) excessive pentratration of object skin ... no collision HACK
 			
 		if (lateral && (bnd <= (float)PHYS_TOUCH))
 			{
@@ -125,11 +122,19 @@ float LineSeg::HitTestBasic(const Ball * pball, const float dtime, CollisionEven
 		|| hitz + ballr * 0.5f > m_rcHitRect.zhigh)
 		return -1.0f;
 
-	coll.normal->x = normal.x;				// hit normal is same as line segment normal
-	coll.normal->y = normal.y;
+	coll.normal[0].x = normal.x;				// hit normal is same as line segment normal
+	coll.normal[0].y = normal.y;
+    coll.normal[0].z = 0.0f;
 		
 	coll.distance = bnd;					// actual contact distance ...
 	coll.hitRigid = rigid;				// collision type
+
+    // check for contact
+    if (fabsf(bnv) <= C_CONTACTVEL && fabsf(bnd) <= PHYS_TOUCH)
+    {
+        coll.isContact = true;
+        coll.normal[1].z = bnv;
+    }
 
 	return hittime;
 	}
@@ -138,6 +143,13 @@ float LineSeg::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 	{															// normal face, lateral, rigid
 	return HitTestBasic(pball, dtime, coll, true, true, true);
 	}
+
+void LineSeg::Contact(CollisionEvent& coll, float dtime)
+{
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, dtime);
+}
+
+
 
 float HitCircle::HitTestBasicRadius(const Ball * pball, const float dtime, CollisionEvent& coll,
 									const bool direction, const bool lateral, const bool rigid)

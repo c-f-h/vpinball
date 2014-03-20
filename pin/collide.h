@@ -115,6 +115,7 @@ public:
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual int GetType() const {return eLineSeg;}
 	virtual void Collide(CollisionEvent *coll);
+    virtual void Contact(CollisionEvent& coll, float dtime);
 	void CalcNormal();
 	void CalcLength();
 	virtual void CalcHitRect();

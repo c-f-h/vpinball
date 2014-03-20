@@ -915,23 +915,7 @@ void HitPlane::Collide(CollisionEvent* coll)
 
 void HitPlane::Contact(CollisionEvent& coll, float dtime)
 {
-    Ball *pball = coll.ball;
-
-    const Vertex3Ds fe = g_pplayer->m_gravity;      // external forces (only gravity for now)
-    const float dot = fe.Dot(normal);
-    //slintf("Playfield CONTACT   - (%f %f %f) - adding %f\n", pball->vel.x, pball->vel.y, pball->vel.z, -dot*dtime);
-    const float normVel = pball->vel.Dot(normal);   // this should be zero, but only up to +/- C_CONTACTVEL
-
-    // If some collision has reflected the ball away from the plane, we may not have to do anything.
-    if (normVel <= C_CONTACTVEL)
-    {
-        const float origNormVel = coll.normal[1].z;
-
-        // Add just enough to kill original normal velocity and counteract the external forces.
-        pball->vel -= (dot*dtime + origNormVel) * normal;
-
-        pball->ApplyFriction(normal, dtime);
-    }
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, dtime);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
