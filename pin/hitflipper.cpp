@@ -520,6 +520,7 @@ float HitFlipper::HitTestFlipperFace(const Ball * pball, const float dtime, Coll
 
    coll.normal[0].x = F.x;	// hit normal is same as line segment normal
    coll.normal[0].y = F.y;
+   coll.normal[0].z = 0.0f;
 
    const Vertex2D dist( // calculate moment from flipper base center
       (pball->pos.x + ballvx*t - ballr*F.x - m_flipperanim.m_hitcircleBase.center.x),  //center of ball + projected radius to contact point
@@ -543,7 +544,12 @@ float HitFlipper::HitTestFlipperFace(const Ball * pball, const float dtime, Coll
 
    const float bnv = dv.x*coll.normal[0].x + dv.y*coll.normal[0].y;  //dot Normal to delta v
 
-   if (bnv >= C_LOWNORMVEL) 
+   /*if (fabs(anglespeed) <= C_PRECISION && fabsf(bnv) <= C_CONTACTVEL && bffnd <= PHYS_TOUCH)     // TODO: for now only for flippers at rest
+   {
+       coll.isContact = true;
+       coll.normal[3].z = bnv;
+   }
+   else*/ if (bnv > C_LOWNORMVEL)
       return -1.0f; // not hit ... ball is receding from endradius already, must have been embedded
 
    coll.distance = bffnd;				//normal ...actual contact distance ... 
@@ -690,3 +696,7 @@ void HitFlipper::Collide(CollisionEvent *coll)
    pball->AngularAcceleration(vnormal);
 }
 
+void HitFlipper::Contact(CollisionEvent& coll, float dtime)
+{
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[3].z, dtime);
+}

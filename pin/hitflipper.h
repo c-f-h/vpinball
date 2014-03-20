@@ -73,6 +73,7 @@ public:
 	virtual int GetType() const {return eFlipper;}
 
 	virtual void Collide(CollisionEvent *coll);
+    void Contact(CollisionEvent& coll, float dtime);
 
 	virtual AnimObject *GetAnimObject() {return &m_flipperanim;}
 
