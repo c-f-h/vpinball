@@ -1600,9 +1600,6 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 					// is this ball static? .. set static and quench	
 					if (pball->m_coll.hitRigid && pball->m_coll.distance < (float)PHYS_TOUCH) //rigid and close distance contacts
 					{
-#ifdef _DEBUGPHYSICS
-						c_contactcnt++;
-#endif
 						const float mag = pball->vel.x*pball->vel.x + pball->vel.y*pball->vel.y; // values below are taken from simulation
 						if (pball->drsq < 8.0e-5f && mag < 1.0e-3f && fabsf(pball->vel.z) < 0.2f)
 						{
@@ -1620,6 +1617,9 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 			}
 		}
 
+#ifdef _DEBUGPHYSICS
+        c_contactcnt = m_contacts.size();
+#endif
         /*
          * Now handle contacts.
          *
