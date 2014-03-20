@@ -17,7 +17,21 @@
 #define DEFAULT_TABLE_DAMPENINGSPEED    65.0f
 #define DEFAULT_TABLE_DAMPENINGFRICTION 0.95f
 
-#define GRAVITYCONST   0.86543f
+
+/*
+ * NOTE ABOUT VP PHYSICAL UNITS:
+ *
+ * By convention, one VP length unit (U) corresponds to
+ *   1 U = .53975 mm = 5.3975E-4 m,   or   1 m = 1852.71 U
+ *
+ * For historical reasons, one VP time unit (T) corresponds to
+ *   1 T = 10 ms = 0.01 s,            or   1 s = 100 T
+ *
+ * Therefore, Earth gravity in VP units can be computed as
+ *   g  =  9.81 m/s^2  =  1.81751 U/T^2
+ */
+
+#define GRAVITYCONST    1.81751f
 
 // Collisions:
 //
