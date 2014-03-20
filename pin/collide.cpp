@@ -402,13 +402,38 @@ void DoHitTest(Ball *pball, HitObject *pho, CollisionEvent& coll)
 #ifdef _DEBUGPHYSICS
     g_pplayer->c_deepTested++;
 #endif
-    const float newtime = pho->HitTest(pball, coll.hittime, coll);
-    if ((newtime >= 0) && (newtime <= coll.hittime))
+    if (!g_pplayer->m_fRecordContacts)  // simply find first event
     {
-        coll.obj = pho;
-        coll.hittime = newtime;
-        coll.hitx = pball->pos.x + pball->vel.x*newtime;
-        coll.hity = pball->pos.y + pball->vel.y*newtime;
+        const float newtime = pho->HitTest(pball, coll.hittime, coll);
+        if ((newtime >= 0) && (newtime <= coll.hittime))
+        {
+            coll.ball = pball;
+            coll.obj = pho;
+            coll.hittime = newtime;
+            coll.hitx = pball->pos.x + pball->vel.x*newtime;
+            coll.hity = pball->pos.y + pball->vel.y*newtime;
+        }
+    }
+    else    // find first collision, but also remember all contacts
+    {
+        CollisionEvent newColl;
+        newColl.isContact = false;
+        const float newtime = pho->HitTest(pball, coll.hittime, newColl);
+        if (newColl.isContact || ((newtime >= 0) && (newtime <= coll.hittime)))
+        {
+            newColl.ball = pball;
+            newColl.obj = pho;
+            newColl.hitx = pball->pos.x + pball->vel.x*newtime;
+            newColl.hity = pball->pos.y + pball->vel.y*newtime;
+        }
+
+        if (newColl.isContact)
+            g_pplayer->m_contacts.push_back(newColl);
+        else if (newtime >= 0 && newtime <= coll.hittime)
+        {
+            coll = newColl;
+            coll.hittime = newtime;
+        }
     }
 }
 

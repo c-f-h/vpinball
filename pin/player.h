@@ -289,6 +289,9 @@ public:
 	
     std::vector< Hitable* > m_triggeredLights;  // lights whose state changed this frame (VP9COMPAT)
 
+    bool m_fRecordContacts;             // flag for DoHitTest()
+    std::vector< CollisionEvent > m_contacts;
+
 private:
 	Vector<HitObject> m_vho;
     std::vector< AnimObject* > m_vmover;    // moving objects for physics simulation

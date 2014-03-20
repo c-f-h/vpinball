@@ -52,6 +52,8 @@ struct CollisionEvent
     float hitx, hity;   // position of the ball at hit time (saved to avoid floating point errors with multiple time slices)
 
     bool hitRigid;      // rigid body collision?
+
+    bool isContact;     // set to true if impact velocity is 0
 };
 
 
@@ -69,6 +71,8 @@ public:
 	virtual int GetType() const = 0;
 
     virtual void Collide(CollisionEvent *hit) = 0;
+
+    virtual void Contact(CollisionEvent& coll, float dtime)  { }     // apply contact forces for the given time interval
 
 	virtual void CalcHitRect() = 0;
 	

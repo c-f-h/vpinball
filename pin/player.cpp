@@ -307,6 +307,9 @@ Player::Player()
 #ifdef DEBUG_FPS
 	ToggleFPS();
 #endif
+
+    m_fRecordContacts = false;
+    m_contacts.reserve(8);
 }
 
 Player::~Player()
@@ -1503,6 +1506,8 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 		c_timesearch++;
 #endif
 		hittime = dtime;	//begin time search from now ...  until delta ends
+        m_fRecordContacts = true;
+        m_contacts.clear();
 
 		for (unsigned i = 0; i < m_vball.size(); i++)
 		{
@@ -1545,6 +1550,8 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 				}
 			}				
 		}
+
+        m_fRecordContacts = false;
 
 		// hittime now set ... or full frame if no hit 
 		// now update displacements to collide-contact or end of physics frame
@@ -1606,6 +1613,21 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 				}
 			}
 		}
+
+        /*
+         * Now handle contacts.
+         *
+         * At this point UpdateVelocities() was already called, so the state is different
+         * from that at HitTest(). However, contacts have zero relative velocity, so
+         * hopefully nothing catastrophic has happened in the meanwhile.
+         *
+         * Maybe a two-phase setup where we first process only contacts, then only collisions
+         * could also work.
+         */
+        for (unsigned i = 0; i < m_contacts.size(); ++i)
+            m_contacts[i].obj->Contact(m_contacts[i], hittime);
+
+        m_contacts.clear();
 
 		dtime -= hittime;	//new delta .. i.e. time remaining
 
