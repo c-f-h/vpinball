@@ -482,6 +482,9 @@ void Player::CreateBoundingHitShapes(Vector<HitObject> *pvho)
 	Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,4); //!!
 
 	pvho->AddElement(ph3dpoly);
+
+    m_hitPlayfield = HitPlane( Vertex3Ds(0,0,1), m_ptable->m_tableheight );
+    m_hitTopGlass  = HitPlane( Vertex3Ds(0,0,-1), m_ptable->m_glassheight );
 }
 
 void Player::InitKeys()
@@ -1518,6 +1521,9 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 				pball->m_coll.hittime = hittime;		// search upto current hittime
 				pball->m_coll.obj = NULL;
 
+                // always check for playfield and top glass
+                DoHitTest(pball, &m_hitPlayfield, pball->m_coll);
+                DoHitTest(pball, &m_hitTopGlass, pball->m_coll);
                 m_hitoctree_dynamic.HitTestBall(pball, pball->m_coll);  // dynamic objects
 				m_hitoctree.HitTestBall(pball, pball->m_coll);  // find the hit objects and hit times
 
@@ -1617,7 +1623,7 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
         /*
          * Now handle contacts.
          *
-         * At this point UpdateVelocities() was already called, so the state is different
+         * At this point UpdateDisplacements() was already called, so the state is different
          * from that at HitTest(). However, contacts have zero relative velocity, so
          * hopefully nothing catastrophic has happened in the meanwhile.
          *

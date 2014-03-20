@@ -149,14 +149,6 @@ void Ball::Init()
 
    fFrozen = false;
 
-   // world limits on ball displacements
-   //	x_min = g_pplayer->m_ptable->m_left + radius;
-   //	x_max = g_pplayer->m_ptable->m_right - radius;
-   //	y_min = g_pplayer->m_ptable->m_top + radius;
-   //	y_max = g_pplayer->m_ptable->m_bottom - radius;
-   z_min = g_pplayer->m_ptable->m_tableheight + radius;
-   z_max = (g_pplayer->m_ptable->m_glassheight - radius);
-
    m_coll.obj = NULL;
    m_fDynamic = C_DYNAMIC; // assume dynamic
 
@@ -571,27 +563,6 @@ void Ball::UpdateDisplacements(const float dtime)
 
 		drsq = ds.LengthSquared();                      // used to determine if static ball
 
-		if (vel.z < 0.f && pos.z <= z_min)              //rolling point below the table and velocity driving deeper
-		{
-			pos.z = z_min;								// set rolling point to table surface
-			vel.z *= -0.2f;							    // reflect velocity  ...  dull bounce
-
-            // Friction is now simulated by appropriate friction forces
-            //const double fric = exp(-dtime * c_hardFrictionCoeff);
-            //vel.x = (float)(vel.x * fric);
-            //vel.y = (float)(vel.y * fric);
-
-			const Vertex3Ds vnormal(0.0f,0.0f,1.0f);
-			ApplyFriction(vnormal, dtime);
-		}
-		else if (vel.z > 0.f && pos.z >= z_max)			//top glass ...contact and going higher
-		{
-			pos.z = z_max;								// set diametric rolling point to top glass
-			vel.z *= -0.2f;								// reflect velocity  ...  dull bounce
-		}
-
-        // side walls are handled via actual collision objects set up in Player::CreateBoundingHitShapes
-
 		CalcHitRect();
 		
 		Matrix3 mat3;
@@ -647,13 +618,7 @@ void Ball::UpdateVelocities()
 	} // manual joystick control
 	else if (!fFrozen)  // Gravity	
 	{
-		vel.x += PHYS_FACTOR * g_pplayer->m_gravity.x;
-		vel.y += PHYS_FACTOR * g_pplayer->m_gravity.y;
-
-		if (pos.z > z_min + 0.05f || g > 0.f) // off the deck??? or gravity postive Z direction	
-			vel.z += PHYS_FACTOR * g;
-		else
-			vel.z += PHYS_FACTOR * g * 0.001f;			  // don't add so much energy if already on the world floor
+		vel += PHYS_FACTOR * g_pplayer->m_gravity;
 
 		vel.x += nx;
 		vel.y += ny;

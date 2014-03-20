@@ -307,6 +307,9 @@ private:
 	Vector<HitObject> m_vho_dynamic;
     HitKD m_hitoctree_dynamic; // should be generated from scratch each time something changes
 
+    HitPlane m_hitPlayfield;
+    HitPlane m_hitTopGlass;
+
 	U64 m_StartTime_usec;
 	U64 m_curPhysicsFrameTime;	// Time when the last frame was drawn
 	U64 m_nextPhysicsFrameTime;	// time at which the next physics update should be

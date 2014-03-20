@@ -100,10 +100,6 @@ public:
     float m_mass;
     float m_invMass;
 
-//	float x_min, x_max;	// world limits on ball displacements
-//	float y_min, y_max;
-	float z_min, z_max;
-
 	Vertex3Ds m_Event_Pos;
 	
 	Matrix3 m_orientation;

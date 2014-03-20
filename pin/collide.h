@@ -12,6 +12,7 @@ enum
 	eBall,
 	e3DPoly,
 	eTriangle,
+	ePlane,
 	e3DLine,
 	eGate,
 	eTextbox,

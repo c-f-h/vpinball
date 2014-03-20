@@ -844,6 +844,99 @@ void HitTriangle::CalcHitRect()
 	m_rcHitRect.zhigh = max(m_rgv[0].z, max(m_rgv[1].z,m_rgv[2].z));
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+HitPlane::HitPlane(const Vertex3Ds& normal_, float d_)
+    : normal(normal_), d(d_)
+{
+    m_elasticity = 0.2f;
+}
+
+float HitPlane::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
+{
+    if (!m_fEnabled) return -1.0f;
+
+    //slintf("HitPlane test - %f %f\n", pball->pos.z, pball->vel.z);
+
+    const float bnv = normal.Dot(pball->vel);       // speed in normal direction
+
+    if (bnv >= (float)C_CONTACTVEL)                 // return if clearly ball is receding from object
+        return -1.0f;
+
+    const float bnd = normal.Dot( pball->pos ) - pball->radius - d; // distance from plane to ball surface
+
+    if (bnd < (float)(-PHYS_SKIN))
+        return -1.0f;   // excessive penetration of plane ... no collision HACK
+
+    // slow moving ball? then either contact or no collision at all
+    if (fabsf(bnv) <= (float)C_CONTACTVEL)
+    {
+        if (fabsf(bnd) <= (float)PHYS_TOUCH)
+        {
+            coll.isContact = true;
+            coll.normal[0] = normal;
+            coll.normal[1].z = bnv;     // remember original normal velocity
+            coll.distance = bnd;
+            coll.hitRigid = true;
+            return 0.0f;    // hittime is ignored for contacts
+        }
+        else
+            return -1.0f;   // large distance, small velocity -> no hit
+    }
+
+    float hittime = bnd / (-bnv);                   // rate ok for safe divide
+    if (hittime < 0)
+        hittime = 0.0f;     // already penetrating? then collide immediately
+
+    if (infNaN(hittime) || hittime > dtime)
+        return -1.0f;       // time is outside this frame ... no collision
+
+    coll.normal[0] = normal;
+    coll.distance = bnd;                // actual contact distance
+    coll.hitRigid = true;               // collision type
+
+    return hittime;
+}
+
+void HitPlane::Collide(CollisionEvent* coll)
+{
+    //slintf("Playfield COLLISION - (%f %f %f) - (%f %f %f)\n",
+    //        coll->ball->pos.x, coll->ball->pos.y, coll->ball->pos.z,
+    //        coll->ball->vel.x, coll->ball->vel.y, coll->ball->vel.z);
+    coll->ball->Collide3DWall(coll->normal[0], m_elasticity, /*m_antifriction*/ 0.0f, /*m_scatter*/ 0.0f);
+
+    // if ball has penetrated, push it out of the plane
+    const float bnd = normal.Dot( coll->ball->pos ) - coll->ball->radius - d; // distance from plane to ball surface
+    if (bnd < 0)
+        coll->ball->pos -= bnd * normal;
+}
+
+void HitPlane::Contact(CollisionEvent& coll, float dtime)
+{
+    Ball *pball = coll.ball;
+
+    const Vertex3Ds fe = g_pplayer->m_gravity;      // external forces (only gravity for now)
+    const float dot = fe.Dot(normal);
+    //slintf("Playfield CONTACT   - (%f %f %f) - adding %f\n", pball->vel.x, pball->vel.y, pball->vel.z, -dot*dtime);
+    const float normVel = pball->vel.Dot(normal);   // this should be zero, but only up to +/- C_CONTACTVEL
+
+    // If some collision has reflected the ball away from the plane, we may not have to do anything.
+    if (normVel <= C_CONTACTVEL)
+    {
+        const float origNormVel = coll.normal[1].z;
+
+        // Add just enough to kill original normal velocity and counteract the external forces.
+        pball->vel -= (dot*dtime + origNormVel) * normal;
+
+        pball->ApplyFriction(normal, dtime);
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
 Hit3DCylinder::Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2, const Vertex3Ds * const pvnormal)
 {
 	v1 = *pv1;

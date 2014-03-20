@@ -92,6 +92,24 @@ public:
 	BOOL m_fVisible; // for ball shadows
 };
 
+
+class HitPlane : public HitObject
+{
+public:
+    HitPlane() {}
+    HitPlane(const Vertex3Ds& normal_, float d_);
+
+    virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
+    virtual int GetType() const { return ePlane; }
+    virtual void Collide(CollisionEvent* coll);
+    virtual void Contact(CollisionEvent& coll, float dtime);
+    virtual void CalcHitRect() {}  // TODO: this is needed if we want to put it in the quadtree
+
+    Vertex3Ds normal;
+    float d;
+};
+
+
 class SpinnerAnimObject : public AnimObject
 {
 public:
