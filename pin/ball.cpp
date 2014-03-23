@@ -509,25 +509,45 @@ void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
 
     Vertex3Ds surfVel;
     SurfaceVelocity(surfP, surfVel);
+    const Vertex3Ds slip = surfVel - surfVel.Dot(hitnormal) * hitnormal;       // calc the tangential slip velocity
 
-    const float bnv = surfVel.Dot(hitnormal);   // ball normal velocity to hit face
-    const Vertex3Ds bvn = bnv * hitnormal;      // project the normal velocity along normal
-    const Vertex3Ds slip = surfVel - bvn;       // calc the tangential slip velocity
-
-    // TODO: compute proper friction force
+    const float maxFric = 0.1f * m_mass * -g_pplayer->m_gravity.Dot(hitnormal);
 
     const float slipspeed = slip.Length();
     //slintf("Velocity: %.2f Angular velocity: %.2f Surface velocity: %.2f Slippage: %.2f\n", vel.Length(), m_angularvelocity.Length(), surfVel.Length(), slipspeed);
     //if (slipspeed > 1e-6f)
+    if (slipspeed < C_PRECISION)
     {
-        //Vertex3Ds slipDir = slip / slipspeed;
-        Vertex3Ds friction = -slip;
+        // slip speed zero - static friction case
 
-        float fricamount = std::min(slipspeed, 0.01f) / 0.01f;
-        fricamount *= 0.2f * dtime;
-        friction *= fricamount;
+        Vertex3Ds surfAcc;
+        SurfaceAcceleration(surfP, surfAcc);
+        const Vertex3Ds slipAcc = surfAcc - surfAcc.Dot(hitnormal) * hitnormal;       // calc the tangential slip acceleration
 
-        ApplySurfaceImpulse(surfP, friction);
+        // neither slip velocity nor slip acceleration? nothing to do here
+        if (slipAcc.LengthSquared() < 1e-6f)
+            return;
+
+        Vertex3Ds slipDir = slipAcc;
+        slipDir.Normalize();
+
+        const float numer = - slipDir.Dot( surfAcc );
+        const float denom = m_invMass + slipDir.Dot( CrossProduct( m_inverseworldinertiatensor * CrossProduct(surfP, slipDir), surfP ) );
+        const float fric = clamp(numer / denom, -maxFric, maxFric);
+
+        ApplySurfaceImpulse(surfP, (dtime * fric) * slipDir);
+    }
+    else
+    {
+        // nonzero slip speed - dynamic friction case
+
+        Vertex3Ds slipDir = slip / slipspeed;
+
+        const float numer = - slipDir.Dot( surfVel );
+        const float denom = m_invMass + slipDir.Dot( CrossProduct( m_inverseworldinertiatensor * CrossProduct(surfP, slipDir), surfP ) );
+        const float fric = clamp(numer / denom, -maxFric, maxFric);
+
+        ApplySurfaceImpulse(surfP, (dtime * fric) * slipDir);
     }
 }
 
@@ -535,6 +555,16 @@ void Ball::SurfaceVelocity(const Vertex3Ds& surfP, Vertex3Ds& svel) const
 {
     svel = CrossProduct(m_angularvelocity, surfP);      // tangential velocity due to rotation
     svel += vel;       // linear velocity
+}
+
+void Ball::SurfaceAcceleration(const Vertex3Ds& surfP, Vertex3Ds& sacc) const
+{
+    sacc = m_invMass * g_pplayer->m_gravity;
+
+    // if we had any external torque, we would have to add "(deriv. of ang.vel.) x surfP" here
+
+    // centripetal acceleration
+    sacc += CrossProduct( m_angularvelocity, CrossProduct(m_angularvelocity, surfP) );
 }
 
 void Ball::ApplySurfaceImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse)
