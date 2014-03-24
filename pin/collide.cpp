@@ -277,11 +277,13 @@ float HitCircle::HitTestBasicRadius(const Ball * pball, const float dtime, Colli
 		const float inv_len = 1.0f/sqrtf(sqrlen);
 		coll.normal->x = (hitx - x)*inv_len;
 		coll.normal->y = (hity - y)*inv_len;
+        coll.normal->z = 0.0f;
 		}
 	 else 
 		{//yes over center
 		coll.normal->x = 0; // make up a value, any direction is ok
 		coll.normal->y = 1.0f;
+        coll.normal->z = 0.0f;
 		}
 	
 	if (!rigid)											// non rigid body collision? return direction
