@@ -486,7 +486,7 @@ void Ball::AngularAcceleration(const Vertex3Ds& hitnormal)
 */
 }
 
-void Ball::HandleStaticContact(const Vertex3Ds& normal, float origNormVel, float dtime)
+void Ball::HandleStaticContact(const Vertex3Ds& normal, float origNormVel, float friction, float dtime)
 {
     const float normVel = vel.Dot(normal);   // this should be zero, but only up to +/- C_CONTACTVEL
 
@@ -500,18 +500,18 @@ void Ball::HandleStaticContact(const Vertex3Ds& normal, float origNormVel, float
         // Add just enough to kill original normal velocity and counteract the external forces.
         vel += normalForce * normal;
 
-        ApplyFriction(normal, dtime);
+        ApplyFriction(normal, dtime, friction);
     }
 }
 
-void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
+void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime, float fricCoeff)
 {
     const Vertex3Ds surfP = -radius * hitnormal;    // surface contact point relative to center of mass
 
     Vertex3Ds surfVel = SurfaceVelocity(surfP);
     const Vertex3Ds slip = surfVel - surfVel.Dot(hitnormal) * hitnormal;       // calc the tangential slip velocity
 
-    const float maxFric = 0.1f * m_mass * -g_pplayer->m_gravity.Dot(hitnormal);
+    const float maxFric = fricCoeff * m_mass * -g_pplayer->m_gravity.Dot(hitnormal);
 
     const float slipspeed = slip.Length();
     //slintf("Velocity: %.2f Angular velocity: %.2f Surface velocity: %.2f Slippage: %.2f\n", vel.Length(), m_angularvelocity.Length(), surfVel.Length(), slipspeed);

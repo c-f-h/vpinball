@@ -712,5 +712,5 @@ void HitFlipper::Collide(CollisionEvent *coll)
 
 void HitFlipper::Contact(CollisionEvent& coll, float dtime)
 {
-    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[3].z, dtime);
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[3].z, 0.6f, dtime);
 }

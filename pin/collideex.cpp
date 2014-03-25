@@ -915,7 +915,7 @@ void HitPlane::Collide(CollisionEvent* coll)
 
 void HitPlane::Contact(CollisionEvent& coll, float dtime)
 {
-    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, dtime);
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, 0.1f, dtime);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
