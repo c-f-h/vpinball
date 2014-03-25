@@ -247,8 +247,7 @@ void Ball::Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, flo
 
     const Vertex3Ds surfP = -radius * hitNormal;    // surface contact point relative to center of mass
 
-    Vertex3Ds surfVel;
-    SurfaceVelocity(surfP, surfVel);            // velocity at impact point
+    Vertex3Ds surfVel = SurfaceVelocity(surfP);            // velocity at impact point
 
     Vertex3Ds tangent = surfVel - surfVel.Dot(hitNormal) * hitNormal;       // calc the tangential velocity
 
@@ -509,8 +508,7 @@ void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
 {
     const Vertex3Ds surfP = -radius * hitnormal;    // surface contact point relative to center of mass
 
-    Vertex3Ds surfVel;
-    SurfaceVelocity(surfP, surfVel);
+    Vertex3Ds surfVel = SurfaceVelocity(surfP);
     const Vertex3Ds slip = surfVel - surfVel.Dot(hitnormal) * hitnormal;       // calc the tangential slip velocity
 
     const float maxFric = 0.1f * m_mass * -g_pplayer->m_gravity.Dot(hitnormal);
@@ -522,8 +520,7 @@ void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
     {
         // slip speed zero - static friction case
 
-        Vertex3Ds surfAcc;
-        SurfaceAcceleration(surfP, surfAcc);
+        Vertex3Ds surfAcc = SurfaceAcceleration(surfP);
         const Vertex3Ds slipAcc = surfAcc - surfAcc.Dot(hitnormal) * hitnormal;       // calc the tangential slip acceleration
 
         // neither slip velocity nor slip acceleration? nothing to do here
@@ -553,20 +550,16 @@ void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime)
     }
 }
 
-void Ball::SurfaceVelocity(const Vertex3Ds& surfP, Vertex3Ds& svel) const
+Vertex3Ds Ball::SurfaceVelocity(const Vertex3Ds& surfP) const
 {
-    svel = CrossProduct(m_angularvelocity, surfP);      // tangential velocity due to rotation
-    svel += vel;       // linear velocity
+    return vel + CrossProduct(m_angularvelocity, surfP);      // linear velocity plus tangential velocity due to rotation
 }
 
-void Ball::SurfaceAcceleration(const Vertex3Ds& surfP, Vertex3Ds& sacc) const
+Vertex3Ds Ball::SurfaceAcceleration(const Vertex3Ds& surfP) const
 {
-    sacc = m_invMass * g_pplayer->m_gravity;
-
     // if we had any external torque, we would have to add "(deriv. of ang.vel.) x surfP" here
-
-    // centripetal acceleration
-    sacc += CrossProduct( m_angularvelocity, CrossProduct(m_angularvelocity, surfP) );
+    return m_invMass * g_pplayer->m_gravity     // linear acceleration
+        + CrossProduct( m_angularvelocity, CrossProduct(m_angularvelocity, surfP) ); // centripetal acceleration
 }
 
 void Ball::ApplySurfaceImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse)

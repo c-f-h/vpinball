@@ -47,8 +47,8 @@ public:
 	void ApplyFriction(const Vertex3Ds& hitnormal, float dtime);
     void HandleStaticContact(const Vertex3Ds& normal, float origNormVel, float dtime);
 
-    void SurfaceVelocity(const Vertex3Ds& surfP, Vertex3Ds& svel) const;
-    void SurfaceAcceleration(const Vertex3Ds& surfP, Vertex3Ds& sacc) const;
+    Vertex3Ds SurfaceVelocity(const Vertex3Ds& surfP) const;
+    Vertex3Ds SurfaceAcceleration(const Vertex3Ds& surfP) const;
 
     void ApplySurfaceImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse);
 

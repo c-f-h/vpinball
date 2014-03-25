@@ -217,6 +217,12 @@ void FlipperAnimObject::UpdateVelocities()
    }
 }
 
+Vertex3Ds HitFlipper::SurfaceVelocity(const Vertex3Ds& surfP) const
+{
+    const Vertex3Ds angularVelocity(0, 0, m_flipperanim.m_anglespeed);
+    return CrossProduct( angularVelocity, surfP );
+}
+
 #define LeftFace 1
 #define RightFace 0
 
@@ -367,6 +373,7 @@ float HitFlipper::HitTestFlipperEnd(const Ball * pball, const float dtime, Colli
    const float inv_cbcedist = 1.0f/cbcedist;
    coll.normal[0].x = ballvtx*inv_cbcedist;				// normal vector from flipper end to ball
    coll.normal[0].y = ballvty*inv_cbcedist;
+   coll.normal[0].z = 0.0f;
 
    const Vertex2D dist(
       (pball->pos.x + ballvx*t - ballr*coll.normal[0].x - m_flipperanim.m_hitcircleBase.center.x), // vector from base to flipperEnd plus the projected End radius
@@ -531,6 +538,7 @@ float HitFlipper::HitTestFlipperFace(const Ball * pball, const float dtime, Coll
    const float inv_dist = 1.0f/distance;
    coll.normal[1].x = -dist.y*inv_dist;		//Unit Tangent velocity of contact point(rotate Normal clockwise)
    coll.normal[1].y =  dist.x*inv_dist;
+   coll.normal[1].z = 0.0f;
 
    if (contactAng >= angleMax && anglespeed > 0 || contactAng <= angleMin && anglespeed < 0)	// hit limits ??? 
       anglespeed = 0.0f;							// rotation stopped
@@ -563,7 +571,26 @@ void HitFlipper::Collide(CollisionEvent *coll)
 {
     Ball *pball = coll->ball;
     Vertex3Ds *phitnormal = coll->normal;
+    const Vertex3Ds normal = phitnormal[0];
 
+    const Vertex3Ds rB = -pball->radius * normal;
+    const Vertex3Ds hitPos = pball->pos + rB;
+
+    const Vertex3Ds cF(
+            m_flipperanim.m_hitcircleBase.center.x,
+            m_flipperanim.m_hitcircleBase.center.y,
+            pball->pos.z );     // make sure collision happens in same z plane where ball is
+
+    const Vertex3Ds rF = hitPos - cF;       // displacement relative to flipper center
+
+    const Vertex3Ds vB = pball->SurfaceVelocity(rB);
+    const Vertex3Ds vF = SurfaceVelocity(rF);
+    const Vertex3Ds vrel = vB - vF;
+    //slintf("Normal: %.2f %.2f %.2f  -  Rel.vel.: %f %f %f\n", normal.x, normal.y, normal.z, vrel.x, vrel.y, vrel.z);
+
+    float bnv = normal.Dot(vrel);       // relative normal velocity
+
+/*
    const float distance = phitnormal[2].x;				// moment .... and the flipper response
    const float angsp = m_flipperanim.m_anglespeed;		// angular rate of flipper at impact moment
    float tanspd = distance * angsp;					// distance * anglespeed
@@ -574,6 +601,7 @@ void HitFlipper::Collide(CollisionEvent *coll)
       pball->vel.y - phitnormal[1].y*tanspd);					 //delta velocity ball to face
 
    float bnv = dv.x*phitnormal[0].x + dv.y*phitnormal[0].y; //dot Normal to delta v
+*/
 
    if (bnv >= -C_LOWNORMVEL )							 // nearly receding ... make sure of conditions
    {												 // otherwise if clearly approaching .. process the collision
@@ -582,7 +610,7 @@ void HitFlipper::Collide(CollisionEvent *coll)
       if (coll->distance < -C_EMBEDDED)
          bnv = -C_EMBEDSHOT;							 // has ball become embedded???, give it a kick
       else return;
-#endif		
+#endif
    }
 
 #ifdef C_DISP_GAIN 
@@ -595,20 +623,16 @@ void HitFlipper::Collide(CollisionEvent *coll)
       pball->pos.x += hdist * phitnormal->x;	// push along norm, back to free area
       pball->pos.y += hdist * phitnormal->y;	// use the norm, but is not correct
    }
-#endif		
+#endif
 
-   float impulse = 1.005f + m_elasticity;		// hit on static, immovable flipper ... i.e on the stops
-   float obliquecorr = 0.0f;
+   const float reactionImpulse = pball->m_mass * fabs(bnv);
 
-   if ((bnv < -0.25f) && (g_pplayer->m_time_msec - m_last_hittime) > 250) // limit rate to 333 milliseconds per event //!! WTF?
-   {
-      flipperHit = (distance == 0.0f) ? -1.0f : -bnv; // move event processing to end of collision handler...
-   }
+   float impulse = -(1.0f + m_elasticity) * bnv;
 
-   m_last_hittime = g_pplayer->m_time_msec; // keep resetting until idle for 250 milliseconds
-
+/*
    if (distance > 0.f)	// recoil possible 
    {			
+      float obliquecorr = 0.0f;
       const float maxradius = m_pflipper->m_d.m_FlipperRadius + m_pflipper->m_d.m_EndRadius; 		
       const float recoil = (m_pflipper->m_d.m_OverridePhysics ? m_pflipper->m_d.m_OverrideRecoil : m_pflipper->m_d.m_recoil)/maxradius; // convert to Radians/time
       const float tfdr = distance/maxradius; 		
@@ -642,58 +666,48 @@ void HitFlipper::Collide(CollisionEvent *coll)
             if (anglespeed > 0.05f) 
                m_flipperanim.m_EnableRotateEvent = 1; //make EOS event
          }
-      }	
+      }
    }
-   pball->vel.x -= impulse*bnv * phitnormal->x; 							// new velocity for ball after impact
-   pball->vel.y -= impulse*bnv * phitnormal->y;
+*/
 
-   // TODO: reenable scatter if needed
-   //float scatter_angle = (m_pflipper->m_d.m_OverridePhysics ? m_pflipper->m_d.m_OverrideScatter : m_pflipper->m_d.m_scatterangle); // object specific roughness
-   //if (scatter_angle <= 0.0f)
-   //   scatter_angle = c_hardScatter;
-   //scatter_angle *= g_pplayer->m_ptable->m_globalDifficulty;			// apply difficulty weighting
+   pball->vel += impulse * normal;        // new velocity for ball after impact
 
-   //if (bnv > -1.0f) scatter_angle = 0.f;								// not for low velocities
+   // apply friction
 
-   //if (obliquecorr != 0.f || scatter_angle > 1.0e-5f)					// trajectory correction to reduce the obliqueness
-   //{
-   //   float scatter = rand_mt_m11();			    // -1.0f..1.0f
-   //   scatter *= (1.0f - scatter*scatter) * 2.59808f * scatter_angle;	// shape quadratic distribution and scale
-   //   scatter_angle = obliquecorr + scatter;
-   //   const float radsin = sinf(scatter_angle);	//  Green's transform matrix... rotate angle delta
-   //   const float radcos = cosf(scatter_angle);	//  rotational transform from current position to position at time t
-   //   const float vx2 = pball->vx;
-   //   const float vy2 = pball->vy;
-   //   pball->vx = vx2 *radcos - vy2 *radsin;  // rotate trajectory more accurately
-   //   pball->vy = vy2 *radcos + vx2 *radsin;
-   //}
+   Vertex3Ds tangent = vrel - vrel.Dot(normal) * normal;       // calc the tangential velocity
 
-   //pball->vx *= 0.985f; pball->vy *= 0.985f; pball->vz *= 0.96f;	// friction     // TODO: reenable
+   static const float frictionCoeff = 0.6f;
 
-   pball->m_fDynamic = C_DYNAMIC;			// reactive ball if quenched
-
-   tanspd = m_flipperanim.m_anglespeed *distance; // new tangential speed
-   dv.x = (pball->vel.x - phitnormal[1].x * tanspd); // project along unit transverse vector
-   dv.y = (pball->vel.y - phitnormal[1].y * tanspd); // delta velocity
-
-   bnv = dv.x*phitnormal->x + dv.y*phitnormal->y;	// dot face Normal to delta v
-
-   if (bnv < 0)
-   {	// opps .... impulse calculations were off a bit, add a little boost
-      bnv *= -1.2f;						// small bounce
-      pball->vel.x += bnv * phitnormal->x;	// new velocity for ball after corrected impact
-      pball->vel.y += bnv * phitnormal->y;	//
-   }
-
-   // move hit event to end of collision routine, pinball may be deleted
-   if (flipperHit != 0)
+   const float tangentSpSq = tangent.LengthSquared();
+   if (tangent.LengthSquared() > 1e-6f)
    {
-      if (flipperHit < 0) m_pflipper->FireGroupEvent(DISPID_HitEvents_Hit);	   //simple hit event	
-      else m_pflipper->FireVoidEventParm(DISPID_FlipperEvents_Collide,flipperHit); // collision velocity (normal to face)	
+       tangent /= sqrt(tangentSpSq);            // normalize to get tangent direction
+       const float vt = vrel.Dot(tangent);   // get speed in tangential direction
+
+       // compute friction impulse
+       const Vertex3Ds cross = CrossProduct(rB, tangent);
+       const float kt = pball->m_invMass + tangent.Dot( CrossProduct(pball->m_inverseworldinertiatensor * cross, rB));
+
+       // friction impulse can't be greather than coefficient of friction times collision impulse (Coulomb friction cone)
+       const float maxFric = frictionCoeff * reactionImpulse;
+       const float jt = clamp(-vt / kt, -maxFric, maxFric);
+
+       pball->ApplySurfaceImpulse(rB, jt * tangent);
    }
 
-   const Vertex3Ds vnormal(phitnormal->x, phitnormal->y, 0.0f);
-   pball->AngularAcceleration(vnormal);
+   pball->m_fDynamic = C_DYNAMIC;           // reactive ball if quenched
+
+   if ((bnv < -0.25f) && (g_pplayer->m_time_msec - m_last_hittime) > 250) // limit rate to 250 milliseconds per event
+   {
+       const float distance = phitnormal[2].x;                     // moment .... and the flipper response
+       const float flipperHit = (distance == 0.0f) ? -1.0f : -bnv; // move event processing to end of collision handler...
+       if (flipperHit < 0)
+           m_pflipper->FireGroupEvent(DISPID_HitEvents_Hit);        // simple hit event
+       else
+           m_pflipper->FireVoidEventParm(DISPID_FlipperEvents_Collide, flipperHit); // collision velocity (normal to face)
+   }
+
+   m_last_hittime = g_pplayer->m_time_msec; // keep resetting until idle for 250 milliseconds
 }
 
 void HitFlipper::Contact(CollisionEvent& coll, float dtime)

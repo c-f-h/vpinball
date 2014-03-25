@@ -79,6 +79,8 @@ public:
 
 	virtual void CalcHitRect();
 
+    Vertex3Ds SurfaceVelocity(const Vertex3Ds& surfP) const;
+
 	Flipper *m_pflipper;
 
 	float m_forcemass; // Force of the flipper, treated as the mass of the moving object;
