@@ -70,8 +70,6 @@
 
 
 //Flippers:
-#define C_FLIPPERACCEL   1.25f
-#define C_FLIPPERIMPULSE 1.0f
 #define C_INTERATIONS 20 // Precision level and cycles for interative calculations // acceptable contact time ... near zero time
 
 //Ball:

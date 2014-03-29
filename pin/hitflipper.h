@@ -10,6 +10,15 @@ public:
 
 	virtual void Check3D()                              { }
 
+    void SetSolenoidState(bool s);
+    float GetStrokeRatio() const;
+
+    // rigid body functions
+    Vertex3Ds SurfaceVelocity(const Vertex3Ds& surfP) const;
+    Vertex3Ds SurfaceAcceleration(const Vertex3Ds& surfP) const;
+
+    void ApplyImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse);
+
 	Flipper *m_pflipper;
 
 	LineSeg m_lineseg1;
@@ -23,9 +32,10 @@ public:
 	Vertex2D m_leftFaceNormal, m_rightFaceNormal, m_leftFaceBase, m_rightFaceBase;
 	Vertex2D m_endRadiusCenter;
 
+    float m_angularMomentum;
+    float m_angularAcceleration;
 	float m_anglespeed;
 	float m_angleCur;
-	float m_angleEnd;
 
 	float m_flipperradius;
 	float m_force;
@@ -35,13 +45,13 @@ public:
 
 	float m_height;
 
-	float m_maxvelocity;
+    int m_dir;
+    bool m_solState;        // is solenoid enabled?
 
+	float m_angleStart, m_angleEnd;
 	float m_angleMin, m_angleMax;
 
-#if 0
 	float m_inertia;	//moment of inertia
-#endif
 
 	int m_EnableRotateEvent;
 
@@ -51,6 +61,10 @@ public:
    bool m_fVisible;
 	bool m_lastHitFace;
    bool m_fCompatibility;
+
+#ifdef DEBUG_FLIPPERS
+    U32 m_startTime;
+#endif
 	};
 
 class HitFlipper :
@@ -60,7 +74,7 @@ public:
 	Vertex2D v;
 	//float rad1, rad2;
 
-	HitFlipper(const float x, const float y, float baser, float endr, float flipr, const float angle,
+	HitFlipper(const Vertex2D& center, float baser, float endr, float flipr, float angleStart, float angleEnd,
 		       const float zlow, const float zhigh, float strength, const float mass);
 	~HitFlipper();
 
@@ -79,11 +93,7 @@ public:
 
 	virtual void CalcHitRect();
 
-    Vertex3Ds SurfaceVelocity(const Vertex3Ds& surfP) const;
-
 	Flipper *m_pflipper;
-
-	float m_forcemass; // Force of the flipper, treated as the mass of the moving object;
 
 	FlipperAnimObject m_flipperanim;
 	int m_last_hittime;

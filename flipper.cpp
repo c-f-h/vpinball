@@ -260,8 +260,9 @@ void Flipper::GetHitShapes(Vector<HitObject> * const pvho)
    }
    else m_d.m_FlipperRadius = m_d.m_FlipperRadiusMax;
 
-   HitFlipper * const phf = new HitFlipper(m_d.m_Center.x, m_d.m_Center.y, m_d.m_BaseRadius, m_d.m_EndRadius,
-	   m_d.m_FlipperRadius, ANGTORAD(m_d.m_StartAngle), height, height + m_d.m_height, (m_d.m_OverridePhysics ? m_d.m_OverrideStrength : m_d.m_strength), m_d.m_mass);
+   HitFlipper * const phf = new HitFlipper(m_d.m_Center, m_d.m_BaseRadius, m_d.m_EndRadius,
+	   m_d.m_FlipperRadius, ANGTORAD(m_d.m_StartAngle), ANGTORAD(m_d.m_EndAngle), height, height + m_d.m_height,
+       (m_d.m_OverridePhysics ? m_d.m_OverrideStrength : m_d.m_strength), m_d.m_force);     // HACK: use "Speed" (m_force) as mass
 
    phf->m_elasticity = (m_d.m_OverridePhysics ? m_d.m_OverrideElasticity : m_d.m_elasticity);
    phf->SetFriction(m_d.m_friction);
@@ -270,11 +271,6 @@ void Flipper::GetHitShapes(Vector<HitObject> * const pvho)
    phf->m_flipperanim.m_EnableRotateEvent = 0;
 
    phf->m_pfe = NULL;
-
-   const float angStart = ANGTORAD(m_d.m_StartAngle);
-   const float angEnd = ANGTORAD(m_d.m_EndAngle);
-   phf->m_flipperanim.m_angleMin = min(angStart, angEnd);
-   phf->m_flipperanim.m_angleMax = max(angStart, angEnd);
 
    phf->m_flipperanim.m_fEnabled = (m_d.m_fEnabled != 0);
    phf->m_flipperanim.m_fVisible = (m_d.m_fVisible != 0);
@@ -546,18 +542,16 @@ STDMETHODIMP Flipper::RotateToEnd() //power stroke to hit ball
    {
       const float endAng = ANGTORAD(m_d.m_EndAngle);
       m_phitflipper->m_flipperanim.m_EnableRotateEvent = 1;
-      m_phitflipper->m_flipperanim.m_angleEnd = endAng;
+      m_phitflipper->m_flipperanim.SetSolenoidState(true);
 
       if (fabsf(endAng - m_phitflipper->m_flipperanim.m_angleCur) < 1.0e-5f)   //already there?
       {
          m_phitflipper->m_flipperanim.m_fAcc = 0;
          m_phitflipper->m_flipperanim.m_anglespeed = 0;
+         m_phitflipper->m_flipperanim.m_angularMomentum = 0;
       }
-      else m_phitflipper->m_flipperanim.m_fAcc = (endAng > m_phitflipper->m_flipperanim.m_angleCur) ? +1 : -1;
-
-	  m_phitflipper->m_flipperanim.m_maxvelocity = (m_d.m_OverridePhysics ? m_d.m_OverrideSpeed : m_d.m_force) * 4.5f;
-      m_phitflipper->m_flipperanim.m_force = (m_d.m_OverridePhysics ? m_d.m_OverrideSpeed : m_d.m_force);
-      m_phitflipper->m_forcemass = (m_d.m_OverridePhysics ? m_d.m_OverrideStrength : m_d.m_strength);
+      else
+          m_phitflipper->m_flipperanim.m_fAcc = m_phitflipper->m_flipperanim.m_dir;
    }
    return S_OK;
 }
@@ -568,22 +562,16 @@ STDMETHODIMP Flipper::RotateToStart() // return to park
    {
       const float startAng =  ANGTORAD(m_d.m_StartAngle);		
       m_phitflipper->m_flipperanim.m_EnableRotateEvent = -1;
-      m_phitflipper->m_flipperanim.m_angleEnd = startAng;
+      m_phitflipper->m_flipperanim.SetSolenoidState(false);
 
       if (fabsf(startAng - m_phitflipper->m_flipperanim.m_angleCur) < 1.0e-5f)//already there?
       {
          m_phitflipper->m_flipperanim.m_fAcc = 0;
          m_phitflipper->m_flipperanim.m_anglespeed = 0;
+         m_phitflipper->m_flipperanim.m_angularMomentum = 0;
       }
-      else m_phitflipper->m_flipperanim.m_fAcc = (startAng > m_phitflipper->m_flipperanim.m_angleCur) ? +1 : -1;
-
-      m_phitflipper->m_flipperanim.m_maxvelocity = (m_d.m_OverridePhysics ? m_d.m_OverrideSpeed : m_d.m_force) * 4.5f;
-
-      float rtn = (m_d.m_OverridePhysics ? m_d.m_OverrideReturnStrength : m_d.m_return);
-      if (rtn <= 0.f) rtn = 1.0f;
-
-      m_phitflipper->m_flipperanim.m_force = (m_d.m_OverridePhysics ? m_d.m_OverrideSpeed : m_d.m_force) * rtn;
-      m_phitflipper->m_forcemass = (m_d.m_OverridePhysics ? m_d.m_OverrideStrength : m_d.m_strength) * rtn;		
+      else
+          m_phitflipper->m_flipperanim.m_fAcc = -m_phitflipper->m_flipperanim.m_dir;
    }
    return S_OK;
 }
