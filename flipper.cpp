@@ -543,15 +543,6 @@ STDMETHODIMP Flipper::RotateToEnd() //power stroke to hit ball
       const float endAng = ANGTORAD(m_d.m_EndAngle);
       m_phitflipper->m_flipperanim.m_EnableRotateEvent = 1;
       m_phitflipper->m_flipperanim.SetSolenoidState(true);
-
-      if (fabsf(endAng - m_phitflipper->m_flipperanim.m_angleCur) < 1.0e-5f)   //already there?
-      {
-         m_phitflipper->m_flipperanim.m_fAcc = 0;
-         m_phitflipper->m_flipperanim.m_anglespeed = 0;
-         m_phitflipper->m_flipperanim.m_angularMomentum = 0;
-      }
-      else
-          m_phitflipper->m_flipperanim.m_fAcc = m_phitflipper->m_flipperanim.m_dir;
    }
    return S_OK;
 }
@@ -563,15 +554,6 @@ STDMETHODIMP Flipper::RotateToStart() // return to park
       const float startAng =  ANGTORAD(m_d.m_StartAngle);		
       m_phitflipper->m_flipperanim.m_EnableRotateEvent = -1;
       m_phitflipper->m_flipperanim.SetSolenoidState(false);
-
-      if (fabsf(startAng - m_phitflipper->m_flipperanim.m_angleCur) < 1.0e-5f)//already there?
-      {
-         m_phitflipper->m_flipperanim.m_fAcc = 0;
-         m_phitflipper->m_flipperanim.m_anglespeed = 0;
-         m_phitflipper->m_flipperanim.m_angularMomentum = 0;
-      }
-      else
-          m_phitflipper->m_flipperanim.m_fAcc = -m_phitflipper->m_flipperanim.m_dir;
    }
    return S_OK;
 }

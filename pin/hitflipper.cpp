@@ -54,7 +54,6 @@ HitFlipper::HitFlipper(const Vertex2D& center, float baser, float endr, float fl
 
    m_flipperanim.SetObjects(angleStart);
 
-   m_flipperanim.m_fAcc = 0;
    m_flipperanim.m_force = strength;
    m_flipperanim.m_mass = mass;
 
@@ -169,14 +168,12 @@ void FlipperAnimObject::UpdateDisplacements(const float dtime)
    //if (m_anglespeed)
    //    slintf("Ang.speed: %f\n", m_anglespeed);
 
-   if (m_angleCur > m_angleMax)		// too far???
+   if (m_angleCur >= m_angleMax)		// too far???
    {
-      m_angleCur = m_angleMax; 
+      //m_angleCur = m_angleMax;
 
       if (m_anglespeed > 0.f) 
       {
-         if(m_fAcc > 0) m_fAcc = 0;
-
 #ifdef DEBUG_FLIPPERS
          if (m_startTime)
          {
@@ -188,23 +185,23 @@ void FlipperAnimObject::UpdateDisplacements(const float dtime)
 #endif
 
          const float anglespd = fabsf(RADTOANG(m_anglespeed));
-         m_angularMomentum = m_anglespeed = 0.f;
+         m_angularMomentum *= -0.2f;
+         m_anglespeed = m_angularMomentum / m_inertia;
 
          if (m_EnableRotateEvent > 0) m_pflipper->FireVoidEventParm(DISPID_LimitEvents_EOS,anglespd); // send EOS event
          else if (m_EnableRotateEvent < 0) m_pflipper->FireVoidEventParm(DISPID_LimitEvents_BOS, anglespd);	// send Beginning of Stroke event
          m_EnableRotateEvent = 0;
       }
    }	
-   else if (m_angleCur < m_angleMin)
+   else if (m_angleCur <= m_angleMin)
    {
-      m_angleCur = m_angleMin; 
+      //m_angleCur = m_angleMin;
 
       if (m_anglespeed < 0.f)
       {
-         if(m_fAcc < 0) m_fAcc = 0;
-
          const float anglespd = fabsf(RADTOANG(m_anglespeed));
-         m_angularMomentum = m_anglespeed = 0.f;
+         m_angularMomentum *= -0.2f;
+         m_anglespeed = m_angularMomentum / m_inertia;
 
          if (m_EnableRotateEvent > 0) m_pflipper->FireVoidEventParm(DISPID_LimitEvents_EOS,anglespd); // send EOS event
          else if (m_EnableRotateEvent < 0) m_pflipper->FireVoidEventParm(DISPID_LimitEvents_BOS, anglespd);	// send Park event
@@ -651,7 +648,7 @@ void HitFlipper::Collide(CollisionEvent *coll)
     //slintf("Normal: %.2f %.2f %.2f  -  Rel.vel.: %f %f %f\n", normal.x, normal.y, normal.z, vrel.x, vrel.y, vrel.z);
 
     float bnv = normal.Dot(vrel);       // relative normal velocity
-    //slintf("Collision - rel.vel. %f\n", bnv);
+    slintf("Flipper collision - rel.vel. %f\n", bnv);
 
    if (bnv >= -C_LOWNORMVEL )							 // nearly receding ... make sure of conditions
    {												 // otherwise if clearly approaching .. process the collision
@@ -788,7 +785,7 @@ void HitFlipper::Contact(CollisionEvent& coll, float dtime)
 
     const float normVel = vrel.Dot(normal);   // this should be zero, but only up to +/- C_CONTACTVEL
 
-    //slintf("Contact - rel.vel. %f\n", normVel);
+    slintf("Flipper contact - rel.vel. %f\n", normVel);
 
     // If some collision has changed the ball's velocity, we may not have to do anything.
     if (normVel <= C_CONTACTVEL)

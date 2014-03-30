@@ -40,7 +40,6 @@ public:
 	float m_flipperradius;
 	float m_force;
 	float m_mass;
-	int m_fAcc;				//rotational acceleration  -1, 0, +1
 	float m_elasticity;
 
 	float m_height;
