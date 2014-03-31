@@ -17,6 +17,8 @@ public:
     Vertex3Ds SurfaceVelocity(const Vertex3Ds& surfP) const;
     Vertex3Ds SurfaceAcceleration(const Vertex3Ds& surfP) const;
 
+    float GetHitTime() const;
+
     void ApplyImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse);
 
 	Flipper *m_pflipper;
@@ -81,6 +83,7 @@ public:
 
 	virtual float HitTestFlipperEnd(const Ball * pball, const float dtime, CollisionEvent& coll);
 
+    float GetHitTime() const;
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	
 	virtual int GetType() const {return eFlipper;}

@@ -168,7 +168,7 @@ void FlipperAnimObject::UpdateDisplacements(const float dtime)
    //if (m_anglespeed)
    //    slintf("Ang.speed: %f\n", m_anglespeed);
 
-   if (m_angleCur >= m_angleMax)		// too far???
+   if (m_angleCur >= m_angleMax - 1e-3f)        // hit stop?
    {
       //m_angleCur = m_angleMax;
 
@@ -192,8 +192,8 @@ void FlipperAnimObject::UpdateDisplacements(const float dtime)
          else if (m_EnableRotateEvent < 0) m_pflipper->FireVoidEventParm(DISPID_LimitEvents_BOS, anglespd);	// send Beginning of Stroke event
          m_EnableRotateEvent = 0;
       }
-   }	
-   else if (m_angleCur <= m_angleMin)
+   }
+   else if (m_angleCur <= m_angleMin + 1e-3f)
    {
       //m_angleCur = m_angleMin;
 
@@ -275,6 +275,28 @@ Vertex3Ds FlipperAnimObject::SurfaceAcceleration(const Vertex3Ds& surfP) const
     const Vertex3Ds centrAcc( -av2 * surfP.x, -av2 * surfP.y, 0 );
 
     return tangAcc + centrAcc;
+}
+
+float FlipperAnimObject::GetHitTime() const
+{
+    if (m_anglespeed == 0)
+        return -1.0f;
+
+    const float dist = (m_anglespeed > 0)
+        ? m_angleMax - m_angleCur       // >= 0
+        : m_angleMin - m_angleCur;      // <= 0
+
+    const float hittime = dist / m_anglespeed;
+
+    if (infNaN(hittime) || hittime < 0)
+        return -1.0f;
+    else
+        return hittime;
+}
+
+float HitFlipper::GetHitTime() const
+{
+    return m_flipperanim.GetHitTime();
 }
 
 #define LeftFace 1

@@ -830,6 +830,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
         if (((pho->GetType() == e3DPoly) && ((Hit3DPoly *)pho)->m_fVisible) ||
             ((pho->GetType() == eTriangle) && ((HitTriangle *)pho)->m_fVisible) )
             m_shadowoctree.AddElement(pho);
+        else if (pho->GetType() == eFlipper)
+            m_vFlippers.push_back((HitFlipper*)pho);
 
         AnimObject *pao = pho->GetAnimObject();
         if (pao)
@@ -1509,6 +1511,15 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 		c_timesearch++;
 #endif
 		hittime = dtime;	//begin time search from now ...  until delta ends
+
+        // find earliest time where a flipper collides with its stop
+        for (unsigned i = 0; i < m_vFlippers.size(); ++i)
+        {
+            const float fliphit = m_vFlippers[i]->GetHitTime();
+            if (fliphit >= 0 && fliphit < hittime)
+                hittime = fliphit;
+        }
+
         m_fRecordContacts = true;
         m_contacts.clear();
 
@@ -1554,8 +1565,8 @@ void Player::PhysicsSimulateCycle(float dtime) // move physics forward to this t
 						}
 					}
 				}
-			}				
-		}
+			}
+		}   // end loop over all balls
 
         m_fRecordContacts = false;
 

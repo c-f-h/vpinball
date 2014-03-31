@@ -182,6 +182,8 @@ public:
 	Ball *m_pactiveballDebug;	// ball the debugger will use as Activeball when firing events
 
     std::vector<Ball*> m_vball;
+    std::vector<HitFlipper*> m_vFlippers;
+
 	Vector<AnimObject> m_vscreenupdate;
 	Vector<HitTimer> m_vht;
 
