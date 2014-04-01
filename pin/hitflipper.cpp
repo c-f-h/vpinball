@@ -168,7 +168,7 @@ void FlipperAnimObject::UpdateDisplacements(const float dtime)
    //if (m_anglespeed)
    //    slintf("Ang.speed: %f\n", m_anglespeed);
 
-   if (m_angleCur >= m_angleMax - 1e-3f)        // hit stop?
+   if (m_angleCur >= m_angleMax)        // hit stop?
    {
       //m_angleCur = m_angleMax;
 
@@ -193,7 +193,7 @@ void FlipperAnimObject::UpdateDisplacements(const float dtime)
          m_EnableRotateEvent = 0;
       }
    }
-   else if (m_angleCur <= m_angleMin + 1e-3f)
+   else if (m_angleCur <= m_angleMin)
    {
       //m_angleCur = m_angleMin;
 
@@ -218,11 +218,6 @@ void FlipperAnimObject::UpdateVelocities()
     //float force = m_dir * (solForce + springForce);
 
     float force = m_dir * (m_solState ? m_force : -0.1f * m_force);
-
-    if (m_angleCur >= m_angleMax)
-        force = std::min(0.0f, force);
-    else if (m_angleCur <= m_angleMin)
-        force = std::max(0.0f, force);
 
     m_angularMomentum += PHYS_FACTOR * force;
     m_anglespeed = m_angularMomentum / m_inertia;    // TODO: figure out moment of inertia
@@ -670,7 +665,7 @@ void HitFlipper::Collide(CollisionEvent *coll)
     //slintf("Normal: %.2f %.2f %.2f  -  Rel.vel.: %f %f %f\n", normal.x, normal.y, normal.z, vrel.x, vrel.y, vrel.z);
 
     float bnv = normal.Dot(vrel);       // relative normal velocity
-    slintf("Flipper collision - rel.vel. %f\n", bnv);
+    //slintf("Flipper collision - rel.vel. %f\n", bnv);
 
    if (bnv >= -C_LOWNORMVEL )							 // nearly receding ... make sure of conditions
    {												 // otherwise if clearly approaching .. process the collision
@@ -807,7 +802,7 @@ void HitFlipper::Contact(CollisionEvent& coll, float dtime)
 
     const float normVel = vrel.Dot(normal);   // this should be zero, but only up to +/- C_CONTACTVEL
 
-    slintf("Flipper contact - rel.vel. %f\n", normVel);
+    //slintf("Flipper contact - rel.vel. %f\n", normVel);
 
     // If some collision has changed the ball's velocity, we may not have to do anything.
     if (normVel <= C_CONTACTVEL)
