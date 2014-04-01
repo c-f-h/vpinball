@@ -111,6 +111,9 @@ public:
 class LineSeg : public HitObject
 	{
 public:
+    LineSeg() { }
+    LineSeg(const Vertex2D& p1, const Vertex2D& p2);
+
 	virtual float HitTestBasic(const Ball * pball, const float dtime, CollisionEvent& coll, const bool direction, const bool lateral, const bool rigid);
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual int GetType() const {return eLineSeg;}

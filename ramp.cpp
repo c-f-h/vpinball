@@ -1022,25 +1022,18 @@ void Ramp::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const 
 
 void Ramp::AddLine(Vector<HitObject> * const pvho, const Vertex2D * const pv1, const Vertex2D * const pv2, const Vertex2D * const pv3, const float height1, const float height2)
 {
-   LineSeg * const plineseg = new LineSeg();
+   LineSeg * const plineseg = new LineSeg(*pv1, *pv2);
    plineseg->m_elasticity = m_d.m_elasticity;
    plineseg->SetFriction(m_d.m_friction);
    plineseg->m_scatter = ANGTORAD(m_d.m_scatter);
-
+   plineseg->m_fEnabled = m_d.m_fCollidable;
    plineseg->m_pfe = NULL;
-
    plineseg->m_rcHitRect.zlow = height1;//m_d.m_heightbottom;
    plineseg->m_rcHitRect.zhigh = height2;//m_d.m_heighttop;
-
-   plineseg->v1 = *pv1;
-   plineseg->v2 = *pv2;
 
    pvho->AddElement(plineseg);
 
    m_vhoCollidable.push_back(plineseg);	//remember hit components of ramp
-   plineseg->m_fEnabled = m_d.m_fCollidable;
-
-   plineseg->CalcNormal();
 
    const Vertex2D vt1(pv1->x - pv2->x, pv1->y - pv2->y);
 

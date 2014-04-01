@@ -32,6 +32,13 @@ HitObject::HitObject() : m_fEnabled(fTrue), m_ObjType(eNull), m_pObj(NULL),
 	{
 	}
 
+
+LineSeg::LineSeg(const Vertex2D& p1, const Vertex2D& p2)
+    : v1(p1), v2(p2)
+{
+    CalcNormal();
+}
+
 void LineSeg::CalcHitRect()
 	{
 	// Allow roundoff
