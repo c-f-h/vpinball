@@ -217,11 +217,30 @@ void FlipperAnimObject::UpdateVelocities()
     //const float solForce = m_solState ? m_force : 0.0f;
     //float force = m_dir * (solForce + springForce);
 
-    float force = m_dir * (m_solState ? m_force : -0.1f * m_force);
+    float solTorque = 0;
+    if (m_solState)
+    {
+        solTorque = m_force;
+        if (fabsf(m_angleCur - m_angleEnd) <= M_PI/180.0f)
+            solTorque *= 0.33f;     // hold coil is weaker
+    }
 
-    m_angularMomentum += PHYS_FACTOR * force;
-    m_anglespeed = m_angularMomentum / m_inertia;    // TODO: figure out moment of inertia
-    m_angularAcceleration = force / m_inertia;
+    float torque = m_dir * (m_solState ? solTorque : -0.1f * m_force);
+
+    // resolve contacts with stoppers
+    if (fabsf(m_anglespeed) <= 1e-2f)
+    {
+        if ((m_angleCur >= m_angleMax - 1e-2f && torque > 0)
+         || (m_angleCur <= m_angleMin + 1e-2f && torque < 0))
+        {
+            m_angularMomentum = 0;
+            torque = 0;
+        }
+    }
+
+    m_angularMomentum += PHYS_FACTOR * torque;
+    m_anglespeed = m_angularMomentum / m_inertia;
+    m_angularAcceleration = torque / m_inertia;
 }
 
 void FlipperAnimObject::ApplyImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse)
