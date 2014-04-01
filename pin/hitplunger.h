@@ -57,6 +57,7 @@ public:
 	virtual int GetType() const {return ePlunger;}
 
 	virtual void Collide(CollisionEvent *coll);
+    virtual void Contact(CollisionEvent& coll, float dtime);
 
 	virtual void CalcHitRect();
 

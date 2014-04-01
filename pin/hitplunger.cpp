@@ -249,44 +249,36 @@ float HitPlunger::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 
 	// We are close enable the plunger light.
 	CollisionEvent hit;
-	const float newtimeb = m_plungeranim.m_linesegBase.HitTest(&BallT, dtime, hit);
-	if (newtimeb >= 0 && newtimeb <= hittime)
+    float newtime;
+
+	newtime = m_plungeranim.m_linesegBase.HitTest(&BallT, dtime, hit);
+	if (newtime >= 0 && newtime <= hittime)
 		{
 		fHit = true;
-		hittime = newtimeb;
-
-		coll.normal[0] = hit.normal[0];
-		coll.distance = hit.distance;
-		coll.hitRigid = true;
+		hittime = newtime;
+        coll = hit;
 		coll.normal[1].x = 0;
 		coll.normal[1].y = 0;
 		}
 
 	for (int i=0;i<2;i++)
 		{
-		const float newtimes = m_plungeranim.m_linesegSide[i].HitTest(&BallT, hittime, hit);
-		if (newtimes >= 0 && newtimes <= hittime)
+		newtime = m_plungeranim.m_linesegSide[i].HitTest(&BallT, hittime, hit);
+		if (newtime >= 0 && newtime <= hittime)
 			{
 			fHit = true;
-			hittime = newtimes;
-
-			coll.normal[0] = hit.normal[0];
-			coll.distance = hit.distance;
-			coll.hitRigid = true;
-
+			hittime = newtime;
+            coll = hit;
 			coll.normal[1].x = 0;
 			coll.normal[1].y = 0;
 			}
 
-		const float newtimej = m_plungeranim.m_jointBase[i].HitTest(&BallT, hittime, hit);
-		if (newtimej >= 0 && newtimej <= hittime)
+		newtime = m_plungeranim.m_jointBase[i].HitTest(&BallT, hittime, hit);
+		if (newtime >= 0 && newtime <= hittime)
 			{
 			fHit = true;
-			hittime = newtimej;
-
-			coll.normal[0] = hit.normal[0];
-			coll.distance = hit.distance;
-			coll.hitRigid = true;
+			hittime = newtime;
+            coll = hit;
 			coll.normal[1].x = 0;
 			coll.normal[1].y = 0;
 			}
@@ -296,35 +288,30 @@ float HitPlunger::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 	
 	BallT.vel.y -= deltay;
 
-	const float newtimee = m_plungeranim.m_linesegEnd.HitTest(&BallT, hittime, hit);
-	if (newtimee >= 0 && newtimee <= hittime)
+	newtime = m_plungeranim.m_linesegEnd.HitTest(&BallT, hittime, hit);
+	if (newtime >= 0 && newtime <= hittime)
 		{
 		fHit = true;
-		hittime = newtimee;
-
-		coll.normal[0] = hit.normal[0];
-		coll.distance = hit.distance;
-		coll.hitRigid = true;
+		hittime = newtime;
+        coll = hit;
 		coll.normal[1].x = 0;
 		coll.normal[1].y = deltay;	 //m_speed;		//>>> changed by chris
 		}
 
 	for (int i=0;i<2;i++)
 		{
-		const float newtimej = m_plungeranim.m_jointEnd[i].HitTest(&BallT, hittime, hit);
-		if (newtimej >= 0 && newtimej <= hittime)
+		newtime = m_plungeranim.m_jointEnd[i].HitTest(&BallT, hittime, hit);
+		if (newtime >= 0 && newtime <= hittime)
 			{
 			fHit = true;
-			hittime = newtimej;
-
-			coll.normal[0] = hit.normal[0];
-			coll.distance = hit.distance;
-			coll.hitRigid = true;
+			hittime = newtime;
+            coll = hit;
 			coll.normal[1].x = 0;
 			coll.normal[1].y = deltay;	 //m_speed;		//>>> changed by chris
 			}
 		}
 
+    //coll.isContact = false;     // HACK: we get contacts from the LineSegs, but ignore them
 	return fHit ? hittime : -1.0f;
 	}
 
@@ -379,3 +366,7 @@ void HitPlunger::Collide(CollisionEvent *coll)
 	const Vertex3Ds vnormal(phitnormal->x, phitnormal->y, 0.0f);
 	pball->AngularAcceleration(vnormal);	
 	}
+
+void HitPlunger::Contact(CollisionEvent& coll, float dtime)
+{
+}

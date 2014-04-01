@@ -40,6 +40,8 @@ class AnimObject;
 
 struct CollisionEvent
 {
+    CollisionEvent() : ball(0), obj(0), isContact(false) {}
+
     Ball* ball;         // the ball that collided with smth
     HitObject* obj;     // what the ball collided with
 
