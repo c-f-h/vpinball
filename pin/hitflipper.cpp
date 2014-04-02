@@ -711,51 +711,9 @@ void HitFlipper::Collide(CollisionEvent *coll)
    }
 #endif
 
-   const Vertex3Ds tmp = CrossProduct( rF, normal ) / m_flipperanim.m_inertia;        // TODO: proper inertia
-
+   const Vertex3Ds tmp = CrossProduct( rF, normal ) / m_flipperanim.m_inertia;
    const float impulse = -(1.0f + m_elasticity) * bnv
        / (pball->m_invMass + normal.Dot(CrossProduct(tmp, rF)));
-
-/*
-   if (distance > 0.f)	// recoil possible 
-   {			
-      float obliquecorr = 0.0f;
-      const float maxradius = m_pflipper->m_d.m_FlipperRadius + m_pflipper->m_d.m_EndRadius; 		
-      const float recoil = (m_pflipper->m_d.m_OverridePhysics ? m_pflipper->m_d.m_OverrideRecoil : m_pflipper->m_d.m_recoil)/maxradius; // convert to Radians/time
-      const float tfdr = distance/maxradius; 		
-      const float tfr = powf(tfdr, (m_pflipper->m_d.m_OverridePhysics ? m_pflipper->m_d.m_OverridePowerLaw : m_pflipper->m_d.m_powerlaw));				// apply powerlaw weighting
-      const float dvt = dv.x * phitnormal[1].x + dv.y  * phitnormal[1].y;		// velocity transvere to flipper
-      const float anglespeed = m_flipperanim.m_anglespeed + dvt * tfr * impulse/(distance*(m_forcemass + tfr));		
-
-      if (m_flipperanim.m_fAcc != 0)											// currently in rotation
-      {	
-         obliquecorr = (float)m_flipperanim.m_fAcc * (m_pflipper->m_d.m_OverridePhysics ? m_pflipper->m_d.m_OverrideOblique : m_pflipper->m_d.m_obliquecorrection); //flipper trajectory correction
-         impulse = (1.005f + m_elasticity)*m_forcemass/(m_forcemass + tfr);	// impulse for pinball
-         m_flipperanim.m_anglespeed = anglespeed;							// new angle speed for flipper	
-      }
-      else if (recoil > 0.f && fabsf(anglespeed) > recoil)					// discard small static impact motions
-      { // these effects are for the flipper at EOS (End of Stroke)
-         if (anglespeed < 0.f && m_flipperanim.m_angleCur >= m_flipperanim.m_angleMax) // at max angle now?
-         { // rotation toward minimum angle					
-            m_flipperanim.m_force = max(-(anglespeed+anglespeed),0.005f);	// restoring force
-            impulse = (1.005f + m_elasticity)*m_forcemass/(m_forcemass + tfr); // impulse for pinball
-            m_flipperanim.m_anglespeed = anglespeed;						// angle speed, less linkage losses, etc.
-            m_flipperanim.m_fAcc = 1;										// set acceleration to opposite direction
-            if (anglespeed < -0.05f)
-               m_flipperanim.m_EnableRotateEvent = 1; //make EOS event
-         }
-         else if (anglespeed > 0.f && m_flipperanim.m_angleCur <= m_flipperanim.m_angleMin) // at min angle now?
-         {// rotation toward maximum angle
-            m_flipperanim.m_force = max(anglespeed+anglespeed,0.005f);		// restoreing force
-            impulse = (1.005f + m_elasticity)*m_forcemass/(m_forcemass + tfr); // impulse for pinball
-            m_flipperanim.m_anglespeed = anglespeed;						// angle speed, less linkage losses, etc.
-            m_flipperanim.m_fAcc = -1;										// set acceleration to opposite direction
-            if (anglespeed > 0.05f) 
-               m_flipperanim.m_EnableRotateEvent = 1; //make EOS event
-         }
-      }
-   }
-*/
 
    pball->vel += (impulse * pball->m_invMass) * normal;        // new velocity for ball after impact
    m_flipperanim.ApplyImpulse(rF, -impulse * normal);
