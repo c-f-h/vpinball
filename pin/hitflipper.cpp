@@ -730,7 +730,7 @@ void HitFlipper::Collide(CollisionEvent *coll)
 
        // compute friction impulse
        Vertex3Ds cross = CrossProduct(rB, tangent);
-       float kt = pball->m_invMass + tangent.Dot(CrossProduct(pball->m_inverseworldinertiatensor * cross, rB));
+       float kt = pball->m_invMass + tangent.Dot(CrossProduct(cross / pball->m_inertia, rB));
 
        cross = CrossProduct(rF, tangent);
        kt += tangent.Dot(CrossProduct(cross / m_flipperanim.m_inertia, rF));    // flipper only has angular response
@@ -835,7 +835,7 @@ void HitFlipper::Contact(CollisionEvent& coll, float dtime)
             slipDir.Normalize();
 
             const float numer = - slipDir.Dot( arel );
-            const float denomB = pball->m_invMass + slipDir.Dot( CrossProduct( pball->m_inverseworldinertiatensor * CrossProduct(rB, slipDir), rB ) );
+            const float denomB = pball->m_invMass + slipDir.Dot( CrossProduct( CrossProduct(rB, slipDir) / pball->m_inertia, rB ) );
             const float denomF = slipDir.Dot( CrossProduct( CrossProduct(rF, -slipDir) / m_flipperanim.m_inertia, rF ) );
             const float fric = clamp(numer / (denomB + denomF), -maxFric, maxFric);
 
@@ -849,7 +849,7 @@ void HitFlipper::Contact(CollisionEvent& coll, float dtime)
             Vertex3Ds slipDir = slip / slipspeed;
 
             const float numer = - slipDir.Dot( vrel );
-            const float denomB = pball->m_invMass + slipDir.Dot( CrossProduct( pball->m_inverseworldinertiatensor * CrossProduct(rB, slipDir), rB ) );
+            const float denomB = pball->m_invMass + slipDir.Dot( CrossProduct( CrossProduct(rB, slipDir) / pball->m_inertia, rB ) );
             const float denomF = slipDir.Dot( CrossProduct( CrossProduct(rF, slipDir) / m_flipperanim.m_inertia, rF ) );
             const float fric = clamp(numer / (denomB + denomF), -maxFric, maxFric);
 

@@ -141,7 +141,7 @@ void Ball::Init()
    m_invMass = 1.0f / m_mass;
 
    m_orientation.Identity();
-   m_inversebodyinertiatensor.Identity((float)(5.0/2.0)/(radius*radius*m_mass));
+   m_inertia = (2 * radius*radius * m_mass) / 5.0f;
    m_angularvelocity.Set(0,0,0);
    m_angularmomentum.Set(0,0,0);
 
@@ -261,7 +261,7 @@ void Ball::Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, flo
 
         // compute friction impulse
         const Vertex3Ds cross = CrossProduct(surfP, tangent);
-        const float kt = m_invMass + tangent.Dot( CrossProduct(m_inverseworldinertiatensor * cross, surfP));
+        const float kt = m_invMass + tangent.Dot( CrossProduct(cross / m_inertia, surfP));
 
         // friction impulse can't be greather than coefficient of friction times collision impulse (Coulomb friction cone)
         const float maxFric = frictionCoeff * reactionImpulse;
@@ -432,60 +432,6 @@ void Ball::Collide(CollisionEvent *coll)
 	pball->m_fDynamic = C_DYNAMIC;
 }
 
-void Ball::AngularAcceleration(const Vertex3Ds& hitnormal)
-{
-/*
-	const Vertex3Ds bccpd = -radius * hitnormal;    // vector ball center to contact point displacement
-
-	const float bnv = vel.Dot(hitnormal);       // ball normal velocity to hit face
-
-	const Vertex3Ds bvn = bnv * hitnormal;      // project the normal velocity along normal
-
-	const Vertex3Ds bvt = vel - bvn;            // calc the tangent velocity
-
-	Vertex3Ds bvT = bvt;                        // ball tangent velocity Unit Tangent
-	bvT.Normalize();	
-
-	const Vertex3Ds bstv =						// ball surface tangential velocity
-	CrossProduct(m_angularvelocity, bccpd);		// velocity of ball surface at contact point
-
-	const float dot = bstv.Dot(bvT);			// speed ball surface contact point tangential to contact surface point
-	const Vertex3Ds cpvt = dot * bvT;           // contact point velocity tangential to hit face
-
-	const Vertex3Ds slideVel = bstv - cpvt;     // contact point slide velocity with ball center velocity -- slide velocity
-
-	// If the point and the ball are travelling in opposite directions,
-	// and the point's velocity is at least the magnitude of the balls,
-	// then we have a natural roll
-	
-	Vertex3Ds cpctrv = -slideVel;				//contact point co-tangential reverse velocity
-
-    if (vel.LengthSquared() > (float)(0.7*0.7))
-    {
-        // Calculate the maximum amount the point velocity can change this
-        // time segment due to friction
-        Vertex3Ds FrictionForce = cpvt + bvt;
-
-        // If the point can change fast enough to go directly to a natural roll, then do it.
-
-        if (FrictionForce.LengthSquared() > (float)(ANGULARFORCE*ANGULARFORCE))
-            FrictionForce.Normalize(ANGULARFORCE);
-
-        cpctrv -= FrictionForce;
-    }
-
-	// Divide by the inertial tensor for a sphere in order to change
-	// linear force into angular momentum
-	cpctrv *= (float)(2.0/5.0); // Inertial tensor for a sphere
-
-	const Vertex3Ds vResult = CrossProduct(bccpd, cpctrv); // ball center contact point displacement X reverse contact point co-tan vel
-
-	//m_angularmomentum *= 0.99f;       // TODO: reenable
-	m_angularmomentum += vResult; // add delta
-	m_angularvelocity = m_inverseworldinertiatensor.MultiplyVector(m_angularmomentum);
-*/
-}
-
 void Ball::HandleStaticContact(const Vertex3Ds& normal, float origNormVel, float friction, float dtime)
 {
     const float normVel = vel.Dot(normal);   // this should be zero, but only up to +/- C_CONTACTVEL
@@ -531,7 +477,7 @@ void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime, float fricCoef
         slipDir.Normalize();
 
         const float numer = - slipDir.Dot( surfAcc );
-        const float denom = m_invMass + slipDir.Dot( CrossProduct( m_inverseworldinertiatensor * CrossProduct(surfP, slipDir), surfP ) );
+        const float denom = m_invMass + slipDir.Dot( CrossProduct( CrossProduct(surfP, slipDir) / m_inertia, surfP ) );
         const float fric = clamp(numer / denom, -maxFric, maxFric);
 
         ApplySurfaceImpulse(surfP, (dtime * fric) * slipDir);
@@ -543,7 +489,7 @@ void Ball::ApplyFriction(const Vertex3Ds& hitnormal, float dtime, float fricCoef
         Vertex3Ds slipDir = slip / slipspeed;
 
         const float numer = - slipDir.Dot( surfVel );
-        const float denom = m_invMass + slipDir.Dot( CrossProduct( m_inverseworldinertiatensor * CrossProduct(surfP, slipDir), surfP ) );
+        const float denom = m_invMass + slipDir.Dot( CrossProduct( CrossProduct(surfP, slipDir) / m_inertia, surfP ) );
         const float fric = clamp(numer / denom, -maxFric, maxFric);
 
         ApplySurfaceImpulse(surfP, (dtime * fric) * slipDir);
@@ -568,7 +514,7 @@ void Ball::ApplySurfaceImpulse(const Vertex3Ds& surfP, const Vertex3Ds& impulse)
 
     const Vertex3Ds rotI = CrossProduct(surfP, impulse);
     m_angularmomentum += rotI;
-    m_angularvelocity = m_inverseworldinertiatensor.MultiplyVector(m_angularmomentum);
+    m_angularvelocity = m_angularmomentum / m_inertia;
 }
 
 void Ball::CalcHitRect()
@@ -611,19 +557,12 @@ void Ball::UpdateDisplacements(const float dtime)
 		
 		Matrix3 addedorientation;
 		addedorientation.MultiplyMatrix(&mat3, &m_orientation);
-
 		addedorientation.MultiplyScalar(dtime);
 
 		m_orientation.AddMatrix(&addedorientation, &m_orientation);
-
 		m_orientation.OrthoNormalize();
 
-		Matrix3 matTransposeOrientation;
-		m_orientation.Transpose(&matTransposeOrientation);
-		m_inverseworldinertiatensor.MultiplyMatrix(&m_orientation,&m_inversebodyinertiatensor);
-		m_inverseworldinertiatensor.MultiplyMatrix(&m_inverseworldinertiatensor,&matTransposeOrientation);
-
-        m_angularvelocity = m_inverseworldinertiatensor.MultiplyVector(m_angularmomentum);
+        m_angularvelocity = m_angularmomentum / m_inertia;
 	}
 }
 

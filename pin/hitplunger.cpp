@@ -364,7 +364,6 @@ void HitPlunger::Collide(CollisionEvent *coll)
 	pball->m_fDynamic = C_DYNAMIC;
 
 	const Vertex3Ds vnormal(phitnormal->x, phitnormal->y, 0.0f);
-	pball->AngularAcceleration(vnormal);	
 	}
 
 void HitPlunger::Contact(CollisionEvent& coll, float dtime)

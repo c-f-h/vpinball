@@ -43,7 +43,6 @@ public:
 
     void Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, float antifriction, float scatter_angle);
 
-	void AngularAcceleration(const Vertex3Ds& hitnormal);
 	void ApplyFriction(const Vertex3Ds& hitnormal, float dtime, float fricCoeff);
     void HandleStaticContact(const Vertex3Ds& normal, float origNormVel, float friction, float dtime);
 
@@ -108,8 +107,7 @@ public:
 	Matrix3 m_orientation;
 	Vertex3Ds m_angularmomentum;
 	Vertex3Ds m_angularvelocity;
-	Matrix3 m_inverseworldinertiatensor;
-	Matrix3 m_inversebodyinertiatensor;
+    float m_inertia;
 
 	bool fFrozen;
 
