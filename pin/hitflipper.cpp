@@ -662,6 +662,9 @@ float HitFlipper::HitTestFlipperFace(const Ball * pball, const float dtime, Coll
 }
 
 
+static const float frictionCoeff = 0.6f;
+
+
 void HitFlipper::Collide(CollisionEvent *coll)
 {
     Ball *pball = coll->ball;
@@ -761,8 +764,6 @@ void HitFlipper::Collide(CollisionEvent *coll)
 
    Vertex3Ds tangent = vrel - vrel.Dot(normal) * normal;       // calc the tangential velocity
 
-   static const float frictionCoeff = 0.6f;
-
    const float tangentSpSq = tangent.LengthSquared();
    if (tangent.LengthSquared() > 1e-6f)
    {
@@ -842,7 +843,7 @@ void HitFlipper::Contact(CollisionEvent& coll, float dtime)
 
         // hypothetical accelerations arising from a unit contact force in normal direction
         const Vertex3Ds aBc = pball->m_invMass * normal;
-        const Vertex3Ds aFc = CrossProduct( CrossProduct(rF, -normal) / m_flipperanim.m_inertia, rF );       // TODO: inertia
+        const Vertex3Ds aFc = CrossProduct( CrossProduct(rF, -normal) / m_flipperanim.m_inertia, rF );
         const float contactForceAcc = normal.Dot( aBc - aFc );
 
         assert( contactForceAcc > 0 );
@@ -854,13 +855,48 @@ void HitFlipper::Contact(CollisionEvent& coll, float dtime)
         pball->vel += (j * pball->m_invMass * dtime) * normal;
         m_flipperanim.ApplyImpulse(rF, (-j * dtime) * normal);
 
-        //const Vertex3Ds fe = m_mass * g_pplayer->m_gravity;      // external forces (only gravity for now)
-        //const float dot = fe.Dot(normal);
-        //const float normalForce = std::max( 0.0f, -(dot*dtime + origNormVel) ); // normal force is always nonnegative
+        // apply friction
 
-        //// Add just enough to kill original normal velocity and counteract the external forces.
-        //vel += normalForce * normal;
+        // first check for slippage
+        const Vertex3Ds slip = vrel - normVel * normal;       // calc the tangential slip velocity
 
-        //ApplyFriction(normal, dtime, friction);
+        const float maxFric = j * frictionCoeff;
+
+        const float slipspeed = slip.Length();
+        if (slipspeed < C_PRECISION)
+        {
+            // slip speed zero - static friction case
+
+            const Vertex3Ds slipAcc = arel - arel.Dot(normal) * normal;       // calc the tangential slip acceleration
+
+            // neither slip velocity nor slip acceleration? nothing to do here
+            if (slipAcc.LengthSquared() < 1e-6f)
+                return;
+
+            Vertex3Ds slipDir = slipAcc;
+            slipDir.Normalize();
+
+            const float numer = - slipDir.Dot( arel );
+            const float denomB = pball->m_invMass + slipDir.Dot( CrossProduct( pball->m_inverseworldinertiatensor * CrossProduct(rB, slipDir), rB ) );
+            const float denomF = slipDir.Dot( CrossProduct( CrossProduct(rF, -slipDir) / m_flipperanim.m_inertia, rF ) );
+            const float fric = clamp(numer / (denomB + denomF), -maxFric, maxFric);
+
+            pball->ApplySurfaceImpulse(rB, (dtime * fric) * slipDir);
+            m_flipperanim.ApplyImpulse(rF, (-dtime * fric) * slipDir);
+        }
+        else
+        {
+            // nonzero slip speed - dynamic friction case
+
+            Vertex3Ds slipDir = slip / slipspeed;
+
+            const float numer = - slipDir.Dot( vrel );
+            const float denomB = pball->m_invMass + slipDir.Dot( CrossProduct( pball->m_inverseworldinertiatensor * CrossProduct(rB, slipDir), rB ) );
+            const float denomF = slipDir.Dot( CrossProduct( CrossProduct(rF, slipDir) / m_flipperanim.m_inertia, rF ) );
+            const float fric = clamp(numer / (denomB + denomF), -maxFric, maxFric);
+
+            pball->ApplySurfaceImpulse(rB, (dtime * fric) * slipDir);
+            m_flipperanim.ApplyImpulse(rF, (-dtime * fric) * slipDir);
+        }
     }
 }
