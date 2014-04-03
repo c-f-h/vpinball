@@ -51,6 +51,8 @@ public:
 
     int m_dir;
     bool m_solState;        // is solenoid enabled?
+    bool m_isInContact;
+    int m_contactDir;
 
 	float m_angleStart, m_angleEnd;
 	float m_angleMin, m_angleMax;

@@ -37,6 +37,7 @@ FlipperAnimObject::FlipperAnimObject(const Vertex2D& center, float baser, float 
 
    m_dir = (angleEnd >= angleStart) ? 1 : -1;
    m_solState = false;
+   m_isInContact = false;
 
    m_angleStart = angleStart;
    m_angleEnd   = angleEnd;
@@ -232,12 +233,21 @@ void FlipperAnimObject::UpdateVelocities()
 
     float torque = m_dir * (m_solState ? solTorque : -0.1f * m_force);
 
+    m_isInContact = false;
     // resolve contacts with stoppers
     if (fabsf(m_anglespeed) <= 1e-2f)
     {
-        if ((m_angleCur >= m_angleMax - 1e-2f && torque > 0)
-         || (m_angleCur <= m_angleMin + 1e-2f && torque < 0))
+        if (m_angleCur >= m_angleMax - 1e-2f && torque > 0)
         {
+            m_isInContact = true;
+            m_contactDir = 1;
+            m_angularMomentum = 0;
+            torque = 0;
+        }
+        else if (m_angleCur <= m_angleMin + 1e-2f && torque < 0)
+        {
+            m_isInContact = true;
+            m_contactDir = -1;
             m_angularMomentum = 0;
             torque = 0;
         }
@@ -716,9 +726,21 @@ void HitFlipper::Collide(CollisionEvent *coll)
    }
 #endif
 
-   const Vertex3Ds tmp = CrossProduct( rF, normal ) / m_flipperanim.m_inertia;
+   // angular response to impulse in normal direction
+   Vertex3Ds angResp = CrossProduct( rF, normal ) / m_flipperanim.m_inertia;
+
+   /*
+    * Check if flipper is in contact with its stopper and the collision impulse
+    * would push it beyond the stopper. In that case, don't allow any transfer
+    * of kinetic energy from ball to flipper. This avoids overly dead bounces
+    * in that case.
+    */
+   const float angImp = -angResp.z;     // minus because impulse will apply in -normal direction
+   if (m_flipperanim.m_isInContact && m_flipperanim.m_contactDir * angImp > 0)
+       angResp.SetZero();
+
    const float impulse = -(1.0f + m_elasticity) * bnv
-       / (pball->m_invMass + normal.Dot(CrossProduct(tmp, rF)));
+       / (pball->m_invMass + normal.Dot(CrossProduct(angResp, rF)));
 
    pball->vel += (impulse * pball->m_invMass) * normal;        // new velocity for ball after impact
    m_flipperanim.ApplyImpulse(rF, -impulse * normal);

@@ -11,6 +11,9 @@ public:
    Vertex2D() {}
    Vertex2D(const float _x, const float _y) : x(_x), y(_y) {}
 
+   void Set(float a, float b) { x=a; y=b; }
+   void SetZero()       { Set(0,0); }
+
    Vertex2D operator+ (const Vertex2D& v) const
    {
        return Vertex2D(x + v.x, y + v.y);
@@ -112,6 +115,7 @@ public:
    Vertex3Ds(const float _x, const float _y, const float _z) : x(_x), y(_y), z(_z) {}
 
    void Set(const float a, const float b, const float c) {x=a; y=b; z=c;}
+   void SetZero()       { Set(0,0,0); }
 
    Vertex3Ds operator+ (const Vertex3Ds& v) const
    {
