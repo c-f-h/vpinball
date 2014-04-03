@@ -191,7 +191,7 @@ void FlipperAnimObject::UpdateDisplacements(const float dtime)
 #endif
 
          const float anglespd = fabsf(RADTOANG(m_anglespeed));
-         m_angularMomentum *= -0.2f;
+         m_angularMomentum *= -0.3f;
          m_anglespeed = m_angularMomentum / m_inertia;
 
          if (m_EnableRotateEvent > 0) m_pflipper->FireVoidEventParm(DISPID_LimitEvents_EOS,anglespd); // send EOS event
@@ -206,7 +206,7 @@ void FlipperAnimObject::UpdateDisplacements(const float dtime)
       if (m_anglespeed < 0.f)
       {
          const float anglespd = fabsf(RADTOANG(m_anglespeed));
-         m_angularMomentum *= -0.2f;
+         m_angularMomentum *= -0.3f;
          m_anglespeed = m_angularMomentum / m_inertia;
 
          if (m_EnableRotateEvent > 0) m_pflipper->FireVoidEventParm(DISPID_LimitEvents_EOS,anglespd); // send EOS event
@@ -677,7 +677,7 @@ float HitFlipper::HitTestFlipperFace(const Ball * pball, const float dtime, Coll
 }
 
 
-static const float frictionCoeff = 0.6f;
+static const float frictionCoeff = 0.8f;
 
 
 void HitFlipper::Collide(CollisionEvent *coll)
@@ -739,7 +739,16 @@ void HitFlipper::Collide(CollisionEvent *coll)
    if (m_flipperanim.m_isInContact && m_flipperanim.m_contactDir * angImp > 0)
        angResp.SetZero();
 
-   const float impulse = -(1.0f + m_elasticity) * bnv
+   /*
+    * Rubber has a coefficient of restitution which decreases with the impact velocity.
+    * This here is a heuristic model which decreases the COR to about 70% at
+    * 1 m/s (18.53 speed units).
+    */
+   const float restitutionFalloff = 0.43f;  // 0 = no falloff, 1 = half the COR at 1 m/s
+   const float epsilon = m_elasticity / (1.0f + restitutionFalloff/18.53f * fabsf(bnv));
+   slintf("Epsilon: %f\n", epsilon);
+
+   const float impulse = -(1.0f + epsilon) * bnv
        / (pball->m_invMass + normal.Dot(CrossProduct(angResp, rF)));
 
    pball->vel += (impulse * pball->m_invMass) * normal;        // new velocity for ball after impact
