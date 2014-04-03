@@ -1,75 +1,73 @@
 #include "stdafx.h"
 
-HitFlipper::HitFlipper(const Vertex2D& center, float baser, float endr, float flipr, float angleStart, float angleEnd,
-                       const float zlow, const float zhigh, float strength, const float mass)
-{	
-   m_flipperanim.m_height = zhigh - zlow;
-   m_flipperanim.m_fCompatibility=fTrue;
+FlipperAnimObject::FlipperAnimObject(const Vertex2D& center, float baser, float endr, float flipr, float angleStart, float angleEnd,
+                      float zlow, float zhigh, float strength, float mass)
+{
+   m_height = zhigh - zlow;
+   m_fCompatibility=fTrue;
 
-   m_flipperanim.m_hitcircleBase.m_pfe = NULL;
-   m_flipperanim.m_hitcircleEnd.m_pfe = NULL;
+   m_hitcircleBase.m_pfe = NULL;
+   m_hitcircleEnd.m_pfe = NULL;
 
-   m_flipperanim.m_lineseg1.m_pfe = NULL;
-   m_flipperanim.m_lineseg2.m_pfe = NULL;
+   m_lineseg1.m_pfe = NULL;
+   m_lineseg2.m_pfe = NULL;
 
-   m_flipperanim.m_lineseg1.m_rcHitRect.zlow = zlow;
-   m_flipperanim.m_lineseg1.m_rcHitRect.zhigh = zhigh;
+   m_lineseg1.m_rcHitRect.zlow = zlow;
+   m_lineseg1.m_rcHitRect.zhigh = zhigh;
 
-   m_flipperanim.m_lineseg2.m_rcHitRect.zlow = zlow;
-   m_flipperanim.m_lineseg2.m_rcHitRect.zhigh = zhigh;
+   m_lineseg2.m_rcHitRect.zlow = zlow;
+   m_lineseg2.m_rcHitRect.zhigh = zhigh;
 
-   m_flipperanim.m_hitcircleEnd.zlow = zlow;
-   m_flipperanim.m_hitcircleEnd.zhigh = zhigh;
+   m_hitcircleEnd.zlow = zlow;
+   m_hitcircleEnd.zhigh = zhigh;
 
-   m_flipperanim.m_hitcircleBase.zlow = zlow;
-   m_flipperanim.m_hitcircleBase.zhigh = zhigh;
+   m_hitcircleBase.zlow = zlow;
+   m_hitcircleBase.zhigh = zhigh;
 
-   m_flipperanim.m_hitcircleBase.center = center;
+   m_hitcircleBase.center = center;
 
    if (baser < 0.01f) baser = 0.01f; // must not be zero 
-   m_flipperanim.m_hitcircleBase.radius = baser; //radius of base section
+   m_hitcircleBase.radius = baser;   //radius of base section
 
    if (endr < 0.01f) endr = 0.01f; // must not be zero 
-   m_flipperanim.m_endradius = endr;		// radius of flipper end
+   m_endradius = endr;             // radius of flipper end
 
    if (flipr < 0.01f) flipr = 0.01f; // must not be zero 
-   m_flipperanim.m_flipperradius = flipr;	//radius of flipper arc, center-to-center radius
+   m_flipperradius = flipr; //radius of flipper arc, center-to-center radius
 
-   m_flipperanim.m_dir = (angleEnd >= angleStart) ? 1 : -1;
-   m_flipperanim.m_solState = false;
+   m_dir = (angleEnd >= angleStart) ? 1 : -1;
+   m_solState = false;
 
-   m_flipperanim.m_angleStart = angleStart;
-   m_flipperanim.m_angleEnd   = angleEnd;
-   m_flipperanim.m_angleMin   = min(angleStart, angleEnd);
-   m_flipperanim.m_angleMax   = max(angleStart, angleEnd);
-   m_flipperanim.m_angleCur   = angleStart;
+   m_angleStart = angleStart;
+   m_angleEnd   = angleEnd;
+   m_angleMin   = min(angleStart, angleEnd);
+   m_angleMax   = max(angleStart, angleEnd);
+   m_angleCur   = angleStart;
 
-   m_flipperanim.m_angularMomentum = 0;
-   m_flipperanim.m_angularAcceleration = 0;
-   m_flipperanim.m_anglespeed = 0;
+   m_angularMomentum = 0;
+   m_angularAcceleration = 0;
+   m_anglespeed = 0;
 
    const float fa = asinf((baser-endr)/flipr); //face to centerline angle (center to center)
 
-   m_flipperanim.faceNormOffset = (float)(M_PI/2.0) - fa; //angle of normal when flipper center line at angle zero
+   faceNormOffset = (float)(M_PI/2.0) - fa; //angle of normal when flipper center line at angle zero
 
-   m_flipperanim.SetObjects(angleStart);
+   SetObjects(angleStart);
 
-   m_flipperanim.m_force = strength;
-   m_flipperanim.m_mass = mass;
+   m_force = strength;
+   m_mass = mass;
 
    // model inertia of flipper as that of rod of length flipr around its end
-   m_flipperanim.m_inertia = 1.0f/3.0f * mass * (flipr*flipr);
+   m_inertia = 1.0f/3.0f * mass * (flipr*flipr);
 
-   m_last_hittime = 0;
+   m_lastHitFace = false; // used to optimize hit face search order
 
-   m_flipperanim.m_lastHitFace = false; // used to optimize hit face search order
+   const float len = m_flipperradius*cosf(fa); //Cosine of face angle X hypotenuse
+   m_lineseg1.length = len;
+   m_lineseg2.length = len;
 
-   const float len = m_flipperanim.m_flipperradius*cosf(fa); //Cosine of face angle X hypotenuse
-   m_flipperanim.m_lineseg1.length = len;
-   m_flipperanim.m_lineseg2.length = len;
-
-   m_flipperanim.zeroAngNorm.x =  sinf(m_flipperanim.faceNormOffset);// F2 Norm, used in Green's transform, in FPM time search
-   m_flipperanim.zeroAngNorm.y = -cosf(m_flipperanim.faceNormOffset);// F1 norm, change sign of x component, i.e -zeroAngNorm.x
+   zeroAngNorm.x =  sinf(faceNormOffset);// F2 Norm, used in Green's transform, in FPM time search
+   zeroAngNorm.y = -cosf(faceNormOffset);// F1 norm, change sign of x component, i.e -zeroAngNorm.x
 
 #if 0 // needs wiring of moment of inertia
    // now calculate moment of inertia using isoceles trapizoid and two circular sections
@@ -112,10 +110,17 @@ HitFlipper::HitFlipper(const Vertex2D& center, float baser, float endr, float fl
 
    const float Iff = Irb_inertia + Ifb_inertia + Ire_inertia; //scalar moment of inertia ... multiply by weight next
 
-   m_flipperanim.m_inertia = Iff * mass;  //mass of flipper body
+   m_inertia = Iff * mass;  //mass of flipper body
 
-   //m_flipperanim.m_inertia = mass;  //stubbed to mass of flipper body
+   //m_inertia = mass;  //stubbed to mass of flipper body
 #endif
+}
+
+HitFlipper::HitFlipper(const Vertex2D& center, float baser, float endr, float flipr, float angleStart, float angleEnd,
+                       const float zlow, const float zhigh, float strength, const float mass)
+    : m_flipperanim(center, baser, endr, flipr, angleStart, angleEnd, zlow, zhigh, strength, mass)
+{
+    m_last_hittime = 0;
 }
 
 HitFlipper::~HitFlipper()
@@ -136,7 +141,7 @@ void HitFlipper::CalcHitRect()
 
 
 void FlipperAnimObject::SetObjects(const float angle)
-{	
+{
    m_angleCur = angle;
    m_hitcircleEnd.center.x = m_hitcircleBase.center.x + m_flipperradius*sinf(angle); //place end radius center
    m_hitcircleEnd.center.y = m_hitcircleBase.center.y - m_flipperradius*cosf(angle);

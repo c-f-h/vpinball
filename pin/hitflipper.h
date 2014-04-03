@@ -2,6 +2,9 @@
 class FlipperAnimObject : public AnimObject
 	{
 public:
+    FlipperAnimObject(const Vertex2D& center, float baser, float endr, float flipr, float angleStart, float angleEnd,
+                      float zlow, float zhigh, float strength, float mass);
+
 	void SetObjects(const float angle);
 	virtual void UpdateDisplacements(const float dtime);
 	virtual void UpdateVelocities();
