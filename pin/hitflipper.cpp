@@ -240,6 +240,7 @@ void FlipperAnimObject::UpdateVelocities()
         if (m_angleCur >= m_angleMax - 1e-2f && torque > 0)
         {
             m_isInContact = true;
+            m_contactImpulse = PHYS_FACTOR * torque;
             m_contactDir = 1;
             m_angularMomentum = 0;
             torque = 0;
@@ -247,6 +248,7 @@ void FlipperAnimObject::UpdateVelocities()
         else if (m_angleCur <= m_angleMin + 1e-2f && torque < 0)
         {
             m_isInContact = true;
+            m_contactImpulse = PHYS_FACTOR * torque;
             m_contactDir = -1;
             m_angularMomentum = 0;
             torque = 0;
@@ -727,17 +729,43 @@ void HitFlipper::Collide(CollisionEvent *coll)
 #endif
 
    // angular response to impulse in normal direction
-   Vertex3Ds angResp = CrossProduct( rF, normal ) / m_flipperanim.m_inertia;
+   Vertex3Ds angResp = CrossProduct( rF, normal );
 
    /*
     * Check if flipper is in contact with its stopper and the collision impulse
     * would push it beyond the stopper. In that case, don't allow any transfer
     * of kinetic energy from ball to flipper. This avoids overly dead bounces
     * in that case.
+    *
+    * Also, if there is contact and the collision impulse pushes with the contact
+    * force, reduce it by the amount of the contact force first to take into
+    * account that the collision has to "overpower" the solenoid/spring first.
     */
    const float angImp = -angResp.z;     // minus because impulse will apply in -normal direction
-   if (m_flipperanim.m_isInContact && m_flipperanim.m_contactDir * angImp > 0)
-       angResp.SetZero();
+   float flipperResponseScaling = 1.0f;
+   if (m_flipperanim.m_isInContact && angImp != 0)
+   {
+       // if impulse pushes against stopper, allow no loss of kinetic energy to flipper
+       // (still allow flipper recoil)
+       if (m_flipperanim.m_contactDir * angImp >= 0)
+           angResp.SetZero();
+       else
+       {
+           // impulse pushes with the contact force, must be stronger than it to cause a movement
+           if (fabsf(angImp) <= fabsf(m_flipperanim.m_contactImpulse))
+           {
+               angResp.SetZero();
+               flipperResponseScaling = 0.0f;
+               m_flipperanim.m_contactImpulse += angImp;        // decrease by "used up" amount
+           }
+           else
+           {
+               angResp.z -= m_flipperanim.m_contactImpulse;
+               flipperResponseScaling = fabsf(angResp.z) / fabsf(angImp);
+               m_flipperanim.m_contactImpulse = 0;
+           }
+       }
+   }
 
    /*
     * Rubber has a coefficient of restitution which decreases with the impact velocity.
@@ -746,13 +774,12 @@ void HitFlipper::Collide(CollisionEvent *coll)
     */
    const float restitutionFalloff = 0.43f;  // 0 = no falloff, 1 = half the COR at 1 m/s
    const float epsilon = m_elasticity / (1.0f + restitutionFalloff/18.53f * fabsf(bnv));
-   slintf("Epsilon: %f\n", epsilon);
 
    const float impulse = -(1.0f + epsilon) * bnv
-       / (pball->m_invMass + normal.Dot(CrossProduct(angResp, rF)));
+       / (pball->m_invMass + normal.Dot(CrossProduct(angResp / m_flipperanim.m_inertia, rF)));
 
    pball->vel += (impulse * pball->m_invMass) * normal;        // new velocity for ball after impact
-   m_flipperanim.ApplyImpulse(rF, -impulse * normal);
+   m_flipperanim.ApplyImpulse(rF, -(impulse * flipperResponseScaling) * normal);
 
    // apply friction
 
