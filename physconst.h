@@ -2,7 +2,7 @@
 
 
 //#define PHYSICS_STEPTIME    10000	// usecs to go between each physics update
-#define PHYSICS_STEPTIME    2500	// usecs to go between each physics update
+#define PHYSICS_STEPTIME    1000	// usecs to go between each physics update
 
 #define PHYSICS_STEPTIME_S  ((float)(PHYSICS_STEPTIME * 1e-6))     // step time in seconds
 
