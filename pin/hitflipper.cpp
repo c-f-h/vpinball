@@ -748,7 +748,10 @@ void HitFlipper::Collide(CollisionEvent *coll)
        // if impulse pushes against stopper, allow no loss of kinetic energy to flipper
        // (still allow flipper recoil)
        if (m_flipperanim.m_contactDir * angImp >= 0)
+       {
            angResp.SetZero();
+           flipperResponseScaling = 0.5f;
+       }
        else
        {
            // impulse pushes with the contact force, must be stronger than it to cause a movement
