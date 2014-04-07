@@ -72,10 +72,6 @@
 //Flippers:
 #define C_INTERATIONS 20 // Precision level and cycles for interative calculations // acceptable contact time ... near zero time
 
-//Ball:
-#define ANGULARFORCE 1   // Number I pulled out of my butt - this number indicates the maximum angular change 
-					     // per time unit, or the speed at which angluar momentum changes over time, 
-					     // depending on how you interpret it.
 //Ramp:
 #define WALLTILT 0.5f
 
