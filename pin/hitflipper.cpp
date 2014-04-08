@@ -240,16 +240,14 @@ void FlipperAnimObject::UpdateVelocities()
         if (m_angleCur >= m_angleMax - 1e-2f && torque > 0)
         {
             m_isInContact = true;
-            m_contactImpulse = PHYS_FACTOR * torque;
-            m_contactDir = 1;
+            m_contactTorque = torque;
             m_angularMomentum = 0;
             torque = 0;
         }
         else if (m_angleCur <= m_angleMin + 1e-2f && torque < 0)
         {
             m_isInContact = true;
-            m_contactImpulse = PHYS_FACTOR * torque;
-            m_contactDir = -1;
+            m_contactTorque = torque;
             m_angularMomentum = 0;
             torque = 0;
         }
@@ -701,10 +699,14 @@ void HitFlipper::Collide(CollisionEvent *coll)
     const Vertex3Ds vB = pball->SurfaceVelocity(rB);
     const Vertex3Ds vF = m_flipperanim.SurfaceVelocity(rF);
     const Vertex3Ds vrel = vB - vF;
-    //slintf("Normal: %.2f %.2f %.2f  -  Rel.vel.: %f %f %f\n", normal.x, normal.y, normal.z, vrel.x, vrel.y, vrel.z);
-
     float bnv = normal.Dot(vrel);       // relative normal velocity
-    //slintf("Flipper collision - rel.vel. %f\n", bnv);
+
+#ifdef DEBUG_FLIPPERS
+    slintf("Collision\n  normal: %.2f %.2f %.2f\n  rel.vel.: %.2f %.2f %.2f\n", normal.x, normal.y, normal.z, vrel.x, vrel.y, vrel.z);
+    slintf("  ball vel. %.2f %.2f %.2f\n", pball->vel.x, pball->vel.y, pball->vel.z);
+    slintf("  norm.vel.: %.2f\n", bnv);
+    slintf("  flipper: %.2f %.2f\n", m_flipperanim.m_angleCur, m_flipperanim.m_anglespeed);
+#endif
 
    if (bnv >= -C_LOWNORMVEL )							 // nearly receding ... make sure of conditions
    {												 // otherwise if clearly approaching .. process the collision
@@ -736,38 +738,15 @@ void HitFlipper::Collide(CollisionEvent *coll)
     * would push it beyond the stopper. In that case, don't allow any transfer
     * of kinetic energy from ball to flipper. This avoids overly dead bounces
     * in that case.
-    *
-    * Also, if there is contact and the collision impulse pushes with the contact
-    * force, reduce it by the amount of the contact force first to take into
-    * account that the collision has to "overpower" the solenoid/spring first.
     */
    const float angImp = -angResp.z;     // minus because impulse will apply in -normal direction
    float flipperResponseScaling = 1.0f;
-   if (m_flipperanim.m_isInContact && angImp != 0)
+   if (m_flipperanim.m_isInContact && m_flipperanim.m_contactTorque * angImp >= 0)
    {
        // if impulse pushes against stopper, allow no loss of kinetic energy to flipper
-       // (still allow flipper recoil)
-       if (m_flipperanim.m_contactDir * angImp >= 0)
-       {
-           angResp.SetZero();
-           flipperResponseScaling = 0.5f;
-       }
-       else
-       {
-           // impulse pushes with the contact force, must be stronger than it to cause a movement
-           if (fabsf(angImp) <= fabsf(m_flipperanim.m_contactImpulse))
-           {
-               angResp.SetZero();
-               flipperResponseScaling = 0.0f;
-               m_flipperanim.m_contactImpulse += angImp;        // decrease by "used up" amount
-           }
-           else
-           {
-               angResp.z -= m_flipperanim.m_contactImpulse;
-               flipperResponseScaling = fabsf(angResp.z) / fabsf(angImp);
-               m_flipperanim.m_contactImpulse = 0;
-           }
-       }
+       // (still allow flipper recoil, but a diminished amount)
+       angResp.SetZero();
+       flipperResponseScaling = 0.5f;
    }
 
    /*
@@ -778,11 +757,43 @@ void HitFlipper::Collide(CollisionEvent *coll)
    const float restitutionFalloff = 0.43f;  // 0 = no falloff, 1 = half the COR at 1 m/s
    const float epsilon = m_elasticity / (1.0f + restitutionFalloff/18.53f * fabsf(bnv));
 
-   const float impulse = -(1.0f + epsilon) * bnv
+   float impulse = -(1.0f + epsilon) * bnv
        / (pball->m_invMass + normal.Dot(CrossProduct(angResp / m_flipperanim.m_inertia, rF)));
+   Vertex3Ds flipperImp = -(impulse * flipperResponseScaling) * normal;
+
+#ifdef DEBUG_FLIPPERS
+   slintf("  epsilon: %.2f\n  angular response: %.3f\n", epsilon, normal.Dot(CrossProduct(angResp / m_flipperanim.m_inertia, rF)));
+#endif
+
+   if (m_flipperanim.m_isInContact)
+   {
+       const Vertex3Ds rotI = CrossProduct(rF, flipperImp);
+       if (rotI.z * m_flipperanim.m_contactTorque < 0)     // pushing against the solenoid?
+       {
+           // Get a bound on the time the flipper needs to return to static conditions.
+           // If it's too short, we treat the flipper as static during the whole collision.
+           const float recoilTime = -rotI.z / m_flipperanim.m_contactTorque; // time flipper needs to eliminate this impulse, in 10ms
+
+           // Check ball normal velocity after collision. If the ball rebounded
+           // off the flipper, we need to make sure it does so with full
+           // reflection, i.e., treat the flipper as static, otherwise
+           // we get overly dead bounces.
+           const float bnv_after = bnv + impulse * pball->m_invMass;
+
+#ifdef DEBUG_FLIPPERS
+           slintf("  recoil time: %f  norm.vel after: %.2f\n", recoilTime, bnv_after);
+#endif
+           if (recoilTime <= 0.5f || bnv_after > 0)
+           {
+               // treat flipper as static for this impact
+               impulse = -(1.0f + epsilon) * bnv / pball->m_invMass;
+               flipperImp.SetZero();
+           }
+       }
+   }
 
    pball->vel += (impulse * pball->m_invMass) * normal;        // new velocity for ball after impact
-   m_flipperanim.ApplyImpulse(rF, -(impulse * flipperResponseScaling) * normal);
+   m_flipperanim.ApplyImpulse(rF, flipperImp);
 
    // apply friction
 
@@ -822,6 +833,12 @@ void HitFlipper::Collide(CollisionEvent *coll)
    }
 
    m_last_hittime = g_pplayer->m_time_msec; // keep resetting until idle for 250 milliseconds
+
+#ifdef DEBUG_FLIPPERS
+    slintf("   ---- after collision ----\n");
+    slintf("  ball vel. %.2f %.2f %.2f\n", pball->vel.x, pball->vel.y, pball->vel.z);
+    slintf("  flipper: %.2f %.2f\n", m_flipperanim.m_angleCur, m_flipperanim.m_anglespeed);
+#endif
 }
 
 void HitFlipper::Contact(CollisionEvent& coll, float dtime)
@@ -846,7 +863,9 @@ void HitFlipper::Contact(CollisionEvent& coll, float dtime)
 
     const float normVel = vrel.Dot(normal);   // this should be zero, but only up to +/- C_CONTACTVEL
 
-    //slintf("Flipper contact - rel.vel. %f\n", normVel);
+#ifdef DEBUG_FLIPPERS
+    slintf("Flipper contact - rel.vel. %f\n", normVel);
+#endif
 
     // If some collision has changed the ball's velocity, we may not have to do anything.
     if (normVel <= C_CONTACTVEL)

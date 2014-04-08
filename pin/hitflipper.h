@@ -1,4 +1,7 @@
 #pragma once
+
+//#define DEBUG_FLIPPERS
+
 class FlipperAnimObject : public AnimObject
 	{
 public:
@@ -52,8 +55,7 @@ public:
     int m_dir;
     bool m_solState;        // is solenoid enabled?
     bool m_isInContact;
-    int m_contactDir;
-    float m_contactImpulse;
+    float m_contactTorque;
 
 	float m_angleStart, m_angleEnd;
 	float m_angleMin, m_angleMax;
