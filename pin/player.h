@@ -269,7 +269,9 @@ public:
 	U32 c_traversed;
 	U32 c_tested;
 	U32 c_deepTested;
+#endif
 
+#ifdef DEBUG_BALL_SPIN
     VertexBuffer * m_ballDebugPoints;
 #endif
 	int m_movedPlunger;			// has plunger moved, must have moved at least three times

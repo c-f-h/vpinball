@@ -891,7 +891,7 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	SendMessage(hwndProgress, PBM_SETPOS, 90, 0);
 
-#ifdef _DEBUGPHYSICS
+#ifdef DEBUG_BALL_SPIN
     {
         std::vector< Vertex3D_NoLighting > ballDbgVtx;
         for (int j = -1; j <= 1; ++j)
@@ -2894,7 +2894,7 @@ void Player::DrawBalls()
             }
         }
 
-#ifdef _DEBUGPHYSICS        // draw debug points for visualizing ball rotation
+#ifdef DEBUG_BALL_SPIN        // draw debug points for visualizing ball rotation
         if (m_fShowFPS)
         {
             // set transform
