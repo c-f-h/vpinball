@@ -553,8 +553,6 @@ PinTable::PinTable()
    m_Gravity = GRAVITYCONST;
    m_hardFriction = C_FRICTIONCONST;
    m_hardScatter = 0;
-   m_maxBallSpeed = C_SPEEDLIMIT;
-   m_dampingFriction = C_DAMPFRICTION;
 
    m_plungerNormalize = 100;  //Mech-Plunger component adjustment or weak spring, aging
    m_plungerFilter = fFalse;
@@ -1724,8 +1722,6 @@ void PinTable::Play()
       {
 		 float m_fOverrideContactFriction;
 		 float m_fOverrideContactScatterAngle;
-		 float m_fOverrideDampeningSpeed;
-		 float m_fOverrideDampeningFriction;
 		 
 		 if(m_fOverridePhysics)
 		 {
@@ -1750,25 +1746,11 @@ void PinTable::Play()
 			 if (hr != S_OK)
 				m_fOverrideContactScatterAngle = DEFAULT_TABLE_SCATTERANGLE;
 			 m_fOverrideContactScatterAngle = ANGTORAD(m_fOverrideContactScatterAngle);
-
-			 m_fOverrideDampeningSpeed = DEFAULT_TABLE_DAMPENINGSPEED;
-		     sprintf_s(tmp,256,"TablePhysicsDampeningSpeed%d",m_fOverridePhysics-1);
-			 hr = GetRegStringAsFloat("Player", tmp, &m_fOverrideDampeningSpeed);
-			 if (hr != S_OK)
-				m_fOverrideDampeningSpeed = DEFAULT_TABLE_DAMPENINGSPEED;
-
-			 m_fOverrideDampeningFriction = DEFAULT_TABLE_DAMPENINGFRICTION;
-		     sprintf_s(tmp,256,"TablePhysicsDampeningFriction%d",m_fOverridePhysics-1);
-			 hr = GetRegStringAsFloat("Player", tmp, &m_fOverrideDampeningFriction);
-			 if (hr != S_OK)
-				m_fOverrideDampeningFriction = DEFAULT_TABLE_DAMPENINGFRICTION;
 		 }
 
          c_hardFriction = 1.0f - (m_fOverridePhysics ? m_fOverrideContactFriction : m_hardFriction);	// convert to reciprocal
          c_hardFrictionCoeff = frictionToCoeff( pow(c_hardFriction, 3.5f) );    // heuristic: about 3.5 physics cycles per 10 ms
          c_hardScatter = (m_fOverridePhysics ? m_fOverrideContactScatterAngle : m_hardScatter);
-         c_maxBallSpeedSqr = (m_fOverridePhysics ? m_fOverrideDampeningSpeed*m_fOverrideDampeningSpeed : m_maxBallSpeed*m_maxBallSpeed);
-         c_dampingFriction = (m_fOverridePhysics ? m_fOverrideDampeningFriction : m_dampingFriction);
          c_plungerNormalize = m_plungerNormalize*(float)(1.0/1300.0);
          c_plungerFilter = (m_plungerFilter != 0); 
 
@@ -2660,8 +2642,6 @@ HRESULT PinTable::SaveData(IStream* pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryp
    bw.WriteFloat(FID(GAVT), m_Gravity);
    bw.WriteFloat(FID(FRCT), m_hardFriction);
    bw.WriteFloat(FID(SCAT), m_hardScatter);
-   bw.WriteFloat(FID(DAMP), m_maxBallSpeed);
-   bw.WriteFloat(FID(DAMF), m_dampingFriction);
    bw.WriteInt(FID(MPGC), m_plungerNormalize);
    bw.WriteBool(FID(MPDF), m_plungerFilter);
    bw.WriteInt(FID(PHML), m_PhysicsMaxLoops);
@@ -3412,14 +3392,6 @@ BOOL PinTable::LoadToken(int id, BiffReader *pbr)
    else if( id == FID(SCAT))
    {
       pbr->GetFloat(&m_hardScatter);
-   }
-   else if( id == FID(DAMP))
-   {
-      pbr->GetFloat(&m_maxBallSpeed);
-   }
-   else if( id == FID(DAMF))
-   {
-      pbr->GetFloat(&m_dampingFriction);
    }
    else if( id == FID(MPGC))
    {
@@ -8313,40 +8285,6 @@ STDMETHODIMP PinTable::put_HardScatter(float newVal )
    return S_OK;
 }
 
-STDMETHODIMP PinTable::get_MaxBallSpeed(float *pVal)
-{
-   *pVal = m_maxBallSpeed;
-
-   return S_OK;
-}
-
-STDMETHODIMP PinTable::put_MaxBallSpeed(float newVal )
-{
-   STARTUNDO
-
-   m_maxBallSpeed = newVal;
-
-   STOPUNDO
-   return S_OK;
-}
-
-STDMETHODIMP PinTable::get_DampingFriction(float *pVal)
-{
-   *pVal = m_dampingFriction;
-
-   return S_OK;
-}
-
-STDMETHODIMP PinTable::put_DampingFriction(float newVal )
-{
-   STARTUNDO
-
-   m_dampingFriction = newVal;
-
-   STOPUNDO
-   return S_OK;
-}
-
 STDMETHODIMP PinTable::get_PlungerNormalize(int *pVal)
 {
    *pVal = m_plungerNormalize;
@@ -8738,8 +8676,8 @@ STDMETHODIMP PinTable::ImportPhysics()
 
 	float FlipperPhysicsSpeed,FlipperPhysicsStrength,FlipperPhysicsElasticity,FlipperPhysicsScatter,FlipperPhysicsReturnStrength,FlipperPhysicsRecoil,FlipperPhysicsPowerLaw,FlipperPhysicsOblique;
 	fscanf_s(f,"%f %f %f %f %f %f %f %f\n", &FlipperPhysicsSpeed,&FlipperPhysicsStrength,&FlipperPhysicsElasticity,&FlipperPhysicsScatter,&FlipperPhysicsReturnStrength,&FlipperPhysicsRecoil,&FlipperPhysicsPowerLaw,&FlipperPhysicsOblique);
-	float TablePhysicsGravityConstant,TablePhysicsContactFriction,TablePhysicsContactScatterAngle,TablePhysicsDampeningSpeed,TablePhysicsDampeningFriction;
-	fscanf_s(f,"%f %f %f %f %f\n", &TablePhysicsGravityConstant,&TablePhysicsContactFriction,&TablePhysicsContactScatterAngle,&TablePhysicsDampeningSpeed,&TablePhysicsDampeningFriction);
+	float TablePhysicsGravityConstant,TablePhysicsContactFriction,TablePhysicsContactScatterAngle;
+	fscanf_s(f,"%f %f %f\n", &TablePhysicsGravityConstant,&TablePhysicsContactFriction,&TablePhysicsContactScatterAngle);
 	//char tmp2[256]; // not used here
 	//fscanf_s(f,"%s",tmp2);
 	fclose(f);
@@ -8761,8 +8699,6 @@ STDMETHODIMP PinTable::ImportPhysics()
 	put_Gravity(TablePhysicsGravityConstant);
 	put_HardFriction(TablePhysicsContactFriction);
 	put_HardScatter(TablePhysicsContactScatterAngle);
-	put_MaxBallSpeed(TablePhysicsDampeningSpeed);
-	put_DampingFriction(TablePhysicsDampeningFriction);
 
 	return S_OK;
 }
@@ -8866,12 +8802,6 @@ STDMETHODIMP PinTable::ExportPhysics()
 
 	get_HardScatter(&val);
 	fprintf_s(f,"%f ",val);
-
-	get_MaxBallSpeed(&val);
-	fprintf_s(f,"%f ",val);
-
-	get_DampingFriction(&val);
-	fprintf_s(f,"%f\n",val);
 
 
 	fprintf_s(f,"%s",m_szTitle);

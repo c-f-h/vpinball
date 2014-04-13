@@ -14,8 +14,6 @@
 #define DEFAULT_TABLE_GRAVITY           1.6774f
 #define DEFAULT_TABLE_CONTACTFRICTION   0.0005f
 #define DEFAULT_TABLE_SCATTERANGLE      0.5f
-#define DEFAULT_TABLE_DAMPENINGSPEED    65.0f
-#define DEFAULT_TABLE_DAMPENINGFRICTION 0.95f
 
 
 /*
@@ -52,9 +50,7 @@
 // Low Normal speed collison is handled as contact process rather than impulse collision
 #define C_LOWNORMVEL 0.0001f
 #define C_CONTACTVEL 0.099f
-// limit ball speed to C_SPEEDLIMIT
-#define C_SPEEDLIMIT 60.0f
-#define C_DAMPFRICTION 0.95f
+
 // low velocity stabilization ... if embedding occurs add some velocity 
 #define C_EMBEDDED 0.0f
 #define C_EMBEDSHOT 0.05f

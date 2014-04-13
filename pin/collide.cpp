@@ -1,7 +1,5 @@
 #include "stdafx.h"
 
-float c_maxBallSpeedSqr = C_SPEEDLIMIT*C_SPEEDLIMIT; 
-float c_dampingFriction = C_DAMPFRICTION;
 float c_plungerNormalize = C_PLUNGERNORMALIZE;
 bool c_plungerFilter = false;
 
