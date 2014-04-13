@@ -534,7 +534,7 @@ BEGIN
     LTEXT           "Power-Law",IDC_STATIC,11,111,66,8
     LTEXT           "Oblique Correction",IDC_STATIC,11,124,66,8
     LTEXT           "Gravity Constant",IDC_STATIC,11,163,69,8
-    LTEXT           "Contact Friction",IDC_STATIC,11,177,69,8
+    LTEXT           "Playfield Friction",IDC_STATIC,11,177,69,8
     LTEXT           "Contact Scatter Angle",IDC_STATIC,11,191,69,8
     //LTEXT           "Dampening Speed",IDC_STATIC,11,205,69,8
     //LTEXT           "Dampening Friction",IDC_STATIC,11,219,69,8
@@ -1432,7 +1432,7 @@ BEGIN
     EDITTEXT        1041,80,201,40,12,ES_AUTOHSCROLL
     EDITTEXT        1042,80,215,40,12,ES_AUTOHSCROLL
     LTEXT           "Gravity Constant",IDC_STATIC,7,9,69,8
-    LTEXT           "Contact Friction",IDC_STATIC,7,23,69,8
+    LTEXT           "Playfield Friction",IDC_STATIC,7,23,69,8
     LTEXT           "Contact Scatter Angle",IDC_STATIC,7,37,69,8
     //LTEXT           "Dampening Speed",IDC_STATIC,7,51,69,8
     //LTEXT           "Dampening Friction",IDC_STATIC,7,65,69,8

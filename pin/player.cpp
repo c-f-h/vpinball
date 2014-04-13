@@ -484,7 +484,12 @@ void Player::CreateBoundingHitShapes(Vector<HitObject> *pvho)
 	pvho->AddElement(ph3dpoly);
 
     m_hitPlayfield = HitPlane( Vertex3Ds(0,0,1), m_ptable->m_tableheight );
+    m_hitPlayfield.SetFriction(m_ptable->m_hardFriction);
+    m_hitPlayfield.m_elasticity = 0.2f;
+
     m_hitTopGlass  = HitPlane( Vertex3Ds(0,0,-1), m_ptable->m_glassheight );
+    m_hitTopGlass.SetFriction(0.3f);
+    m_hitTopGlass.m_elasticity = 0.2f;
 }
 
 void Player::InitKeys()

@@ -881,7 +881,7 @@ void HitPlane::Collide(CollisionEvent* coll)
     //slintf("Playfield COLLISION - (%f %f %f) - (%f %f %f)\n",
     //        coll->ball->pos.x, coll->ball->pos.y, coll->ball->pos.z,
     //        coll->ball->vel.x, coll->ball->vel.y, coll->ball->vel.z);
-    coll->ball->Collide3DWall(coll->normal[0], m_elasticity, /*m_friction*/ 0.1f, /*m_scatter*/ 0.0f);
+    coll->ball->Collide3DWall(coll->normal[0], m_elasticity, m_friction, /*m_scatter*/ 0.0f);
 
     // if ball has penetrated, push it out of the plane
     const float bnd = normal.Dot( coll->ball->pos ) - coll->ball->radius - d; // distance from plane to ball surface
@@ -891,7 +891,7 @@ void HitPlane::Collide(CollisionEvent* coll)
 
 void HitPlane::Contact(CollisionEvent& coll, float dtime)
 {
-    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, /*m_friction*/ 0.1f, dtime);
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, m_friction, dtime);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
