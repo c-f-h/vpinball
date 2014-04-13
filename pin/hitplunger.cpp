@@ -350,7 +350,7 @@ void HitPlunger::Collide(CollisionEvent *coll)
 	pball->vel.x += impulse *phitnormal->x;  
 	pball->vel.y += impulse *phitnormal->y; 
 
-	pball->vel *= c_hardFriction;           //friction all axiz
+	pball->vel *= c_hardFriction;           //friction all axiz     // TODO: fix this
 
 	const float scatter_vel = m_plungeranim.m_scatterVelocity * g_pplayer->m_ptable->m_globalDifficulty;// apply dificulty weighting
 

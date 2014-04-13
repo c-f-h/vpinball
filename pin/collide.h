@@ -24,7 +24,6 @@ enum
 	};
 
 extern float c_hardFriction; 
-extern float c_hardFrictionCoeff;       // for variable timestep
 extern float c_hardScatter; 
 
 extern float c_plungerNormalize;  //Adjust Mech-Plunger, useful for component change or weak spring etc.

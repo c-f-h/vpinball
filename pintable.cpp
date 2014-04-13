@@ -1749,7 +1749,6 @@ void PinTable::Play()
 		 }
 
          c_hardFriction = 1.0f - (m_fOverridePhysics ? m_fOverrideContactFriction : m_hardFriction);	// convert to reciprocal
-         c_hardFrictionCoeff = frictionToCoeff( pow(c_hardFriction, 3.5f) );    // heuristic: about 3.5 physics cycles per 10 ms
          c_hardScatter = (m_fOverridePhysics ? m_fOverrideContactScatterAngle : m_hardScatter);
          c_plungerNormalize = m_plungerNormalize*(float)(1.0/1300.0);
          c_plungerFilter = (m_plungerFilter != 0); 
