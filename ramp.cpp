@@ -972,6 +972,7 @@ void Ramp::GetHitShapesDebug(Vector<HitObject> * const pvho)
 {
 }
 
+#ifdef RAMPTEST
 void Ramp::AddSideWall(Vector<HitObject> * const pvho, const Vertex2D * const pv1, const Vertex2D * const pv2, const float height1, const float height2, const float wallheight)
 {
    Vertex3Ds * const rgv3D = new Vertex3Ds[4];
@@ -990,6 +991,7 @@ void Ramp::AddSideWall(Vector<HitObject> * const pvho, const Vertex2D * const pv
    m_vhoCollidable.push_back(ph3dpoly);	//remember hit components of ramp
    ph3dpoly->m_fEnabled = m_d.m_fCollidable;
 }
+#endif
 
 void Ramp::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const ph3d1, const HitTriangle * const ph3d2)
 {
