@@ -1748,7 +1748,6 @@ void PinTable::Play()
 			 m_fOverrideContactScatterAngle = ANGTORAD(m_fOverrideContactScatterAngle);
 		 }
 
-         c_hardFriction = 1.0f - (m_fOverridePhysics ? m_fOverrideContactFriction : m_hardFriction);	// convert to reciprocal
          c_hardScatter = (m_fOverridePhysics ? m_fOverrideContactScatterAngle : m_hardScatter);
          c_plungerNormalize = m_plungerNormalize*(float)(1.0/1300.0);
          c_plungerFilter = (m_plungerFilter != 0); 
@@ -8256,10 +8255,7 @@ STDMETHODIMP PinTable::put_HardFriction(float newVal )
 {	
    STARTUNDO
 
-   if (newVal > 1.0f) newVal = 1.0f;
-      else if (newVal < 0) newVal = 0;
-
-   m_hardFriction = newVal;
+   m_hardFriction = clamp(newVal, 0.0f, 1.0f);
 
    STOPUNDO
 

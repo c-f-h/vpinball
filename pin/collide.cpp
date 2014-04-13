@@ -4,7 +4,6 @@ float c_plungerNormalize = C_PLUNGERNORMALIZE;
 bool c_plungerFilter = false;
 
 float c_hardScatter = 0.0f;
-float c_hardFriction = 1.0f - C_FRICTIONCONST;
 
 HitObject *CreateCircularHitPoly(const float x, const float y, const float z, const float r, const int sections)
 	{

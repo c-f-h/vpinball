@@ -23,7 +23,6 @@ enum
 	eKicker		// this is done to limit to one test
 	};
 
-extern float c_hardFriction; 
 extern float c_hardScatter; 
 
 extern float c_plungerNormalize;  //Adjust Mech-Plunger, useful for component change or weak spring etc.
