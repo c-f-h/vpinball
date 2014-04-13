@@ -680,9 +680,6 @@ float HitFlipper::HitTestFlipperFace(const Ball * pball, const float dtime, Coll
 }
 
 
-static const float frictionCoeff = 0.8f;
-
-
 void HitFlipper::Collide(CollisionEvent *coll)
 {
     Ball *pball = coll->ball;
@@ -816,7 +813,7 @@ void HitFlipper::Collide(CollisionEvent *coll)
        kt += tangent.Dot(CrossProduct(cross / m_flipperanim.m_inertia, rF));    // flipper only has angular response
 
        // friction impulse can't be greater than coefficient of friction times collision impulse (Coulomb friction cone)
-       const float maxFric = frictionCoeff * impulse;
+       const float maxFric = m_friction * impulse;
        const float jt = clamp(-vt / kt, -maxFric, maxFric);
 
        pball->ApplySurfaceImpulse(rB, jt * tangent);
@@ -906,7 +903,7 @@ void HitFlipper::Contact(CollisionEvent& coll, float dtime)
         // first check for slippage
         const Vertex3Ds slip = vrel - normVel * normal;       // calc the tangential slip velocity
 
-        const float maxFric = j * frictionCoeff;
+        const float maxFric = j * m_friction;
 
         const float slipspeed = slip.Length();
         if (slipspeed < C_PRECISION)

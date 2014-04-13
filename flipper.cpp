@@ -63,7 +63,7 @@ void Flipper::SetDefaults(bool fromMouseClick)
    m_d.m_angleEOS = 0;		//disabled
 
    hr = GetRegStringAsFloat("DefaultProps\\Flipper","ReturnStrength", &fTmp);
-   m_d.m_return = (hr == S_OK) && fromMouseClick ? fTmp : 0.09f;		// match existing physics, return equals stroke 
+   m_d.m_return = (hr == S_OK) && fromMouseClick ? fTmp : 0.09f;
 
    hr = GetRegStringAsFloat("DefaultProps\\Flipper","Speed", &fTmp);
    m_d.m_force = (hr == S_OK) && fromMouseClick ? fTmp : 0.15f;
@@ -73,11 +73,7 @@ void Flipper::SetDefaults(bool fromMouseClick)
 
    m_d.m_OverridePhysics = 0;
 
-   //hr = GetRegStringAsFloat("DefaultProps\\Flipper","Friction", &fTmp);
-   //if (hr == S_OK)
-   //	m_d.m_friction = fTmp;
-   //else
-   m_d.m_friction = 0;	//zero uses global value
+   m_d.m_friction = GetRegStringAsFloatWithDefault("DefaultProps\\Flipper","Friction", 0.8f);
 
    m_d.m_scatter = 0.0;	//zero uses global value
 
@@ -147,32 +143,42 @@ void Flipper::SetDefaults(bool fromMouseClick)
 
 void Flipper::WriteRegDefaults()
 {
-   SetRegValueFloat("DefaultProps\\Flipper","BaseRadius", m_d.m_BaseRadius);
-   SetRegValueFloat("DefaultProps\\Flipper","EndRadius", m_d.m_EndRadius);
-   SetRegValueFloat("DefaultProps\\Flipper","StartAngle", m_d.m_StartAngle);
-   SetRegValueFloat("DefaultProps\\Flipper","EndAngle", m_d.m_EndAngle);
-   SetRegValueFloat("DefaultProps\\Flipper","Length", m_d.m_FlipperRadiusMax);
-   SetRegValueFloat("DefaultProps\\Flipper","MaxDifLength", m_d.m_FlipperRadiusMin);
-   SetRegValueFloat("DefaultProps\\Flipper","RecoilVelocity", m_d.m_recoil);
-   SetRegValueFloat("DefaultProps\\Flipper","ReturnStrength", m_d.m_return);
-   SetRegValueFloat("DefaultProps\\Flipper","Speed", m_d.m_force);
-   SetRegValueFloat("DefaultProps\\Flipper","Elasticity", m_d.m_elasticity);
-   SetRegValueFloat("DefaultProps\\Flipper","ScatterAngle", RADTOANG(m_d.m_scatterangle));
-   SetRegValue("DefaultProps\\Flipper","TimerEnabled",REG_DWORD,&m_d.m_tdr.m_fTimerEnabled,4);
-   SetRegValue("DefaultProps\\Flipper","TimerInterval", REG_DWORD, &m_d.m_tdr.m_TimerInterval, 4);
-   SetRegValue("DefaultProps\\Flipper","Color", REG_DWORD, &m_d.m_color, 4);
-   SetRegValue("DefaultProps\\Flipper","RubberColor", REG_DWORD, &m_d.m_rubbercolor, 4);
-   SetRegValue("DefaultProps\\Flipper","Surface", REG_SZ, &m_d.m_szSurface,strlen(m_d.m_szSurface));
-   SetRegValueFloat("DefaultProps\\Flipper","Strength", m_d.m_strength);
-   SetRegValueFloat("DefaultProps\\Flipper","PowerLaw", m_d.m_powerlaw);
-   SetRegValueFloat("DefaultProps\\Flipper","ObliqueCorrection", m_d.m_obliquecorrection);
-   SetRegValueFloat("DefaultProps\\Flipper","Height", m_d.m_height);
-   SetRegValue("DefaultProps\\Flipper","RubberThickness", REG_DWORD, &m_d.m_rubberthickness, 4);
-   SetRegValue("DefaultProps\\Flipper","RubberHeight", REG_DWORD, &m_d.m_rubberheight, 4);
-   SetRegValue("DefaultProps\\Flipper","RubberWidth", REG_DWORD, &m_d.m_rubberwidth, 4);
-   SetRegValue("DefaultProps\\Flipper","Visible",REG_DWORD,&m_d.m_fVisible,4);
-   SetRegValue("DefaultProps\\Flipper","Enabled",REG_DWORD,&m_d.m_fEnabled,4);
-   SetRegValue("DefaultProps\\Flipper","CompatibilityMode",REG_DWORD,&m_d.m_fCompatibility,4);
+   static const char regKey[] = "DefaultProps\\Flipper";
+
+   SetRegValueFloat(regKey,"BaseRadius", m_d.m_BaseRadius);
+   SetRegValueFloat(regKey,"StartAngle", m_d.m_StartAngle);
+   SetRegValueFloat(regKey,"EndAngle", m_d.m_EndAngle);
+   SetRegValueFloat(regKey,"BaseRadius", m_d.m_BaseRadius);
+   SetRegValueFloat(regKey,"MaxDifLength", m_d.m_FlipperRadiusMin);
+   SetRegValueFloat(regKey,"EndRadius", m_d.m_EndRadius);
+   SetRegValueFloat(regKey,"ReturnStrength", m_d.m_return);
+   SetRegValueFloat(regKey,"StartAngle", m_d.m_StartAngle);
+   SetRegValueFloat(regKey,"Elasticity", m_d.m_elasticity);
+   SetRegValueFloat(regKey,"EndAngle", m_d.m_EndAngle);
+   SetRegValueFloat(regKey,"Length", m_d.m_FlipperRadiusMax);
+   SetRegValueFloat(regKey,"MaxDifLength", m_d.m_FlipperRadiusMin);
+   SetRegValueFloat(regKey,"RecoilVelocity", m_d.m_recoil);
+   SetRegValueFloat(regKey,"ReturnStrength", m_d.m_return);
+   SetRegValueFloat(regKey,"Speed", m_d.m_force);
+   SetRegValueFloat(regKey,"Elasticity", m_d.m_elasticity);
+   SetRegValueFloat(regKey, "Friction", m_d.m_friction);
+   SetRegValueFloat(regKey,"ScatterAngle", RADTOANG(m_d.m_scatterangle));
+   SetRegValue(regKey,"TimerEnabled",REG_DWORD,&m_d.m_tdr.m_fTimerEnabled,4);
+   SetRegValue(regKey,"TimerInterval", REG_DWORD, &m_d.m_tdr.m_TimerInterval, 4);
+   SetRegValue(regKey,"Color", REG_DWORD, &m_d.m_color, 4);
+   SetRegValue(regKey,"RubberColor", REG_DWORD, &m_d.m_rubbercolor, 4);
+   SetRegValue(regKey,"Surface", REG_SZ, &m_d.m_szSurface,strlen(m_d.m_szSurface));
+   SetRegValueFloat(regKey,"Strength", m_d.m_strength);
+   SetRegValueFloat(regKey,"Height", m_d.m_height);
+   SetRegValueFloat(regKey,"PowerLaw", m_d.m_powerlaw);
+   SetRegValueFloat(regKey,"ObliqueCorrection", m_d.m_obliquecorrection);
+   SetRegValueFloat(regKey,"Height", m_d.m_height);
+   SetRegValue(regKey,"RubberThickness", REG_DWORD, &m_d.m_rubberthickness, 4);
+   SetRegValue(regKey,"RubberHeight", REG_DWORD, &m_d.m_rubberheight, 4);
+   SetRegValue(regKey,"RubberWidth", REG_DWORD, &m_d.m_rubberwidth, 4);
+   SetRegValue(regKey,"Visible",REG_DWORD,&m_d.m_fVisible,4);
+   SetRegValue(regKey,"Enabled",REG_DWORD,&m_d.m_fEnabled,4);
+   SetRegValue(regKey,"CompatibilityMode",REG_DWORD,&m_d.m_fCompatibility,4);
 }
 
 
@@ -868,6 +874,7 @@ HRESULT Flipper::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcrypt
    bw.WriteInt(FID(RWDT), m_d.m_rubberwidth);
    bw.WriteFloat(FID(STRG), m_d.m_strength);
    bw.WriteFloat(FID(ELAS), m_d.m_elasticity);
+   bw.WriteFloat(FID(FRIC), m_d.m_friction);
    bw.WriteBool(FID(VSBL), m_d.m_fVisible);
    bw.WriteBool(FID(ENBL), m_d.m_fEnabled);
    bw.WriteBool(FID(COMP), m_d.m_fCompatibility);
@@ -995,6 +1002,10 @@ BOOL Flipper::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(ELAS))
    {
       pbr->GetFloat(&m_d.m_elasticity);
+   }
+   else if (id == FID(FRIC))
+   {
+      pbr->GetFloat(&m_d.m_friction);
    }
    else if (id == FID(FPWL))
    {
@@ -1498,6 +1509,29 @@ STDMETHODIMP Flipper::put_Elasticity(float newVal)
    {
       STARTUNDO
       m_d.m_elasticity = newVal;
+      STOPUNDO
+   }
+
+   return S_OK;
+}
+
+STDMETHODIMP Flipper::get_Friction(float *pVal)
+{
+   *pVal = (m_phitflipper) ? m_phitflipper->m_friction : m_d.m_friction;
+
+   return S_OK;
+}
+
+STDMETHODIMP Flipper::put_Friction(float newVal)
+{
+   if (m_phitflipper)
+   {
+      m_phitflipper->m_friction = newVal;
+   }
+   else
+   {
+      STARTUNDO
+      m_d.m_friction = newVal;
       STOPUNDO
    }
 

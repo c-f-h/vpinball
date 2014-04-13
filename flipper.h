@@ -129,6 +129,8 @@ DECLARE_REGISTRY_RESOURCEID(IDR_FLIPPER)
 public:
 	STDMETHOD(get_Elasticity)(/*[out, retval]*/ float *pVal);
 	STDMETHOD(put_Elasticity)(/*[in]*/ float newVal);
+	STDMETHOD(get_Friction)(/*[out, retval]*/ float *pVal);
+	STDMETHOD(put_Friction)(/*[in]*/ float newVal);
     STDMETHOD(get_Visible)(/*[out, retval]*/ VARIANT_BOOL *pVal);
     STDMETHOD(put_Visible)(/*[in]*/ VARIANT_BOOL newVal);
     STDMETHOD(get_Enabled)(/*[out, retval]*/ VARIANT_BOOL *pVal);
