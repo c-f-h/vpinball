@@ -19,7 +19,7 @@ void BumperHitCircle::Collide(CollisionEvent* coll)
 
 	const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
 
-	pball->CollideWall(hitnormal, m_elasticity, m_antifriction, m_scatter);	//reflect ball from wall
+	pball->CollideWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);	//reflect ball from wall
 
 	// if the bumper is disabled then don't activate the bumper
 	if (m_pbumper->m_fDisabled)
@@ -111,7 +111,7 @@ void LineSegSlingshot::Collide(CollisionEvent* coll)
 		pball->vel.y -= hitnormal.y * force;	// allow CollideWall to handle the remainder
 	}
 
-	pball->CollideWall(hitnormal, m_elasticity, m_antifriction, m_scatter);
+	pball->CollideWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
 
 	if (m_pfe && !m_psurface->m_fDisabled)
 	{
@@ -292,7 +292,7 @@ HitSpinner::HitSpinner(Spinner * const pspinner, const float height)
 	else if (m_spinneranim.m_angle < m_spinneranim.m_angleMin) m_spinneranim.m_angle = m_spinneranim.m_angleMin;	
 	
 	m_spinneranim.m_elasticity = pspinner->m_d.m_elasticity;
-	m_spinneranim.m_friction = 1.0f - pspinner->m_d.m_friction;	//antifriction
+    m_spinneranim.m_friction = 1.0f - pspinner->m_d.m_antifriction;
 	m_spinneranim.m_scatter = pspinner->m_d.m_scatter;
 	m_spinneranim.m_fVisible = pspinner->m_d.m_fVisible;	
 }
@@ -402,7 +402,7 @@ void SpinnerAnimObject::UpdateVelocities()
 {
 	m_anglespeed -= sinf(m_angle) * 0.0025f; // Center of gravity towards bottom of object, makes it stop vertical
 
-	m_anglespeed *= m_pspinner->m_d.m_antifriction;     // TODO: depends on STEPTIME
+	m_anglespeed *= m_pspinner->m_d.m_antifriction;     // TODO: depends on STEPTIME    // TODO: fix this
 }
 
 void SpinnerAnimObject::Reset()
@@ -579,7 +579,7 @@ void Hit3DPoly::Collide(CollisionEvent *coll)
    {
       const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
 
-      pball->Collide3DWall(normal, m_elasticity, m_antifriction, m_scatter);
+      pball->Collide3DWall(normal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
       if ( m_ObjType == ePrimitive )
       {
          if ( m_pfe && m_fEnabled)
@@ -766,7 +766,7 @@ void HitTriangle::Collide(CollisionEvent* coll)
    {
       const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
 
-      pball->Collide3DWall(normal, m_elasticity, m_antifriction, m_scatter);
+      pball->Collide3DWall(normal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
       if ( m_ObjType == ePrimitive )
       {
          if ( m_pfe && m_fEnabled)
@@ -881,7 +881,7 @@ void HitPlane::Collide(CollisionEvent* coll)
     //slintf("Playfield COLLISION - (%f %f %f) - (%f %f %f)\n",
     //        coll->ball->pos.x, coll->ball->pos.y, coll->ball->pos.z,
     //        coll->ball->vel.x, coll->ball->vel.y, coll->ball->vel.z);
-    coll->ball->Collide3DWall(coll->normal[0], m_elasticity, /*m_antifriction*/ 0.0f, /*m_scatter*/ 0.0f);
+    coll->ball->Collide3DWall(coll->normal[0], m_elasticity, /*m_friction*/ 0.1f, /*m_scatter*/ 0.0f);
 
     // if ball has penetrated, push it out of the plane
     const float bnd = normal.Dot( coll->ball->pos ) - coll->ball->radius - d; // distance from plane to ball surface
@@ -891,7 +891,7 @@ void HitPlane::Collide(CollisionEvent* coll)
 
 void HitPlane::Contact(CollisionEvent& coll, float dtime)
 {
-    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, 0.1f, dtime);
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, /*m_friction*/ 0.1f, dtime);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -968,7 +968,7 @@ void Hit3DCylinder::Collide(CollisionEvent* coll)
     const Vertex3Ds& hitnormal = coll->normal[0];
 
     const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
-    pball->Collide3DWall(hitnormal, m_elasticity, m_antifriction, m_scatter);
+    pball->Collide3DWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
    if ( m_ObjType == ePrimitive )
    {
       if ( m_pfe && m_fEnabled )

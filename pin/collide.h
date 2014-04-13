@@ -81,7 +81,7 @@ public:
 	
 	virtual AnimObject *GetAnimObject() {return NULL;}
 
-    void SetFriction(float friction)        { m_antifriction = 1.0f - friction; }
+    void SetFriction(float friction)        { m_friction = friction; }
 
 	IFireEvents *m_pfe;
 	float m_threshold;
@@ -95,7 +95,7 @@ public:
 	int   m_ObjType;
 	void* m_pObj;
 	float m_elasticity;
-	float m_antifriction;
+	float m_friction;
 	float m_scatter;
 	};
 

@@ -314,7 +314,7 @@ void LineSeg::Collide(CollisionEvent *coll)
     const Vertex3Ds& hitnormal = coll->normal[0];
 
     const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
-	pball->CollideWall(hitnormal, m_elasticity, m_antifriction, m_scatter);
+	pball->CollideWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
 
 	if (m_pfe)
 		{			
@@ -376,7 +376,7 @@ void Joint::Collide(CollisionEvent *coll)
     const Vertex3Ds& hitnormal = coll->normal[0];
 
     const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
-	pball->CollideWall(hitnormal, m_elasticity, m_antifriction, m_scatter);
+	pball->CollideWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
 
     if (m_pfe)
     {
@@ -414,7 +414,7 @@ float HitCircle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 
 void HitCircle::Collide(CollisionEvent *coll)
 {
-    coll->ball->CollideWall(coll->normal[0], m_elasticity, m_antifriction, m_scatter);
+    coll->ball->CollideWall(coll->normal[0], m_elasticity, /*m_friction*/ 0.3f, m_scatter);
 }
 
 

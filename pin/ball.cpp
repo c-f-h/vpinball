@@ -208,7 +208,7 @@ void Ball::EnsureOMObject()
 	m_pballex->m_pball = this;
 }
  
-void Ball::Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, float antifriction, float scatter_angle)
+void Ball::Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, float friction, float scatter_angle)
 {
     //speed normal to wall
     float dot = vel.Dot(hitNormal);
@@ -251,8 +251,6 @@ void Ball::Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, flo
 
     Vertex3Ds tangent = surfVel - surfVel.Dot(hitNormal) * hitNormal;       // calc the tangential velocity
 
-    static const float frictionCoeff = 0.3f;
-
     const float tangentSpSq = tangent.LengthSquared();
     if (tangent.LengthSquared() > 1e-6f)
     {
@@ -264,7 +262,7 @@ void Ball::Collide3DWall(const Vertex3Ds& hitNormal, const float elasticity, flo
         const float kt = m_invMass + tangent.Dot( CrossProduct(cross / m_inertia, surfP));
 
         // friction impulse can't be greather than coefficient of friction times collision impulse (Coulomb friction cone)
-        const float maxFric = frictionCoeff * reactionImpulse;
+        const float maxFric = friction * reactionImpulse;
         const float jt = clamp(-vt / kt, -maxFric, maxFric);
 
         ApplySurfaceImpulse(surfP, jt * tangent);
@@ -603,11 +601,6 @@ void Ball::UpdateVelocities()
 		vel.x += nx;
 		vel.y += ny;
 	}
-
-	const float mag = vel.LengthSquared(); //speed check 
-	const float antifrict = (mag > c_maxBallSpeedSqr) ? c_dampingFriction : 0.99875f;
-
-	//vel *= antifrict; // speed damping // TODO: reenable
 
 	m_fDynamic = C_DYNAMIC; // always set .. after adding velocity
 
