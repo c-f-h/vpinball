@@ -719,55 +719,31 @@ float HitTriangle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll
 
     hitPos += hittime * pball->vel;	// advance hit point to contact
 
-	// Do a point in poly test, using the xy plane, to see if the hit point is inside the polygon
-	//this need to be changed to a point in polygon on 3D plane
+    // check if hitPos is within the triangle
 
-	float x2 = m_rgv[0].x;
-	float y2 = m_rgv[0].y;
-	bool hx2 = (hitPos.x >= x2);
-	bool hy2 = (hitPos.y <= y2);
-	int crosscount=0;	// count of lines which the hit point is to the left of
-	for (int i=0;i<3;i++)
+    // Compute vectors
+    const Vertex3Ds v0 = m_rgv[2] - m_rgv[0];
+    const Vertex3Ds v1 = m_rgv[1] - m_rgv[0];
+    const Vertex3Ds v2 = hitPos   - m_rgv[0];
+
+    // Compute dot products
+    const float dot00 = v0.Dot(v0);
+    const float dot01 = v0.Dot(v1);
+    const float dot02 = v0.Dot(v2);
+    const float dot11 = v1.Dot(v1);
+    const float dot12 = v1.Dot(v2);
+
+    // Compute barycentric coordinates
+    const float invDenom = 1.0f / (dot00 * dot11 - dot01 * dot01);
+    const float u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+    const float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+    // Check if point is in triangle
+    const bool pointInTri = (u >= 0) && (v >= 0) && (u + v < 1);
+
+	if (pointInTri)
 	{
-		const float x1 = x2;
-		const float y1 = y2;
-		const bool hx1 = hx2;
-		const bool hy1 = hy2;
-		
-		const int j = (i < 3-1) ? (i+1) : 0;
-		x2 = m_rgv[j].x;
-		y2 = m_rgv[j].y;
-		hx2 = (hitPos.x >= x2);
-		hy2 = (hitPos.y <= y2);
-
-		if ((y1==y2) ||
-		    (hy1 && hy2) || (!hy1 && !hy2) || // if out of y range, forget about this segment
-		    (hx1 && hx2)) // Hit point is on the right of the line
-			continue;
-
-		if (!hx1 && !hx2)
-		{
-			crosscount^=1;
-			continue;
-		}
-
-		if (x2 == x1)
-		{
-			if (!hx2)
-				crosscount^=1;
-			continue;
-		}
-
-		// Now the hard part - the hit point is in the line bounding box
-
-		if (x2 - (y2 - hitPos.y)*(x1 - x2)/(y1 - y2) > hitPos.x)
-			crosscount^=1;
-	}
-
-	if (crosscount & 1)
-	{
-		coll.normal[0].x = m_rgv[0].z;
-		coll.normal[0].y = m_rgv[2].z;
+		coll.normal[0] = normal;
 
 		if (!rigid)								// non rigid body collision? return direction
 			coll.normal[1].x = bUnHit ? 1.0f : 0.0f;	// UnHit signal	is receding from outside target
@@ -777,8 +753,8 @@ float HitTriangle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll
 
 		return hittime;
 	}
-
-	return -1.0f;
+    else
+        return -1.0f;
 }
 
 void HitTriangle::Collide(CollisionEvent* coll)
