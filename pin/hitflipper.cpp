@@ -895,7 +895,7 @@ void HitFlipper::Contact(CollisionEvent& coll, float dtime)
 
         const float j = -normAcc / contactForceAcc;
 
-        pball->vel += (j * pball->m_invMass * dtime) * normal;
+        pball->vel += (j * pball->m_invMass * dtime - origNormVel) * normal;        // kill any existing normal velocity
         m_flipperanim.ApplyImpulse(rF, (-j * dtime) * normal);
 
         // apply friction
