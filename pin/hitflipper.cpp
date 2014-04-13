@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 FlipperAnimObject::FlipperAnimObject(const Vertex2D& center, float baser, float endr, float flipr, float angleStart, float angleEnd,
-                      float zlow, float zhigh, float strength, float mass)
+                      float zlow, float zhigh, float strength, float mass, float returnRatio)
 {
    m_height = zhigh - zlow;
    m_fCompatibility=fTrue;
@@ -56,6 +56,7 @@ FlipperAnimObject::FlipperAnimObject(const Vertex2D& center, float baser, float 
    SetObjects(angleStart);
 
    m_force = strength;
+   m_returnRatio = returnRatio;
    m_mass = mass;
 
    // model inertia of flipper as that of rod of length flipr around its end
@@ -118,8 +119,8 @@ FlipperAnimObject::FlipperAnimObject(const Vertex2D& center, float baser, float 
 }
 
 HitFlipper::HitFlipper(const Vertex2D& center, float baser, float endr, float flipr, float angleStart, float angleEnd,
-                       const float zlow, const float zhigh, float strength, const float mass)
-    : m_flipperanim(center, baser, endr, flipr, angleStart, angleEnd, zlow, zhigh, strength, mass)
+		       float zlow, float zhigh, float strength, float mass, float returnRatio)
+    : m_flipperanim(center, baser, endr, flipr, angleStart, angleEnd, zlow, zhigh, strength, mass, returnRatio)
 {
     m_last_hittime = 0;
 }
@@ -223,15 +224,17 @@ void FlipperAnimObject::UpdateVelocities()
     //const float solForce = m_solState ? m_force : 0.0f;
     //float force = m_dir * (solForce + springForce);
 
-    float solTorque = 0;
+    float torque = 0;
     if (m_solState)
     {
-        solTorque = m_force;
+        torque = m_force;
         if (fabsf(m_angleCur - m_angleEnd) <= M_PI/180.0f)
-            solTorque *= 0.33f;     // hold coil is weaker
+            torque *= 0.33f;     // hold coil is weaker
     }
+    else
+        torque = -m_returnRatio * m_force;
 
-    float torque = m_dir * (m_solState ? solTorque : -0.1f * m_force);
+    torque *= m_dir;
 
     m_isInContact = false;
     // resolve contacts with stoppers

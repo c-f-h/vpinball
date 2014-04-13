@@ -262,7 +262,7 @@ void Flipper::GetHitShapes(Vector<HitObject> * const pvho)
 
    HitFlipper * const phf = new HitFlipper(m_d.m_Center, m_d.m_BaseRadius, m_d.m_EndRadius,
 	   m_d.m_FlipperRadius, ANGTORAD(m_d.m_StartAngle), ANGTORAD(m_d.m_EndAngle), height, height + m_d.m_height,
-       (m_d.m_OverridePhysics ? m_d.m_OverrideStrength : m_d.m_strength), m_d.m_force);     // HACK: use "Speed" (m_force) as mass
+       (m_d.m_OverridePhysics ? m_d.m_OverrideStrength : m_d.m_strength), m_d.m_force, m_d.m_return);     // HACK: use "Speed" (m_force) as mass
 
    phf->m_elasticity = (m_d.m_OverridePhysics ? m_d.m_OverrideElasticity : m_d.m_elasticity);
    phf->SetFriction(m_d.m_friction);
@@ -1551,10 +1551,7 @@ STDMETHODIMP Flipper::put_Return(float newVal)
 {
    STARTUNDO
 
-   if (newVal < 0.f) newVal = 0.f;
-      else if (newVal > 1.0f) newVal = 1.0f;
-
-   m_d.m_return = newVal;
+   m_d.m_return = clamp(newVal, 0.0f, 1.0f);
 
    STOPUNDO
 

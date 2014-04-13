@@ -6,7 +6,7 @@ class FlipperAnimObject : public AnimObject
 	{
 public:
     FlipperAnimObject(const Vertex2D& center, float baser, float endr, float flipr, float angleStart, float angleEnd,
-                      float zlow, float zhigh, float strength, float mass);
+                      float zlow, float zhigh, float strength, float mass, float returnRatio);
 
 	void SetObjects(const float angle);
 	virtual void UpdateDisplacements(const float dtime);
@@ -47,6 +47,7 @@ public:
 
 	float m_flipperradius;
 	float m_force;
+    float m_returnRatio;
 	float m_mass;
 	float m_elasticity;
 
@@ -84,7 +85,7 @@ public:
 	//float rad1, rad2;
 
 	HitFlipper(const Vertex2D& center, float baser, float endr, float flipr, float angleStart, float angleEnd,
-		       const float zlow, const float zhigh, float strength, const float mass);
+		       float zlow, float zhigh, float strength, float mass, float returnRatio);
 	~HitFlipper();
 
 	virtual float HitTestFlipperFace(const Ball * pball, const float dtime, CollisionEvent& coll, const bool face1);
