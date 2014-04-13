@@ -969,21 +969,21 @@ BEGIN
     EDITTEXT        DISPID_Flipper_Speed,76,7,40,12,ES_AUTOHSCROLL
     EDITTEXT        19,76,22,40,12,ES_AUTOHSCROLL
     EDITTEXT        21,76,37,40,12,ES_AUTOHSCROLL
-    EDITTEXT        112,76,52,40,12,ES_AUTOHSCROLL
+    //EDITTEXT        112,76,52,40,12,ES_AUTOHSCROLL
     EDITTEXT        23,76,67,40,12,ES_AUTOHSCROLL
-    EDITTEXT        22,76,82,40,12,ES_AUTOHSCROLL
-    EDITTEXT        109,76,97,40,12,ES_AUTOHSCROLL
-    EDITTEXT        110,76,112,40,12,ES_AUTOHSCROLL
+    //EDITTEXT        22,76,82,40,12,ES_AUTOHSCROLL
+    //EDITTEXT        109,76,97,40,12,ES_AUTOHSCROLL
+    //EDITTEXT        110,76,112,40,12,ES_AUTOHSCROLL
     EDITTEXT        1044,106,130,10,12,ES_AUTOHSCROLL
     LTEXT           "Override by Global Physics Set",-1,7,132,98,8
     LTEXT           "&Mass",-1,7,9,66,8
     LTEXT           "Stre&ngth",-1,7,24,66,8
     LTEXT           "Elast&icity",-1,7,39,66,8
-    LTEXT           "Recoil Velocity",-1,7,84,66,8
+    //LTEXT           "Recoil Velocity",-1,7,84,66,8
     LTEXT           "Return Strength Ratio",-1,7,69,66,8
-    LTEXT           "Oblique Correction",-1,7,114,66,8
-    LTEXT           "Scatter Angle",-1,7,54,66,8
-    LTEXT           "Power-Law",-1,7,99,66,8
+    //LTEXT           "Oblique Correction",-1,7,114,66,8
+    //LTEXT           "Scatter Angle",-1,7,54,66,8
+    //LTEXT           "Power-Law",-1,7,99,66,8
 END
 
 IDD_PROPPLUNGER_PHYSICS DIALOGEX 0, 0, 125, 125
