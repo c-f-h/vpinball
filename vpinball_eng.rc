@@ -976,7 +976,7 @@ BEGIN
     EDITTEXT        110,76,112,40,12,ES_AUTOHSCROLL
     EDITTEXT        1044,106,130,10,12,ES_AUTOHSCROLL
     LTEXT           "Override by Global Physics Set",-1,7,132,98,8
-    LTEXT           "S&peed",-1,7,9,66,8
+    LTEXT           "&Mass",-1,7,9,66,8
     LTEXT           "Stre&ngth",-1,7,24,66,8
     LTEXT           "Elast&icity",-1,7,39,66,8
     LTEXT           "Recoil Velocity",-1,7,84,66,8
