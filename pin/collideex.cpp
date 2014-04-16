@@ -241,7 +241,7 @@ void GateAnimObject::UpdateVelocities()
 	{
 		if (m_angle == m_angleMin)
 			m_anglespeed = 0.0f;
-		else        // TODO: depends on STEPTIME
+		else
 			m_anglespeed = (m_anglespeed - sinf(m_angle) * 0.0025f) * (1.0f - m_friction); // Center of gravity towards bottom of object, makes it stop vertical
 		//else m_anglespeed = (m_anglespeed-sinf((m_angle - m_angleMin)*0.5f) * 0.02f)*(1.0f - m_friction); // Center of gravity towards bottom of object, makes it stop vertical
 	}
@@ -285,15 +285,12 @@ HitSpinner::HitSpinner(Spinner * const pspinner, const float height)
 	m_spinneranim.m_angleMax = ANGTORAD(pspinner->m_d.m_angleMax);
 	m_spinneranim.m_angleMin = ANGTORAD(pspinner->m_d.m_angleMin);
 
-	m_spinneranim.m_angle = 0;
+	m_spinneranim.m_angle = clamp(0.0f, m_spinneranim.m_angleMin, m_spinneranim.m_angleMax);
 	m_spinneranim.m_anglespeed = 0;
+    // compute proper damping factor for physics framerate
+    m_spinneranim.m_damping = powf(pspinner->m_d.m_antifriction, PHYS_FACTOR);
 
-	if (m_spinneranim.m_angle > m_spinneranim.m_angleMax) m_spinneranim.m_angle = m_spinneranim.m_angleMax;
-	else if (m_spinneranim.m_angle < m_spinneranim.m_angleMin) m_spinneranim.m_angle = m_spinneranim.m_angleMin;	
-	
 	m_spinneranim.m_elasticity = pspinner->m_d.m_elasticity;
-    m_spinneranim.m_friction = 1.0f - pspinner->m_d.m_antifriction;
-	m_spinneranim.m_scatter = pspinner->m_d.m_scatter;
 	m_spinneranim.m_fVisible = pspinner->m_d.m_fVisible;	
 }
 
@@ -400,9 +397,9 @@ void SpinnerAnimObject::UpdateDisplacements(const float dtime)
 
 void SpinnerAnimObject::UpdateVelocities()
 {
-	m_anglespeed -= sinf(m_angle) * 0.0025f; // Center of gravity towards bottom of object, makes it stop vertical
+	m_anglespeed -= sinf(m_angle) * 0.0025f * PHYS_FACTOR; // Center of gravity towards bottom of object, makes it stop vertical
 
-	m_anglespeed *= m_pspinner->m_d.m_antifriction;     // TODO: depends on STEPTIME    // TODO: fix this
+	m_anglespeed *= m_damping;
 }
 
 void SpinnerAnimObject::Reset()

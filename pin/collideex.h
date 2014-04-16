@@ -127,8 +127,7 @@ public:
 	float m_angleMax;
 	float m_angleMin;
 	float m_elasticity;
-	float m_friction;
-	float m_scatter;
+    float m_damping;
 	BOOL m_fVisible;
 };
 

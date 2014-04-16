@@ -139,12 +139,6 @@ void Spinner::SetDefaults(bool fromMouseClick)
    //else
    //   m_d.m_friction = 0;	//zero uses global value
 
-   hr = GetRegStringAsFloat("DefaultProps\\Spinner","Scatter", &fTmp);
-   if ((hr == S_OK) && fromMouseClick)
-      m_d.m_scatter = fTmp;
-   else
-      m_d.m_scatter = 0;	//zero uses global value
-
    hr = GetRegInt("DefaultProps\\Spinner","Visible", &iTmp);
    if ((hr == S_OK) && fromMouseClick)
       m_d.m_fVisible = iTmp == 0 ? false : true;
