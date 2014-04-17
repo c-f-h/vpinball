@@ -149,7 +149,7 @@ float LineSeg::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 
 void LineSeg::Contact(CollisionEvent& coll, float dtime)
 {
-    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, 0.4f, dtime);
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, /*m_friction*/ 0.3f, dtime);
 }
 
 
