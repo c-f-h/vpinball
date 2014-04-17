@@ -83,6 +83,7 @@ public:
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual int GetType() const {return eTriangle;}
 	virtual void Collide(CollisionEvent* coll);
+    virtual void Contact(CollisionEvent& coll, float dtime);
 	virtual void CalcHitRect();
 
     bool IsDegenerate() const       { return normal.IsZero(); }

@@ -657,13 +657,13 @@ HitTriangle::HitTriangle(const Vertex3Ds rgv[3])
 	m_scatter = 0;
 }
 
-float HitTriangle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll) //!! optimize specific for triangle?
+float HitTriangle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 {
 	if (!m_fEnabled) return -1.0f;
 
     const float bnv = normal.Dot(pball->vel);       //speed in Normal-vector direction
 
-	if ((m_ObjType != eTrigger) && (bnv >= 0.f))								// return if clearly ball is receding from object
+	if (bnv >= C_CONTACTVEL)						// return if clearly ball is receding from object
 		return -1.0f;
 
 	// Point on the ball that will hit the polygon, if it hits at all
@@ -672,47 +672,32 @@ float HitTriangle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll
 
     const float bnd = normal.Dot( hitPos - m_rgv[0] ); // distance from plane to ball
 
-	bool bUnHit = (bnv > C_LOWNORMVEL);
-	const bool inside = (bnd <= 0);									// in ball inside object volume
-
-	const bool rigid = (m_ObjType != eTrigger);
 	float hittime;
-	if (rigid) //rigid polygon
-	{
-		if (bnd < (float)(-PHYS_SKIN)) return -1.0f;	// (ball normal distance) excessive pentratration of object skin ... no collision HACK
-			
-		if (bnd <= (float)PHYS_TOUCH)
-		{
-			if (inside || (fabsf(bnv) > C_CONTACTVEL)		// fast velocity, return zero time
-															//zero time for rigid fast bodies
-			|| (bnd <= (float)(-PHYS_TOUCH)))				// slow moving but embedded
-				hittime = 0;
-			else
-				hittime = bnd*(float)(1.0/(2.0*PHYS_TOUCH)) + 0.5f;	// don't compete for fast zero time events
-		}
-		else if (fabsf(bnv) > C_LOWNORMVEL )					// not velocity low ????
-			hittime = bnd/(-bnv);								// rate ok for safe divide 
-		else
-			return -1.0f;										// wait for touching
-	}
-	else //non-rigid polygon
-	{
-		if (bnv * bnd >= 0)										// outside-receding || inside-approaching
-		{
-			if((m_ObjType != eTrigger) ||				// not a trigger
-			   (!pball->m_vpVolObjs) ||					// temporary ball
-			   (fabsf(bnd) >= (float)(PHYS_SKIN/2.0)) ||		// not to close ... nor to far away
-			   (inside != (pball->m_vpVolObjs->IndexOf(m_pObj) < 0)))// ...ball outside and hit set or  ball inside and no hit set
-				return -1.0f;
 
-			hittime = 0;
-			bUnHit = !inside;	// ball on outside is UnHit, otherwise it's a Hit
-		}
-		else
-			hittime = bnd/(-bnv);	
-	}
+    if (bnd < (float)(-PHYS_SKIN))
+        return -1.0f;	// (ball normal distance) excessive pentratration of object skin ... no collision HACK
 
-	if (infNaN(hittime) || hittime < 0 || hittime > dtime) return -1.0f;	// time is outside this frame ... no collision
+    bool isContact = false;
+
+    if (bnd <= (float)PHYS_TOUCH)
+    {
+        if (fabs(bnv) <= C_CONTACTVEL)
+        {
+            hittime = 0;
+            isContact = true;
+        }
+        else if (bnd <= 0)
+            hittime = 0;                            // zero time for rigid fast bodies
+        else
+            hittime = bnd / -bnv;
+    }
+    else if (fabsf(bnv) > C_LOWNORMVEL )					// not velocity low?
+        hittime = bnd / -bnv;								// rate ok for safe divide 
+    else
+        return -1.0f;										// wait for touching
+
+	if (infNaN(hittime) || hittime < 0 || hittime > dtime)
+        return -1.0f;	// time is outside this frame ... no collision
 
     hitPos += hittime * pball->vel;	// advance hit point to contact
 
@@ -736,17 +721,20 @@ float HitTriangle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll
     const float v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 
     // Check if point is in triangle
-    const bool pointInTri = (u >= 0) && (v >= 0) && (u + v < 1);
+    const bool pointInTri = (u >= 0) && (v >= 0) && (u + v <= 1);
 
 	if (pointInTri)
 	{
 		coll.normal[0] = normal;
 
-		if (!rigid)								// non rigid body collision? return direction
-			coll.normal[1].x = bUnHit ? 1.0f : 0.0f;	// UnHit signal	is receding from outside target
-			
-		coll.distance = bnd;					// 3dhit actual contact distance ... 
-		coll.hitRigid = rigid;				// collision type
+		coll.distance = bnd;				// 3dhit actual contact distance ... 
+		coll.hitRigid = true;				// collision type
+
+        if (isContact)
+        {
+            coll.isContact = true;
+            coll.normal[1].z = bnv;
+        }
 
 		return hittime;
 	}
@@ -756,55 +744,33 @@ float HitTriangle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll
 
 void HitTriangle::Collide(CollisionEvent* coll)
 {
-   Ball *pball = coll->ball;
-   const Vertex3Ds& hitnormal = coll->normal[0];
+    Ball *pball = coll->ball;
+    const Vertex3Ds& hitnormal = coll->normal[0];
 
-   if (m_ObjType != eTrigger)
-   {
-      const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
+    const float dot = hitnormal.Dot(pball->vel);
 
-      pball->Collide3DWall(normal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
-      if ( m_ObjType == ePrimitive )
-      {
-         if ( m_pfe && m_fEnabled)
-         {
+    pball->Collide3DWall(normal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
+    if ( m_ObjType == ePrimitive )
+    {
+        if (m_pfe && m_fEnabled)
+        {
             if ( dot <= -m_threshold )
             {
-               // is this the same place as last event????
-               // if same then ignore it
-               const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
+                // is this the same place as last event? if same then ignore it
+                const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
 
-               if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
-               {
-                  m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
-               }
+                if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
+                {
+                    m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
+                }
             }
+        }
+    }
+}
 
-         }
-      }
-   }
-	else		
-	{
-		if (!pball->m_vpVolObjs) return;
-
-		const int i = pball->m_vpVolObjs->IndexOf(m_pObj); // if -1 then not in objects volume set (i.e not already hit)
-
-		if ((coll->normal[1].x < 1.0f) == (i < 0))	// Hit == NotAlreadyHit
-		{			
-            pball->pos += STATICTIME * pball->vel; //move ball slightly forward
-				
-			if (i < 0)
-			{	
-				pball->m_vpVolObjs->AddElement(m_pObj);
-				((Trigger*)m_pObj)->FireGroupEvent(DISPID_HitEvents_Hit);				
-			}		
-			else			
-			{
-				pball->m_vpVolObjs->RemoveElementAt(i);
-				((Trigger*)m_pObj)->FireGroupEvent(DISPID_HitEvents_Unhit);				
-			}
-		}	
-	}
+void HitTriangle::Contact(CollisionEvent& coll, float dtime)
+{
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, /*m_friction*/ 0.3f, dtime);
 }
 
 void HitTriangle::CalcHitRect()
