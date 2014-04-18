@@ -194,8 +194,6 @@ public:
 class TriggerLineSeg : public LineSeg
 {
 public:
-	TriggerLineSeg();
-
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual void Collide(CollisionEvent* coll);
 
@@ -207,8 +205,6 @@ public:
 class TriggerHitCircle : public HitCircle
 {
 public:
-	TriggerHitCircle();
-
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual void Collide(CollisionEvent* coll);
 

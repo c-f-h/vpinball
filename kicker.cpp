@@ -801,6 +801,11 @@ KickerHitCircle::KickerHitCircle()
 	m_pball = NULL;
 	}
 
+float KickerHitCircle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
+{
+	return HitTestBasicRadius(pball, dtime, coll, false, false, false); //any face, not-lateral, non-rigid
+}
+
 void KickerHitCircle::DoCollide(Ball * const pball, Vertex3Ds * const phitnormal)
 	{
 	if (m_pball) return;								// a previous ball already in kicker
@@ -827,9 +832,7 @@ void KickerHitCircle::DoCollide(Ball * const pball, Vertex3Ds * const phitnormal
 			if (pball->fFrozen)	// script may have unfrozen the ball
 				{
 				// Only mess with variables if ball was not kicked during event
-				pball->vel.x = 0;
-				pball->vel.y = 0;
-				pball->vel.z = 0;
+				pball->vel.SetZero();
 				pball->pos.x = center.x;
 				pball->pos.y = center.y;
 				pball->pos.z = m_zheight + pball->radius;

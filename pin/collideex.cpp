@@ -920,11 +920,6 @@ void LightSeqAnimObject::Check3D()
 }
 
 
-TriggerLineSeg::TriggerLineSeg()
-{
-	m_fEnabled = fTrue;
-}
-
 float TriggerLineSeg::HitTest(const Ball * pball, float dtime, CollisionEvent& coll) //rlc problem-5
 {
 	if (!m_ptrigger->m_hitEnabled) return -1.0f;				//rlc custom shape trigger
@@ -959,10 +954,6 @@ void TriggerLineSeg::Collide(CollisionEvent* coll)
 	}	
 }
 
-TriggerHitCircle::TriggerHitCircle()
-{
-	m_fEnabled = fTrue;
-}
 
 float TriggerHitCircle::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 {
