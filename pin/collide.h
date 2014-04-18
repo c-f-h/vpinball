@@ -79,6 +79,8 @@ public:
 
     void SetFriction(float friction)        { m_friction = friction; }
 
+    void FireHitEvent(Ball* pball);
+
 	IFireEvents *m_pfe;
 	float m_threshold;
 	

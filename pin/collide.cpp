@@ -28,6 +28,20 @@ HitObject::HitObject() : m_fEnabled(fTrue), m_ObjType(eNull), m_pObj(NULL),
 	{
 	}
 
+void HitObject::FireHitEvent(Ball* pball)
+{
+    if (m_pfe && m_fEnabled)
+    {
+        // is this the same place as last event? if same then ignore it
+        const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
+        pball->m_Event_Pos = pball->pos;    //remember last collide position
+
+        if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
+            m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
+    }
+}
+
+
 
 LineSeg::LineSeg(const Vertex2D& p1, const Vertex2D& p2)
     : v1(p1), v2(p2)
@@ -305,30 +319,16 @@ float HitCircle::HitTestRadius(const Ball *pball, float dtime, CollisionEvent& c
 	}	
 
 void LineSeg::Collide(CollisionEvent *coll)
-	{
+{
     Ball *pball = coll->ball;
     const Vertex3Ds& hitnormal = coll->normal[0];
 
     const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
-	pball->CollideWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
+    pball->CollideWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
 
-	if (m_pfe)
-		{			
-		if (dot <= -m_threshold)
-			{
-            // is this the same place as last event????
-            // if same then ignore it
-            const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
-
-            if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
-				{
-				m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
-				}
-			}
-		
-        pball->m_Event_Pos = pball->pos; //remember last collide position
-		}
-	}
+    if (dot <= -m_threshold)
+        FireHitEvent(pball);
+}
 
 void LineSeg::CalcNormal()
 	{
@@ -367,30 +367,16 @@ float Joint::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 	}
 
 void Joint::Collide(CollisionEvent *coll)
-	{
+{
     Ball *pball = coll->ball;
     const Vertex3Ds& hitnormal = coll->normal[0];
 
     const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
-	pball->CollideWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
+    pball->CollideWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
 
-    if (m_pfe)
-    {
-        if (dot <= -m_threshold)
-        {
-            // is this the same place as last event????
-            // if same then ignore it
-            const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
-
-            if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
-            {
-                m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
-            }
-        }
-
-        pball->m_Event_Pos = pball->pos;        //remember last collide position
-    }
-	}
+    if (dot <= -m_threshold)
+        FireHitEvent(pball);
+}
 
 void HitCircle::CalcHitRect()
 	{

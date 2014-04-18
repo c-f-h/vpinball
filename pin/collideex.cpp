@@ -113,33 +113,18 @@ void LineSegSlingshot::Collide(CollisionEvent* coll)
 
 	pball->CollideWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
 
-	if (m_pfe && !m_psurface->m_fDisabled)
-	{
-		if (dot <= -m_threshold)
-		{
-            // is this the same place as last event????
-            // if same then ignore it
-            const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
-
-            if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
-			{
-				if (m_psurface->m_d.m_slingshot_threshold != 0.0f)// if new slingshot threshold is set use it
-				{
-					if (threshold)
-					{
-						m_pfe->FireGroupEvent(DISPID_SurfaceEvents_Slingshot);
-						m_slingshotanim.m_TimeReset = g_pplayer->m_time_msec + 100;
-					}
-				}
-				else if (dot <= -m_threshold)//legacy wall threshold
-				{
-					m_pfe->FireGroupEvent(DISPID_SurfaceEvents_Slingshot);
-					m_slingshotanim.m_TimeReset = g_pplayer->m_time_msec + 100;
-				}
-			}
-		}
+    if (m_pfe && !m_psurface->m_fDisabled && threshold)
+    {
+        // is this the same place as last event? if same then ignore it
+        const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
         pball->m_Event_Pos = pball->pos; //remember last collide position
-	}
+
+        if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
+        {
+            m_pfe->FireGroupEvent(DISPID_SurfaceEvents_Slingshot);
+            m_slingshotanim.m_TimeReset = g_pplayer->m_time_msec + 100;
+        }
+    }
 }
 
 void SlingshotAnimObject::Check3D()
@@ -203,16 +188,7 @@ void HitGate::Collide(CollisionEvent* coll)
 	if (fabsf(h - pball->radius) > 1.0f)				// avoid divide by zero
 		m_gateanim.m_anglespeed /= h - pball->radius;
 
-	if (m_pfe)
-	{			
-        // is this the same place as last event????
-        // if same then ignore it
-        const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
-        pball->m_Event_Pos = pball->pos;    //remember last collide position
-
-        if (dist.LengthSquared() > 0.25f)   // must be a new place if only by a little
-			m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
-	}
+    FireHitEvent(pball);
 }
 
 void GateAnimObject::UpdateDisplacements(const float dtime)
@@ -577,26 +553,11 @@ void Hit3DPoly::Collide(CollisionEvent *coll)
       const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
 
       pball->Collide3DWall(normal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
-      if ( m_ObjType == ePrimitive )
-      {
-         if ( m_pfe && m_fEnabled)
-         {
-            if ( dot <= -m_threshold )
-            {
-               // is this the same place as last event????
-               // if same then ignore it
-               const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
 
-               if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
-               {
-                  m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
-               }
-            }
-
-         }
-      }
+      if (m_ObjType == ePrimitive && dot <= -m_threshold)
+          FireHitEvent(pball);
    }
-	else		
+	else
 	{
 		if (!pball->m_vpVolObjs) return;
 
@@ -750,22 +711,9 @@ void HitTriangle::Collide(CollisionEvent* coll)
     const float dot = hitnormal.Dot(pball->vel);
 
     pball->Collide3DWall(normal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
-    if ( m_ObjType == ePrimitive )
-    {
-        if (m_pfe && m_fEnabled)
-        {
-            if ( dot <= -m_threshold )
-            {
-                // is this the same place as last event? if same then ignore it
-                const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
 
-                if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
-                {
-                    m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
-                }
-            }
-        }
-    }
+    if (m_ObjType == ePrimitive && dot <= -m_threshold)
+        FireHitEvent(pball);
 }
 
 void HitTriangle::Contact(CollisionEvent& coll, float dtime)
@@ -932,24 +880,9 @@ void Hit3DCylinder::Collide(CollisionEvent* coll)
 
     const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
     pball->Collide3DWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
-   if ( m_ObjType == ePrimitive )
-   {
-      if ( m_pfe && m_fEnabled )
-      {
-         if ( dot <= -m_threshold )
-         {
-            // is this the same place as last event????
-            // if same then ignore it
-            const Vertex3Ds dist = pball->m_Event_Pos - pball->pos;
 
-            if (dist.LengthSquared() > 0.25f) // must be a new place if only by a little
-            {
-               m_pfe->FireGroupEvent(DISPID_HitEvents_Hit);
-            }
-         }
-
-      }
-   }
+    if (m_ObjType == ePrimitive && dot <= -m_threshold)
+        FireHitEvent(pball);
 }
 
 void Hit3DCylinder::CalcHitRect()
