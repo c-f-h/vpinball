@@ -307,7 +307,7 @@ float Ball::HitTest(const Ball * pball_, float dtime, CollisionEvent& coll)
 		pball->vel.z -= dv.z;
 	}
 
-	float b = dv.Dot(d);                    // inner product
+	const float b = dv.Dot(d);              // inner product
 	const float bnv = b/bcdd;				// normal speed of balls toward each other
 
 	if ( bnv > C_LOWNORMVEL) return -1.0f;	// dot of delta velocity and delta displacement, postive if receding no collison
@@ -334,19 +334,12 @@ float Ball::HitTest(const Ball * pball_, float dtime, CollisionEvent& coll)
         //   at^2 + bt + c = 0
 		const float a = dv.LengthSquared();         // square of differential velocity
 
-		if (a < 1.0e-8f) return -1.0f;				// ball moving really slow, then wait for contact
+		if (a < 1.0e-8f)
+            return -1.0f;				// ball moving really slow, then wait for contact
 
-		const float c = bcddsq - totalradius*totalradius;	//first contact test: square delta position - square of radii
-		b *= 2.0f;									// two inner products
-		float result = b*b - 4.0f*a*c;				// squareroot term (discriminant) in quadratic equation
-
-		if (result < 0.0f) return -1.0f;			// no collision path exist	
-
-		result = sqrtf(result);
-
-        // compute the two solutions to the quadratic equation
-		      float time1 = (-b + result)/(2.0f * a);
-		const float time2 = (-b - result)/(2.0f * a);
+        float time1, time2;
+        if (!SolveQuadraticEq(a, 2*b, bcddsq - totalradius*totalradius, time1, time2))
+            return -1.0f;
 
         // choose smallest non-negative solution
 		hittime = std::min(time1, time2);
