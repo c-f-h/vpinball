@@ -371,6 +371,11 @@ float HitFlipper::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
       coll.normal[2].x = 0;			//moment is zero ... only friction
       coll.normal[2].y = 0;			//radians/time at collison
 
+      // Flipper::Contact() expects origNormVel in normal[3].z,
+      // but HitCircle puts it in normal[1].z
+      if (coll.isContact)
+          coll.normal[3].z = coll.normal[1].z;
+
       return hittime;
    }
 

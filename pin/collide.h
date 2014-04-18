@@ -133,14 +133,15 @@ class HitCircle : public HitObject
 public:
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 
-	float HitTestBasicRadius(const Ball * pball, const float dtime, CollisionEvent& coll,
-									const bool direction, const bool lateral, const bool rigid);
+	float HitTestBasicRadius(const Ball * pball, float dtime, CollisionEvent& coll,
+                             bool direction, bool lateral, bool rigid);
 
 	float HitTestRadius(const Ball * pball, const float dtime, CollisionEvent& coll);
 
 	virtual int GetType() const {return eCircle;}
 
 	virtual void Collide(CollisionEvent *coll);
+    virtual void Contact(CollisionEvent& coll, float dtime);
 
 	virtual void CalcHitRect();
 
