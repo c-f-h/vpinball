@@ -216,7 +216,7 @@ public:
 class Hit3DCylinder : public HitCircle
 {
 public:
-	Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2, const Vertex3Ds * const pvnormal);
+	Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2);
 
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual void Collide(CollisionEvent* coll);
@@ -228,7 +228,6 @@ public:
 	void CacheHitTransform();
 
 	Vertex3Ds v1, v2;
-	Vertex3Ds normal;
 
 	Vertex3Ds vtrans[2];
 	Vertex3Ds transaxis;

@@ -808,11 +808,10 @@ void HitPlane::Contact(CollisionEvent& coll, float dtime)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-Hit3DCylinder::Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2, const Vertex3Ds * const pvnormal)
+Hit3DCylinder::Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2)
 {
 	v1 = *pv1;
 	v2 = *pv2;
-	normal = *pvnormal;
 	radius = 0;
 	CacheHitTransform();
 }
