@@ -852,9 +852,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
                 m_vhoCollidable.push_back(ph3dpoly);	//remember hit components of ramp
                 ph3dpoly->m_fEnabled = m_d.m_fCollidable;
 
-                if (ph3dpolyOld)
-                    CheckJoint(pvho, ph3dpolyOld, ph3dpoly);
-
+                CheckJoint(pvho, ph3dpolyOld, ph3dpoly);
                 ph3dpolyOld = ph3dpoly;
             }
          }
@@ -884,8 +882,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
              m_vhoCollidable.push_back(ph3dpoly);	//remember hit components of ramp
              ph3dpoly->m_fEnabled = m_d.m_fCollidable;
 
-             if (ph3dpolyOld)
-                 CheckJoint(pvho, ph3dpolyOld, ph3dpoly);
+             CheckJoint(pvho, ph3dpolyOld, ph3dpoly);
              ph3dpolyOld = ph3dpoly;
          }
       }
@@ -992,9 +989,12 @@ void Ramp::AddSideWall(Vector<HitObject> * const pvho, const Vertex2D * const pv
 
 void Ramp::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const ph3d1, const HitTriangle * const ph3d2)
 {
-   const Vertex3Ds vjointnormal = CrossProduct(ph3d1->normal, ph3d2->normal);
-   if (vjointnormal.LengthSquared() < 1e-8f)
-       return;  // coplanar triangles need no joints
+   if (ph3d1)   // may be null in case of degenerate triangles
+   {
+       const Vertex3Ds vjointnormal = CrossProduct(ph3d1->normal, ph3d2->normal);
+       if (vjointnormal.LengthSquared() < 1e-8f)
+           return;  // coplanar triangles need no joints
+   }
 
    // By convention of the calling function, points 1 [0] and 2 [1] of the second polygon will
    // be the common-edge points
