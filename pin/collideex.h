@@ -229,9 +229,8 @@ public:
 
 	Vertex3Ds v1, v2;
 
+    Matrix3 matTrans;
 	Vertex3Ds vtrans[2];
-	Vertex3Ds transaxis;
-	float transangle;
 };
 
 

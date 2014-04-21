@@ -818,10 +818,11 @@ Hit3DCylinder::Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * cons
 
 void Hit3DCylinder::CacheHitTransform()
 {
-	Vertex3Ds vLine(v2.x - v1.x,v2.y - v1.y,v2.z - v1.z);
+	Vertex3Ds vLine = v2 - v1;
 	vLine.Normalize();
 
-	// Axis of rotation to make 3D cynlinder a cylinder along the z-axis
+	// Axis of rotation to make 3D cylinder a cylinder along the z-axis
+	Vertex3Ds transaxis;
 	/*const Vertex3Ds vup(0,0,1.0f);
 	CrossProduct(vLine, vup, &transaxis);*/
 	transaxis.x =  vLine.y;
@@ -831,12 +832,15 @@ void Hit3DCylinder::CacheHitTransform()
 	// Angle to rotate the cylinder into the z-axis
 	const float dot = vLine.z; //vLine.Dot(&vup);
 
-	transangle = acosf(-dot);
+	const float transangle = acosf(-dot);
 
-	vtrans[0] = v1;
-	vtrans[1] = v2;
+    matTrans.RotationAroundAxis(transaxis, transangle);
 
-	RotateAround(transaxis, vtrans, 2, transangle);
+	vtrans[0] = matTrans * v1;
+	vtrans[1] = matTrans * v2;
+
+    //const Vertex3Ds tmp = vtrans[1] - vtrans[0];
+    //slintf("After rotate:\n  %.2f %.2f %.2f\n", tmp.x, tmp.y, tmp.z);
 }
 
 float Hit3DCylinder::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
@@ -844,20 +848,11 @@ float Hit3DCylinder::HitTest(const Ball * pball, float dtime, CollisionEvent& co
 	if (!m_fEnabled)
 		return -1.0f;	
 
+    // transform ball to cylinder coordinate system
 	Ball ballT = *pball;
-
-	Vertex3Ds vball = ballT.pos;
-	RotateAround(transaxis, &vball, 1, transangle);
-
-	Vertex3Ds vvelocity(ballT.vel.x,ballT.vel.y,ballT.vel.z);
-	RotateAround(transaxis, &vvelocity, 1, transangle);
-
-	ballT.pos.x = vball.x;
-	ballT.pos.y = vball.y;
-	ballT.pos.z = vball.z + pball->radius;
-	ballT.vel.x = vvelocity.x;
-	ballT.vel.y = vvelocity.y;
-	ballT.vel.z = vvelocity.z;
+    ballT.pos = matTrans * ballT.pos;
+    ballT.pos.z += pball->radius;
+	ballT.vel = matTrans * ballT.vel;
 
 	center.x = vtrans[0].x;
 	center.y = vtrans[0].y;
@@ -866,8 +861,8 @@ float Hit3DCylinder::HitTest(const Ball * pball, float dtime, CollisionEvent& co
 
 	const float hittime = HitTestRadius(&ballT, dtime, coll);
 
-	if (hittime >= 0)
-		coll.normal[0] = RotateAround(transaxis, Vertex2D(coll.normal->x, coll.normal->y), -transangle);
+	if (hittime >= 0)       // transform hit normal back to world coordinate system
+		coll.normal[0] = matTrans.MultiplyVectorT(coll.normal[0]);
 
 	return hittime;
 }
@@ -877,7 +872,7 @@ void Hit3DCylinder::Collide(CollisionEvent* coll)
     Ball *pball = coll->ball;
     const Vertex3Ds& hitnormal = coll->normal[0];
 
-    const float dot = hitnormal.x * pball->vel.x + hitnormal.y * pball->vel.y;
+    const float dot = hitnormal.Dot(pball->vel);
     pball->Collide3DWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
 
     if (m_ObjType == ePrimitive && dot <= -m_threshold)
