@@ -151,9 +151,11 @@ private:
 
     bool isHabitrail() const;
 
+private:
 	Vertex2D *GetRampVertex(int &pcvertex, float ** const ppheight, bool ** const ppfCross, float ** const ppratio);
 	void prepareHabitrail(RenderDevice* pd3dDevice);
 	void prepareStatic(RenderDevice* pd3dDevice);
+    void AddJoint(Vector<HitObject> * pvho, const Vertex3Ds& v1, const Vertex3Ds& v2);
 	void CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const ph3d1, const HitTriangle * const ph3d2);
 
 	void RenderStaticHabitrail(RenderDevice* pd3dDevice);

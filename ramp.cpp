@@ -804,11 +804,7 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
    // Add hit triangles for the ramp floor.
    {
       HitTriangle *ph3dpolyOld = NULL;
-
-      const Vertex2D *pv1;
-      const Vertex2D *pv2;
-      const Vertex2D *pv3;
-      const Vertex2D *pv4;
+      const Vertex2D *pv1, *pv2, *pv3, *pv4;
 
       for (int i=0;i<(cvertex-1);i++)
       {
@@ -831,6 +827,10 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
             rgv3D[0] = Vertex3Ds(pv2->x,pv2->y,rgheight1[i]);
             rgv3D[1] = Vertex3Ds(pv1->x,pv1->y,rgheight1[i]);
             rgv3D[2] = Vertex3Ds(pv3->x,pv3->y,rgheight1[i+1]);
+
+            // add joint for starting edge of ramp
+            if (i == 0)
+                AddJoint(pvho, rgv3D[0], rgv3D[1]);
 
             HitTriangle * const ph3dpoly = new HitTriangle(rgv3D); //!! this is not efficient at all, use native triangle-soup directly somehow
 
@@ -890,14 +890,11 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
          }
       }
 
-      Vertex3Ds rgv3D[3];
-      rgv3D[0] = Vertex3Ds(pv4->x,pv4->y,rgheight1[cvertex-1]);
-      rgv3D[1] = Vertex3Ds(pv3->x,pv3->y,rgheight1[cvertex-1]);
-      rgv3D[2] = Vertex3Ds(pv1->x,pv1->y,rgheight1[cvertex-1]);
-      ph3dpolyOld = new HitTriangle(rgv3D);
+      // add joint for final edge of ramp
+      Vertex3Ds v1(pv4->x,pv4->y,rgheight1[cvertex-1]);
+      Vertex3Ds v2(pv3->x,pv3->y,rgheight1[cvertex-1]);
+      AddJoint(pvho, v1, v2);
 
-      CheckJoint(pvho, ph3dpolyOld, ph3dpolyOld);
-      delete ph3dpolyOld;
       ph3dpolyOld = NULL;
    }
 
@@ -1001,8 +998,12 @@ void Ramp::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const 
 
    // By convention of the calling function, points 1 [0] and 2 [1] of the second polygon will
    // be the common-edge points
+   AddJoint(pvho, ph3d2->m_rgv[0], ph3d2->m_rgv[1]);
+}
 
-   Hit3DCylinder * const ph3dc = new Hit3DCylinder(&ph3d2->m_rgv[0], &ph3d2->m_rgv[1]);
+void Ramp::AddJoint(Vector<HitObject> * pvho, const Vertex3Ds& v1, const Vertex3Ds& v2)
+{
+   Hit3DCylinder * const ph3dc = new Hit3DCylinder(&v1, &v2);
    ph3dc->m_elasticity = m_d.m_elasticity;
    ph3dc->SetFriction(m_d.m_friction);
    ph3dc->m_scatter = ANGTORAD(m_d.m_scatter);
