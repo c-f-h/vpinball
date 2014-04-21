@@ -115,6 +115,25 @@ public:
          m_d[2][0] = m_d[2][1] = 0.0f;
    }
 
+   // Create matrix for rotating around an arbitrary vector
+   void RotationAroundAxis(const Vertex3Ds& axis, float angle)
+   {
+       const float rsin = sinf(angle);
+       const float rcos = cosf(angle);
+
+       m_d[0][0] = axis.x*axis.x + rcos*(1.0f-axis.x*axis.x);
+       m_d[1][0] = axis.x*axis.y*(1.0f-rcos) - axis.z*rsin;
+       m_d[2][0] = axis.z*axis.x*(1.0f-rcos) + axis.y*rsin;
+
+       m_d[0][1] = axis.x*axis.y*(1.0f-rcos) + axis.z*rsin;
+       m_d[1][1] = axis.y*axis.y + rcos*(1.0f-axis.y*axis.y);
+       m_d[2][1] = axis.y*axis.z*(1.0f-rcos) - axis.x*rsin;
+
+       m_d[0][2] = axis.z*axis.x*(1.0f-rcos) - axis.y*rsin;
+       m_d[1][2] = axis.y*axis.z*(1.0f-rcos) + axis.x*rsin;
+       m_d[2][2] = axis.z*axis.z + rcos*(1.0f-axis.z*axis.z);
+   }
+
    float m_d[3][3];
 };
 
