@@ -832,6 +832,9 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
             if (i == 0)
                 AddJoint(pvho, rgv3D[0], rgv3D[1]);
 
+            // add joint for left edge
+            AddJoint(pvho, rgv3D[0], rgv3D[2]);
+
             HitTriangle * const ph3dpoly = new HitTriangle(rgv3D); //!! this is not efficient at all, use native triangle-soup directly somehow
 
             if (ph3dpoly->IsDegenerate())       // degenerate triangles happen if width is 0 at some point
@@ -862,6 +865,9 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
          rgv3D[0] = Vertex3Ds(pv3->x,pv3->y,rgheight1[i+1]);
          rgv3D[1] = Vertex3Ds(pv1->x,pv1->y,rgheight1[i]);
          rgv3D[2] = Vertex3Ds(pv4->x,pv4->y,rgheight1[i+1]);
+
+         // add joint for right edge
+         AddJoint(pvho, rgv3D[1], rgv3D[2]);
 
          HitTriangle * const ph3dpoly = new HitTriangle(rgv3D);
          if (ph3dpoly->IsDegenerate())
