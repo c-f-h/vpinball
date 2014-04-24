@@ -808,15 +808,14 @@ void HitPlane::Contact(CollisionEvent& coll, float dtime)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-Hit3DCylinder::Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2)
+HitLine3D::HitLine3D(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2)
 {
 	v1 = *pv1;
 	v2 = *pv2;
-	radius = 0;
 	CacheHitTransform();
 }
 
-void Hit3DCylinder::CacheHitTransform()
+void HitLine3D::CacheHitTransform()
 {
 	Vertex3Ds vLine = v2 - v1;
 	vLine.Normalize();
@@ -843,23 +842,23 @@ void Hit3DCylinder::CacheHitTransform()
     //slintf("After rotate:\n  %.2f %.2f %.2f\n", tmp.x, tmp.y, tmp.z);
 }
 
-float Hit3DCylinder::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
+float HitLine3D::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
 {
 	if (!m_fEnabled)
-		return -1.0f;	
+		return -1.0f;
 
     // transform ball to cylinder coordinate system
-	Ball ballT = *pball;
+    Ball ballT = *pball;
     ballT.pos = matTrans * ballT.pos;
-    //ballT.pos.z += pball->radius;
-	ballT.vel = matTrans * ballT.vel;
+    ballT.vel = matTrans * ballT.vel;
 
-	center.x = vtrans[0].x;
-	center.y = vtrans[0].y;
-	zlow = min(vtrans[0].z, vtrans[1].z);
-	zhigh = max(vtrans[0].z, vtrans[1].z);
+    // set up HitLineZ parameters
+    m_xy.x = vtrans[0].x;
+    m_xy.y = vtrans[0].y;
+    m_zlow = min(vtrans[0].z, vtrans[1].z);
+    m_zhigh = max(vtrans[0].z, vtrans[1].z);
 
-	const float hittime = HitTestRadius(&ballT, dtime, coll);
+    const float hittime = HitLineZ::HitTest(&ballT, dtime, coll);
 
 	if (hittime >= 0)       // transform hit normal back to world coordinate system
 		coll.normal[0] = matTrans.MultiplyVectorT(coll.normal[0]);
@@ -867,7 +866,7 @@ float Hit3DCylinder::HitTest(const Ball * pball, float dtime, CollisionEvent& co
 	return hittime;
 }
 
-void Hit3DCylinder::Collide(CollisionEvent* coll)
+void HitLine3D::Collide(CollisionEvent* coll)
 {
     Ball *pball = coll->ball;
     const Vertex3Ds& hitnormal = coll->normal[0];
@@ -879,7 +878,7 @@ void Hit3DCylinder::Collide(CollisionEvent* coll)
         FireHitEvent(pball);
 }
 
-void Hit3DCylinder::CalcHitRect()
+void HitLine3D::CalcHitRect()
 {
 	m_rcHitRect.left = min(v1.x, v2.x);
 	m_rcHitRect.right = max(v1.x, v2.x);

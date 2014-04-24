@@ -710,7 +710,11 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
 
    if (dot < 0.f) // Inside edges don't need joint hit-testing (dot == 0 continuous segments should mathematically never hit)
    {
-      Joint * const pjoint = new Joint();
+      HitLineZ * const pjoint = new HitLineZ(*pv1, m_d.m_heightbottom, m_d.m_heighttop);
+      pjoint->m_elasticity = m_d.m_elasticity;
+      pjoint->SetFriction(m_d.m_friction);
+      pjoint->m_scatter = ANGTORAD(m_d.m_scatter);
+      pjoint->m_fEnabled = m_d.m_fCollidable;
 
       if (m_d.m_fHitEvent)
       {
@@ -720,23 +724,10 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
       else
          pjoint->m_pfe = NULL;
 
-      pjoint->m_rcHitRect.zlow = m_d.m_heightbottom;
-      pjoint->m_rcHitRect.zhigh = m_d.m_heighttop;
-
-      pjoint->m_elasticity = m_d.m_elasticity;
-      pjoint->SetFriction(m_d.m_friction);
-      pjoint->m_scatter = ANGTORAD(m_d.m_scatter);
-
-      pjoint->center.x = pv1->x;
-      pjoint->center.y = pv1->y;
       pvho->AddElement(pjoint);
-      if (m_d.m_fDroppable)
-      {
-         m_vhoDrop.AddElement(pjoint);
-      }
-
       m_vhoCollidable.AddElement(pjoint);
-      pjoint->m_fEnabled = m_d.m_fCollidable;
+      if (m_d.m_fDroppable)
+         m_vhoDrop.AddElement(pjoint);
    }
 }
 

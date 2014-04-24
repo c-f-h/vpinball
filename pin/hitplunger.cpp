@@ -47,22 +47,14 @@ HitPlunger::HitPlunger(const float x, const float y, const float x2, const float
 		m_plungeranim.m_linesegEnd.m_rcHitRect.zlow = zheight;
 		m_plungeranim.m_linesegEnd.m_rcHitRect.zhigh = zheight+PLUNGERHEIGHT;
 
-		m_plungeranim.m_jointBase[0].m_rcHitRect.zlow = zheight;
-		m_plungeranim.m_jointBase[0].m_rcHitRect.zhigh = zheight+PLUNGERHEIGHT;
-		m_plungeranim.m_jointBase[1].m_rcHitRect.zlow = zheight;
-		m_plungeranim.m_jointBase[1].m_rcHitRect.zhigh = zheight+PLUNGERHEIGHT;
-		m_plungeranim.m_jointEnd[0].m_rcHitRect.zlow = zheight;
-		m_plungeranim.m_jointEnd[0].m_rcHitRect.zhigh = zheight+PLUNGERHEIGHT;
-		m_plungeranim.m_jointEnd[1].m_rcHitRect.zlow = zheight;
-		m_plungeranim.m_jointEnd[1].m_rcHitRect.zhigh = zheight+PLUNGERHEIGHT;
-		m_plungeranim.m_jointBase[0].zlow = zheight;
-		m_plungeranim.m_jointBase[0].zhigh = zheight+PLUNGERHEIGHT;
-		m_plungeranim.m_jointBase[1].zlow = zheight;
-		m_plungeranim.m_jointBase[1].zhigh = zheight+PLUNGERHEIGHT;
-		m_plungeranim.m_jointEnd[0].zlow = zheight;
-		m_plungeranim.m_jointEnd[0].zhigh = zheight+PLUNGERHEIGHT;
-		m_plungeranim.m_jointEnd[1].zlow = zheight;
-		m_plungeranim.m_jointEnd[1].zhigh = zheight+PLUNGERHEIGHT;
+		m_plungeranim.m_jointBase[0].m_zlow = zheight;
+		m_plungeranim.m_jointBase[0].m_zhigh = zheight+PLUNGERHEIGHT;
+		m_plungeranim.m_jointBase[1].m_zlow = zheight;
+		m_plungeranim.m_jointBase[1].m_zhigh = zheight+PLUNGERHEIGHT;
+		m_plungeranim.m_jointEnd[0].m_zlow = zheight;
+		m_plungeranim.m_jointEnd[0].m_zhigh = zheight+PLUNGERHEIGHT;
+		m_plungeranim.m_jointEnd[1].m_zlow = zheight;
+		m_plungeranim.m_jointEnd[1].m_zhigh = zheight+PLUNGERHEIGHT;
 
 		m_plungeranim.SetObjects(m_plungeranim.m_pos);
 		}
@@ -86,10 +78,10 @@ void PlungerAnimObject::SetObjects(const float len)
 	m_linesegBase.v2.x = m_x2;
 	m_linesegBase.v2.y = m_y;// + 0.0001f;
 
-	m_jointBase[0].center.x = m_x;
-	m_jointBase[0].center.y = m_y;
-	m_jointBase[1].center.x = m_x2;
-	m_jointBase[1].center.y = m_y;// + 0.0001f;
+	m_jointBase[0].m_xy.x = m_x;
+	m_jointBase[0].m_xy.y = m_y;
+	m_jointBase[1].m_xy.x = m_x2;
+	m_jointBase[1].m_xy.y = m_y;// + 0.0001f;
 	
 	m_linesegSide[0].v2.x = m_x;
 	m_linesegSide[0].v2.y = m_y;
@@ -106,10 +98,10 @@ void PlungerAnimObject::SetObjects(const float len)
 	m_linesegEnd.v1.x = m_x2;
 	m_linesegEnd.v1.y = len;// + 0.0001f;
 	
-	m_jointEnd[0].center.x = m_x;
-	m_jointEnd[0].center.y = len;
-	m_jointEnd[1].center.x = m_x2;
-	m_jointEnd[1].center.y = len;// + 0.0001f;
+	m_jointEnd[0].m_xy.x = m_x;
+	m_jointEnd[0].m_xy.y = len;
+	m_jointEnd[1].m_xy.x = m_x2;
+	m_jointEnd[1].m_xy.y = len;// + 0.0001f;
 
 	m_linesegBase.CalcNormal();
 	m_linesegEnd.CalcNormal();

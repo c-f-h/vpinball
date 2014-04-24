@@ -1009,7 +1009,7 @@ void Ramp::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const 
 
 void Ramp::AddJoint(Vector<HitObject> * pvho, const Vertex3Ds& v1, const Vertex3Ds& v2)
 {
-   Hit3DCylinder * const ph3dc = new Hit3DCylinder(&v1, &v2);
+   HitLine3D * const ph3dc = new HitLine3D(&v1, &v2);
    ph3dc->m_elasticity = m_d.m_elasticity;
    ph3dc->SetFriction(m_d.m_friction);
    ph3dc->m_scatter = ANGTORAD(m_d.m_scatter);
@@ -1028,8 +1028,8 @@ void Ramp::AddLine(Vector<HitObject> * const pvho, const Vertex2D * const pv1, c
    plineseg->m_scatter = ANGTORAD(m_d.m_scatter);
    plineseg->m_fEnabled = m_d.m_fCollidable;
    plineseg->m_pfe = NULL;
-   plineseg->m_rcHitRect.zlow = height1;//m_d.m_heightbottom;
-   plineseg->m_rcHitRect.zhigh = height2;//m_d.m_heighttop;
+   plineseg->m_rcHitRect.zlow = height1;
+   plineseg->m_rcHitRect.zhigh = height2;
 
    pvho->AddElement(plineseg);
 
@@ -1043,21 +1043,15 @@ void Ramp::AddLine(Vector<HitObject> * const pvho, const Vertex2D * const pv1, c
 
       if (dot < 0) // Inside edges don't need joint hit-testing (dot == 0 continuous segments should mathematically never hit)
       {
-         Joint * const pjoint = new Joint();
+         HitLineZ * const pjoint = new HitLineZ(*pv1, height1, height2);
          pjoint->m_elasticity = m_d.m_elasticity;
          pjoint->SetFriction(m_d.m_friction);
          pjoint->m_scatter = ANGTORAD(m_d.m_scatter);
-
          pjoint->m_pfe = NULL;
-
-         pjoint->m_rcHitRect.zlow = height1;//m_d.m_heightbottom;
-         pjoint->m_rcHitRect.zhigh = height2;//m_d.m_heighttop;
-
-         pjoint->center = *pv1;
-         pvho->AddElement(pjoint);
-
-         m_vhoCollidable.push_back(pjoint);	//remember hit components of ramp
          pjoint->m_fEnabled = m_d.m_fCollidable;
+
+         pvho->AddElement(pjoint);
+         m_vhoCollidable.push_back(pjoint); //remember hit components of ramp
       }
    }
 }

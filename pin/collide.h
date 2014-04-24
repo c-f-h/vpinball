@@ -151,20 +151,23 @@ public:
 	float zhigh;
 	};
 
-class Joint : public HitCircle
-	{
+
+// collision object which is a line segment parallel to the z axis
+class HitLineZ : public HitObject
+{
 public:
-	Joint();
+    HitLineZ()      { }
+    HitLineZ(const Vertex2D& xy, float zlow, float zhigh);
 
-	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
+    virtual void CalcHitRect();
+    virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
+    virtual int GetType() const { return eJoint; }
+    virtual void Collide(CollisionEvent *coll);
+    virtual void Contact(CollisionEvent& coll, float dtime);
 
-	virtual int GetType() const {return eJoint;}
-
-	virtual void Collide(CollisionEvent *coll);
-
-	virtual void CalcHitRect();
-	};
-
+    Vertex2D m_xy;
+    float m_zlow, m_zhigh;
+};
 
 
 

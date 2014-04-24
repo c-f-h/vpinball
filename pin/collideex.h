@@ -213,10 +213,10 @@ public:
 	Trigger *m_ptrigger;
 };
 
-class Hit3DCylinder : public HitCircle
+class HitLine3D : public HitLineZ
 {
 public:
-	Hit3DCylinder(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2);
+	HitLine3D(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2);
 
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual void Collide(CollisionEvent* coll);
