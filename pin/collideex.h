@@ -213,10 +213,15 @@ public:
 	Trigger *m_ptrigger;
 };
 
+/*
+ * Arbitrary line segment in 3D space.
+ *
+ * Is implemented by transforming a HitLineZ to the desired orientation.
+ */
 class HitLine3D : public HitLineZ
 {
 public:
-	HitLine3D(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2);
+	HitLine3D(const Vertex3Ds& v1, const Vertex3Ds& v2);
 
 	virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
 	virtual void Collide(CollisionEvent* coll);
@@ -225,12 +230,10 @@ public:
 
 	virtual int GetType() const {return e3DLine;}
 
-	void CacheHitTransform();
-
-	Vertex3Ds v1, v2;
+private:
+	void CacheHitTransform(const Vertex3Ds& v1, const Vertex3Ds& v2);
 
     Matrix3 matTrans;
-	Vertex3Ds vtrans[2];
 };
 
 

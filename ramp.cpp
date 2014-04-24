@@ -1009,7 +1009,7 @@ void Ramp::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * const 
 
 void Ramp::AddJoint(Vector<HitObject> * pvho, const Vertex3Ds& v1, const Vertex3Ds& v2)
 {
-   HitLine3D * const ph3dc = new HitLine3D(&v1, &v2);
+   HitLine3D * const ph3dc = new HitLine3D(v1, v2);
    ph3dc->m_elasticity = m_d.m_elasticity;
    ph3dc->SetFriction(m_d.m_friction);
    ph3dc->m_scatter = ANGTORAD(m_d.m_scatter);

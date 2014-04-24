@@ -296,7 +296,7 @@ void Primitive::CheckJoint(Vector<HitObject> * const pvho, const HitTriangle * c
    // BUG/TODO: this is wrong! This code was blindly copy-pasted from the ramp code without
    // checking this assumption, which is not true for a general triangle mesh.
 
-   HitLine3D * const ph3dc = new HitLine3D(&ph3d2->m_rgv[0], &ph3d2->m_rgv[1]);
+   HitLine3D * const ph3dc = new HitLine3D(ph3d2->m_rgv[0], ph3d2->m_rgv[1]);
    ph3dc->m_elasticity = m_d.m_elasticity;
    ph3dc->SetFriction(m_d.m_friction);
    ph3dc->m_scatter = ANGTORAD(m_d.m_scatter);

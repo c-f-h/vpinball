@@ -808,14 +808,19 @@ void HitPlane::Contact(CollisionEvent& coll, float dtime)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-HitLine3D::HitLine3D(const Vertex3Ds * const pv1, const Vertex3Ds * const pv2)
+HitLine3D::HitLine3D(const Vertex3Ds& v1, const Vertex3Ds& v2)
 {
-	v1 = *pv1;
-	v2 = *pv2;
-	CacheHitTransform();
+    CacheHitTransform(v1, v2);
+
+    m_rcHitRect.left = min(v1.x, v2.x);
+    m_rcHitRect.right = max(v1.x, v2.x);
+    m_rcHitRect.top = min(v1.y, v2.y);
+    m_rcHitRect.bottom = max(v1.y, v2.y);
+    m_rcHitRect.zlow = min(v1.z, v2.z);
+    m_rcHitRect.zhigh = max(v1.z, v2.z);
 }
 
-void HitLine3D::CacheHitTransform()
+void HitLine3D::CacheHitTransform(const Vertex3Ds& v1, const Vertex3Ds& v2)
 {
 	Vertex3Ds vLine = v2 - v1;
 	vLine.Normalize();
@@ -835,10 +840,16 @@ void HitLine3D::CacheHitTransform()
 
     matTrans.RotationAroundAxis(transaxis, transangle);
 
-	vtrans[0] = matTrans * v1;
-	vtrans[1] = matTrans * v2;
+    const Vertex3Ds vtrans1 = matTrans * v1;
+    const Vertex3Ds vtrans2 = matTrans * v2;
 
-    //const Vertex3Ds tmp = vtrans[1] - vtrans[0];
+    // set up HitLineZ parameters
+    m_xy.x = vtrans1.x;
+    m_xy.y = vtrans1.y;
+    m_zlow = min(vtrans1.z, vtrans2.z);
+    m_zhigh = max(vtrans1.z, vtrans2.z);
+
+    //const Vertex3Ds tmp = vtrans2 - vtrans1;
     //slintf("After rotate:\n  %.2f %.2f %.2f\n", tmp.x, tmp.y, tmp.z);
 }
 
@@ -851,12 +862,6 @@ float HitLine3D::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
     Ball ballT = *pball;
     ballT.pos = matTrans * ballT.pos;
     ballT.vel = matTrans * ballT.vel;
-
-    // set up HitLineZ parameters
-    m_xy.x = vtrans[0].x;
-    m_xy.y = vtrans[0].y;
-    m_zlow = min(vtrans[0].z, vtrans[1].z);
-    m_zhigh = max(vtrans[0].z, vtrans[1].z);
 
     const float hittime = HitLineZ::HitTest(&ballT, dtime, coll);
 
@@ -880,12 +885,7 @@ void HitLine3D::Collide(CollisionEvent* coll)
 
 void HitLine3D::CalcHitRect()
 {
-	m_rcHitRect.left = min(v1.x, v2.x);
-	m_rcHitRect.right = max(v1.x, v2.x);
-	m_rcHitRect.top = min(v1.y, v2.y);
-	m_rcHitRect.bottom = max(v1.y, v2.y);
-	m_rcHitRect.zlow = min(v1.z, v2.z);
-	m_rcHitRect.zhigh = max(v1.z, v2.z);
+    // already done in constructor
 }
 
 
