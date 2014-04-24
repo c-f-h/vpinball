@@ -56,7 +56,9 @@ public:
     int m_dir;
     bool m_solState;        // is solenoid enabled?
     bool m_isInContact;
+    float m_curTorque;
     float m_contactTorque;
+    float m_torqueRampupSpeed;
 
 	float m_angleStart, m_angleEnd;
 	float m_angleMin, m_angleMax;

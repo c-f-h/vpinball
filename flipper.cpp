@@ -266,16 +266,19 @@ void Flipper::GetHitShapes(Vector<HitObject> * const pvho)
    }
    else m_d.m_FlipperRadius = m_d.m_FlipperRadiusMax;
 
+   const float strength = m_d.m_OverridePhysics ? m_d.m_OverrideStrength : m_d.m_strength;
+
    HitFlipper * const phf = new HitFlipper(m_d.m_Center, m_d.m_BaseRadius, m_d.m_EndRadius,
 	   m_d.m_FlipperRadius, ANGTORAD(m_d.m_StartAngle), ANGTORAD(m_d.m_EndAngle), height, height + m_d.m_height,
-       (m_d.m_OverridePhysics ? m_d.m_OverrideStrength : m_d.m_strength), m_d.m_force, m_d.m_return);     // HACK: use "Speed" (m_force) as mass
+       strength, m_d.m_force, m_d.m_return);     // HACK: use "Speed" (m_force) as mass
 
    phf->m_elasticity = (m_d.m_OverridePhysics ? m_d.m_OverrideElasticity : m_d.m_elasticity);
    phf->SetFriction(m_d.m_friction);
    phf->m_scatter = m_d.m_scatter;
 
-   phf->m_flipperanim.m_EnableRotateEvent = 0;
+   phf->m_flipperanim.m_torqueRampupSpeed = strength / 3.0f;
 
+   phf->m_flipperanim.m_EnableRotateEvent = 0;
    phf->m_pfe = NULL;
 
    phf->m_flipperanim.m_fEnabled = (m_d.m_fEnabled != 0);

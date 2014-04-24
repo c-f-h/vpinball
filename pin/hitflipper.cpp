@@ -38,6 +38,8 @@ FlipperAnimObject::FlipperAnimObject(const Vertex2D& center, float baser, float 
    m_dir = (angleEnd >= angleStart) ? 1 : -1;
    m_solState = false;
    m_isInContact = false;
+   m_curTorque = 0.0f;
+   m_torqueRampupSpeed = 1e6f;
 
    m_angleStart = angleStart;
    m_angleEnd   = angleEnd;
@@ -224,20 +226,28 @@ void FlipperAnimObject::UpdateVelocities()
     //const float solForce = m_solState ? m_force : 0.0f;
     //float force = m_dir * (solForce + springForce);
 
-    float torque = 0;
+    float desiredTorque = 0;
     if (m_solState)
     {
-        torque = m_force;
+        desiredTorque = m_force;
         if (fabsf(m_angleCur - m_angleEnd) <= M_PI/180.0f)
-            torque *= 0.33f;     // hold coil is weaker
+            desiredTorque *= 0.33f;     // hold coil is weaker
     }
     else
-        torque = -m_returnRatio * m_force;
+        desiredTorque = -m_returnRatio * m_force;
 
-    torque *= m_dir;
+    desiredTorque *= m_dir;
 
-    m_isInContact = false;
+    // update current torque linearly towards desired torque
+    // (simple model for coil hysteresis)
+    if (desiredTorque >= m_curTorque)
+        m_curTorque = std::min(m_curTorque + m_torqueRampupSpeed * PHYS_FACTOR, desiredTorque);
+    else
+        m_curTorque = std::max(m_curTorque - m_torqueRampupSpeed * PHYS_FACTOR, desiredTorque);
+
     // resolve contacts with stoppers
+    float torque = m_curTorque;
+    m_isInContact = false;
     if (fabsf(m_anglespeed) <= 1e-2f)
     {
         if (m_angleCur >= m_angleMax - 1e-2f && torque > 0)
