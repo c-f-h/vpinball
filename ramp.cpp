@@ -1035,13 +1035,11 @@ void Ramp::AddLine(Vector<HitObject> * const pvho, const Vertex2D * const pv1, c
 
    m_vhoCollidable.push_back(plineseg);	//remember hit components of ramp
 
-   const Vertex2D vt1(pv1->x - pv2->x, pv1->y - pv2->y);
-
    if (pv3)
    {
-      const Vertex2D vt2(pv1->x - pv3->x, pv1->y - pv3->y);
-
-      const float dot = vt1.x*vt2.y - vt1.y*vt2.x;
+      const Vertex2D vt1 = *pv1 - *pv2;
+      const Vertex2D vt2 = *pv1 - *pv3;
+      const float dot = vt1.Dot(vt2);
 
       if (dot < 0) // Inside edges don't need joint hit-testing (dot == 0 continuous segments should mathematically never hit)
       {
