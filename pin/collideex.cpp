@@ -851,7 +851,7 @@ float Hit3DCylinder::HitTest(const Ball * pball, float dtime, CollisionEvent& co
     // transform ball to cylinder coordinate system
 	Ball ballT = *pball;
     ballT.pos = matTrans * ballT.pos;
-    ballT.pos.z += pball->radius;
+    //ballT.pos.z += pball->radius;
 	ballT.vel = matTrans * ballT.vel;
 
 	center.x = vtrans[0].x;
