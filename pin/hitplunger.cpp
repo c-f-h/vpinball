@@ -116,18 +116,6 @@ void PlungerAnimObject::SetObjects(const float len)
 
 	m_linesegSide[0].CalcNormal();
 	m_linesegSide[1].CalcNormal();
-
-	const float deg45 = (float)sin(M_PI/4.0);
-
-	m_jointBase[0].normal.x = -deg45;
-	m_jointBase[0].normal.y =  deg45;
-	m_jointBase[1].normal.x =  deg45;
-	m_jointBase[1].normal.y =  deg45;
-
-	m_jointEnd[0].normal.x = -deg45;
-	m_jointEnd[0].normal.y = -deg45;
-	m_jointEnd[1].normal.x =  deg45;
-	m_jointEnd[1].normal.y = -deg45;
 	}
 
 void PlungerAnimObject::UpdateDisplacements(const float dtime)

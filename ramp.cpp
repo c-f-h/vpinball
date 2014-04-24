@@ -1058,16 +1058,6 @@ void Ramp::AddLine(Vector<HitObject> * const pvho, const Vertex2D * const pv1, c
 
          m_vhoCollidable.push_back(pjoint);	//remember hit components of ramp
          pjoint->m_fEnabled = m_d.m_fCollidable;
-
-         // Set up line normal
-         const float inv_length = 1.0f/sqrtf(vt2.x * vt2.x + vt2.y * vt2.y);
-         pjoint->normal.x = plineseg->normal.x - vt2.y *inv_length;
-         pjoint->normal.y = vt2.x *inv_length + plineseg->normal.y;
-
-         // Set up line normal
-         const float inv_length2 = 1.0f/sqrtf(pjoint->normal.x * pjoint->normal.x + pjoint->normal.y * pjoint->normal.y);
-         pjoint->normal.x *= inv_length2;
-         pjoint->normal.y *= inv_length2;
       }
    }
 }

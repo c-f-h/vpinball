@@ -737,20 +737,6 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
 
       m_vhoCollidable.AddElement(pjoint);
       pjoint->m_fEnabled = m_d.m_fCollidable;
-
-      // Set up line normal
-      {
-         const float inv_length = 1.0f/sqrtf(vt2.x * vt2.x + vt2.y * vt2.y);
-         pjoint->normal.x = plineseg->normal.x - vt2.y * inv_length;
-         pjoint->normal.y = plineseg->normal.y + vt2.x * inv_length;
-      }
-
-      // Set up line normal
-      {
-         const float inv_length = 1.0f/sqrtf(pjoint->normal.x * pjoint->normal.x + pjoint->normal.y * pjoint->normal.y);
-         pjoint->normal.x *= inv_length;
-         pjoint->normal.y *= inv_length;
-      }
    }
 }
 

@@ -163,9 +163,6 @@ public:
 	virtual void Collide(CollisionEvent *coll);
 
 	virtual void CalcHitRect();
-
-	//Vertex2D v;
-	Vertex2D normal;
 	};
 
 
