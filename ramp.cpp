@@ -1316,11 +1316,14 @@ void Ramp::prepareHabitrail(RenderDevice* pd3dDevice )
       // This is the vector describing the tangent to the ramp at this point
       tangent.Normalize();
 
-      const Vertex3Ds rotationaxis(tangent.y, -tangent.x, 0.0f);
-      /*
-      Vertex3Ds up(0,0,1.0f);
+      /* Vertex3Ds up(0,0,1);
       // Get axis of rotation to rotate our cross-section into place
       CrossProduct(tangent, up, &rotationaxis);*/
+      Vertex3Ds rotationaxis(tangent.y, -tangent.x, 0.0f);
+      if (rotationaxis.LengthSquared() <= 1e-6f)
+          rotationaxis.Set(1, 0, 0);
+      else
+          rotationaxis.Normalize();
 
       const float dot = tangent.z; //tangent.Dot(&up);
       const float angle = acosf(dot);
