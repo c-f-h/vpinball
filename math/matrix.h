@@ -116,6 +116,8 @@ public:
    }
 
    // Create matrix for rotating around an arbitrary vector
+   // NB: axis must be normalized
+   // NB: this actually rotates by -angle in right-handed coordinates
    void RotationAroundAxis(const Vertex3Ds& axis, float angle)
    {
        const float rsin = sinf(angle);

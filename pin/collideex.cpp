@@ -833,12 +833,17 @@ void HitLine3D::CacheHitTransform(const Vertex3Ds& v1, const Vertex3Ds& v2)
 	transaxis.y = -vLine.x;
 	transaxis.z = 0.0f;
 
-	// Angle to rotate the cylinder into the z-axis
+    if (transaxis.LengthSquared() <= 1e-6f)     // line already points in z axis?
+        transaxis.Set(1, 0, 0);                 // choose arbitrary rotation vector
+    else
+        transaxis.Normalize();
+
+	// Angle to rotate the line into the z-axis
 	const float dot = vLine.z; //vLine.Dot(&vup);
 
-	const float transangle = acosf(-dot);
+	const float transangle = acosf(dot);
 
-    matTrans.RotationAroundAxis(transaxis, transangle);
+    matTrans.RotationAroundAxis(transaxis, -transangle);
 
     const Vertex3Ds vtrans1 = matTrans * v1;
     const Vertex3Ds vtrans2 = matTrans * v2;
@@ -848,9 +853,6 @@ void HitLine3D::CacheHitTransform(const Vertex3Ds& v1, const Vertex3Ds& v2)
     m_xy.y = vtrans1.y;
     m_zlow = min(vtrans1.z, vtrans2.z);
     m_zhigh = max(vtrans1.z, vtrans2.z);
-
-    //const Vertex3Ds tmp = vtrans2 - vtrans1;
-    //slintf("After rotate:\n  %.2f %.2f %.2f\n", tmp.x, tmp.y, tmp.z);
 }
 
 float HitLine3D::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
