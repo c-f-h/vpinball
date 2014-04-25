@@ -74,6 +74,7 @@ void Flipper::SetDefaults(bool fromMouseClick)
    m_d.m_OverridePhysics = 0;
 
    m_d.m_friction = GetRegStringAsFloatWithDefault("DefaultProps\\Flipper","Friction", 0.8f);
+   m_d.m_rampUp = GetRegStringAsFloatWithDefault("DefaultProps\\Flipper","RampUp", 0.0f);
 
    m_d.m_scatter = 0.0;	//zero uses global value
 
@@ -162,7 +163,7 @@ void Flipper::WriteRegDefaults()
    SetRegValueFloat(regKey,"Speed", m_d.m_force);
    SetRegValueFloat(regKey,"Elasticity", m_d.m_elasticity);
    SetRegValueFloat(regKey, "Friction", m_d.m_friction);
-   SetRegValueFloat(regKey,"ScatterAngle", RADTOANG(m_d.m_scatterangle));
+   SetRegValueFloat(regKey, "RampUp", m_d.m_rampUp);
    SetRegValue(regKey,"TimerEnabled",REG_DWORD,&m_d.m_tdr.m_fTimerEnabled,4);
    SetRegValue(regKey,"TimerInterval", REG_DWORD, &m_d.m_tdr.m_TimerInterval, 4);
    SetRegValue(regKey,"Color", REG_DWORD, &m_d.m_color, 4);
@@ -276,7 +277,10 @@ void Flipper::GetHitShapes(Vector<HitObject> * const pvho)
    phf->SetFriction(m_d.m_friction);
    phf->m_scatter = m_d.m_scatter;
 
-   phf->m_flipperanim.m_torqueRampupSpeed = strength / 3.0f;
+   if (m_d.m_rampUp <= 0)
+       phf->m_flipperanim.m_torqueRampupSpeed = 1e6f;       // set very high for instant coil response
+   else
+       phf->m_flipperanim.m_torqueRampupSpeed = strength / m_d.m_rampUp;
 
    phf->m_flipperanim.m_EnableRotateEvent = 0;
    phf->m_pfe = NULL;
@@ -878,6 +882,7 @@ HRESULT Flipper::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcrypt
    bw.WriteFloat(FID(STRG), m_d.m_strength);
    bw.WriteFloat(FID(ELAS), m_d.m_elasticity);
    bw.WriteFloat(FID(FRIC), m_d.m_friction);
+   bw.WriteFloat(FID(RPUP), m_d.m_rampUp);
    bw.WriteBool(FID(VSBL), m_d.m_fVisible);
    bw.WriteBool(FID(ENBL), m_d.m_fEnabled);
    bw.WriteBool(FID(COMP), m_d.m_fCompatibility);
@@ -1009,6 +1014,10 @@ BOOL Flipper::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(FRIC))
    {
       pbr->GetFloat(&m_d.m_friction);
+   }
+   else if (id == FID(RPUP))
+   {
+      pbr->GetFloat(&m_d.m_rampUp);
    }
    else if (id == FID(FPWL))
    {
@@ -1537,6 +1546,21 @@ STDMETHODIMP Flipper::put_Friction(float newVal)
       m_d.m_friction = newVal;
       STOPUNDO
    }
+
+   return S_OK;
+}
+
+STDMETHODIMP Flipper::get_RampUp(float *pVal)
+{
+   *pVal = m_d.m_rampUp;
+   return S_OK;
+}
+
+STDMETHODIMP Flipper::put_RampUp(float newVal)
+{
+   STARTUNDO
+   m_d.m_rampUp = newVal;
+   STOPUNDO
 
    return S_OK;
 }
