@@ -685,10 +685,8 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
    plineseg->m_rcHitRect.zlow = m_d.m_heightbottom;
    plineseg->m_rcHitRect.zhigh = m_d.m_heighttop;
 
-   plineseg->v1.x = pv1->x;
-   plineseg->v1.y = pv1->y;
-   plineseg->v2.x = pv2->x;
-   plineseg->v2.y = pv2->y;
+   plineseg->v1 = *pv1;
+   plineseg->v2 = *pv2;
 
    plineseg->m_elasticity = m_d.m_elasticity;
    plineseg->SetFriction(m_d.m_friction);
@@ -703,10 +701,10 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
 
    plineseg->CalcNormal();
 
-   const Vertex2D vt1(pv1->x - pv2->x, pv1->y - pv2->y);
-   const Vertex2D vt2(pv1->x - pv3->x, pv1->y - pv3->y);
+   const Vertex2D vt1 = *pv1 - *pv2;
+   const Vertex2D vt2 = *pv1 - *pv3;
 
-   const float dot = vt1.x*vt2.y - vt1.y*vt2.x;
+   const float dot = vt1.Dot(vt2);
 
    if (dot < 0.f) // Inside edges don't need joint hit-testing (dot == 0 continuous segments should mathematically never hit)
    {
