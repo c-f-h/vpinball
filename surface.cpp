@@ -651,6 +651,25 @@ void Surface::CurvesToShapes(Vector<HitObject> * const pvho)
        m_vhoDrop.AddElement(ph3dpoly);
 }
 
+void Surface::SetupHitObject(Vector<HitObject> * pvho, HitObject * obj)
+{
+    obj->m_elasticity = m_d.m_elasticity;
+    obj->SetFriction(m_d.m_friction);
+    obj->m_scatter = ANGTORAD(m_d.m_scatter);
+    obj->m_fEnabled = m_d.m_fCollidable;
+
+    if (m_d.m_fHitEvent)
+    {
+        obj->m_pfe = (IFireEvents *)this;
+        obj->m_threshold = m_d.m_threshold;
+    }
+
+    pvho->AddElement(obj);
+    m_vhoCollidable.AddElement(obj);	//remember hit components of wall
+    if (m_d.m_fDroppable)
+        m_vhoDrop.AddElement(obj);
+}
+
 void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const pv1, const RenderVertex * const pv2, const RenderVertex * const pv3, const bool fSlingshot)
 {
    LineSeg *plineseg;
@@ -701,6 +720,14 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
 
    plineseg->CalcNormal();
 
+   if (m_d.m_heightbottom != 0)
+   {
+       // add lower edge as a line
+       Vertex3Ds v1(pv1->x, pv1->y, m_d.m_heightbottom);
+       Vertex3Ds v2(pv2->x, pv2->y, m_d.m_heightbottom);
+       SetupHitObject(pvho, new HitLine3D(v1, v2));
+   }
+
    const Vertex2D vt1 = *pv1 - *pv2;
    const Vertex2D vt2 = *pv1 - *pv3;
 
@@ -708,24 +735,12 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
 
    if (dot < 0.f) // Inside edges don't need joint hit-testing (dot == 0 continuous segments should mathematically never hit)
    {
-      HitLineZ * const pjoint = new HitLineZ(*pv1, m_d.m_heightbottom, m_d.m_heighttop);
-      pjoint->m_elasticity = m_d.m_elasticity;
-      pjoint->SetFriction(m_d.m_friction);
-      pjoint->m_scatter = ANGTORAD(m_d.m_scatter);
-      pjoint->m_fEnabled = m_d.m_fCollidable;
+       SetupHitObject(pvho, new HitLineZ(*pv1, m_d.m_heightbottom, m_d.m_heighttop));
 
-      if (m_d.m_fHitEvent)
-      {
-         pjoint->m_pfe = (IFireEvents *)this;
-         pjoint->m_threshold = m_d.m_threshold;
-      }
-      else
-         pjoint->m_pfe = NULL;
-
-      pvho->AddElement(pjoint);
-      m_vhoCollidable.AddElement(pjoint);
-      if (m_d.m_fDroppable)
-         m_vhoDrop.AddElement(pjoint);
+       // add upper and lower end points of line
+       if (m_d.m_heightbottom != 0)
+           SetupHitObject(pvho, new HitPoint(Vertex3Ds(pv1->x, pv1->y, m_d.m_heightbottom)));
+       SetupHitObject(pvho, new HitPoint(Vertex3Ds(pv1->x, pv1->y, m_d.m_heighttop)));
    }
 }
 

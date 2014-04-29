@@ -363,6 +363,9 @@ void HitCircle::Contact(CollisionEvent& coll, float dtime)
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+
+
 HitLineZ::HitLineZ(const Vertex2D& xy, float zlow, float zhigh)
     : m_xy(xy), m_zlow(zlow), m_zhigh(zhigh)
 {
@@ -460,6 +463,101 @@ void HitLineZ::Collide(CollisionEvent *coll)
 }
 
 void HitLineZ::Contact(CollisionEvent& coll, float dtime)
+{
+    coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, /*m_friction*/ 0.3f, dtime);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+HitPoint::HitPoint(const Vertex3Ds& p)
+    : m_p(p)
+{
+}
+
+float HitPoint::HitTest(const Ball * pball, float dtime, CollisionEvent& coll)
+{
+    if (!m_fEnabled)
+        return -1.0f;
+
+    const Vertex3Ds dist = pball->pos - m_p;    // relative ball position
+
+    const float bcddsq = dist.LengthSquared();  // ball center to line distance squared
+    const float bcdd = sqrtf(bcddsq);           // distance ball to line
+    if (bcdd <= 1.0e-6f)
+        return -1.0f;                           // no hit on exact center
+
+    const float b = dist.Dot(pball->vel);
+    const float bnv = b/bcdd;                   // ball normal velocity
+
+    if (bnv > C_CONTACTVEL)
+        return -1.0f;                           // clearly receding from radius
+
+    const float bnd = bcdd - pball->radius;     // ball distance to line
+
+    const float a = pball->vel.LengthSquared();
+
+    float hittime = 0;
+    bool isContact = false;
+
+    if (bnd < (float)PHYS_TOUCH)       // already in collision distance?
+    {
+        if (fabsf(bnv) <= C_CONTACTVEL)
+        {
+            isContact = true;
+            hittime = 0;
+        }
+        else
+            hittime = std::max(0.0f, -bnd / bnv);   // estimate based on distance and speed along distance
+    }
+    else
+    {
+        if (a < 1.0e-8f)
+            return -1.0f;    // no hit - ball not moving relative to object
+
+        float time1, time2;
+        if (!SolveQuadraticEq(a, 2*b, bcddsq - pball->radius*pball->radius, time1, time2))
+            return -1.0f;
+
+        hittime = (time1*time2 < 0) ? max(time1,time2) : min(time1,time2); // find smallest nonnegative solution
+    }
+
+    if (infNaN(hittime) || hittime < 0 || hittime > dtime)
+        return -1.0f; // contact out of physics frame
+
+    const Vertex3Ds hitPos = pball->pos + hittime * pball->vel;
+    coll.normal[0] = hitPos - m_p;
+    coll.normal[0].Normalize();
+
+    coll.isContact = isContact;
+    if (isContact)
+        coll.normal[1].z = bnv;
+
+    coll.distance = bnd;                    // actual contact distance
+    coll.hitRigid = true;
+
+    return hittime;
+}
+
+void HitPoint::CalcHitRect()
+{
+    m_rcHitRect = FRect3D(m_p.x, m_p.x, m_p.y, m_p.y, m_p.z, m_p.z);
+}
+
+void HitPoint::Collide(CollisionEvent *coll)
+{
+    Ball *pball = coll->ball;
+    const Vertex3Ds& hitnormal = coll->normal[0];
+
+    const float dot = hitnormal.Dot(pball->vel);
+    pball->Collide3DWall(hitnormal, m_elasticity, /*m_friction*/ 0.3f, m_scatter);
+
+    if (dot <= -m_threshold)
+        FireHitEvent(pball);
+}
+
+void HitPoint::Contact(CollisionEvent& coll, float dtime)
 {
     coll.ball->HandleStaticContact(coll.normal[0], coll.normal[1].z, /*m_friction*/ 0.3f, dtime);
 }

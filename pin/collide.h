@@ -3,6 +3,7 @@
 enum
 	{
 	eNull,
+    ePoint,
 	eLineSeg,
 	eJoint,
 	eCircle,
@@ -167,6 +168,21 @@ public:
 
     Vertex2D m_xy;
     float m_zlow, m_zhigh;
+};
+
+
+class HitPoint : public HitObject
+{
+public:
+    HitPoint(const Vertex3Ds& p);
+
+    virtual void CalcHitRect();
+    virtual float HitTest(const Ball * pball, float dtime, CollisionEvent& coll);
+    virtual int GetType() const { return ePoint; }
+    virtual void Collide(CollisionEvent *coll);
+    virtual void Contact(CollisionEvent& coll, float dtime);
+
+    Vertex3Ds m_p;
 };
 
 
