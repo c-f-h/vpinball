@@ -24,9 +24,10 @@ HitObject *CreateCircularHitPoly(const float x, const float y, const float z, co
 	}
 
 HitObject::HitObject() : m_fEnabled(fTrue), m_ObjType(eNull), m_pObj(NULL),
-						 m_elasticity(0.3f), m_pfedebug(NULL)
-	{
-	}
+                         m_elasticity(0.3f), m_friction(0.3f), m_scatter(0.0f),
+                         m_pfe(NULL), m_pfedebug(NULL)
+{
+}
 
 void HitObject::FireHitEvent(Ball* pball)
 {
