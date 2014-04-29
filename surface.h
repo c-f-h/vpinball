@@ -136,10 +136,10 @@ private:
 	PinTable *m_ptable;
 	BSTR m_bstrName;
 
-	Vector<LineSegSlingshot> m_vlinesling;
+    std::vector<LineSegSlingshot*> m_vlinesling;
 
-	Vector<HitObject> m_vhoDrop; // Objects to disable when dropped
-	Vector<HitObject> m_vhoCollidable; // Objects to that may be collide selectable
+    std::vector<HitObject*> m_vhoDrop; // Objects to disable when dropped
+    std::vector<HitObject*> m_vhoCollidable; // Objects to that may be collide selectable
 
 	bool IsWall;
    int numVertices, numPolys;

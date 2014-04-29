@@ -645,10 +645,10 @@ void Surface::CurvesToShapes(Vector<HitObject> * const pvho)
 
    pvho->AddElement(ph3dpoly);
 
-   m_vhoCollidable.AddElement(ph3dpoly);
+   m_vhoCollidable.push_back(ph3dpoly);
 
    if (m_d.m_fDroppable)
-       m_vhoDrop.AddElement(ph3dpoly);
+       m_vhoDrop.push_back(ph3dpoly);
 }
 
 void Surface::SetupHitObject(Vector<HitObject> * pvho, HitObject * obj)
@@ -665,9 +665,9 @@ void Surface::SetupHitObject(Vector<HitObject> * pvho, HitObject * obj)
     }
 
     pvho->AddElement(obj);
-    m_vhoCollidable.AddElement(obj);	//remember hit components of wall
+    m_vhoCollidable.push_back(obj);	//remember hit components of wall
     if (m_d.m_fDroppable)
-        m_vhoDrop.AddElement(obj);
+        m_vhoDrop.push_back(obj);
 }
 
 void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const pv1, const RenderVertex * const pv2, const RenderVertex * const pv3, const bool fSlingshot)
@@ -698,7 +698,7 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
       plinesling->m_force = m_d.m_slingshotforce;
       plinesling->m_psurface = this;
 
-      m_vlinesling.AddElement(plinesling);
+      m_vlinesling.push_back(plinesling);
    }
 
    plineseg->m_rcHitRect.zlow = m_d.m_heightbottom;
@@ -713,9 +713,9 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
 
    pvho->AddElement(plineseg);
    if (m_d.m_fDroppable)
-      m_vhoDrop.AddElement(plineseg);
+      m_vhoDrop.push_back(plineseg);
 
-   m_vhoCollidable.AddElement(plineseg);
+   m_vhoCollidable.push_back(plineseg);
    plineseg->m_fEnabled = m_d.m_fCollidable;
 
    plineseg->CalcNormal();
@@ -761,9 +761,9 @@ void Surface::EndPlay()
 {
    IEditable::EndPlay();
 
-   m_vlinesling.RemoveAllElements();
-   m_vhoDrop.RemoveAllElements();
-   m_vhoCollidable.RemoveAllElements();
+   m_vlinesling.clear();
+   m_vhoDrop.clear();
+   m_vhoCollidable.clear();
 
    FreeBuffers();
 }
@@ -1050,9 +1050,9 @@ void Surface::PrepareSlingshots( RenderDevice *pd3dDevice )
    Vertex3D *buf;
    slingshotVBuffer->lock(0,0,(void**)&buf, VertexBuffer::WRITEONLY);
    int offset=0;
-   for (int i=0;i<m_vlinesling.Size();i++)
+   for (unsigned i=0; i<m_vlinesling.size(); i++)
    {
-      LineSegSlingshot * const plinesling = m_vlinesling.ElementAt(i);
+      LineSegSlingshot * const plinesling = m_vlinesling[i];
       plinesling->m_slingshotanim.m_fAnimations = (m_d.m_fSlingshotAnimation != 0);
 
       Vertex3D rgv3D[12];
@@ -1135,10 +1135,10 @@ void Surface::RenderSetup(const RenderDevice* _pd3dDevice)
 
    m_d.m_heightbottom *= m_ptable->m_zScale;
    m_d.m_heighttop *= m_ptable->m_zScale;
-   if( m_vlinesling.Size()>0 )
+   if( !m_vlinesling.empty() )
    {
       if( !slingshotVBuffer )
-         pd3dDevice->CreateVertexBuffer(m_vlinesling.Size()*24, 0, MY_D3DFVF_VERTEX, &slingshotVBuffer);
+         pd3dDevice->CreateVertexBuffer(m_vlinesling.size()*24, 0, MY_D3DFVF_VERTEX, &slingshotVBuffer);
 
       slingShotMaterial.setColor( 1.0f, m_d.m_slingshotColor );
       PrepareSlingshots(pd3dDevice);
@@ -1207,9 +1207,9 @@ void Surface::RenderSlingshots(RenderDevice* pd3dDevice)
    const float slingbottom = (m_d.m_heighttop - m_d.m_heightbottom) * 0.2f + m_d.m_heightbottom;
    const float slingtop    = (m_d.m_heighttop - m_d.m_heightbottom) * 0.8f + m_d.m_heightbottom;
 
-   for (int i=0;i<m_vlinesling.Size();i++)
+   for (unsigned i=0; i<m_vlinesling.size(); i++)
    {
-      LineSegSlingshot * const plinesling = m_vlinesling.ElementAt(i);
+      LineSegSlingshot * const plinesling = m_vlinesling[i];
       if (plinesling->m_slingshotanim.m_iframe != 1)
           continue;
 
@@ -1944,8 +1944,8 @@ STDMETHODIMP Surface::put_IsDropped(VARIANT_BOOL newVal)
    {
       m_fIsDropped = fNewVal;
 
-      for (int i=0;i<m_vhoDrop.Size();i++)
-         m_vhoDrop.ElementAt(i)->m_fEnabled = !m_fIsDropped && m_d.m_fCollidable; //disable hit on enities composing the object 
+      for (unsigned i=0; i<m_vhoDrop.size(); i++)
+         m_vhoDrop[i]->m_fEnabled = !m_fIsDropped && m_d.m_fCollidable; //disable hit on enities composing the object 
 
 #ifdef ULTRAPIN
       // Check if this surface has a user value.
@@ -2193,10 +2193,10 @@ STDMETHODIMP Surface::put_Collidable(VARIANT_BOOL newVal)
 
    m_d.m_fCollidable = fNewVal;
 
-   for (int i=0;i<m_vhoCollidable.Size();i++)
+   for (unsigned i=0; i<m_vhoCollidable.size(); i++)
    {
-      if (m_d.m_fDroppable) m_vhoCollidable.ElementAt(i)->m_fEnabled = fNewVal && !m_fIsDropped;
-      else m_vhoCollidable.ElementAt(i)->m_fEnabled = fNewVal; //copy to hit checking on enities composing the object 
+      if (m_d.m_fDroppable) m_vhoCollidable[i]->m_fEnabled = fNewVal && !m_fIsDropped;
+      else m_vhoCollidable[i]->m_fEnabled = fNewVal; //copy to hit checking on enities composing the object 
    }	
 
    STOPUNDO
