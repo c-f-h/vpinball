@@ -777,6 +777,12 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
          AddSideWall(pvho, pv2, pv3,rgheight1[i], rgheight1[i+1], wallheightright);
          AddSideWall(pvho, pv3, pv2,rgheight1[i+1], rgheight1[i], wallheightright);
 #endif
+
+         // add joints at start and end of right wall
+         if (i == 0)
+             AddJoint2D(pvho, *pv2, rgheight1[i], rgheight1[i+1]+wallheightright);
+         else if (i == cvertex-2)
+             AddJoint2D(pvho, *pv3, rgheight1[i], rgheight1[i+1]+wallheightright);
       }
    }
 
@@ -797,6 +803,12 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
          AddSideWall(pvho, pv2, pv3, rgheight1[cvertex - i - 1], rgheight1[cvertex - i - 2], wallheightleft);
          AddSideWall(pvho, pv3, pv2, rgheight1[cvertex - i - 2], rgheight1[cvertex - i - 1], wallheightleft);
 #endif
+
+         // add joints at start and end of left wall
+         if (i == 0)
+             AddJoint2D(pvho, *pv2, rgheight1[cvertex - i - 2], rgheight1[cvertex - i - 1] + wallheightleft);
+         else if (i == cvertex-2)
+             AddJoint2D(pvho, *pv3, rgheight1[cvertex - i - 2], rgheight1[cvertex - i - 1] + wallheightleft);
       }
    }
 
@@ -1013,10 +1025,22 @@ void Ramp::AddJoint(Vector<HitObject> * pvho, const Vertex3Ds& v1, const Vertex3
    ph3dc->m_elasticity = m_d.m_elasticity;
    ph3dc->SetFriction(m_d.m_friction);
    ph3dc->m_scatter = ANGTORAD(m_d.m_scatter);
-   pvho->AddElement(ph3dc);
-
-   m_vhoCollidable.push_back(ph3dc);	//remember hit components of ramp
    ph3dc->m_fEnabled = m_d.m_fCollidable;
+
+   pvho->AddElement(ph3dc);
+   m_vhoCollidable.push_back(ph3dc);	//remember hit components of ramp
+}
+
+void Ramp::AddJoint2D(Vector<HitObject> * pvho, const Vertex2D& p, float zlow, float zhigh)
+{
+    HitLineZ * const pjoint = new HitLineZ(p, zlow, zhigh);
+    pjoint->m_elasticity = m_d.m_elasticity;
+    pjoint->SetFriction(m_d.m_friction);
+    pjoint->m_scatter = ANGTORAD(m_d.m_scatter);
+    pjoint->m_fEnabled = m_d.m_fCollidable;
+
+    pvho->AddElement(pjoint);
+    m_vhoCollidable.push_back(pjoint); //remember hit components of ramp
 }
 
 
@@ -1042,17 +1066,7 @@ void Ramp::AddLine(Vector<HitObject> * const pvho, const Vertex2D * const pv1, c
       const float dot = vt1.Dot(vt2);
 
       if (dot < 0) // Inside edges don't need joint hit-testing (dot == 0 continuous segments should mathematically never hit)
-      {
-         HitLineZ * const pjoint = new HitLineZ(*pv1, height1, height2);
-         pjoint->m_elasticity = m_d.m_elasticity;
-         pjoint->SetFriction(m_d.m_friction);
-         pjoint->m_scatter = ANGTORAD(m_d.m_scatter);
-         pjoint->m_pfe = NULL;
-         pjoint->m_fEnabled = m_d.m_fCollidable;
-
-         pvho->AddElement(pjoint);
-         m_vhoCollidable.push_back(pjoint); //remember hit components of ramp
-      }
+          AddJoint2D(pvho, *pv1, height1, height2);
    }
 }
 
