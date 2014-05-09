@@ -34,18 +34,13 @@ void ScriptGlobalTable::Init(PinTable *pt)
 
 STDMETHODIMP ScriptGlobalTable::Nudge(float Angle, float Force)
 {
-   if (g_pplayer && (g_pplayer->m_nudgetime == 0))
+   if (g_pplayer)
    {
       const float sn = sinf(ANGTORAD(Angle));
       const float cs = cosf(ANGTORAD(Angle));
 
-      //g_pplayer->m_NudgeX = -sn*Force;
-      //g_pplayer->m_NudgeY = cs*Force;
-
-      g_pplayer->m_NudgeBackX =  sn * Force;
-      g_pplayer->m_NudgeBackY = -cs * Force;
-
-      g_pplayer->m_nudgetime = 10;
+      g_pplayer->m_tableVel.x +=  sn * Force;
+      g_pplayer->m_tableVel.y += -cs * Force;
    }
 
    return S_OK;
@@ -7442,25 +7437,6 @@ INT_PTR CALLBACK ProgressProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
    }
 
    return FALSE;
-}
-
-STDMETHODIMP PinTable::Nudge(float Angle, float Force)
-{
-   if (g_pplayer && (g_pplayer->m_nudgetime == 0) && g_pplayer->m_ptable->m_Shake)
-   {
-      const float sn = sinf(ANGTORAD(Angle));
-      const float cs = cosf(ANGTORAD(Angle));
-
-      //g_pplayer->m_NudgeX = -sn*Force;
-      //g_pplayer->m_NudgeY = cs*Force;
-
-      g_pplayer->m_NudgeBackX =  sn * Force;
-      g_pplayer->m_NudgeBackY = -cs * Force;
-
-      g_pplayer->m_nudgetime = 10;
-   }
-
-   return S_OK;
 }
 
 STDMETHODIMP PinTable::get_GlassHeight(float *pVal)

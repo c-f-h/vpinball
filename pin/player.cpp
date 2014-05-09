@@ -788,8 +788,10 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 
 	m_NudgeX = 0;
 	m_NudgeY = 0;
-	m_nudgetime = 0;
 	m_movedPlunger = 0;	// has plunger moved, must have moved at least three times
+
+    m_tableVel.SetZero();
+    m_tableDisplacement.SetZero();
 
 	SendMessage(hwndProgress, PBM_SETPOS, 50, 0);
 	SetWindowText(hwndProgressName, "Initalizing Physics...");
@@ -1808,21 +1810,13 @@ void Player::UpdatePhysics()
 		UltraNudge_update();		// physics_diff_time is the balance of time to move from the graphic frame position to the next
 		UltraPlunger_update();		// integral physics frame. So the previous graphics frame was (1.0 - physics_diff_time) before 
 									// this integral physics frame. Accelerations and inputs are always physics frame aligned
-		if (m_nudgetime)
-		{
-			m_nudgetime--;
-
-			if (m_nudgetime == 5)
-			{
-				m_NudgeX = -m_NudgeBackX * 2.0f;
-				m_NudgeY =  m_NudgeBackY * 2.0f;
-			}
-			else if (m_nudgetime == 0)
-			{
-				m_NudgeX =  m_NudgeBackX;
-				m_NudgeY = -m_NudgeBackY;
-			}
-		}
+        {
+            Vertex3Ds force = -0.8f * m_tableDisplacement - 0.8f * m_tableVel;
+            m_tableVel += PHYS_FACTOR * force;
+            m_tableDisplacement += PHYS_FACTOR * m_tableVel;
+            //if (m_tableVel.LengthSquared() >= 1e-5f)
+            //    slintf("Table shake: %.2f  %.2f\n", m_tableDisplacement.x, m_tableVel.x);
+        }
 
 		for (unsigned i=0; i<m_vmover.size(); i++)
 			m_vmover[i]->UpdateVelocities();	// always on integral physics frame boundary
@@ -1986,15 +1980,7 @@ void Player::CheckAndUpdateRegions()
 
 void Player::FlipVideoBuffersNormal( const bool vsync )
 {
-	if ( m_nudgetime &&			// Table is being nudged.
-		 m_ptable->m_Shake )	// The "EarthShaker" effect is active. //!! make configurable (cab vs desktop)
-	{
-		// Draw with an offset to shake the display.
-        // TODO: this doesn't work in DX9, have to handle shake some other way.
-		m_pin3d.Flip( /*(int)m_NudgeBackX, (int)m_NudgeBackY,*/ vsync);
-	}
-    else
-        m_pin3d.Flip(vsync);
+    m_pin3d.Flip(vsync);
 }
 
 static const float quadVerts[4*5] =

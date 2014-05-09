@@ -209,9 +209,11 @@ public:
 
 	float m_NudgeX;
 	float m_NudgeY;
-	float m_NudgeBackX;
-	float m_NudgeBackY;
 	int m_NudgeManual;			//index of joystick that has manual control
+
+    // new nudging
+    Vertex3Ds m_tableVel;
+    Vertex3Ds m_tableDisplacement;
 
 	EnumAssignKeys m_rgKeys[eCKeys]; //Player's key assignments
 
@@ -224,8 +226,6 @@ public:
 	int m_fCloseType;			// if 0 exit player and close application if started minimized, if 1 close application always, 2 is brute force exit
 
 	int m_sleeptime;			// time to sleep during each frame - can helps side threads like vpinmame
-
-	int m_nudgetime;
 
 	GPINFLOAT m_pixelaspectratio;
 

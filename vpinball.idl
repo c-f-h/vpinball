@@ -463,7 +463,6 @@ typedef [uuid(D09B9F0E-C1AE-40dd-84D6-B1F74053AA8E)]
 		[propput, id(DISPID_Table_DisplayGrid), helpstring("property DisplayGrid")] HRESULT DisplayGrid([in] VARIANT_BOOL newVal);
 		[propget, id(DISPID_Table_DisplayBackdrop), helpstring("property DisplayBackdrop")] HRESULT DisplayBackdrop([out, retval] VARIANT_BOOL *pVal);
 		[propput, id(DISPID_Table_DisplayBackdrop), helpstring("property DisplayBackdrop")] HRESULT DisplayBackdrop([in] VARIANT_BOOL newVal);
-		[id(DISPID_Table_Nudge), helpstring("method Nudge")] HRESULT Nudge([in] float Angle, [in] float Force);
 		[propget, id(DISPID_Image), helpstring("property Image")] HRESULT Image([out, retval] BSTR *pVal);
 		[propput, id(DISPID_Image), helpstring("property Image")] HRESULT Image([in] BSTR newVal);
 		[propget, id(DISPID_Name), helpstring("property Name")] HRESULT Name([out, retval] BSTR *pVal);
