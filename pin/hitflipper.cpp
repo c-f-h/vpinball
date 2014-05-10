@@ -229,8 +229,8 @@ void FlipperAnimObject::UpdateVelocities()
     if (m_solState)
     {
         desiredTorque = m_force;
-        if (fabsf(m_angleCur - m_angleEnd) <= M_PI/180.0f)
-            desiredTorque *= 0.66f;     // hold coil is weaker
+        if (fabsf(m_angleCur - m_angleEnd) <= 3*M_PI/180.0f)
+            desiredTorque *= 0.75f;     // hold coil is weaker
     }
     else
         desiredTorque = -m_returnRatio * m_force;
