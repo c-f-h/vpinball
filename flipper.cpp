@@ -71,6 +71,8 @@ void Flipper::SetDefaults(bool fromMouseClick)
    hr = GetRegStringAsFloat("DefaultProps\\Flipper","Elasticity", &fTmp);
    m_d.m_elasticity = (hr == S_OK) && fromMouseClick ? fTmp : 0.55f;
 
+   m_d.m_elasticityFalloff = GetRegStringAsFloatWithDefault("DefaultProps\\Flipper","ElasticityFalloff", 0.43f);
+
    m_d.m_OverridePhysics = 0;
 
    m_d.m_friction = GetRegStringAsFloatWithDefault("DefaultProps\\Flipper","Friction", 0.8f);
@@ -154,7 +156,6 @@ void Flipper::WriteRegDefaults()
    SetRegValueFloat(regKey,"EndRadius", m_d.m_EndRadius);
    SetRegValueFloat(regKey,"ReturnStrength", m_d.m_return);
    SetRegValueFloat(regKey,"StartAngle", m_d.m_StartAngle);
-   SetRegValueFloat(regKey,"Elasticity", m_d.m_elasticity);
    SetRegValueFloat(regKey,"EndAngle", m_d.m_EndAngle);
    SetRegValueFloat(regKey,"Length", m_d.m_FlipperRadiusMax);
    SetRegValueFloat(regKey,"MaxDifLength", m_d.m_FlipperRadiusMin);
@@ -162,6 +163,7 @@ void Flipper::WriteRegDefaults()
    SetRegValueFloat(regKey,"ReturnStrength", m_d.m_return);
    SetRegValueFloat(regKey,"Speed", m_d.m_force);
    SetRegValueFloat(regKey,"Elasticity", m_d.m_elasticity);
+   SetRegValueFloat(regKey,"ElasticityFalloff", m_d.m_elasticityFalloff);
    SetRegValueFloat(regKey, "Friction", m_d.m_friction);
    SetRegValueFloat(regKey, "RampUp", m_d.m_rampUp);
    SetRegValue(regKey,"TimerEnabled",REG_DWORD,&m_d.m_tdr.m_fTimerEnabled,4);
@@ -881,6 +883,7 @@ HRESULT Flipper::SaveData(IStream *pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcrypt
    bw.WriteInt(FID(RWDT), m_d.m_rubberwidth);
    bw.WriteFloat(FID(STRG), m_d.m_strength);
    bw.WriteFloat(FID(ELAS), m_d.m_elasticity);
+   bw.WriteFloat(FID(ELFO), m_d.m_elasticityFalloff);
    bw.WriteFloat(FID(FRIC), m_d.m_friction);
    bw.WriteFloat(FID(RPUP), m_d.m_rampUp);
    bw.WriteBool(FID(VSBL), m_d.m_fVisible);
@@ -1010,6 +1013,10 @@ BOOL Flipper::LoadToken(int id, BiffReader *pbr)
    else if (id == FID(ELAS))
    {
       pbr->GetFloat(&m_d.m_elasticity);
+   }
+   else if (id == FID(ELFO))
+   {
+      pbr->GetFloat(&m_d.m_elasticityFalloff);
    }
    else if (id == FID(FRIC))
    {
@@ -1525,6 +1532,20 @@ STDMETHODIMP Flipper::put_Elasticity(float newVal)
    }
 
    return S_OK;
+}
+
+STDMETHODIMP Flipper::get_ElasticityFalloff(float *pVal)
+{
+    *pVal = m_d.m_elasticityFalloff;
+    return S_OK;
+}
+
+STDMETHODIMP Flipper::put_ElasticityFalloff(float newVal)
+{
+    STARTUNDO
+    m_d.m_elasticityFalloff = newVal;
+    STOPUNDO
+    return S_OK;
 }
 
 STDMETHODIMP Flipper::get_Friction(float *pVal)

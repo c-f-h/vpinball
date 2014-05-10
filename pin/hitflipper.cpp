@@ -59,7 +59,6 @@ FlipperAnimObject::FlipperAnimObject(const Vertex2D& center, float baser, float 
 
    m_force = strength;
    m_returnRatio = returnRatio;
-   m_mass = mass;
 
    // model inertia of flipper as that of rod of length flipr around its end
    m_inertia = 1.0f/3.0f * mass * (flipr*flipr);
@@ -766,11 +765,10 @@ void HitFlipper::Collide(CollisionEvent *coll)
 
    /*
     * Rubber has a coefficient of restitution which decreases with the impact velocity.
-    * This here is a heuristic model which decreases the COR to about 70% at
-    * 1 m/s (18.53 speed units).
+    * We use a heuristic model which decreases the COR according to a falloff parameter:
+    * 0 = no falloff, 1 = half the COR at 1 m/s (18.53 speed units)
     */
-   const float restitutionFalloff = 0.43f;  // 0 = no falloff, 1 = half the COR at 1 m/s
-   const float epsilon = m_elasticity / (1.0f + restitutionFalloff/18.53f * fabsf(bnv));
+   const float epsilon = m_elasticity / (1.0f + m_pflipper->m_d.m_elasticityFalloff/18.53f * fabsf(bnv));
 
    float impulse = -(1.0f + epsilon) * bnv
        / (pball->m_invMass + normal.Dot(CrossProduct(angResp / m_flipperanim.m_inertia, rF)));

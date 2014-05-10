@@ -32,6 +32,7 @@ public:
     BOOL  m_fEnabled;
     BOOL  m_fCompatibility;
 	float m_elasticity;
+    float m_elasticityFalloff;
 	float m_friction;
     float m_rampUp;
 	float m_scatter;
@@ -130,6 +131,8 @@ DECLARE_REGISTRY_RESOURCEID(IDR_FLIPPER)
 public:
 	STDMETHOD(get_Elasticity)(/*[out, retval]*/ float *pVal);
 	STDMETHOD(put_Elasticity)(/*[in]*/ float newVal);
+	STDMETHOD(get_ElasticityFalloff)(/*[out, retval]*/ float *pVal);
+	STDMETHOD(put_ElasticityFalloff)(/*[in]*/ float newVal);
 	STDMETHOD(get_Friction)(/*[out, retval]*/ float *pVal);
 	STDMETHOD(put_Friction)(/*[in]*/ float newVal);
 	STDMETHOD(get_RampUp)(/*[out, retval]*/ float *pVal);

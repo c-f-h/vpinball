@@ -48,8 +48,6 @@ public:
 	float m_flipperradius;
 	float m_force;
     float m_returnRatio;
-	float m_mass;
-	float m_elasticity;
 
 	float m_height;
 
