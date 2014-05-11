@@ -724,7 +724,7 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
 
    const float dot = vt1.Dot(vt2);
 
-   if (dot < 0.f) // Inside edges don't need joint hit-testing (dot == 0 continuous segments should mathematically never hit)
+   if (dot != 0.f) // continuous segments should mathematically never hit
    {
        SetupHitObject(pvho, new HitLineZ(*pv1, m_d.m_heightbottom, m_d.m_heighttop));
 
