@@ -427,6 +427,8 @@ typedef [uuid(D09B9F0E-C1AE-40dd-84D6-B1F74053AA8E)]
 		[propput, id(1101), helpstring("property HardFriction")] HRESULT HardFriction([in] float newVal);
 		[propget, id(1102), helpstring("property HardScatter")] HRESULT HardScatter([out, retval] float *pVal);
 		[propput, id(1102), helpstring("property HardScatter")] HRESULT HardScatter([in] float newVal);
+		[propget, id(1103), helpstring("property NudgeTime")] HRESULT NudgeTime([out, retval] float *pVal);
+		[propput, id(1103), helpstring("property NudgeTime")] HRESULT NudgeTime([in] float newVal);
 		[propget, id(1104), helpstring("property PlungerNormalize")] HRESULT PlungerNormalize([out, retval] int *pVal);
 		[propput, id(1104), helpstring("property PlungerNormalize")] HRESULT PlungerNormalize([in] int newVal);
 		[propget, id(1105), helpstring("property PhysicsLoopTime")] HRESULT PhysicsLoopTime([out, retval] int *pVal);

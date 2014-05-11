@@ -790,11 +790,35 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
 	m_NudgeY = 0;
 	m_movedPlunger = 0;	// has plunger moved, must have moved at least three times
 
-    m_tableVel.SetZero();
-    m_tableDisplacement.SetZero();
-
 	SendMessage(hwndProgress, PBM_SETPOS, 50, 0);
 	SetWindowText(hwndProgressName, "Initalizing Physics...");
+
+    {
+        // Initialize new nudging.
+        m_tableVel.SetZero();
+        m_tableDisplacement.SetZero();
+
+        // Table movement (displacement u) is modeled as a mass-spring-damper system
+        //   u'' = -k u - c u'
+        // with a spring constant k and a damping coefficient c.
+        // See http://en.wikipedia.org/wiki/Damping#Linear_damping
+
+        const float nudgeTime = m_ptable->m_nudgeTime;      // T
+        const float dampingRatio = 0.5f;                    // zeta
+
+        // time for one half period (one swing and swing back):
+        //   T = pi / omega_d,
+        // where
+        //   omega_d = omega_0 * sqrt(1 - zeta^2)       (damped frequency)
+        //   omega_0 = sqrt(k)                          (undamped frequency)
+        // Solving for the spring constant k, we get
+        m_nudgeSpring = (float)(M_PI*M_PI / (nudgeTime*nudgeTime * (1.0 - dampingRatio*dampingRatio)));
+
+        // The formula for the damping ratio is
+        //   zeta = c / (2 sqrt(k)).
+        // Solving for the damping coefficient c, we get
+        m_nudgeDamping = 2.0f * sqrtf(m_nudgeSpring) * dampingRatio;
+    }
 
 	// Need to set timecur here, for init functions that set timers
 	m_time_msec = 0;
@@ -1811,7 +1835,10 @@ void Player::UpdatePhysics()
 		UltraPlunger_update();		// integral physics frame. So the previous graphics frame was (1.0 - physics_diff_time) before 
 									// this integral physics frame. Accelerations and inputs are always physics frame aligned
         {
-            Vertex3Ds force = -0.8f * m_tableDisplacement - 0.8f * m_tableVel;
+            // table movement is modeled as a mass-spring-damper system
+            //   u'' = -k u - c u'
+            // with a spring constant k and a damping coefficient c
+            Vertex3Ds force = -m_nudgeSpring * m_tableDisplacement - m_nudgeDamping * m_tableVel;
             m_tableVel += PHYS_FACTOR * force;
             m_tableDisplacement += PHYS_FACTOR * m_tableVel;
             //if (m_tableVel.LengthSquared() >= 1e-5f)

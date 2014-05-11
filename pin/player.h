@@ -214,6 +214,8 @@ public:
     // new nudging
     Vertex3Ds m_tableVel;
     Vertex3Ds m_tableDisplacement;
+    float m_nudgeSpring;
+    float m_nudgeDamping;
 
 	EnumAssignKeys m_rgKeys[eCKeys]; //Player's key assignments
 

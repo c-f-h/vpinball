@@ -548,6 +548,7 @@ PinTable::PinTable()
    m_Gravity = GRAVITYCONST;
    m_hardFriction = C_FRICTIONCONST;
    m_hardScatter = 0;
+   m_nudgeTime = 5.0f;
 
    m_plungerNormalize = 100;  //Mech-Plunger component adjustment or weak spring, aging
    m_plungerFilter = fFalse;
@@ -2635,6 +2636,7 @@ HRESULT PinTable::SaveData(IStream* pstm, HCRYPTHASH hcrypthash, HCRYPTKEY hcryp
    bw.WriteFloat(FID(GAVT), m_Gravity);
    bw.WriteFloat(FID(FRCT), m_hardFriction);
    bw.WriteFloat(FID(SCAT), m_hardScatter);
+   bw.WriteFloat(FID(NDGT), m_nudgeTime);
    bw.WriteInt(FID(MPGC), m_plungerNormalize);
    bw.WriteBool(FID(MPDF), m_plungerFilter);
    bw.WriteInt(FID(PHML), m_PhysicsMaxLoops);
@@ -3385,6 +3387,10 @@ BOOL PinTable::LoadToken(int id, BiffReader *pbr)
    else if( id == FID(SCAT))
    {
       pbr->GetFloat(&m_hardScatter);
+   }
+   else if( id == FID(NDGT))
+   {
+      pbr->GetFloat(&m_nudgeTime);
    }
    else if( id == FID(MPGC))
    {
@@ -8251,6 +8257,22 @@ STDMETHODIMP PinTable::put_HardScatter(float newVal )
 
    m_hardScatter = ANGTORAD(newVal);
 
+   STOPUNDO
+
+   return S_OK;
+}
+
+STDMETHODIMP PinTable::get_NudgeTime(float *pVal)
+{
+   *pVal = m_nudgeTime;
+
+   return S_OK;
+}
+
+STDMETHODIMP PinTable::put_NudgeTime(float newVal )
+{
+   STARTUNDO
+   m_nudgeTime = newVal;
    STOPUNDO
 
    return S_OK;

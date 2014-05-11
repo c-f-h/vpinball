@@ -1421,7 +1421,7 @@ BEGIN
     EDITTEXT        1100,80,7,40,12,ES_AUTOHSCROLL
     EDITTEXT        1101,80,21,40,12,ES_AUTOHSCROLL
     EDITTEXT        1102,80,34,40,12,ES_AUTOHSCROLL
-    //EDITTEXT        1103,80,48,40,12,ES_AUTOHSCROLL
+    EDITTEXT        1103,80,48,40,12,ES_AUTOHSCROLL
     //EDITTEXT        1106,80,62,40,12,ES_AUTOHSCROLL
     EDITTEXT        1105,80,76,40,12,ES_AUTOHSCROLL
     EDITTEXT        1104,80,90,40,12,ES_AUTOHSCROLL
@@ -1436,8 +1436,7 @@ BEGIN
     LTEXT           "Gravity Constant",IDC_STATIC,7,9,69,8
     LTEXT           "Playfield Friction",IDC_STATIC,7,23,69,8
     LTEXT           "Contact Scatter Angle",IDC_STATIC,7,37,69,8
-    //LTEXT           "Dampening Speed",IDC_STATIC,7,51,69,8
-    //LTEXT           "Dampening Friction",IDC_STATIC,7,65,69,8
+    LTEXT           "Nudge Time",IDC_STATIC,7,51,69,8
     LTEXT           "Physics Max. Loops",IDC_STATIC,7,79,70,8
     LTEXT           "Mech-Plunger Adjust",IDC_STATIC,7,92,70,8
     LTEXT           "Override by Global Physics Set",IDC_STATIC,7,118,98,8
