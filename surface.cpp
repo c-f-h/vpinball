@@ -639,16 +639,8 @@ void Surface::CurvesToShapes(Vector<HitObject> * const pvho)
       delete vvertex.ElementAt(i);
 
    Hit3DPoly * const ph3dpoly = new Hit3DPoly(rgv3D,count);
-   ph3dpoly->m_pfe = (IFireEvents *)this;
    ph3dpoly->m_fVisible = fTrue;
-   ph3dpoly->m_fEnabled = m_d.m_fCollidable;
-
-   pvho->AddElement(ph3dpoly);
-
-   m_vhoCollidable.push_back(ph3dpoly);
-
-   if (m_d.m_fDroppable)
-       m_vhoDrop.push_back(ph3dpoly);
+   SetupHitObject(pvho, ph3dpoly);
 }
 
 void Surface::SetupHitObject(Vector<HitObject> * pvho, HitObject * obj)
@@ -711,14 +703,13 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
    plineseg->SetFriction(m_d.m_friction);
    plineseg->m_scatter = ANGTORAD(m_d.m_scatter);
 
+   plineseg->CalcNormal();
+   plineseg->m_fEnabled = m_d.m_fCollidable;
+
    pvho->AddElement(plineseg);
    if (m_d.m_fDroppable)
       m_vhoDrop.push_back(plineseg);
-
    m_vhoCollidable.push_back(plineseg);
-   plineseg->m_fEnabled = m_d.m_fCollidable;
-
-   plineseg->CalcNormal();
 
    if (m_d.m_heightbottom != 0)
    {
