@@ -1,3 +1,4 @@
+#include "stdafx.h"
 
 bool SolveQuadraticEq(float a, float b, float c, float& sol1, float& sol2)
 {
