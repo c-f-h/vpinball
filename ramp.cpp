@@ -780,9 +780,9 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
 
          // add joints at start and end of right wall
          if (i == 0)
-             AddJoint2D(pvho, *pv2, rgheight1[i], rgheight1[i+1]+wallheightright);
+             AddJoint2D(pvho, *pv2, rgheight1[0], rgheight1[0] + wallheightright);
          else if (i == cvertex-2)
-             AddJoint2D(pvho, *pv3, rgheight1[i], rgheight1[i+1]+wallheightright);
+             AddJoint2D(pvho, *pv3, rgheight1[cvertex-1], rgheight1[cvertex-1] + wallheightright);
       }
    }
 
@@ -806,9 +806,9 @@ void Ramp::GetHitShapes(Vector<HitObject> * const pvho)
 
          // add joints at start and end of left wall
          if (i == 0)
-             AddJoint2D(pvho, *pv2, rgheight1[cvertex - i - 2], rgheight1[cvertex - i - 1] + wallheightleft);
+             AddJoint2D(pvho, *pv2, rgheight1[cvertex-1], rgheight1[cvertex-1] + wallheightleft);
          else if (i == cvertex-2)
-             AddJoint2D(pvho, *pv3, rgheight1[cvertex - i - 2], rgheight1[cvertex - i - 1] + wallheightleft);
+             AddJoint2D(pvho, *pv3, rgheight1[0], rgheight1[0] + wallheightleft);
       }
    }
 
