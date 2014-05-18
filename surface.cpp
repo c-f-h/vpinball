@@ -718,6 +718,12 @@ void Surface::AddLine(Vector<HitObject> * const pvho, const RenderVertex * const
        Vertex3Ds v2(pv2->x, pv2->y, m_d.m_heightbottom);
        SetupHitObject(pvho, new HitLine3D(v1, v2));
    }
+   {
+       // add upper edge as a line
+       Vertex3Ds v1(pv1->x, pv1->y, m_d.m_heighttop);
+       Vertex3Ds v2(pv2->x, pv2->y, m_d.m_heighttop);
+       SetupHitObject(pvho, new HitLine3D(v1, v2));
+   }
 
    const Vertex2D vt1 = *pv1 - *pv2;
    const Vertex2D vt2 = *pv1 - *pv3;
