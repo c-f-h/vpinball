@@ -594,7 +594,7 @@ void Ball::UpdateVelocities()
 		vel.x += nx;
 		vel.y += ny;
 
-        vel -= g_pplayer->m_tableVel;
+        vel -= g_pplayer->m_tableVelDelta;
 	}
 
 	m_fDynamic = C_DYNAMIC; // always set .. after adding velocity

@@ -797,6 +797,8 @@ HRESULT Player::Init(PinTable * const ptable, const HWND hwndProgress, const HWN
         // Initialize new nudging.
         m_tableVel.SetZero();
         m_tableDisplacement.SetZero();
+        m_tableVelOld.SetZero();
+        m_tableVelDelta.SetZero();
 
         // Table movement (displacement u) is modeled as a mass-spring-damper system
         //   u'' = -k u - c u'
@@ -1843,6 +1845,9 @@ void Player::UpdatePhysics()
             m_tableDisplacement += PHYS_FACTOR * m_tableVel;
             //if (m_tableVel.LengthSquared() >= 1e-5f)
             //    slintf("Table shake: %.2f  %.2f\n", m_tableDisplacement.x, m_tableVel.x);
+
+            m_tableVelDelta = m_tableVel - m_tableVelOld;
+            m_tableVelOld = m_tableVel;
         }
 
 		for (unsigned i=0; i<m_vmover.size(); i++)

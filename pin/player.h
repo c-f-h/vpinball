@@ -214,6 +214,8 @@ public:
     // new nudging
     Vertex3Ds m_tableVel;
     Vertex3Ds m_tableDisplacement;
+    Vertex3Ds m_tableVelOld;
+    Vertex3Ds m_tableVelDelta;
     float m_nudgeSpring;
     float m_nudgeDamping;
 
