@@ -136,7 +136,6 @@ void Ball::RenderSetup()
 void Ball::Init()
 {
    // Only called by real balls, not temporary objects created for physics/rendering
-   collisionMass = 1.0f;
    m_mass = 1.0f;
    m_invMass = 1.0f / m_mass;
 
@@ -373,7 +372,7 @@ void Ball::Collide(CollisionEvent *coll)
 	// correct displacements, mostly from low velocity, alternative to true acceleration processing
 
     // target ball to object ball delta velocity
-	const Vertex3Ds impulse = pball->collisionMass * pball->vel - collisionMass * vel;
+	const Vertex3Ds impulse = pball->m_mass * pball->vel - m_mass * vel;
 
 	float dot = impulse.Dot(vnormal);
 
@@ -408,9 +407,9 @@ void Ball::Collide(CollisionEvent *coll)
 	}
 #endif				
 
-	const float averageMass = (collisionMass + pball->collisionMass)*0.5f;
-	const float impulse1 = ((float)(-1.8 * 0.5) * dot) * pball->collisionMass / (averageMass * collisionMass);
-	float impulse2 = ((float)(-1.8 * 0.5) * dot) * collisionMass / (averageMass * pball->collisionMass);
+	const float averageMass = (m_mass + pball->m_mass)*0.5f;
+	const float impulse1 = ((float)(-1.8 * 0.5) * dot) * pball->m_mass / (averageMass * m_mass);
+	float impulse2 = ((float)(-1.8 * 0.5) * dot) * m_mass / (averageMass * pball->m_mass);
 
 	if (!fFrozen)
 	{

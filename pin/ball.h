@@ -98,7 +98,6 @@ public:
 	float drsq;	// square of distance moved
 
 	float radius;
-	float collisionMass;        // TODO: unify with m_mass
     float m_mass;
     float m_invMass;
 
