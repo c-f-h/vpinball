@@ -364,18 +364,18 @@ float Ball::HitTest(const Ball * pball_, float dtime, CollisionEvent& coll)
 void Ball::Collide(CollisionEvent *coll)
 {
     Ball *pball = coll->ball;
-	const Vertex3Ds vnormal = coll->normal[0];
 
-	if (pball->fFrozen) 
-		return;
-
-	// correct displacements, mostly from low velocity, alternative to true acceleration processing
+    // make sure we process each ball/ball collision only once
+    // (but if we are frozen, there won't be a second collision event, so deal with it now!)
+    if (pball <= this && !this->fFrozen)
+        return;
 
     // target ball to object ball delta velocity
-	const Vertex3Ds impulse = pball->m_mass * pball->vel - m_mass * vel;
+    const Vertex3Ds vrel = pball->vel - vel;
+	const Vertex3Ds vnormal = coll->normal[0];
+	float dot = vrel.Dot(vnormal);
 
-	float dot = impulse.Dot(vnormal);
-
+	// correct displacements, mostly from low velocity, alternative to true acceleration processing
 	if (dot >= -C_LOWNORMVEL )								// nearly receding ... make sure of conditions
 	{														// otherwise if clearly approaching .. process the collision
 		if (dot > C_LOWNORMVEL) return;						//is this velocity clearly receding (i.e must > a minimum)		
@@ -385,8 +385,8 @@ void Ball::Collide(CollisionEvent *coll)
 		else return;
 #endif
 	}
-			
-#ifdef C_DISP_GAIN 		
+
+#ifdef C_DISP_GAIN
 	float edist = -C_DISP_GAIN * coll->distance;
 	if (edist > 1.0e-4f)
 	{										
@@ -405,21 +405,18 @@ void Ball::Collide(CollisionEvent *coll)
 		edist *= 0.5f;		
         pos -= edist * vnormal;         // pull along norm, back to free area
 	}
-#endif				
+#endif
 
-	const float averageMass = (m_mass + pball->m_mass)*0.5f;
-	const float impulse1 = ((float)(-1.8 * 0.5) * dot) * pball->m_mass / (averageMass * m_mass);
-	float impulse2 = ((float)(-1.8 * 0.5) * dot) * m_mass / (averageMass * pball->m_mass);
+    const float myInvMass = fFrozen ? 0.0f : m_invMass; // frozen ball has infinite mass
+    const float impulse = -(1.0f + 0.8f) * dot / (myInvMass + pball->m_invMass);    // resitution = 0.8
 
-	if (!fFrozen)
-	{
-        vel -= impulse1 * vnormal;
-		m_fDynamic = C_DYNAMIC;		
-	}
-	else impulse2 += impulse1;
-		
-    pball->vel += impulse2 * vnormal;
-	pball->m_fDynamic = C_DYNAMIC;
+    if (!fFrozen)
+    {
+        vel -= (impulse * myInvMass) * vnormal;
+        m_fDynamic = C_DYNAMIC;
+    }
+    pball->vel += (impulse * pball->m_invMass) * vnormal;
+    pball->m_fDynamic = C_DYNAMIC;
 }
 
 void Ball::HandleStaticContact(const Vertex3Ds& normal, float origNormVel, float friction, float dtime)
